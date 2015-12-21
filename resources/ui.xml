@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+<resource type="text/css" src="resources/main.css"/>
+<resource type="text/css" src="resources/ionicons.css"/>
+<resource type="application/font-ttf" src="resources/ionicons.ttf"/>
+<debug>
+    <widget class="sidebar">
+      <widget class="sidebar-toggle">
+        <widget type="textview" class="icon ion ion-navicon"></widget>
+      </widget>
+    </widget>
+</debug>
+<ui>
+  <widget class="window">
+    <widget class="sidebar">
+      <widget>
+        <widget class="sidebar-toggle">
+          <widget type="textview" class="icon ion ion-navicon-round"></widget>
+        </widget>
+      </widget>
+      <widget id="item-home" class="sidebar-item">
+        <widget type="textview" class="icon ion ion-images"></widget>
+        <widget type="textview" class="text">集锦</widget>
+      </widget>
+      <widget id="item-settings" class="sidebar-item">
+        <widget type="textview" class="icon ion ion-ios-albums-outline"></widget>
+        <widget type="textview" class="text">相册</widget>
+      </widget>
+      <widget id="item-widgets" class="sidebar-item">
+        <widget type="textview" class="icon ion ion-ios-folder-outline"></widget>
+        <widget type="textview" class="text">文件夹</widget>
+      </widget>
+      <widget id="item-widgets" class="sidebar-item">
+        <widget type="textview" class="icon ion ion-ios-settings"></widget>
+        <widget type="textview" class="text">设置</widget>
+      </widget>
+    </widget>
+    <widget class="content-wrapper">
+      <widget class="navbar"></widget>
+      <widget class="content"></widget>
+    </widget>
+  </widget>
+</ui>
+</lcui-app>

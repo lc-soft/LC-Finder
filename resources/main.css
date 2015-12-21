@@ -1,0 +1,64 @@
+.window {
+	background-color: #eff3f5;
+	height: 100%;
+	width: 100%;
+}
+.sidebar {
+	width: 256px;
+	height: 100%;
+	background-color: #fff;
+}
+.sidebar-mini {
+	width: 48px;
+}
+.sidebar .sidebar-item {
+	width: 100%;
+	padding: 8px 0;
+	border-top: 1px solid #f3f3f3;
+}
+.sidebar .sidebar-toggle {
+	padding: 8px 0;
+}
+.sidebar .sidebar-toggle .icon,
+.sidebar .sidebar-item .icon,
+.sidebar .sidebar-item .text {
+	display: inline-block;
+	font-size: 14px;
+	line-height: 28px;
+	color: #515253;
+}
+.sidebar .sidebar-item .icon,
+.sidebar .sidebar-toggle .icon {
+	width: 48px;
+	font-size: 20px;
+	text-align: center;
+	padding: 2px 0 0 0;
+}
+.sidebar .sidebar-item:hover .text,
+.sidebar .sidebar-item:hover .icon,
+.sidebar .sidebar-item:active .text,
+.sidebar .sidebar-item:active .icon {
+	color: #262626;
+}
+.sidebar .sidebar-item:hover, .sidebar .sidebar-toggle:hover {
+	background-color: #fbfbfb;
+}
+.sidebar .sidebar-item:active, .sidebar .sidebar-toggle:active {
+	background-color: #f3f3f3;
+}
+.sidebar-item .text {
+	font-family: Microsoft YaHei;
+}
+.content-wrapper {
+	padding: 0 0 0 48px;
+	width: 100%;
+	height: 100%;
+}
+.content-wrapper .navbar {
+	width: 100%;
+	height: 48px;
+	background-color: #fafafa;
+}
+.content-wrapper .content {
+	
+}
