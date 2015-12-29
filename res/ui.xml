@@ -1,36 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <lcui-app>
-<resource type="text/css" src="resources/main.css"/>
-<resource type="text/css" src="resources/ionicons.css"/>
-<resource type="application/font-ttf" src="resources/ionicons.ttf"/>
-<debug>
-    <widget class="sidebar">
-      <widget class="sidebar-toggle">
-        <widget type="textview" class="icon ion ion-navicon"></widget>
-      </widget>
-    </widget>
-</debug>
+<resource type="text/css" src="res/main.css"/>
+<resource type="text/css" src="res/ionicons.css"/>
+<resource type="application/font-ttf" src="res/ionicons.ttf"/>
 <ui>
   <widget class="window">
     <widget class="sidebar">
       <widget>
-        <widget class="sidebar-toggle">
+        <widget type="sidebar-toggle">
           <widget type="textview" class="icon ion ion-navicon-round"></widget>
         </widget>
+      </widget>
+      <widget id="item-search" class="sidebar-item">
+        <widget type="textview" class="icon ion ion-ios-search"></widget>
+        <widget type="textview" class="text">搜索</widget>
       </widget>
       <widget id="item-home" class="sidebar-item">
         <widget type="textview" class="icon ion ion-images"></widget>
         <widget type="textview" class="text">集锦</widget>
       </widget>
-      <widget id="item-settings" class="sidebar-item">
+      <widget id="item-albums" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-albums-outline"></widget>
         <widget type="textview" class="text">相册</widget>
       </widget>
-      <widget id="item-widgets" class="sidebar-item">
+      <widget id="item-folders" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-folder-outline"></widget>
         <widget type="textview" class="text">文件夹</widget>
       </widget>
-      <widget id="item-widgets" class="sidebar-item">
+      <widget id="item-settings" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-settings"></widget>
         <widget type="textview" class="text">设置</widget>
       </widget>

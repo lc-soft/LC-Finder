@@ -7,6 +7,7 @@
 	width: 256px;
 	height: 100%;
 	background-color: #fff;
+	position: absolute;
 }
 .sidebar-mini {
 	width: 48px;
@@ -16,10 +17,10 @@
 	padding: 8px 0;
 	border-top: 1px solid #f3f3f3;
 }
-.sidebar .sidebar-toggle {
+.sidebar sidebar-toggle {
 	padding: 8px 0;
 }
-.sidebar .sidebar-toggle .icon,
+.sidebar sidebar-toggle .icon,
 .sidebar .sidebar-item .icon,
 .sidebar .sidebar-item .text {
 	display: inline-block;
@@ -28,7 +29,7 @@
 	color: #515253;
 }
 .sidebar .sidebar-item .icon,
-.sidebar .sidebar-toggle .icon {
+.sidebar sidebar-toggle .icon {
 	width: 48px;
 	font-size: 20px;
 	text-align: center;
@@ -40,10 +41,10 @@
 .sidebar .sidebar-item:active .icon {
 	color: #262626;
 }
-.sidebar .sidebar-item:hover, .sidebar .sidebar-toggle:hover {
+.sidebar .sidebar-item:hover, .sidebar sidebar-toggle:hover {
 	background-color: #fbfbfb;
 }
-.sidebar .sidebar-item:active, .sidebar .sidebar-toggle:active {
+.sidebar .sidebar-item:active, .sidebar sidebar-toggle:active {
 	background-color: #f3f3f3;
 }
 .sidebar-item .text {
@@ -58,7 +59,11 @@
 	width: 100%;
 	height: 48px;
 	background-color: #fafafa;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 .content-wrapper .content {
-	
+	height: 100%;
+	padding: 48px 0 0 0;
 }

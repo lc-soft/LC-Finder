@@ -22,10 +22,10 @@
     <ClCompile Include="src\main.c" />
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="resources\ui.xml" />
+    <None Include="res\main.css" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\main.css" />
+    <Xml Include="res\ui.xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>

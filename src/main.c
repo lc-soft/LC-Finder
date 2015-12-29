@@ -6,7 +6,7 @@
 #include <LCUI/gui/builder.h>
 #include <stdlib.h>
 
-#define XML_PATH "resources/ui.xml"
+#define XML_PATH "res/ui.xml"
 
 #ifdef LCUI_BUILD_IN_WIN32
 #include <io.h>
@@ -39,6 +39,7 @@ int main( int argc, char *argv[] )
 	InitConsoleWindow();
 #endif
 	_wchdir( L"F:/代码库/GitHub/LC-Finder" );
+	//return test_mix2();
 	LCUI_Init();
 	LCUIDisplay_SetMode( LDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 540 );

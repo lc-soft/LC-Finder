@@ -23,13 +23,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="resources\ui.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="resources\main.css">
+    <None Include="res\main.css">
       <Filter>相关资源</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="res\ui.xml">
+      <Filter>相关资源</Filter>
+    </Xml>
   </ItemGroup>
 </Project>
