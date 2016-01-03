@@ -243,3 +243,6 @@ ModelManifest.xml
 
 # Debug files
 *.dSYM/
+
+res/*.db
+include/sqlite3.h
