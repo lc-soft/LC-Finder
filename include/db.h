@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
-* main.c -- The code of main function, and other related code.
+* db.h -- the database operation set.
 *
 * Copyright (C) 2015 by Liu Chao <lc-soft@live.cn>
 *
@@ -20,7 +20,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* main.c -- main 函数的实现代码，以及相关功能代码。
+* db.h -- 数据库操作集。
 *
 * 版权所有 (C) 2015 归属于 刘超 <lc-soft@live.cn>
 *
@@ -36,58 +36,27 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
-#include <LCUI/display.h>
-#include <LCUI/gui/widget.h>
-#include <LCUI/gui/widget/textview.h>
-#include <LCUI/gui/builder.h>
-#include "db.h"
+#ifndef __DB_H__
+#define __DB_H__
 
-#define XML_PATH "res/ui.xml"
+typedef struct DB_TagRec_ {
+	int id;			/**< 标签标识号 */
+	char *name;		/**< 标签名称 */
+	int count;		/**< 与该标签关联的文件总数 */
+} DB_TagRec, *DB_Tag;
 
-#ifdef LCUI_BUILD_IN_WIN32
-#include <io.h>
-#include <fcntl.h>
+typedef struct DB_DirRec_ {
+	int id;			/**< 文件夹标识号 */
+	char *path;		/**< 文件夹路径 */
+} DB_DirRec, *DB_Dir;
 
-static void InitConsoleWindow(void)
-{
-	int hCrt;
-	FILE *hf;
-	AllocConsole();
-	hCrt=_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE),_O_TEXT );
-	hf=_fdopen( hCrt, "w" );
-	*stdout = *hf;
-	setvbuf (stdout, NULL, _IONBF, 0);
-	printf ("InitConsoleWindow OK!\n");
-}
+typedef struct DB_FileRec_ {
+	int id;			/**< 文件标识号 */
+	char *path;		/**< 文件路径 */
+} DB_FileRec, *DB_File;
+
+int DB_Init( void );
+
+int DB_AddDir( const char *dirpath );
 
 #endif
-
-static void onTimer( void *arg )
-{
-	Widget_PrintTree( NULL );
-	//LCUI_PrintStyleLibrary();
-}
-
-int main( int argc, char *argv[] )
-{
-	LCUI_Widget box;
-#ifdef LCUI_BUILD_IN_WIN32
-	InitConsoleWindow();
-#endif
-	_wchdir( L"F:/代码库/GitHub/LC-Finder" );
-	LCUI_Init();
-	LCUIDisplay_SetMode( LDM_WINDOWED );
-	LCUIDisplay_SetSize( 960, 540 );
-	box = LCUIBuilder_LoadFile( XML_PATH );
-	if( box ) {
-		Widget_Top( box );
-		Widget_Unwrap( &box );
-	}
-	Widget_Update( LCUIWidget_GetRoot(), TRUE );
-	DB_Init();
-	DB_AddDir( "F:/代码库/GitHub/LC-Finder" );
-	//LCUITimer_Set( 1000, onTimer, NULL, FALSE );
-	return LCUI_Main();
-}
