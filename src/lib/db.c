@@ -48,7 +48,8 @@
 
 static struct DB_Module {
 	sqlite3 *db;
-	char *sql_buffer;
+	char *sql_buf;
+	int sql_buf_len;
 } self;
 
 static const char *sql_init = "\
@@ -85,9 +86,38 @@ static const char *sql_get_dir_total = "select count(*) from dir;";
 static const char *sql_get_tag_total = "select count(*) from tag;";
 static const char *sql_add_dir = "insert into dir(path) values(\"%s\");";
 static const char *sql_add_tag = "insert into tag(name) values(\"%s\");";
+static const char *sql_remove_tag = "delete from tag where id = %d;";
+static const char *sql_file_set_score = "update file set score = %d where id = %d;\
+";
+static const char *sql_file_add_tag = "\
+insert into file_tag_relation(fid, tid) values(%d, %d);\
+";
+static const char *sql_file_remove_tag = "\
+delete from file_tag_relation where fid = %d and tid = %d;\
+";
 static const char *sql_add_file = "\
 insert into file(did, path, create_time) values(%d, \"%s\", %d)\
 ";
+
+
+static int DB_CacheSQL( const char *sql )
+{
+	char *buf;
+	int len = self.sql_buf_len + strlen(sql) + 2;
+	if( self.sql_buf ) {
+		buf = realloc( self.sql_buf, sizeof( char )*len );
+	} else {
+		buf = malloc( sizeof(char)*len );
+	}
+	if( !buf ) {
+		return -1;
+	}
+	strcat( buf, ";\n" );
+	strcat( buf, sql );
+	self.sql_buf = buf;
+	self.sql_buf_len = len;
+	return 0;
+}
 
 int DB_Init( void )
 {
@@ -104,7 +134,8 @@ int DB_Init( void )
 		printf( "[database] error: %s\n", errmsg );
 		return -2;
 	}
-	self.sql_buffer = NULL;
+	self.sql_buf = NULL;
+	self.sql_buf_len = 0;
 	return 0;
 }
 
@@ -121,7 +152,7 @@ int DB_AddDir( const char *dirpath )
 	return 0;
 }
 
-int DBDir_GetList( DB_Dir **outlist )
+int DB_GetDirs( DB_Dir **outlist )
 {
 	DB_Dir *list, dir;
 	sqlite3_stmt *stmt;
@@ -175,7 +206,14 @@ int DB_AddTag( const char *tagname )
 	return 0;
 }
 
-int DBTag_GetList( DB_Tag **outlist )
+void DB_AddFile( DB_Dir dir, const char *filepath, int create_time )
+{
+	char sql[1024];
+	sprintf( sql, sql_add_file, dir->id, filepath, create_time );
+	DB_CacheSQL( sql );
+}
+
+int DB_GetTags( DB_Tag **outlist )
 {
 	DB_Tag *list, tag;
 	sqlite3_stmt *stmt;
@@ -219,33 +257,42 @@ int DBTag_GetList( DB_Tag **outlist )
 
 void DBTag_Remove( DB_Tag tag )
 {
-
+	char sql[1024];
+	sprintf( sql, sql_remove_tag, tag->id );
+	DB_CacheSQL( sql );
 }
 
-void DBFile_RemoveTag( DB_File file, const char *tagname )
+void DBFile_RemoveTag( DB_File file, DB_Tag tag )
 {
-
+	char sql[1024];
+	sprintf( sql, sql_file_remove_tag, file->id, tag->id );
+	DB_CacheSQL( sql );
 }
 
-void DBFile_AddTag( DB_File file, const char *tagname )
+void DBFile_AddTag( DB_File file, DB_Tag tag )
 {
-
+	char sql[1024];
+	sprintf( sql, sql_file_add_tag, file->id, tag->id );
+	DB_CacheSQL( sql );
 }
 
 void DBFile_SetScore( DB_File file, int score )
 {
-
+	char sql[1024];
+	sprintf( sql, sql_file_set_score, score, file->id );
+	DB_CacheSQL( sql );
 }
 
 int DB_Flush( void )
 {
 	int ret;
 	char *errmsg, *sql;
-	if( !self.sql_buffer ) {
+	if( !self.sql_buf ) {
 		return 0;
 	}
-	sql = self.sql_buffer;
-	self.sql_buffer = NULL;
+	sql = self.sql_buf;
+	self.sql_buf = NULL;
+	self.sql_buf_len = 0;
 	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
 	if( ret != SQLITE_OK ) {
 		printf( "[database] flush error: %s\n", errmsg );
