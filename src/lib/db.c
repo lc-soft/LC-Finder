@@ -79,7 +79,7 @@ static const char *sql_get_dir_list = "\
 select id, path from dir order by path asc;\
 ";
 static const char *sql_get_tag_list = "\
-select t.id, t.name, count(ftr.tid) from tag t, file_tag_relation ftr\
+select t.id, t.name, count(ftr.tid) from tag t, file_tag_relation ftr \
 where ftr.tid = t.id group by ftr.tid order by name asc;\
 ";
 static const char *sql_get_dir_total = "select count(*) from dir;";
@@ -90,16 +90,22 @@ static const char *sql_remove_tag = "delete from tag where id = %d;";
 static const char *sql_file_set_score = "update file set score = %d where id = %d;\
 ";
 static const char *sql_file_add_tag = "\
-insert into file_tag_relation(fid, tid) values(%d, %d);\
+insert into file_tag_relation(fid, did, tid) values(%d, %d, %d);\
 ";
 static const char *sql_file_remove_tag = "\
 delete from file_tag_relation where fid = %d and tid = %d;\
 ";
 static const char *sql_add_file = "\
-insert into file(did, path, create_time) values(%d, \"%s\", %d)\
+insert into file(did, path, create_time) values(%d, \"%s\", %d);\
 ";
+static const char *sql_get_tag_id = "select id from tag where name = \"%s\";";
+static const char *sql_get_dir_id = "select id from dir where path = \"%s\";";
+static const char *sql_search_files = "select f.id, f.did, f.score, f.path \
+d.path from file f, dir d, file_tag_relation ftr where d.id = f,did";
+static const char *sql_count_files = "select count(f.id) from file f, dir d, \
+file_tag_relation ftr where d.id = f,did";
 
-
+/** 缓存 SQL 代码，等到调用 DB_Flush() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )
 {
 	char *buf;
@@ -139,17 +145,29 @@ int DB_Init( void )
 	return 0;
 }
 
-int DB_AddDir( const char *dirpath )
+DB_Dir DB_AddDir( const char *dirpath )
 {
 	int ret;
+	DB_Dir dir;
+	sqlite3_stmt *stmt;
 	char *errmsg, sql[1024];
-	sprintf( sql, sql_add_dir, dirpath );
+	sprintf( sql, sql_add_tag, dirpath );
 	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
 	if( ret != SQLITE_OK ) {
 		printf( "[database] error: %s\n", errmsg );
-		return -1;
+		return NULL;
 	}
-	return 0;
+	sprintf( sql, sql_get_dir_id, dirpath );
+	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
+	ret = sqlite3_step( stmt );
+	if( ret != SQLITE_ROW ) {
+		return NULL;
+	}
+	dir = malloc( sizeof( DB_DirRec ) );
+	dir->id = sqlite3_column_int( stmt, 0 );
+	dir->path = strdup( dirpath );
+	sqlite3_finalize( stmt );
+	return dir;
 }
 
 int DB_GetDirs( DB_Dir **outlist )
@@ -193,17 +211,30 @@ int DB_GetDirs( DB_Dir **outlist )
 	return i;
 }
 
-int DB_AddTag( const char *tagname )
+DB_Tag DB_AddTag( const char *tagname )
 {
 	int ret;
+	DB_Tag tag;
+	sqlite3_stmt *stmt;
 	char *errmsg, sql[1024];
 	sprintf( sql, sql_add_tag, tagname );
 	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
 	if( ret != SQLITE_OK ) {
 		printf( "[database] error: %s\n", errmsg );
-		return -1;
+		return NULL;
 	}
-	return 0;
+	sprintf( sql, sql_get_tag_id, tagname );
+	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
+	ret = sqlite3_step( stmt );
+	if( ret != SQLITE_ROW ) {
+		return NULL;
+	}
+	tag = malloc( sizeof( DB_TagRec ) );
+	tag->id = sqlite3_column_int( stmt, 0 );
+	tag->name = strdup( tagname );
+	tag->count = 0;
+	sqlite3_finalize( stmt );
+	return tag;
 }
 
 void DB_AddFile( DB_Dir dir, const char *filepath, int create_time )
@@ -272,7 +303,7 @@ void DBFile_RemoveTag( DB_File file, DB_Tag tag )
 void DBFile_AddTag( DB_File file, DB_Tag tag )
 {
 	char sql[1024];
-	sprintf( sql, sql_file_add_tag, file->id, tag->id );
+	sprintf( sql, sql_file_add_tag, file->id, file->did, tag->id );
 	DB_CacheSQL( sql );
 }
 
@@ -281,6 +312,110 @@ void DBFile_SetScore( DB_File file, int score )
 	char sql[1024];
 	sprintf( sql, sql_file_set_score, score, file->id );
 	DB_CacheSQL( sql );
+}
+
+/** 执行文件搜索操作，处理SQL查询结果 */
+static int DB_DoSearchFiles( const char *sql, int limit, DB_File **outfiles )
+{
+	int i = 0;
+	DB_File *files;
+	sqlite3_stmt *stmt;
+	if( !outfiles ) {
+		return 0;
+	}
+	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
+	files = malloc( sizeof( DB_File )*(limit + 1) );
+	if( !files ) {
+		return -1;
+	}
+	while( sqlite3_step( stmt ) == SQLITE_ROW && i < limit ) {
+		int len, n;
+		const char *path, *dirpath;
+		DB_File f = malloc( sizeof( DB_FileRec ) );
+		f->id = sqlite3_column_int( stmt, 0 );
+		f->did = sqlite3_column_int( stmt, 1 );
+		f->score = sqlite3_column_int( stmt, 2 );
+		path = sqlite3_column_text( stmt, 3 );
+		dirpath = sqlite3_column_text( stmt, 4 );
+		n = strlen( dirpath );
+		len = strlen( f->path ) + n + 2;
+		f->path = malloc( len*sizeof( char ) );
+		/* 拼接文件夹路径和文件路径 */
+		strcpy( f->path, dirpath );
+		if( f->path[n - 1] != '/' ) {
+			f->path[n] = '/';
+			f->path[n + 1] = 0;
+		}
+		strcat( f->path, path );
+		files[i] = f;
+		++i;
+	}
+	sqlite3_finalize( stmt );
+	files[limit] = NULL;
+	*outfiles = files;
+	return i;
+}
+
+int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
+{
+	int i;
+	char buf[256], sql[1024], sql_terms[1024];
+	strcpy( sql, sql_search_files );
+	if( q->n_tags > 0 && q->tags ) {
+		strcat( sql_terms, " and ftr.tid in (" );
+		for( i = 0; i < q->n_dirs; ++i ) {
+			sprintf( buf, "%d", q->tags[i]->id );
+			if( i > 0 ) {
+				strcat( sql_terms, ", " );
+			}
+			strcat( sql_terms, buf );
+		}
+		strcat( sql_terms, ") and ftr.fid = f.id" );
+	}
+	if( q->n_dirs > 0 && q->dirs ) {
+		strcat( sql_terms, " and f.did in(" );
+		for( i = 0; i < q->n_dirs; ++i ) {
+			sprintf( buf, "%d", q->dirs[i]->id );
+			if( i > 0 ) {
+				strcat( sql_terms, ", " );
+			}
+			strcat( sql_terms, buf );
+		}
+	}
+	if( q->create_time == DESC ) {
+		strcat( sql_terms, " order by f.create_time desc" );
+	} else if( q->create_time == ASC ) {
+		strcat( sql_terms, " order by f.create_time asc" );
+	}
+	if( q->score != NONE ) {
+		if( q->create_time != NONE ) {
+			strcat( sql_terms, ", " );
+		} else {
+			strcat( sql_terms, " order by " );
+		}
+		if( q->score == DESC ) {
+			strcat( sql_terms, "f.score desc" );
+		} else {
+			strcat( sql_terms, "f.score asc" );
+		}
+	}
+	if( total ) {
+		sqlite3_stmt *stmt;
+		strcpy( sql, sql_count_files );
+		strcat( sql, sql_terms );
+		sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
+		if( sqlite3_step( stmt ) == SQLITE_ROW ) {
+			*total = sqlite3_column_int( stmt, 0 );
+		} else {
+			*total = 0;
+		}
+		sqlite3_finalize( stmt );
+	}
+	sprintf( buf, " limit %d offset %d", q->limit, q->offset );
+	strcpy( sql, sql_search_files );
+	strcat( sql_terms, buf );
+	strcat( sql, sql_terms );
+	return DB_DoSearchFiles( sql, q->limit, outfiles );
 }
 
 int DB_Flush( void )
