@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
-* db.c -- the database operation set.
+* file_search.c -- file indexing and searching.
 *
 * Copyright (C) 2015 by Liu Chao <lc-soft@live.cn>
 *
@@ -20,7 +20,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* db.c -- 数据库操作集。
+* file_search.c -- 文件信息的索引与搜索。
 *
 * 版权所有 (C) 2015 归属于 刘超 <lc-soft@live.cn>
 *
@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "db.h"
+#include "file_search.h"
 #include "sqlite3.h"
 
 #ifdef WIN32
