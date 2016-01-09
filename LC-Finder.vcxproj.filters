@@ -21,7 +21,13 @@
     <ClCompile Include="src\main.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\lib\db.c">
+    <ClCompile Include="src\lib\finder.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\file_search.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\file_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -37,7 +43,10 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\db.h">
+    <ClInclude Include="include\file_search.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\file_cache.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

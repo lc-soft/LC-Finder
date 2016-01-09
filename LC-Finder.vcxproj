@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\lib\db.c" />
+    <ClCompile Include="src\lib\file_cache.c" />
+    <ClCompile Include="src\lib\file_search.c" />
+    <ClCompile Include="src\lib\finder.c" />
     <ClCompile Include="src\main.c" />
   </ItemGroup>
   <ItemGroup>
@@ -30,7 +32,8 @@
     <Xml Include="res\ui.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\db.h" />
+    <ClInclude Include="include\file_cache.h" />
+    <ClInclude Include="include\file_search.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
