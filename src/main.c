@@ -42,7 +42,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/builder.h>
-#include "db.h"
+#include "file_search.h"
 
 #define XML_PATH "res/ui.xml"
 

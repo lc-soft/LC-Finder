@@ -36,6 +36,109 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
+#include <LCUI_Build.h>
+#include <LCUI/LCUI.h>
 #include "file_cache.h"
 
-// code
+static const char filename[] = ".lc-finder-files.cache";
+static const char *match_suffixs[] = {".png", ".bmp", ".jpg", ".jpeg"};
+
+CacheTask NewCacheTask( const char *dirpath )
+{
+	CacheTask t = NEW( CacheTaskRec, 1 );
+	if( dirpath ) {
+		t->dirpath = malloc( strlen( dirpath ) + 1 );
+		strcpy( t->dirpath, dirpath );
+	} else {
+		t->dirpath = NULL;
+	}
+	t->state = STATE_NONE;
+	t->count = 0;
+	return t;
+}
+
+void DeleteCacheTask( CacheTask *tptr )
+{
+	CacheTask t = *tptr;
+	if( t->dirpath ) {
+		free( t->dirpath );
+		t->dirpath = NULL;
+	}
+	free( t );
+	*tptr = NULL;
+}
+
+/** 扫描文件 */
+static int LCFinder_ScanFiles( CacheTask t, const char *dirpath, FILE *fp )
+{
+	LCUI_Dir dir;
+	LCUI_DirEntry *entry;
+	char filepath[2048], *name;
+	int i, n, len = strlen( dirpath );
+	strcpy( filepath, dirpath );
+	if( filepath[len - 1] != '/' ) {
+		filepath[len++] = '/';
+		filepath[len] = 0;
+	}
+	LCUI_OpenDirA( filepath, &dir );
+	n = sizeof( match_suffixs ) / sizeof( *match_suffixs );
+	while( (entry = LCUI_ReadDirA( &dir )) && t->state == STATE_STARTED ) {
+		name = LCUI_GetFileNameA( entry );
+		strcpy( filepath + len, name );
+		if( LCUI_FileIsDirectory( entry ) ) {
+			LCFinder_ScanFiles( t, filepath, fp );
+			continue;
+		}
+		if( !LCUI_FileIsArchive( entry ) ) {
+			continue;
+		}
+		for( i = 0; i < n; ++i ) {
+			if( strstr( name, match_suffixs[i] ) ) {
+				break;
+			}
+		}
+		if( i >= n ) {
+			continue;
+		}
+		fputs( filepath, fp );
+		fputc( '\n', fp );
+		++t->count;
+	}
+	LCUI_CloseDir( &dir );
+	return t->count;
+}
+
+int LCFinder_StartCache( CacheTask t )
+{
+	FILE *fp;
+	char *tmpfile, *file;
+	const char suffix[] = ".tmp";
+	int len, n = strlen( t->dirpath );
+	len = n + sizeof( filename ) / sizeof( char );
+	file = malloc( len * sizeof( char ) );
+	len += sizeof( suffix ) / sizeof( char );
+	tmpfile = malloc( len * sizeof( char ) );
+	strcpy( tmpfile, t->dirpath );
+	if( tmpfile[n - 1] != '/' ) {
+		tmpfile[n++] = '/';
+		tmpfile[n] = 0;
+	}
+	sprintf( file, "%s%s", tmpfile, filename );
+	sprintf( tmpfile + n, "%s%s", filename, suffix );
+	fp = fopen( tmpfile, "w" );
+	if( !fp ) {
+		return -1;
+	}
+	t->state = STATE_STARTED;
+	n = LCFinder_ScanFiles( t, t->dirpath, fp );
+	t->state = STATE_FINISHED;
+	fclose( fp );
+	remove( file );
+	rename( tmpfile, file );
+	return n;
+}
+
+void LCFinder_StopCache( CacheTask t )
+{
+	t->state = STATE_NONE;
+}
