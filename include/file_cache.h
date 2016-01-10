@@ -43,25 +43,33 @@ typedef enum {
 	STATE_NONE,
 	STATE_STARTED,
 	STATE_FINISHED
-} CacheTaskState;
+} SyncTaskState;
 
-/** 缓存任务 */
-typedef struct CacheTaskRec_ {
+/** 文件列表同步任务 */
+typedef struct SyncTaskRec_ {
 	char *dirpath;			/**< 目标文件夹位置 */
-	CacheTaskState state;		/**< 任务状态 */
-	unsigned long int count;	/**< 已经缓存的文件数量 */
-} CacheTaskRec, *CacheTask;
+	SyncTaskState state;		/**< 任务状态 */
+	unsigned long int count;	/**< 当前已经缓存的文件数量 */
+} SyncTaskRec, *SyncTask;
 
-/** 新建缓存任务 */
-CacheTask NewCacheTask( const char *dirpath );
+typedef void(*FileHanlder)(void*, const char*);
 
-/** 删除缓存任务 */
-void DeleteCacheTask( CacheTask *tptr );
+/** 新建同步任务 */
+SyncTask NewSyncTask( const char *dirpath );
 
-/** 开始缓存文件列表 */
-int LCFinder_StartCache( CacheTask t );
+/** 删除同步任务 */
+void DeleteSyncTask( SyncTask *tptr );
 
-/** 终止缓存文件列表 */
-void LCFinder_StopCache( CacheTask t );
+/** 遍历每个新增的文件 */
+int SyncTask_InAddFiles( SyncTask t, FileHanlder func, void *func_data );
+
+/** 遍历每个已删除的文件 */
+int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data );
+
+/** 开始同步文件列表 */
+int LCFinder_StartSyncFiles( SyncTask t );
+
+/** 终止同步文件列表 */
+void LCFinder_StopSync( SyncTask t );
 
 #endif

@@ -40,12 +40,65 @@
 #include <LCUI/LCUI.h>
 #include "file_cache.h"
 
+#define MAX_PATH_LEN 2048
+
+/** 文件夹内的文件变更状态统计 */
+typedef struct DirStatsRec_ {
+	Dict *files;		/** 之前已缓存的文件列表 */
+	Dict *added_files;	/** 新增的文件 */
+	Dict *deleted_files;	/** 删除的文件 */
+} DirStatsRec, *DirStats;
+
+#define GetDirStats(T) (DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
+
 static const char filename[] = ".lc-finder-files.cache";
 static const char *match_suffixs[] = {".png", ".bmp", ".jpg", ".jpeg"};
 
-CacheTask NewCacheTask( const char *dirpath )
+static unsigned int Dict_KeyHash( const unsigned char *buf )
 {
-	CacheTask t = NEW( CacheTaskRec, 1 );
+	unsigned int hash = 5381;
+	while( *buf ) {
+		hash = ((hash << 5) + hash) + (*buf++);
+	}
+	return hash;
+}
+
+static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
+{
+	if( strcmp( key1, key2 ) == 0 ) {
+		return 1;
+	}
+	return 0;
+}
+
+static void *Dict_KeyDup( void *privdata, const void *key )
+{
+	char *newkey = malloc( (strlen( key ) + 1)*sizeof( char ) );
+	strcpy( newkey, key );
+	return newkey;
+}
+
+static void Dict_KeyDestructor( void *privdata, void *key )
+{
+	free( key );
+}
+
+static DictType DictType_Files = {
+	Dict_KeyHash,
+	Dict_KeyDup,
+	NULL,
+	Dict_KeyCompare,
+	Dict_KeyDestructor,
+	NULL
+};
+
+SyncTask NewSyncTask( const char *dirpath )
+{
+	SyncTask t = malloc( sizeof(SyncTaskRec) + sizeof(DirStatsRec) );
+	DirStats ds = GetDirStats( t );
+	ds->deleted_files = Dict_Create( &DictType_Files, NULL );
+	ds->added_files = Dict_Create( &DictType_Files, NULL );
+	ds->files = Dict_Create( &DictType_Files, NULL );
 	if( dirpath ) {
 		t->dirpath = malloc( strlen( dirpath ) + 1 );
 		strcpy( t->dirpath, dirpath );
@@ -57,24 +110,71 @@ CacheTask NewCacheTask( const char *dirpath )
 	return t;
 }
 
-void DeleteCacheTask( CacheTask *tptr )
+void DeleteSyncTask( SyncTask *tptr )
 {
-	CacheTask t = *tptr;
+	SyncTask t = *tptr;
+	DirStats ds = GetDirStats( t );
 	if( t->dirpath ) {
 		free( t->dirpath );
 		t->dirpath = NULL;
 	}
+	Dict_Release( ds->files );
+	Dict_Release( ds->added_files );
+	Dict_Release( ds->deleted_files );
 	free( t );
 	*tptr = NULL;
 }
 
+static int FileDict_ForEach( Dict *d, void( *func )(void*, const char*), void *data )
+{
+	int count = 0;
+	DictEntry *entry;
+	DictIterator *iter = Dict_GetIterator( d );
+	while( (entry = Dict_Next( iter )) ) {
+		func( data, DictEntry_GetKey( entry ) );
+		++count;
+	}
+	Dict_ReleaseIterator( iter );
+	return count;
+}
+
+int SyncTask_InAddFiles( SyncTask t, FileHanlder func, void *func_data )
+{
+	DirStats ds = GetDirStats( t );
+	return FileDict_ForEach( ds->added_files, func, func_data );
+}
+
+int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data )
+{
+	DirStats ds = GetDirStats( t );
+	return FileDict_ForEach( ds->deleted_files, func, func_data );
+}
+
+/** 从缓存记录中载入文件列表 */
+static int SyncTask_LoadCache( SyncTask t, FILE *fp )
+{
+	int count = 0;
+	char *path, buf[MAX_PATH_LEN];
+	DirStats ds = GetDirStats( t );
+	while( feof( fp ) ) {
+		path = fgets( buf, MAX_PATH_LEN, fp );
+		if( path ) {
+			Dict_Add( ds->files, path, (void*)1 );
+			Dict_Add( ds->deleted_files, path, (void*)1 );
+			++count;
+		}
+	}
+	return count;
+}
+
 /** 扫描文件 */
-static int LCFinder_ScanFiles( CacheTask t, const char *dirpath, FILE *fp )
+static int SyncTask_ScanFiles( SyncTask t, const char *dirpath, FILE *fp )
 {
 	LCUI_Dir dir;
 	LCUI_DirEntry *entry;
 	char filepath[2048], *name;
 	int i, n, len = strlen( dirpath );
+	DirStats ds = GetDirStats( t );
 	strcpy( filepath, dirpath );
 	if( filepath[len - 1] != '/' ) {
 		filepath[len++] = '/';
@@ -86,7 +186,7 @@ static int LCFinder_ScanFiles( CacheTask t, const char *dirpath, FILE *fp )
 		name = LCUI_GetFileNameA( entry );
 		strcpy( filepath + len, name );
 		if( LCUI_FileIsDirectory( entry ) ) {
-			LCFinder_ScanFiles( t, filepath, fp );
+			SyncTask_ScanFiles( t, filepath, fp );
 			continue;
 		}
 		if( !LCUI_FileIsArchive( entry ) ) {
@@ -100,6 +200,14 @@ static int LCFinder_ScanFiles( CacheTask t, const char *dirpath, FILE *fp )
 		if( i >= n ) {
 			continue;
 		}
+		/* 若该文件路径存在于之前的缓存中，说明未被删除，否则将之
+		 * 视为新增的文件。
+		 */
+		if( Dict_FetchValue( ds->files, filepath ) ) {
+			Dict_Delete( ds->deleted_files, filepath );
+		} else {
+			Dict_Add( ds->added_files, filepath, (void*)1 );
+		}
 		fputs( filepath, fp );
 		fputc( '\n', fp );
 		++t->count;
@@ -108,7 +216,7 @@ static int LCFinder_ScanFiles( CacheTask t, const char *dirpath, FILE *fp )
 	return t->count;
 }
 
-int LCFinder_StartCache( CacheTask t )
+int LCFinder_StartSyncFiles( SyncTask t )
 {
 	FILE *fp;
 	char *tmpfile, *file;
@@ -124,13 +232,18 @@ int LCFinder_StartCache( CacheTask t )
 		tmpfile[n] = 0;
 	}
 	sprintf( file, "%s%s", tmpfile, filename );
+	fp = fopen( file, "r" );
+	if( fp ) {
+		SyncTask_LoadCache( t, fp );
+		fclose( fp );
+	}
 	sprintf( tmpfile + n, "%s%s", filename, suffix );
 	fp = fopen( tmpfile, "w" );
 	if( !fp ) {
 		return -1;
 	}
 	t->state = STATE_STARTED;
-	n = LCFinder_ScanFiles( t, t->dirpath, fp );
+	n = SyncTask_ScanFiles( t, t->dirpath, fp );
 	t->state = STATE_FINISHED;
 	fclose( fp );
 	remove( file );
@@ -138,7 +251,7 @@ int LCFinder_StartCache( CacheTask t )
 	return n;
 }
 
-void LCFinder_StopCache( CacheTask t )
+void LCFinder_StopSync( SyncTask t )
 {
 	t->state = STATE_NONE;
 }
