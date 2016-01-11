@@ -5,35 +5,47 @@
 <resource type="application/font-ttf" src="res/ionicons.ttf"/>
 <ui>
   <widget class="window">
-    <widget class="sidebar">
+    <widget class="sidebar sidebar-mini">
       <widget>
         <widget type="sidebar-toggle">
           <widget type="textview" class="icon ion ion-navicon-round"></widget>
         </widget>
       </widget>
-      <widget id="item-search" class="sidebar-item">
+      <widget id="sidebar-btn-search" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-search"></widget>
         <widget type="textview" class="text">搜索</widget>
       </widget>
-      <widget id="item-home" class="sidebar-item">
+      <widget id="sidebar-btn-home" class="sidebar-item">
         <widget type="textview" class="icon ion ion-images"></widget>
         <widget type="textview" class="text">集锦</widget>
       </widget>
-      <widget id="item-albums" class="sidebar-item">
+      <widget id="sidebar-btn-albums" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-albums-outline"></widget>
         <widget type="textview" class="text">相册</widget>
       </widget>
-      <widget id="item-folders" class="sidebar-item">
+      <widget id="sidebar-btn-folders" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-folder-outline"></widget>
         <widget type="textview" class="text">文件夹</widget>
       </widget>
-      <widget id="item-settings" class="sidebar-item">
+      <widget id="sidebar-btn-settings" class="sidebar-item">
         <widget type="textview" class="icon ion ion-ios-settings"></widget>
         <widget type="textview" class="text">设置</widget>
       </widget>
     </widget>
-    <widget class="content-wrapper">
-      <widget class="navbar"></widget>
+    <widget id="view-home" class="content-wrapper">
+      <widget class="navbar">
+        <widget type="textview" class="navbar-title">集锦</widget>
+      </widget>
+      <widget class="content"></widget>
+    </widget>
+    <widget id="view-folders" class="content-wrapper hide">
+      <widget class="navbar">
+        <widget type="textview" class="navbar-title">文件夹</widget>
+        <widget class="pull-right">
+          <widget id="btn-sync-folder-files" type="textview" class="navbar-btn icon ion ion-android-sync"></widget>
+          <widget id="btn-sync-import-folder" type="textview" class="navbar-btn icon ion ion-ios-download-outline"></widget>
+        </widget>
+      </widget>
       <widget class="content"></widget>
     </widget>
   </widget>
