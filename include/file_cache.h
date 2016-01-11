@@ -65,7 +65,7 @@ int SyncTask_InAddFiles( SyncTask t, FileHanlder func, void *func_data );
 int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data );
 
 /** 开始同步文件列表 */
-int LCFinder_StartSyncFiles( SyncTask t );
+int SyncTask_Start( SyncTask t );
 
 /** 终止同步文件列表 */
 void LCFinder_StopSync( SyncTask t );

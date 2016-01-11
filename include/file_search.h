@@ -34,8 +34,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __FILE_CACHE_H__
-#define __FILE_CACHE_H__
+#ifndef __FILE_SEARCH_H__
+#define __FILE_SEARCH_H__
 
 enum order {
 	NONE,

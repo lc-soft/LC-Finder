@@ -214,7 +214,7 @@ static int SyncTask_ScanFiles( SyncTask t, const char *dirpath, FILE *fp )
 	return t->count;
 }
 
-int LCFinder_StartSyncFiles( SyncTask t )
+int SyncTask_Start( SyncTask t )
 {
 	FILE *fp;
 	char *tmpfile, *file;
