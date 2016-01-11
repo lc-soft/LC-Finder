@@ -23,6 +23,8 @@
     <ClCompile Include="src\lib\file_search.c" />
     <ClCompile Include="src\lib\finder.c" />
     <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\ui\sidebar.c" />
+    <ClCompile Include="src\ui\ui.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -34,6 +36,7 @@
   <ItemGroup>
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
+    <ClInclude Include="include\ui.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>

@@ -16,6 +16,9 @@
     <Filter Include="相关资源">
       <UniqueIdentifier>{fff477ac-eadc-49ea-b19c-0910a30903c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\ui">
+      <UniqueIdentifier>{90be4bd8-deb5-4bdc-9866-57c7c74d830a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.c">
@@ -29,6 +32,12 @@
     </ClCompile>
     <ClCompile Include="src\lib\file_cache.c">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\sidebar.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\ui.c">
+      <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -47,6 +56,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\file_cache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ui.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
