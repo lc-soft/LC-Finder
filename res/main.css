@@ -15,10 +15,10 @@
 .sidebar .sidebar-item {
 	width: 100%;
 	padding: 8px 0;
-	border-top: 1px solid #f3f3f3;
 }
 .sidebar sidebar-toggle {
 	padding: 8px 0;
+	display: inline-block;
 }
 .sidebar sidebar-toggle .icon,
 .sidebar .sidebar-item .icon,
@@ -27,6 +27,10 @@
 	font-size: 14px;
 	line-height: 28px;
 	color: #515253;
+}
+.sidebar .sidebar-title {
+	font-size: 20px;
+	line-height: 48px;
 }
 .sidebar .sidebar-item .icon,
 .sidebar sidebar-toggle .icon {
@@ -63,35 +67,84 @@
 	position: absolute;
 	top: 0;
 	left: 0;
+	box-shadow: 0 0 3px rgb(0,0,0,0.6);
 }
 .content-wrapper .content {
 	height: 100%;
-	padding: 48px 0 0 0;
+	padding: 60px 25px 0 25px;
 }
-
 .navbar .navbar-title {
 	font-size: 16px;
 	line-height: 48px;
-	padding: 0 0 0 12px;
+	padding: 0 0 0 25px;
 }
-
+.content .title {
+	font-size: 20px;
+	line-height: 32px;
+	height: 32px;
+	width: 100%;
+	padding: 0 0 10px 0;
+}
 .navbar .navbar-btn {
+	height: 48px;
+	width: 48px;
+	text-align: center;
+	display: inline-block;
+	padding: 2px 0 0 0;
+}
+.navbar .navbar-btn .icon {
 	font-size: 24px;
 	line-height: 48px;
 	height: 48px;
 	width: 48px;
 	text-align: center;
-	display: inline-block;
 }
-
 .pull-right {
 	top: 0;
 	right: 0;
 	height: 100%;
 	position: absolute;
 }
-
 .hide {
 	display: none;
 	visible: false;
+}
+textview {
+	font-size: 14px;
+}
+.btn-link textview {
+	color: #007acc;
+	padding: 4px 0;
+}
+.btn-link:hover textview {
+	color: #23527c;
+}
+.skin-light-black .sidebar {
+	background-color: #f9fafc;
+	border: 1px solid #d2d6de;
+}
+.skin-light-black .sidebar sidebar-toggle .icon,
+.skin-light-black .sidebar .sidebar-item .icon,
+.skin-light-black .sidebar .sidebar-item .text {
+	color: #000;
+}
+.skin-light-black .sidebar .sidebar-item:hover, 
+.skin-light-black .sidebar sidebar-toggle:hover {
+	background-color: #f4f4f5;
+}
+.skin-light-black .sidebar .sidebar-item:active,
+.skin-light-black .sidebar sidebar-toggle:active {
+	background-color: #f4f4f5;
+}
+.skin-light-black .content-wrapper {
+	background-color: #F5F5F5;
+}
+.skin-light-black .navbar {
+	background-color: #616161;
+}
+.skin-light-black .navbar textview {
+	color: #fff;
+}
+.skin-light-black .navbar .navbar-btn:hover {
+	background-color: #424242;
 }
