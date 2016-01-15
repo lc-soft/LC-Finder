@@ -52,6 +52,7 @@ static struct DB_Module {
 
 static const char *sql_init = "\
 create table if not exists dir (\
+	visible integer default 1,\
 	id integer primary key autoincrement,\
 	path text not null\
 );\
@@ -63,9 +64,17 @@ create table if not exists file (\
 	create_time int not null,\
 	foreign key (did) references dir(id) on delete cascade\
 );\
+create table if not exists tag_group {\
+	id integer primary key autoincrement,\
+	name text not null\
+}\
 create table if not exists tag (\
 	id integer primary key autoincrement,\
-	name text\
+	gid integer,\
+	name text not null,\
+	alias text,\
+	visible integer default 1,\
+	foreign key( did ) references dir( id ) \
 );\
 create table if not exists file_tag_relation (\
 	fid integer not null,\
