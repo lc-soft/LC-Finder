@@ -45,6 +45,7 @@
       <Filter>相关资源</Filter>
     </None>
     <None Include="LICENSE" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="res\ui.xml">
