@@ -4,7 +4,7 @@
 <resource type="text/css" src="res/ionicons.css"/>
 <resource type="application/font-ttf" src="res/ionicons.ttf"/>
 <ui>
-  <widget class="window skin-light-black">
+  <widget class="window skin-light-green">
     <widget id="main-sidebar" class="sidebar sidebar-mini">
       <widget class="sidebar-header">
         <widget type="sidebar-toggle">
@@ -25,7 +25,7 @@
         <widget type="textview" class="text">相册</widget>
       </widget>
       <widget id="sidebar-btn-folders" class="sidebar-item">
-        <widget type="textview" class="icon ion ion-ios-folder-outline"></widget>
+        <widget id="test-textview" type="textview" class="icon ion ion-ios-folder-outline"></widget>
         <widget type="textview" class="text">文件夹</widget>
       </widget>
       <widget id="sidebar-btn-settings" class="sidebar-item">

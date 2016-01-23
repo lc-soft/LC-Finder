@@ -35,12 +35,13 @@ void UI_Init(void)
 	LCUI_Init();
 	LCUIDisplay_SetMode( LDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 540 );
+	//LCUIDisplay_ShowRectBorder();
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
 		Widget_Unwrap( &box );
 	}
-	Widget_Update( LCUIWidget_GetRoot(), TRUE );
+	Widget_UpdateStyle( LCUIWidget_GetRoot(), TRUE );
 	UI_InitSidebar();
 }
 

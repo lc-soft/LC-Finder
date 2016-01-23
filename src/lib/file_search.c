@@ -64,10 +64,10 @@ create table if not exists file (\
 	create_time int not null,\
 	foreign key (did) references dir(id) on delete cascade\
 );\
-create table if not exists tag_group {\
+create table if not exists tag_group (\
 	id integer primary key autoincrement,\
 	name text not null\
-}\
+);\
 create table if not exists tag (\
 	id integer primary key autoincrement,\
 	gid integer,\
