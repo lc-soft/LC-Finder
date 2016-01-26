@@ -51,66 +51,66 @@ static struct DB_Module {
 } self;
 
 static const char *sql_init = "\
-create table if not exists dir (\
-	visible integer default 1,\
-	id integer primary key autoincrement,\
-	path text not null\
+CREATE TABLE IF NOT EXISTS dir (\
+	visible INTEGER DEFAULT 1,\
+	id INTEGER PRIMARY KEY AUTOINCREMENT,\
+	path TEXT NOT NULL\
 );\
-create table if not exists file (\
-	id integer primary key autoincrement,\
-	did integer not null, \
-	path text not null,\
-	score integer default 0,\
-	create_time int not null,\
-	foreign key (did) references dir(id) on delete cascade\
+CREATE TABLE IF NOT EXISTS file (\
+	id INTEGER PRIMARY KEY AUTOINCREMENT,\
+	did INTEGER NOT NULL, \
+	path TEXT NOT NULL,\
+	score INTEGER DEFAULT 0,\
+	create_time INT NOT NULL,\
+	FOREIGN KEY(did) REFERENCES dir(id) ON DELETE CASCADE\
 );\
-create table if not exists tag_group (\
-	id integer primary key autoincrement,\
-	name text not null\
+CREATE TABLE IF NOT EXISTS tag_group (\
+	id INTEGER PRIMARY KEY AUTOINCREMENT,\
+	name TEXT NOT NULL\
 );\
-create table if not exists tag (\
-	id integer primary key autoincrement,\
-	gid integer,\
-	name text not null,\
-	alias text,\
-	visible integer default 1,\
-	foreign key( did ) references dir( id ) \
+CREATE TABLE IF NOT EXISTS tag (\
+	id INTEGER PRIMARY KEY AUTOINCREMENT,\
+	gid INTEGER,\
+	name TEXT NOT NULL,\
+	alias TEXT,\
+	visible INTEGER DEFAULT 1,\
+	FOREIGN KEY(did) REFERENCES dir(id) \
 );\
-create table if not exists file_tag_relation (\
-	fid integer not null,\
-	tid integer not null,\
-	foreign key (fid) references file(id) on delete cascade,\
-	foreign key (tid) references tag(id) on delete cascade\
+CREATE TABLE IF NOT EXISTS file_tag_relation (\
+	fid INTEGER NOT NULL,\
+	tid INTEGER NOT NULL,\
+	FOREIGN KEY (fid) REFERENCES file(id) ON DELETE CASCADE,\
+	FOREIGN KEY (tid) REFERENCES tag(id) ON DELETE CASCADE\
 );";
 static const char *sql_get_dir_list = "\
-select id, path from dir order by path asc;\
+SELECT id, path FROM dir ORDER BY PATH ASC;\
 ";
 static const char *sql_get_tag_list = "\
-select t.id, t.name, count(ftr.tid) from tag t, file_tag_relation ftr \
-where ftr.tid = t.id group by ftr.tid order by name asc;\
+SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
+WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;\
 ";
-static const char *sql_get_dir_total = "select count(*) from dir;";
-static const char *sql_get_tag_total = "select count(*) from tag;";
-static const char *sql_add_dir = "insert into dir(path) values(\"%s\");";
-static const char *sql_add_tag = "insert into tag(name) values(\"%s\");";
-static const char *sql_remove_tag = "delete from tag where id = %d;";
-static const char *sql_file_set_score = "update file set score = %d where id = %d;\
+static const char *sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
+static const char *sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
+static const char *sql_add_dir = "INSERT INTO dir(path) VALUES(\"%s\");";
+static const char *sql_add_tag = "INSERT INTO tag(name) VALUES(\"%s\");";
+static const char *sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
+static const char *sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;\
 ";
 static const char *sql_file_add_tag = "\
-insert into file_tag_relation(fid, did, tid) values(%d, %d, %d);\
+REPLACE INTO file_tag_relation(fid, did, tid) VALUES(%d, %d, %d);\
 ";
 static const char *sql_file_remove_tag = "\
-delete from file_tag_relation where fid = %d and tid = %d;\
+DELETE FROM file_tag_relation WHERE fid = %d AND tid = %d;\
 ";
 static const char *sql_add_file = "\
-insert into file(did, path, create_time) values(%d, \"%s\", %d);\
+INSERT INTO file(did, path, create_time) VALUES(%d, \"%s\", %d);\
 ";
-static const char *sql_get_tag_id = "select id from tag where name = \"%s\";";
-static const char *sql_get_dir_id = "select id from dir where path = \"%s\";";
-static const char *sql_search_files = "select f.id, f.did, f.score, f.path \
-d.path from file f, dir d, file_tag_relation ftr where d.id = f,did";
-static const char *sql_count_files = "select count(f.id) from file f, dir d, \
-file_tag_relation ftr where d.id = f,did";
+static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
+static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
+static const char *sql_search_files = "SELECT f.id, f.did, f.score, f.path \
+d.path FROM file f, dir d, file_tag_relation ftr WHERE d.id = f,did";
+static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f, dir d, \
+file_tag_relation ftr WHERE d.id = f,did";
 
 /** 缓存 SQL 代码，等到调用 DB_Flush() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )
@@ -369,7 +369,7 @@ int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
 	char buf[256], sql[1024], sql_terms[1024];
 	strcpy( sql, sql_search_files );
 	if( q->n_tags > 0 && q->tags ) {
-		strcat( sql_terms, " and ftr.tid in (" );
+		strcat( sql_terms, " AND ftr.tid IN (" );
 		for( i = 0; i < q->n_dirs; ++i ) {
 			sprintf( buf, "%d", q->tags[i]->id );
 			if( i > 0 ) {
@@ -377,10 +377,10 @@ int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
 			}
 			strcat( sql_terms, buf );
 		}
-		strcat( sql_terms, ") and ftr.fid = f.id" );
+		strcat( sql_terms, ") AND ftr.fid = f.id" );
 	}
 	if( q->n_dirs > 0 && q->dirs ) {
-		strcat( sql_terms, " and f.did in(" );
+		strcat( sql_terms, " AND f.did IN (" );
 		for( i = 0; i < q->n_dirs; ++i ) {
 			sprintf( buf, "%d", q->dirs[i]->id );
 			if( i > 0 ) {
@@ -390,20 +390,20 @@ int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
 		}
 	}
 	if( q->create_time == DESC ) {
-		strcat( sql_terms, " order by f.create_time desc" );
+		strcat( sql_terms, " ORDER BY f.create_time DESC" );
 	} else if( q->create_time == ASC ) {
-		strcat( sql_terms, " order by f.create_time asc" );
+		strcat( sql_terms, " ORDER BY f.create_time ASC" );
 	}
 	if( q->score != NONE ) {
 		if( q->create_time != NONE ) {
 			strcat( sql_terms, ", " );
 		} else {
-			strcat( sql_terms, " order by " );
+			strcat( sql_terms, " ORDER BY " );
 		}
 		if( q->score == DESC ) {
-			strcat( sql_terms, "f.score desc" );
+			strcat( sql_terms, "f.score DESC" );
 		} else {
-			strcat( sql_terms, "f.score asc" );
+			strcat( sql_terms, "f.score ASC" );
 		}
 	}
 	if( total ) {
@@ -418,7 +418,7 @@ int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
 		}
 		sqlite3_finalize( stmt );
 	}
-	sprintf( buf, " limit %d offset %d", q->limit, q->offset );
+	sprintf( buf, " LIMIT %d OFFSET %d", q->limit, q->offset );
 	strcpy( sql, sql_search_files );
 	strcat( sql_terms, buf );
 	strcat( sql, sql_terms );
