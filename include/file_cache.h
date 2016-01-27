@@ -45,21 +45,21 @@ typedef enum {
 
 /** 文件列表同步任务 */
 typedef struct SyncTaskRec_ {
-	char *dirpath;			/**< 目标文件夹位置 */
+	wchar_t *dirpath;		/**< 目标文件夹位置 */
 	SyncTaskState state;		/**< 任务状态 */
 	unsigned long int count;	/**< 当前已经缓存的文件数量 */
 } SyncTaskRec, *SyncTask;
 
-typedef void(*FileHanlder)(void*, const char*);
+typedef void(*FileHanlder)(void*, const wchar_t*);
 
 /** 新建同步任务 */
-SyncTask NewSyncTask( const char *dirpath );
+SyncTask SyncTask_NewW( const wchar_t *dirpath );
 
 /** 删除同步任务 */
-void DeleteSyncTask( SyncTask *tptr );
+void SyncTask_Delete( SyncTask *tptr );
 
 /** 遍历每个新增的文件 */
-int SyncTask_InAddFiles( SyncTask t, FileHanlder func, void *func_data );
+int SyncTask_InAddedFiles( SyncTask t, FileHanlder func, void *func_data );
 
 /** 遍历每个已删除的文件 */
 int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data );

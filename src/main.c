@@ -36,6 +36,7 @@
 
 #include <wchar.h>
 #include "file_search.h"
+#include "finder.h"
 #include "ui.h"
 
 int main( int argc, char *argv[] )
@@ -43,6 +44,6 @@ int main( int argc, char *argv[] )
 	_wchdir( L"F:/代码库/GitHub/LC-Finder" );
 	UI_Init();
 	DB_Init();
-	DB_AddDir( "F:/代码库/GitHub/LC-Finder" );
+	LCFinder_Init();
 	return UI_Run();
 }

@@ -38,21 +38,29 @@
 #include <LCUI/LCUI.h>
 #include "file_cache.h"
 
-#define MAX_PATH_LEN 2048
+#ifdef _WIN32
+#include <direct.h>
+#define mkdir(PATH) _wmkdir(PATH)
+#endif
+
+#define MAX_PATH_LEN	2048
+#define FILE_HEAD_TAG	"[LC-Finder Files Cache]"
+#define WCSLEN(STR)	(sizeof( STR ) / sizeof( wchar_t ))
+#define GetDirStats(T)	(DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
+
 
 /** 文件夹内的文件变更状态统计 */
 typedef struct DirStatsRec_ {
-	Dict *files;		/** 之前已缓存的文件列表 */
-	Dict *added_files;	/** 新增的文件 */
-	Dict *deleted_files;	/** 删除的文件 */
+	Dict *files;		/**< 之前已缓存的文件列表 */
+	Dict *added_files;	/**< 新增的文件 */
+	Dict *deleted_files;	/**< 删除的文件 */
 } DirStatsRec, *DirStats;
 
-#define GetDirStats(T) (DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
+static const wchar_t cache_file[] = L"files.dat";
+static const wchar_t cache_dir[] = L".lc-finder.cache";
+static const wchar_t *match_suffixs[] = {L".png", L".bmp", L".jpg", L".jpeg"};
 
-static const char filename[] = ".lc-finder-files.cache";
-static const char *match_suffixs[] = {".png", ".bmp", ".jpg", ".jpeg"};
-
-static unsigned int Dict_KeyHash( const unsigned char *buf )
+static unsigned int Dict_KeyHash( const wchar_t *buf )
 {
 	unsigned int hash = 5381;
 	while( *buf ) {
@@ -63,7 +71,7 @@ static unsigned int Dict_KeyHash( const unsigned char *buf )
 
 static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
 {
-	if( strcmp( key1, key2 ) == 0 ) {
+	if( wcscmp( key1, key2 ) == 0 ) {
 		return 1;
 	}
 	return 0;
@@ -71,8 +79,8 @@ static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
 
 static void *Dict_KeyDup( void *privdata, const void *key )
 {
-	char *newkey = malloc( (strlen( key ) + 1)*sizeof( char ) );
-	strcpy( newkey, key );
+	wchar_t *newkey = malloc( (wcslen( key ) + 1)*sizeof( wchar_t ) );
+	wcscpy( newkey, key );
 	return newkey;
 }
 
@@ -90,7 +98,7 @@ static DictType DictType_Files = {
 	NULL
 };
 
-SyncTask NewSyncTask( const char *dirpath )
+SyncTask SyncTask_NewW( const wchar_t *dirpath )
 {
 	SyncTask t = malloc( sizeof(SyncTaskRec) + sizeof(DirStatsRec) );
 	DirStats ds = GetDirStats( t );
@@ -98,8 +106,8 @@ SyncTask NewSyncTask( const char *dirpath )
 	ds->added_files = Dict_Create( &DictType_Files, NULL );
 	ds->files = Dict_Create( &DictType_Files, NULL );
 	if( dirpath ) {
-		t->dirpath = malloc( strlen( dirpath ) + 1 );
-		strcpy( t->dirpath, dirpath );
+		t->dirpath = malloc( wcslen( dirpath ) + 1 );
+		wcscpy( t->dirpath, dirpath );
 	} else {
 		t->dirpath = NULL;
 	}
@@ -108,7 +116,7 @@ SyncTask NewSyncTask( const char *dirpath )
 	return t;
 }
 
-void DeleteSyncTask( SyncTask *tptr )
+void SyncTask_Delete( SyncTask *tptr )
 {
 	SyncTask t = *tptr;
 	DirStats ds = GetDirStats( t );
@@ -123,7 +131,7 @@ void DeleteSyncTask( SyncTask *tptr )
 	*tptr = NULL;
 }
 
-static int FileDict_ForEach( Dict *d, void( *func )(void*, const char*), void *data )
+static int FileDict_ForEach( Dict *d, FileHanlder func, void *data )
 {
 	int count = 0;
 	DictEntry *entry;
@@ -136,7 +144,7 @@ static int FileDict_ForEach( Dict *d, void( *func )(void*, const char*), void *d
 	return count;
 }
 
-int SyncTask_InAddFiles( SyncTask t, FileHanlder func, void *func_data )
+int SyncTask_InAddedFiles( SyncTask t, FileHanlder func, void *func_data )
 {
 	DirStats ds = GetDirStats( t );
 	return FileDict_ForEach( ds->added_files, func, func_data );
@@ -151,47 +159,71 @@ int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data )
 /** 从缓存记录中载入文件列表 */
 static int SyncTask_LoadCache( SyncTask t, FILE *fp )
 {
-	int count = 0;
-	char *path, buf[MAX_PATH_LEN];
+	wchar_t *path;
+	char buf[MAX_PATH_LEN];
+	int count = 0, len, size;
 	DirStats ds = GetDirStats( t );
-	while( feof( fp ) ) {
-		path = fgets( buf, MAX_PATH_LEN, fp );
-		if( path ) {
-			Dict_Add( ds->files, path, (void*)1 );
-			Dict_Add( ds->deleted_files, path, (void*)1 );
-			++count;
+	if( !fgets( buf, MAX_PATH_LEN, fp ) ) {
+		return 0;
+	}
+	if( !strstr( buf, FILE_HEAD_TAG ) ) {
+		return 0;
+	}
+	while( !feof( fp ) ) {
+		size = fread( &len, sizeof( int ), 1, fp );
+		if( size < 1 || len < 1 ) {
+			break;
 		}
+		size = fread( buf, sizeof( wchar_t ), len, fp );
+		if( size < len || size > MAX_PATH_LEN ) {
+			break;
+		}
+		path = (wchar_t*)buf;
+		path[len] = 0;
+		Dict_Add( ds->files, path, (void*)1 );
+		Dict_Add( ds->deleted_files, path, (void*)1 );
+		wprintf(L"file: %s\n", path);
+		++count;
 	}
 	return count;
 }
 
 /** 扫描文件 */
-static int SyncTask_ScanFiles( SyncTask t, const char *dirpath, FILE *fp )
+static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 {
 	LCUI_Dir dir;
 	LCUI_DirEntry *entry;
-	char filepath[2048], *name;
-	int i, n, len = strlen( dirpath );
+	wchar_t filepath[2048], *name;
+	int i, n, len, dir_len = wcslen( dirpath );
 	DirStats ds = GetDirStats( t );
-	strcpy( filepath, dirpath );
-	if( filepath[len - 1] != '/' ) {
-		filepath[len++] = '/';
-		filepath[len] = 0;
+	wcscpy( filepath, dirpath );
+	if( filepath[dir_len - 1] != '/' ) {
+		filepath[dir_len++] = '/';
+		filepath[dir_len] = 0;
 	}
-	LCUI_OpenDirA( filepath, &dir );
+	LCUI_OpenDir( filepath, &dir );
 	n = sizeof( match_suffixs ) / sizeof( *match_suffixs );
-	while( (entry = LCUI_ReadDirA( &dir )) && t->state == STATE_STARTED ) {
-		name = LCUI_GetFileNameA( entry );
-		strcpy( filepath + len, name );
+	while( (entry = LCUI_ReadDir( &dir )) && t->state == STATE_STARTED ) {
+		name = LCUI_GetFileName( entry );
+		/* 忽略 . 和 .. 文件夹 */
+		if( name[0] == '.' ) {
+			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {
+				continue;
+			}
+		} else if( wcscmp( name, cache_dir ) == 0 ) {
+			continue;
+		}
+		wcscpy( filepath + dir_len, name );
+		len = wcslen( filepath );
 		if( LCUI_FileIsDirectory( entry ) ) {
-			SyncTask_ScanFiles( t, filepath, fp );
+			SyncTask_ScanFilesW( t, filepath, fp );
 			continue;
 		}
 		if( !LCUI_FileIsArchive( entry ) ) {
 			continue;
 		}
 		for( i = 0; i < n; ++i ) {
-			if( strstr( name, match_suffixs[i] ) ) {
+			if( wcsstr( name, match_suffixs[i] ) ) {
 				break;
 			}
 		}
@@ -201,13 +233,16 @@ static int SyncTask_ScanFiles( SyncTask t, const char *dirpath, FILE *fp )
 		/* 若该文件路径存在于之前的缓存中，说明未被删除，否则将之
 		 * 视为新增的文件。
 		 */
+		wprintf(L"check file: %s\n", filepath);
 		if( Dict_FetchValue( ds->files, filepath ) ) {
+			printf("is exits\n");
 			Dict_Delete( ds->deleted_files, filepath );
 		} else {
+			printf("is new\n");
 			Dict_Add( ds->added_files, filepath, (void*)1 );
 		}
-		fputs( filepath, fp );
-		fputc( '\n', fp );
+		fwrite( &len, sizeof( int ), 1, fp );
+		fwrite( filepath, sizeof( wchar_t ), len, fp );
 		++t->count;
 	}
 	LCUI_CloseDir( &dir );
@@ -217,35 +252,38 @@ static int SyncTask_ScanFiles( SyncTask t, const char *dirpath, FILE *fp )
 int SyncTask_Start( SyncTask t )
 {
 	FILE *fp;
-	char *tmpfile, *file;
-	const char suffix[] = ".tmp";
-	int len, n = strlen( t->dirpath );
-	len = n + sizeof( filename ) / sizeof( char );
-	file = malloc( len * sizeof( char ) );
-	len += sizeof( suffix ) / sizeof( char );
-	tmpfile = malloc( len * sizeof( char ) );
-	strcpy( tmpfile, t->dirpath );
+	wchar_t *tmpfile, *file;
+	const wchar_t suffix[] = L".tmp";
+	int len, n = wcslen( t->dirpath );
+	len = n + WCSLEN( cache_dir ) + 3;
+	len += WCSLEN( cache_file ) + WCSLEN( suffix );
+	tmpfile = malloc( len * sizeof( wchar_t ) );
+	file = malloc( len * sizeof( wchar_t ) );
+	wcscpy( tmpfile, t->dirpath );
 	if( tmpfile[n - 1] != '/' ) {
 		tmpfile[n++] = '/';
 		tmpfile[n] = 0;
 	}
-	sprintf( file, "%s%s", tmpfile, filename );
-	fp = fopen( file, "r" );
+	wcscat( tmpfile, cache_dir );
+	mkdir( tmpfile );
+	wsprintf( file, L"%s/%s", tmpfile, cache_file );
+	fp = _wfopen( file, L"r" );
 	if( fp ) {
 		SyncTask_LoadCache( t, fp );
 		fclose( fp );
 	}
-	sprintf( tmpfile + n, "%s%s", filename, suffix );
-	fp = fopen( tmpfile, "w" );
+	wsprintf( tmpfile, L"%s%s", file, suffix );
+	fp = _wfopen( tmpfile, L"w" );
 	if( !fp ) {
 		return -1;
 	}
 	t->state = STATE_STARTED;
-	n = SyncTask_ScanFiles( t, t->dirpath, fp );
+	fputs( FILE_HEAD_TAG"\n", fp );
+	n = SyncTask_ScanFilesW( t, t->dirpath, fp );
 	t->state = STATE_FINISHED;
 	fclose( fp );
-	remove( file );
-	rename( tmpfile, file );
+	_wremove( file );
+	_wrename( tmpfile, file );
 	return n;
 }
 

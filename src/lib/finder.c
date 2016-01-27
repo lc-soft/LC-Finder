@@ -1,4 +1,5 @@
-﻿#include <string.h>
+﻿#include <stdio.h>
+#include <string.h>
 #include "file_search.h"
 #include "file_cache.h"
 
@@ -35,9 +36,23 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 	return DB_AddDir( dirpath );
 }
 
-void LCFinder_Init(void)
+static void CheckAddedFile( void *data, const wchar_t *path )
 {
+	wprintf(L"add file: %s\n", path);
+}
+
+static void CheckDeletedFile( void *data, const wchar_t *path )
+{
+	wprintf(L"delete file: %s\n", path);
+}
+
+void LCFinder_Init( void )
+{
+	SyncTask t = SyncTask_NewW( L"test-dir" );
+	int count = SyncTask_Start( t );
+	printf( "scan files: %d\n", count );
+	SyncTask_InAddedFiles( t, CheckAddedFile, NULL );
+	SyncTask_InDeletedFiles( t, CheckDeletedFile, NULL );
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
 }
- 
