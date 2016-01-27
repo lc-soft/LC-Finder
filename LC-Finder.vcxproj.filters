@@ -62,5 +62,8 @@
     <ClInclude Include="include\ui.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\finder.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
