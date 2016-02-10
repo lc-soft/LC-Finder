@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\lib\finder.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -37,6 +34,9 @@
       <Filter>源文件\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\ui.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\view_settings.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>
@@ -63,7 +63,7 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\finder.h">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

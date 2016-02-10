@@ -59,17 +59,21 @@
 	box-sizing: border-box;
 }
 .content-wrapper .navbar {
-	width: 100%;
-	height: 48px;
-	background-color: #fafafa;
-	position: absolute;
 	top: 0;
 	left: 0;
-	box-shadow: 0 0 3px rgb(0,0,0,0.6);
+	width: 100%;
+	height: 48px;
+	position: absolute;
+	background-color: #fafafa;
+	box-shadow: 0 0 3px rgba(0,0,0,0.6);
 }
 .content-wrapper .content {
 	height: 100%;
-	padding: 60px 25px 0 25px;
+	padding: 60px 0 0 15px;
+}
+.content-wrapper .item-group {
+	padding: 0 10px;
+	margin: 0 0 15px 0;
 }
 .navbar .navbar-title {
 	font-size: 16px;
@@ -80,8 +84,7 @@
 	font-size: 20px;
 	line-height: 32px;
 	height: 32px;
-	width: 100%;
-	padding: 0 0 10px 0;
+	margin: 0 0 10px 10px;
 }
 .navbar .navbar-btn {
 	height: 48px;
@@ -96,6 +99,42 @@
 	height: 48px;
 	width: 48px;
 	text-align: center;
+}
+.source-list {
+	margin: 0 0 15px 0;
+}
+.source-list .source-list-item {
+	width: 340px;
+}
+.source-list .source-list-item:hover {
+	background-color: #fcfcfc;
+}
+.source-list .source-list-item .btn-delete {
+	top: 0;
+	right: 0;
+	width: 48px;
+	height: 100%;
+	position: absolute;
+	text-align: center;
+}
+.source-list .source-list-item .btn-delete:hover {
+	background-color: #f8f8f8;
+}
+.source-list .source-list-item .btn-delete:active {
+	background-color: #f3f3f3;
+}
+.source-list .source-list-item textview {
+	line-height: 48px;
+}
+.source-list .source-list-item .icon {
+	font-size: 24px;
+	padding: 0 8px;
+	width: 24px;
+	display: inline-block;
+	text-align: center;
+}
+.source-list .source-list-item .text {
+	display: inline-block;
 }
 .pull-right {
 	top: 0;
@@ -155,26 +194,24 @@ textview {
 }
 .skin-light-green .sidebar .sidebar-item:hover, 
 .skin-light-green .sidebar sidebar-toggle:hover {
-	background-color: #ECF8EE;
+	background-color: #fafafa;
 }
-.skin-light-green .sidebar .sidebar-item:hover textview,
-.skin-light-green .sidebar sidebar-toggle:hover textview {
+.skin-light-green .sidebar .sidebar-item:active textview,
+.skin-light-green .sidebar sidebar-toggle:active textview {
 	color: #44BB55;
 }
-.skin-light-green .sidebar .active,
 .skin-light-green .sidebar .sidebar-item:active,
 .skin-light-green .sidebar sidebar-toggle:active {
-	background-color: #44BB55;
+	background-color: #ECF8EE;
 }
+.skin-light-green .sidebar .active,
 .skin-light-green .sidebar .active:hover {
 	background-color: #44BB55;
 }
 .skin-light-green .sidebar .active:hover textview {
 	color: #fff;
 }
-.skin-light-green .sidebar .active textview,
-.skin-light-green .sidebar .sidebar-item:active textview,
-.skin-light-green .sidebar sidebar-toggle:active textview {
+.skin-light-green .sidebar .active textview {
 	color: #fff;
 }
 .skin-light-green .content-wrapper {

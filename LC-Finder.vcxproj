@@ -22,7 +22,7 @@
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
     <ClCompile Include="src\lib\finder.c" />
-    <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\ui\view_settings.c" />
     <ClCompile Include="src\ui\sidebar.c" />
     <ClCompile Include="src\ui\ui.c" />
   </ItemGroup>
@@ -135,7 +135,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LCUI_D.lib;LCUIMain.lib;sqlite3.lib;user32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -165,7 +165,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>LCUI_D.lib;LCUIMain.lib;sqlite3.lib</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>

@@ -8,6 +8,9 @@ void UI_Init( void );
 int UI_Run( void );
 
 /** 初始化侧边栏 */
-void UI_InitSidebar(void);
+void UI_InitSidebar( void );
+
+/** 初始化“设置”视图 */
+void UI_InitSettingsView( void );
 
 #endif

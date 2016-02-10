@@ -1,4 +1,9 @@
-﻿#include <LCUI_Build.h>
+﻿/**
+* sidebar.c -- 侧边栏菜单控件
+* 版权所有 (C) 2016 归属于 刘超 <root@lc-soft.io>
+*/
+
+#include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/gui/widget.h>
 #include "ui.h"

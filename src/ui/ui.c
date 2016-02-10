@@ -1,14 +1,20 @@
+/**
+* ui.c -- 图形界面管理模块
+* 版权所有 (C) 2016 归属于 刘超 <root@lc-soft.io>
+*/
+
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/display.h>
-#include <LCUI/gui/widget.h>
-#include <LCUI/gui/widget/textview.h>
+#include <LCUI/font/charset.h>
 #include <LCUI/gui/builder.h>
+#include <stdlib.h>
 #include "ui.h"
+#include "finder.h"
 
 #define XML_PATH "res/ui.xml"
 
-#ifdef LCUI_BUILD_IN_WIN32
+#ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
 
@@ -25,6 +31,11 @@ static void InitConsoleWindow( void )
 }
 
 #endif
+
+static void onTimer( void *arg )
+{
+	Widget_PrintTree( NULL );
+}
 
 void UI_Init(void)
 {
@@ -43,6 +54,8 @@ void UI_Init(void)
 	}
 	Widget_UpdateStyle( LCUIWidget_GetRoot(), TRUE );
 	UI_InitSidebar();
+	UI_InitSettingsView();
+	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 }
 
 int UI_Run(void)

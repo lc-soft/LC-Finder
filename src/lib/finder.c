@@ -1,14 +1,12 @@
 ﻿#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "file_search.h"
-#include "file_cache.h"
+#include <wchar.h>
+#include <locale.h>
+#include "finder.h"
+#include "ui.h"
 
-static struct FinderRec_ {
-	DB_Dir *dirs;
-	DB_Tag *tags;
-	int n_dirs;
-	int n_tags;
-} finder;
+Finder finder;
 
 DB_Dir LCFinder_GetDir( const char *dirpath )
 {
@@ -25,15 +23,34 @@ DB_Dir LCFinder_GetDir( const char *dirpath )
 
 DB_Dir LCFinder_AddDir( const char *dirpath )
 {
-	int i;
-	DB_Dir dir;
+	int i, len;
+	char *path;
+	DB_Dir dir, *dirs;
+	len = strlen( dirpath );
+	path = malloc( (len + 2) * sizeof( char ) );
+	strcpy( path, dirpath );
+	if( path[len - 1] != PATH_SEP ) {
+		path[len] = PATH_SEP;
+		path[len + 1] = 0;
+	}
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
-		if( strstr( dir->path, dirpath ) == 0 ) {
+		if( strstr( dir->path, path ) ) {
 			return NULL;
 		}
 	}
-	return DB_AddDir( dirpath );
+	dir = DB_AddDir( dirpath );
+	if( !dir ) {
+		return NULL;
+	}
+	finder.n_dirs += 1;
+	dirs = realloc( finder.dirs, sizeof( DB_Dir )*finder.n_dirs );
+	if( !dirs ) {
+		finder.n_dirs -= 1;
+		return dir;
+	}
+	finder.dirs = dirs;
+	return dir;
 }
 
 static void CheckAddedFile( void *data, const wchar_t *path )
@@ -46,13 +63,12 @@ static void CheckDeletedFile( void *data, const wchar_t *path )
 	wprintf(L"delete file: %s\n", path);
 }
 
-void LCFinder_Init( void )
+int main( int argc, char **argv )
 {
-	SyncTask t = SyncTask_NewW( L"test-dir" );
-	int count = SyncTask_Start( t );
-	printf( "scan files: %d\n", count );
-	SyncTask_InAddedFiles( t, CheckAddedFile, NULL );
-	SyncTask_InDeletedFiles( t, CheckDeletedFile, NULL );
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
+	DB_Init();
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
+	UI_Init();
+	return UI_Run();
 }

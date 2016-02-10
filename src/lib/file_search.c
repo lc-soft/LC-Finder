@@ -158,7 +158,7 @@ DB_Dir DB_AddDir( const char *dirpath )
 	DB_Dir dir;
 	sqlite3_stmt *stmt;
 	char *errmsg, sql[1024];
-	sprintf( sql, sql_add_tag, dirpath );
+	sprintf( sql, sql_add_dir, dirpath );
 	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
 	if( ret != SQLITE_OK ) {
 		printf( "[database] error: %s\n", errmsg );
