@@ -58,6 +58,7 @@
             <widget type="textview">选择照片的源文件夹。</widget>
           </widget>
           <widget id="tip-no-folders" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
+          <widget id="current-folder-list" class="folder-list"></widget>
         </widget>
       </widget>
       <widget id="view-settings" class="content-wrapper hide">

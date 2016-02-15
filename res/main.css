@@ -106,6 +106,9 @@
 .source-list .source-list-item {
 	width: 340px;
 }
+.source-list .source-list-item .text {
+	width: 240px;
+}
 .source-list .source-list-item:hover {
 	background-color: #fcfcfc;
 }
@@ -135,6 +138,35 @@
 }
 .source-list .source-list-item .text {
 	display: inline-block;
+}
+.folder-list .folder-list-item {
+	width: 240px;
+	height: 128px;
+	display: inline-block;
+	background-color: #f0f0f0;
+	margin: 0 10px 10px 0;
+}
+.folder-list .folder-list-item .info {
+	height: 54px;
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	padding: 10px 50px 10px 10px;
+}
+.folder-list .folder-list-item .info .icon {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 38px;
+	height: 38px;
+	font-size: 32px;
+	text-align: center;
+	line-height: 38px;
+}
+.folder-list .folder-list-item .info .path,
+.folder-list .folder-list-item .info .name {
+	width: 190px;
 }
 .pull-right {
 	top: 0;
