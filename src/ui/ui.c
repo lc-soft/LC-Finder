@@ -55,6 +55,7 @@ void UI_Init(void)
 	Widget_UpdateStyle( LCUIWidget_GetRoot(), TRUE );
 	UI_InitSidebar();
 	UI_InitSettingsView();
+	UI_InitFoldersView();
 	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 }
 

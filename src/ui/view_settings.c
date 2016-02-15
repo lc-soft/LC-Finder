@@ -16,6 +16,10 @@
 
 #define PATH_LEN 2048
 
+static struct SettingsViewData {
+	LCUI_Widget dirlist;
+} this_view;
+
 static LCUI_Widget NewDirListItem( DB_Dir dir )
 {
 	LCUI_Widget item, icon, text, btn;
@@ -34,6 +38,13 @@ static LCUI_Widget NewDirListItem( DB_Dir dir )
 	return item;
 }
 
+static void OnAddDir( void *privdata, void *arg )
+{
+	DB_Dir dir = arg;
+	LCUI_Widget item = NewDirListItem( dir );
+	Widget_Append( this_view.dirlist, item );
+}
+
 /** 初始化文件夹目录控件 */
 static void UI_InitDirList( LCUI_Widget view )
 {
@@ -43,12 +54,14 @@ static void UI_InitDirList( LCUI_Widget view )
 		item = NewDirListItem( finder.dirs[i] );
 		Widget_Append( view, item );
 	}
+	LCFinder_BindEvent( "dir.add", OnAddDir, NULL );
 }
 
 static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
 {
 	int len;
 	HWND hwnd;
+	DB_Dir dir;
 	BROWSEINFOW bi;
 	LCUI_Surface s;
 	LPITEMIDLIST iids;
@@ -76,7 +89,10 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
 		return;
 	}
 	_DEBUG_MSG( "add dir: %s\n", dirpath );
-	LCFinder_AddDir( dirpath );
+	dir = LCFinder_AddDir( dirpath );
+	if( dir ) {
+		LCFinder_SendEvent( "dir.add", dir );
+	}
 }
 
 void UI_InitSettingsView( void )
@@ -85,4 +101,5 @@ void UI_InitSettingsView( void )
 	LCUI_Widget dirlist = LCUIWidget_GetById( "current-source-list" );
 	Widget_BindEvent( btn, "click", OnSelectDir, NULL, NULL );
 	UI_InitDirList( dirlist );
+	this_view.dirlist = dirlist;
 }

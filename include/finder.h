@@ -11,6 +11,8 @@ typedef struct Finder_ {
 	int n_tags;
 } Finder;
 
+typedef void( *EventHandler )(void*, void*);
+
 #ifdef _WIN32
 #define PATH_SEP '\\'
 #else
@@ -20,6 +22,12 @@ typedef struct Finder_ {
 extern Finder finder;
 
 void LCFinder_Init( void );
+
+/** 绑定事件 */
+int LCFinder_BindEvent( const char *name, EventHandler handler, void *data );
+
+/** 触发事件 */
+int LCFinder_SendEvent( const char *name, void *data );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );
 

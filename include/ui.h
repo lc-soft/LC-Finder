@@ -13,4 +13,7 @@ void UI_InitSidebar( void );
 /** 初始化“设置”视图 */
 void UI_InitSettingsView( void );
 
+/** 初始化“文件夹”视图 */
+void UI_InitFoldersView( void );
+
 #endif

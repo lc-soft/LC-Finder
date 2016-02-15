@@ -39,6 +39,9 @@
     <ClCompile Include="src\finder.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\view_folders.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\main.css">
