@@ -1,4 +1,4 @@
-#ifndef __LC_FINDER_H__
+ï»¿#ifndef __LC_FINDER_H__
 #define __LC_FINDER_H__
 
 #include "file_cache.h"
@@ -23,10 +23,10 @@ extern Finder finder;
 
 void LCFinder_Init( void );
 
-/** °ó¶¨ÊÂ¼ş */
+/** ç»‘å®šäº‹ä»¶ */
 int LCFinder_BindEvent( const char *name, EventHandler handler, void *data );
 
-/** ´¥·¢ÊÂ¼ş */
+/** è§¦å‘äº‹ä»¶ */
 int LCFinder_SendEvent( const char *name, void *data );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );

@@ -22,6 +22,8 @@
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
+    <ClCompile Include="src\lib\thumb_cache.c" />
+    <ClCompile Include="src\lib\thumb_pool.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_settings.c" />
     <ClCompile Include="src\ui\sidebar.c" />
@@ -41,6 +43,8 @@
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\finder.h" />
+    <ClInclude Include="include\thumb_cache.h" />
+    <ClInclude Include="include\thumb_pool.h" />
     <ClInclude Include="include\ui.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -136,7 +140,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -166,7 +170,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
