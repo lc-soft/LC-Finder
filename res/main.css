@@ -13,7 +13,7 @@
 	width: 48px;
 }
 .sidebar .sidebar-item {
-	width: 100%;
+	width: 256px;
 	padding: 8px 0;
 }
 .sidebar sidebar-toggle {
@@ -60,7 +60,7 @@
 }
 .content-wrapper .navbar {
 	top: 0;
-	left: 0;
+	left: 48px;
 	width: 100%;
 	height: 48px;
 	position: absolute;
@@ -70,6 +70,7 @@
 .content-wrapper .content {
 	height: 100%;
 	padding: 60px 0 0 15px;
+	box-sizing: border-box;
 }
 .content-wrapper .item-group {
 	padding: 0 10px;
@@ -140,29 +141,38 @@
 	display: inline-block;
 }
 .folder-list .folder-list-item {
-	width: 240px;
-	height: 128px;
+	width: 300px;
+	height: 134px;
 	display: inline-block;
 	background-color: #f0f0f0;
 	margin: 0 10px 10px 0;
+	border: 1px solid #eee;
 }
 .folder-list .folder-list-item .info {
-	height: 54px;
-	width: 100%;
-	position: absolute;
-	bottom: 0;
 	left: 0;
+	bottom: 0;
+	width: 100%;
+	height: 54px;
+	position: absolute;
+	background-color: #fff;
+	border-top: 1px solid #eee;
 	padding: 10px 50px 10px 10px;
+	box-sizing: border-box;
 }
 .folder-list .folder-list-item .info .icon {
-	position: absolute;
 	top: 10px;
 	right: 10px;
-	width: 38px;
-	height: 38px;
-	font-size: 32px;
+	width: 34px;
+	height: 34px;
+	font-size: 30px;
 	text-align: center;
-	line-height: 38px;
+	line-height: 34px;
+	position: absolute;
+	color: #888;
+}
+.folder-list .folder-list-item .info .path {
+	color: #888;
+	font-size: 13px;
 }
 .folder-list .folder-list-item .info .path,
 .folder-list .folder-list-item .info .name {

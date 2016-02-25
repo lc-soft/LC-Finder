@@ -3,11 +3,6 @@
   <resource type="text/css" src="res/main.css"/>
   <resource type="text/css" src="res/ionicons.css"/>
   <resource type="application/font-ttf" src="res/ionicons.ttf"/>
-  <dui>
-    <widget class="item-group">
-      <widget type="textview" class="title">源</widget>
-    </widget>
-  </dui>
   <ui>
     <widget class="window skin-light-green">
       <widget id="main-sidebar" class="sidebar sidebar-mini">
