@@ -5,9 +5,15 @@
 #include <locale.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include <LCUI/font/charset.h>
 #include "finder.h"
 #include "ui.h"
 #define EVENT_TOTAL 2
+
+#ifdef _WIN32
+#include <direct.h>
+#define mkdir(PATH) _wmkdir(PATH)
+#endif
 
 Finder finder;
 static LCUI_EventBox finder_events;
@@ -104,12 +110,88 @@ static void CheckDeletedFile( void *data, const wchar_t *path )
 	wprintf(L"delete file: %s\n", path);
 }
 
+typedef struct FileSyncStatusRec_ {
+	int state;
+	int count;
+	SyncTask task;
+} FileSyncStatusRec, *FileSyncStatus;
+
+int LCFinder_SyncFiles( FileSyncStatus s )
+{
+	int i, len;
+	DB_Dir dir;
+	wchar_t *path;
+	s->count = 0;
+	s->state = STATE_STARTED;
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		dir = finder.dirs[i];
+		len = strlen( dir->path ) + 1;
+		path = malloc( sizeof( wchar_t )*len );
+		len = LCUI_DecodeString( path, dir->path, len, ENCODING_UTF8 );
+		path[len] = 0;
+		wprintf(L"scan path: %s\n", path);
+		s->task = SyncTask_NewW( finder.fileset_dir, path );
+		SyncTask_Start( s->task );
+		s->count += s->task->count;
+		free( path );
+	}
+	return s->count;
+}
+
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+
+static void InitConsoleWindow( void )
+{
+	int hCrt;
+	FILE *hf;
+	AllocConsole();
+	hCrt = _open_osfhandle( (long)GetStdHandle( STD_OUTPUT_HANDLE ), _O_TEXT );
+	hf = _fdopen( hCrt, "w" );
+	*stdout = *hf;
+	setvbuf( stdout, NULL, _IONBF, 0 );
+	printf( "InitConsoleWindow OK!\n" );
+}
+
+#endif
+
+static LCFinder_InitWorkDir( void )
+{
+	int len;
+	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
+	wchar_t data_dir[1024] = L"F:\\代码库\\GitHub\\LC-Finder\\data\\";
+	len = wcslen( data_dir );
+	if( data_dir[len - 1] != PATH_SEP ) {
+		data_dir[len++] = PATH_SEP;
+		data_dir[len] = 0;
+	}
+	finder.data_dir = NEW( wchar_t, len + 2 );
+	finder.fileset_dir = NEW( wchar_t, len + 2 + wcslen(dirs[0]) );
+	finder.thumbs_dir = NEW( wchar_t, len + 2 +wcslen(dirs[1]) );
+	wcscpy( finder.data_dir, data_dir );
+	wsprintf( finder.fileset_dir, L"%s%s", data_dir, dirs[0] );
+	wsprintf( finder.thumbs_dir, L"%s%s", data_dir, dirs[1] );
+	mkdir( finder.data_dir );
+	mkdir( finder.fileset_dir );
+	mkdir( finder.thumbs_dir );
+}
+
 int main( int argc, char **argv )
 {
+	FileSyncStatusRec status;
+
+#ifdef LCUI_BUILD_IN_WIN32
+	InitConsoleWindow();
+#endif
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 	DB_Init();
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
+	LCFinder_InitWorkDir();
+	LCFinder_SyncFiles( &status );
+	_DEBUG_MSG( "scan files: %d\n", status.count );
+	return 0;
 	LCFinder_InitEvents();
 	UI_Init();
 	return UI_Run();

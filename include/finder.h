@@ -9,6 +9,9 @@ typedef struct Finder_ {
 	DB_Tag *tags;
 	int n_dirs;
 	int n_tags;
+	wchar_t *data_dir;
+	wchar_t *fileset_dir;
+	wchar_t *thumbs_dir;
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);

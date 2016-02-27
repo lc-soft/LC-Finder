@@ -45,15 +45,18 @@ typedef enum {
 
 /** 文件列表同步任务 */
 typedef struct SyncTaskRec_ {
-	wchar_t *dirpath;		/**< 目标文件夹位置 */
+	wchar_t *scan_dir;		/**< 需扫描的目录 */
+	wchar_t *data_dir;		/**< 数据存放目录 */
 	SyncTaskState state;		/**< 任务状态 */
 	unsigned long int count;	/**< 当前已经缓存的文件数量 */
 } SyncTaskRec, *SyncTask;
 
 typedef void(*FileHanlder)(void*, const wchar_t*);
 
+SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
+
 /** 新建同步任务 */
-SyncTask SyncTask_NewW( const wchar_t *dirpath );
+SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir );
 
 /** 删除同步任务 */
 void SyncTask_Delete( SyncTask *tptr );

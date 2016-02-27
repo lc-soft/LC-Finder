@@ -36,11 +36,14 @@
 
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include <LCUI/font/charset.h>
 #include "file_cache.h"
+#include "sha1.h"
 
 #ifdef _WIN32
-#include <direct.h>
-#define mkdir(PATH) _wmkdir(PATH)
+#define PATH_SEP '\\'
+#else
+#define PATH_SEP '/'
 #endif
 
 #define MAX_PATH_LEN	2048
@@ -56,8 +59,6 @@ typedef struct DirStatsRec_ {
 	Dict *deleted_files;	/**< 删除的文件 */
 } DirStatsRec, *DirStats;
 
-static const wchar_t cache_file[] = L"files.dat";
-static const wchar_t cache_dir[] = L".lc-finder.cache";
 static const wchar_t *match_suffixs[] = {L".png", L".bmp", L".jpg", L".jpeg"};
 
 static unsigned int Dict_KeyHash( const wchar_t *buf )
@@ -98,19 +99,33 @@ static DictType DictType_Files = {
 	NULL
 };
 
-SyncTask SyncTask_NewW( const wchar_t *dirpath )
+SyncTask SyncTask_New( const char *data_dir, const char *scan_dir )
+{
+	SyncTask t;
+	wchar_t *wcs_data_dir, *wcs_scan_dir;
+	size_t len1 = strlen( data_dir ) + 1;
+	size_t len2 = strlen( scan_dir ) + 1;
+	wcs_data_dir = malloc( sizeof( wchar_t )*len1 );
+	wcs_scan_dir = malloc( sizeof( wchar_t )*len2 );
+	LCUI_DecodeString( wcs_data_dir, data_dir, len1, ENCODING_UTF8 );
+	LCUI_DecodeString( wcs_scan_dir, scan_dir, len2, ENCODING_UTF8 );
+	t = SyncTask_NewW( wcs_data_dir, wcs_scan_dir );
+	free( wcs_data_dir );
+	free( wcs_scan_dir );
+	return t;
+}
+
+SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 {
 	SyncTask t = malloc( sizeof(SyncTaskRec) + sizeof(DirStatsRec) );
 	DirStats ds = GetDirStats( t );
 	ds->deleted_files = Dict_Create( &DictType_Files, NULL );
 	ds->added_files = Dict_Create( &DictType_Files, NULL );
 	ds->files = Dict_Create( &DictType_Files, NULL );
-	if( dirpath ) {
-		t->dirpath = malloc( wcslen( dirpath ) + 1 );
-		wcscpy( t->dirpath, dirpath );
-	} else {
-		t->dirpath = NULL;
-	}
+	t->scan_dir = malloc( wcslen( scan_dir ) + 1 );
+	t->data_dir = malloc( wcslen( scan_dir ) + 1 );
+	wcscpy( t->scan_dir, scan_dir );
+	wcscpy( t->data_dir, data_dir );
 	t->state = STATE_NONE;
 	t->count = 0;
 	return t;
@@ -120,10 +135,10 @@ void SyncTask_Delete( SyncTask *tptr )
 {
 	SyncTask t = *tptr;
 	DirStats ds = GetDirStats( t );
-	if( t->dirpath ) {
-		free( t->dirpath );
-		t->dirpath = NULL;
-	}
+	free( t->scan_dir );
+	free( t->data_dir );
+	t->scan_dir = NULL;
+	t->data_dir = NULL;
 	Dict_Release( ds->files );
 	Dict_Release( ds->added_files );
 	Dict_Release( ds->deleted_files );
@@ -197,8 +212,8 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 	int i, n, len, dir_len = wcslen( dirpath );
 	DirStats ds = GetDirStats( t );
 	wcscpy( filepath, dirpath );
-	if( filepath[dir_len - 1] != '/' ) {
-		filepath[dir_len++] = '/';
+	if( filepath[dir_len - 1] != PATH_SEP ) {
+		filepath[dir_len++] = PATH_SEP;
 		filepath[dir_len] = 0;
 	}
 	LCUI_OpenDir( filepath, &dir );
@@ -210,8 +225,6 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {
 				continue;
 			}
-		} else if( wcscmp( name, cache_dir ) == 0 ) {
-			continue;
 		}
 		wcscpy( filepath + dir_len, name );
 		len = wcslen( filepath );
@@ -249,37 +262,60 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 	return t->count;
 }
 
+wchar_t *encode( const wchar_t *wstr )
+{
+	int i, len;
+	SHA1_CTX ctx;
+	uint8_t results[20];
+	wchar_t *out_wstr, elem[4];
+
+	SHA1Init( &ctx );
+	len = wcslen( wstr );
+	len *= sizeof( wchar_t ) / sizeof( unsigned char );
+	SHA1Update( &ctx, (unsigned char*)wstr, len );
+	SHA1Final( results, &ctx );
+	out_wstr = malloc( sizeof( wchar_t ) * 42 );
+	out_wstr[0] = 0;
+	for( i = 0; i < 20; ++i ) {
+		wsprintf( elem, L"%02x", results[i] );
+		wcscat( out_wstr, elem );
+	}
+	wprintf(L"after encode: %s\n", out_wstr);
+	return out_wstr;
+}
+
 int SyncTask_Start( SyncTask t )
 {
 	FILE *fp;
-	wchar_t *tmpfile, *file;
+	int n, len;
+	wchar_t *tmpfile, *file, *name;
 	const wchar_t suffix[] = L".tmp";
-	int len, n = wcslen( t->dirpath );
-	len = n + WCSLEN( cache_dir ) + 3;
-	len += WCSLEN( cache_file ) + WCSLEN( suffix );
+	name = encode( t->scan_dir );
+	n = wcslen( t->data_dir );
+	len = n + wcslen( name ) + 2 + WCSLEN( suffix );
 	tmpfile = malloc( len * sizeof( wchar_t ) );
 	file = malloc( len * sizeof( wchar_t ) );
-	wcscpy( tmpfile, t->dirpath );
-	if( tmpfile[n - 1] != '/' ) {
-		tmpfile[n++] = '/';
+	wcscpy( tmpfile, t->data_dir );
+	if( tmpfile[n - 1] != PATH_SEP ) {
+		tmpfile[n++] = PATH_SEP;
 		tmpfile[n] = 0;
 	}
-	wcscat( tmpfile, cache_dir );
-	mkdir( tmpfile );
-	wsprintf( file, L"%s/%s", tmpfile, cache_file );
+	wsprintf( file, L"%s%s", tmpfile, name );
+	wprintf(L"cache file: %s\n", file );
 	fp = _wfopen( file, L"r" );
 	if( fp ) {
 		SyncTask_LoadCache( t, fp );
 		fclose( fp );
 	}
 	wsprintf( tmpfile, L"%s%s", file, suffix );
+	wprintf(L"tmp cache file: %s\n", file );
 	fp = _wfopen( tmpfile, L"w" );
 	if( !fp ) {
 		return -1;
 	}
 	t->state = STATE_STARTED;
 	fputs( FILE_HEAD_TAG"\n", fp );
-	n = SyncTask_ScanFilesW( t, t->dirpath, fp );
+	n = SyncTask_ScanFilesW( t, t->scan_dir, fp );
 	t->state = STATE_FINISHED;
 	fclose( fp );
 	_wremove( file );
