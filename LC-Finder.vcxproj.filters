@@ -48,6 +48,9 @@
     <ClCompile Include="src\lib\thumb_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\lib\sha1.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\main.css">
@@ -78,6 +81,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\thumb_pool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\sha1.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

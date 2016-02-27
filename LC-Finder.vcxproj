@@ -22,6 +22,7 @@
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
+    <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\lib\thumb_pool.c" />
     <ClCompile Include="src\ui\view_folders.c" />
@@ -43,6 +44,7 @@
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\finder.h" />
+    <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\thumb_cache.h" />
     <ClInclude Include="include\thumb_pool.h" />
     <ClInclude Include="include\ui.h" />
