@@ -16,4 +16,7 @@ void UI_InitSettingsView( void );
 /** 初始化“文件夹”视图 */
 void UI_InitFoldersView( void );
 
+/** 初始化文件同步时的提示框 */
+void UI_InitFileSyncTip( void );
+
 #endif

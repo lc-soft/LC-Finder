@@ -69,6 +69,7 @@
 }
 .content-wrapper .content {
 	height: 100%;
+	width: 100%;
 	padding: 60px 0 0 15px;
 	box-sizing: border-box;
 }
@@ -177,6 +178,22 @@
 .folder-list .folder-list-item .info .path,
 .folder-list .folder-list-item .info .name {
 	width: 190px;
+}
+.alert {
+	top: 70px;
+	right: 20px;
+	position: absolute;
+	padding: 10px;
+	background-color: #fafafa;
+	border: 1px solid #eee;
+}
+.alert .alert-title {
+	font-size: 16px;
+}
+.alert .alert-text {
+	color: #888;
+	font-size: 13px;
+	display: block;
 }
 .pull-right {
 	top: 0;

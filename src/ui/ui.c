@@ -35,6 +35,7 @@ void UI_Init(void)
 	UI_InitSidebar();
 	UI_InitSettingsView();
 	UI_InitFoldersView();
+	UI_InitFileSyncTip();
 	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 }
 

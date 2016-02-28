@@ -54,6 +54,13 @@
           </widget>
           <widget id="tip-no-folders" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
           <widget id="current-folder-list" class="folder-list"></widget>
+          <widget class="alert alert-primary hide">
+            <widget class="alert-header">
+              <widget type="spin" class="ion ion-android-sync"></widget>
+              <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
+            </widget>
+            <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
+          </widget>
         </widget>
       </widget>
       <widget id="view-settings" class="content-wrapper hide">
