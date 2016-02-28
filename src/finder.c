@@ -129,10 +129,10 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		path = malloc( sizeof( wchar_t )*len );
 		len = LCUI_DecodeString( path, dir->path, len, ENCODING_UTF8 );
 		path[len] = 0;
-		wprintf(L"scan path: %s\n", path);
 		s->task = SyncTask_NewW( finder.fileset_dir, path );
 		SyncTask_Start( s->task );
 		s->count += s->task->count;
+		SyncTask_Delete( &s->task );
 		free( path );
 	}
 	return s->count;
@@ -191,7 +191,6 @@ int main( int argc, char **argv )
 	LCFinder_InitWorkDir();
 	LCFinder_SyncFiles( &status );
 	_DEBUG_MSG( "scan files: %d\n", status.count );
-	return 0;
 	LCFinder_InitEvents();
 	UI_Init();
 	return UI_Run();

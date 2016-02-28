@@ -117,15 +117,17 @@ SyncTask SyncTask_New( const char *data_dir, const char *scan_dir )
 
 SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 {
+	size_t len1 = wcslen( data_dir ) + 1;
+	size_t len2 = wcslen( scan_dir ) + 1;
 	SyncTask t = malloc( sizeof(SyncTaskRec) + sizeof(DirStatsRec) );
 	DirStats ds = GetDirStats( t );
 	ds->deleted_files = Dict_Create( &DictType_Files, NULL );
 	ds->added_files = Dict_Create( &DictType_Files, NULL );
 	ds->files = Dict_Create( &DictType_Files, NULL );
-	t->scan_dir = malloc( wcslen( scan_dir ) + 1 );
-	t->data_dir = malloc( wcslen( scan_dir ) + 1 );
-	wcscpy( t->scan_dir, scan_dir );
+	t->data_dir = malloc( sizeof( wchar_t ) * len1 );
+	t->scan_dir = malloc( sizeof( wchar_t ) * len2 );
 	wcscpy( t->data_dir, data_dir );
+	wcscpy( t->scan_dir, scan_dir );
 	t->state = STATE_NONE;
 	t->count = 0;
 	return t;
@@ -280,7 +282,6 @@ wchar_t *encode( const wchar_t *wstr )
 		wsprintf( elem, L"%02x", results[i] );
 		wcscat( out_wstr, elem );
 	}
-	wprintf(L"after encode: %s\n", out_wstr);
 	return out_wstr;
 }
 
