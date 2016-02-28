@@ -246,3 +246,5 @@ ModelManifest.xml
 
 res/*.db
 include/sqlite3.h
+include/unqlite.h
+data
