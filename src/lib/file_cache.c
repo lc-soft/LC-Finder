@@ -199,7 +199,6 @@ static int SyncTask_LoadCache( SyncTask t, FILE *fp )
 		path[len] = 0;
 		Dict_Add( ds->files, path, (void*)1 );
 		Dict_Add( ds->deleted_files, path, (void*)1 );
-		wprintf(L"file: %s\n", path);
 		++count;
 	}
 	return count;
@@ -248,12 +247,9 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 		/* 若该文件路径存在于之前的缓存中，说明未被删除，否则将之
 		 * 视为新增的文件。
 		 */
-		wprintf(L"check file: %s\n", filepath);
 		if( Dict_FetchValue( ds->files, filepath ) ) {
-			printf("is exits\n");
 			Dict_Delete( ds->deleted_files, filepath );
 		} else {
-			printf("is new\n");
 			Dict_Add( ds->added_files, filepath, (void*)1 );
 		}
 		fwrite( &len, sizeof( int ), 1, fp );
@@ -302,14 +298,12 @@ int SyncTask_Start( SyncTask t )
 		tmpfile[n] = 0;
 	}
 	wsprintf( file, L"%s%s", tmpfile, name );
-	wprintf(L"cache file: %s\n", file );
 	fp = _wfopen( file, L"r" );
 	if( fp ) {
 		SyncTask_LoadCache( t, fp );
 		fclose( fp );
 	}
 	wsprintf( tmpfile, L"%s%s", file, suffix );
-	wprintf(L"tmp cache file: %s\n", file );
 	fp = _wfopen( tmpfile, L"w" );
 	if( !fp ) {
 		return -1;

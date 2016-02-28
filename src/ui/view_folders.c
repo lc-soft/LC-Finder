@@ -54,13 +54,20 @@ static void OnAddDir( void *privdata, void *data )
 	Widget_Append( this_view.items, item );
 }
 
+static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
+{
+	LCFinder_SendEvent( "sync", NULL );
+}
+
 void UI_InitFoldersView( void )
 {
 	int i;
+	LCUI_Widget btn = LCUIWidget_GetById( "btn-sync-folder-files" );
 	LCUI_Widget list = LCUIWidget_GetById( "current-folder-list" );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		LCUI_Widget item = NewFolderItem( finder.dirs[i] );
 		Widget_Append( list, item );
 	}
 	this_view.items = list;
+	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 }

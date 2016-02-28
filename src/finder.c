@@ -110,12 +110,6 @@ static void CheckDeletedFile( void *data, const wchar_t *path )
 	wprintf(L"delete file: %s\n", path);
 }
 
-typedef struct FileSyncStatusRec_ {
-	int state;
-	int count;
-	SyncTask task;
-} FileSyncStatusRec, *FileSyncStatus;
-
 int LCFinder_SyncFiles( FileSyncStatus s )
 {
 	int i, len;
@@ -179,8 +173,6 @@ static LCFinder_InitWorkDir( void )
 
 int main( int argc, char **argv )
 {
-	FileSyncStatusRec status;
-
 #ifdef LCUI_BUILD_IN_WIN32
 	InitConsoleWindow();
 #endif
@@ -189,8 +181,6 @@ int main( int argc, char **argv )
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
 	LCFinder_InitWorkDir();
-	LCFinder_SyncFiles( &status );
-	_DEBUG_MSG( "scan files: %d\n", status.count );
 	LCFinder_InitEvents();
 	UI_Init();
 	return UI_Run();

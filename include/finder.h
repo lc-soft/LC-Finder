@@ -22,6 +22,12 @@ typedef void( *EventHandler )(void*, void*);
 #define PATH_SEP '/'
 #endif
 
+typedef struct FileSyncStatusRec_ {
+	int state;
+	int count;
+	SyncTask task;
+} FileSyncStatusRec, *FileSyncStatus;
+
 extern Finder finder;
 
 void LCFinder_Init( void );
@@ -31,6 +37,8 @@ int LCFinder_BindEvent( const char *name, EventHandler handler, void *data );
 
 /** 触发事件 */
 int LCFinder_SendEvent( const char *name, void *data );
+
+int LCFinder_SyncFiles( FileSyncStatus s );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );
 
