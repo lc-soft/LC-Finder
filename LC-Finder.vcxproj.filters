@@ -56,11 +56,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\main.css">
-      <Filter>相关资源</Filter>
-    </None>
     <None Include="LICENSE" />
     <None Include="README.md" />
+    <None Include="res\ui.css">
+      <Filter>相关资源</Filter>
+    </None>
+    <None Include="res\ui-skin.css">
+      <Filter>相关资源</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="res\ui.xml">

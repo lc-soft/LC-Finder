@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <lcui-app>
-  <resource type="text/css" src="res/main.css"/>
+  <resource type="text/css" src="res/ui.css"/>
+  <resource type="text/css" src="res/ui-skin.css"/>
   <resource type="text/css" src="res/ionicons.css"/>
   <resource type="application/font-ttf" src="res/ionicons.ttf"/>
   <ui>
@@ -33,56 +34,63 @@
           <widget type="textview" class="text">设置</widget>
         </widget>
       </widget>
-      <widget id="view-home" class="content-wrapper">
-        <widget class="navbar">
-          <widget type="textview" class="navbar-title">集锦</widget>
+      <widget id="view-home" class="view">
+        <widget class="view-navbar">
+          <widget type="textview" class="view-navbar-title">集锦</widget>
         </widget>
-        <widget class="content"></widget>
+        <widget class="view-body"></widget>
       </widget>
-      <widget id="view-folders" class="content-wrapper hide">
-        <widget class="navbar">
-          <widget type="textview" class="navbar-title">文件夹</widget>
+      <widget id="view-folders" class="view hide">
+        <widget class="view-navbar">
+          <widget type="textview" class="view-navbar-title">文件夹</widget>
           <widget class="pull-right">
-            <widget id="btn-sync-folder-files" class="navbar-btn">
+            <widget id="btn-sync-folder-files" class="view-navbar-btn">
               <widget type="textview" class="icon ion ion-android-sync"></widget>
             </widget>
           </widget>
         </widget>
-        <widget class="content">
-          <widget id="btn-switch-to-settings" class="btn btn-link">
-            <widget type="textview">选择照片的源文件夹。</widget>
-          </widget>
-          <widget id="tip-no-folders" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
-          <widget id="current-folder-list" class="folder-list"></widget>
-          <widget class="alert alert-primary hide">
-            <widget class="alert-header">
-              <widget type="spin" class="ion ion-android-sync"></widget>
-              <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
+        <widget class="view-body">
+          <widget class="view-content">
+            <widget id="btn-switch-to-settings" class="btn btn-link">
+              <widget type="textview">选择照片的源文件夹。</widget>
             </widget>
-            <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
+            <widget id="tip-no-folders" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
+            <widget id="current-folder-list" class="folder-list"></widget>
+            <widget class="alert alert-primary hide">
+              <widget class="alert-header">
+                <widget type="spin" class="ion ion-android-sync"></widget>
+                <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
+              </widget>
+              <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
+            </widget>
           </widget>
         </widget>
       </widget>
-      <widget id="view-settings" class="content-wrapper hide">
-        <widget class="navbar">
-          <widget type="textview" class="navbar-title">设置</widget>
+      <widget id="view-settings" class="view hide">
+        <widget class="view-navbar">
+          <widget type="textview" class="view-navbar-title">设置</widget>
         </widget>
-        <widget class="content">
-          <widget type="textview" class="title">源</widget>
-          <widget class="source-list">
-            <widget id="current-source-list"></widget>
-            <widget id="btn-add-source" class="source-list-item">
-              <widget type="textview" class="icon ion ion-plus-round"></widget>
-              <widget type="textview" class="text">添加文件夹</widget>
+        <widget class="view-body">
+          <widget id="view-settings-content-wrapper" class="view-content-wrapper">
+            <widget id="view-settings-content" class="scrolllayer view-content">
+              <widget type="textview" class="title">源</widget>
+              <widget class="source-list">
+                <widget id="current-source-list"></widget>
+                <widget id="btn-add-source" class="source-list-item">
+                  <widget type="textview" class="icon ion ion-plus-round"></widget>
+                  <widget type="textview" class="text">添加文件夹</widget>
+                </widget>
+              </widget>
+              <widget type="textview" class="title">关于此应用</widget>
+              <widget class="item-group">
+                <widget type="textview" class="text">LC-Finder 0.1.0</widget>
+                <widget type="textview" class="text">© 2016 LC's Software</widget>
+                <widget id="btn-open-license" class="btn btn-link">
+                  <widget type="textview">GNU通用公共许可协议</widget>
+                </widget>
+              </widget>
             </widget>
-          </widget>
-          <widget type="textview" class="title">关于此应用</widget>
-          <widget class="item-group">
-            <widget type="textview" class="text">LC-Finder 0.1.0</widget>
-            <widget type="textview" class="text">© 2016 LC's Software</widget>
-            <widget id="btn-open-license" class="btn btn-link">
-              <widget type="textview">GNU通用公共许可协议</widget>
-            </widget>
+            <widget type="scrollbar" data-parent="view-settings-content-wrapper" data-layer="view-settings-content"/>
           </widget>
         </widget>
       </widget>

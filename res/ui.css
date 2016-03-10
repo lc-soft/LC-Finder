@@ -52,13 +52,13 @@
 .sidebar-item .text {
 	font-family: Microsoft YaHei;
 }
-.content-wrapper {
+.view {
 	padding: 0 0 0 48px;
 	width: 100%;
 	height: 100%;
 	box-sizing: border-box;
 }
-.content-wrapper .navbar {
+.view .view-navbar {
 	top: 0;
 	left: 48px;
 	width: 100%;
@@ -67,35 +67,43 @@
 	background-color: #fafafa;
 	box-shadow: 0 0 3px rgba(0,0,0,0.6);
 }
-.content-wrapper .content {
+.view .view-body {
 	height: 100%;
 	width: 100%;
-	padding: 60px 0 0 15px;
+	padding: 48px 0 0 15px;
 	box-sizing: border-box;
 }
-.content-wrapper .item-group {
+.view .view-content-wrapper {
+	width: 100%;
+	height: 100%;
+}
+.view .view-content {
+	width: 100%;
+	padding: 15px 0 0 0;
+}
+.view .item-group {
 	padding: 0 10px;
 	margin: 0 0 15px 0;
 }
-.navbar .navbar-title {
+.view-navbar .view-navbar-title {
 	font-size: 16px;
 	line-height: 48px;
 	padding: 0 0 0 25px;
 }
-.content .title {
+.view-body .title {
 	font-size: 20px;
 	line-height: 32px;
 	height: 32px;
 	margin: 0 0 10px 10px;
 }
-.navbar .navbar-btn {
+.view-navbar .view-navbar-btn {
 	height: 48px;
 	width: 48px;
 	text-align: center;
 	display: inline-block;
 	padding: 2px 0 0 0;
 }
-.navbar .navbar-btn .icon {
+.view-navbar .view-navbar-btn .icon {
 	font-size: 24px;
 	line-height: 48px;
 	height: 48px;
@@ -215,82 +223,22 @@ textview {
 .btn-link:hover textview {
 	color: #23527c;
 }
-.skin-light-black .sidebar {
-	background-color: #f9fafc;
-	border: 1px solid #d2d6de;
-}
-.skin-light-black .sidebar sidebar-toggle .icon,
-.skin-light-black .sidebar .sidebar-item .icon,
-.skin-light-black .sidebar .sidebar-item .text {
-	color: #000;
-}
-.skin-light-black .sidebar .sidebar-item:hover, 
-.skin-light-black .sidebar sidebar-toggle:hover {
-	background-color: #f4f4f5;
-}
-.skin-light-black .sidebar .sidebar-item:active,
-.skin-light-black .sidebar sidebar-toggle:active {
-	background-color: #f4f4f5;
-}
-.skin-light-black .content-wrapper {
-	background-color: #F5F5F5;
-}
-.skin-light-black .navbar {
-	background-color: #616161;
-}
-.skin-light-black .navbar textview {
-	color: #fff;
-}
-.skin-light-black .navbar .navbar-btn:hover {
-	background-color: #424242;
-}
-.skin-light-green .sidebar {
-	background-color: #F0F1F2;
-	border: 1px solid #DDDEDF;
-}
-.skin-light-green .sidebar textview {
-	color: #000;
-}
-.skin-light-green .sidebar .sidebar-item:hover, 
-.skin-light-green .sidebar sidebar-toggle:hover {
-	background-color: #fafafa;
-}
-.skin-light-green .sidebar .sidebar-item:active textview,
-.skin-light-green .sidebar sidebar-toggle:active textview {
-	color: #44BB55;
-}
-.skin-light-green .sidebar .sidebar-item:active,
-.skin-light-green .sidebar sidebar-toggle:active {
-	background-color: #ECF8EE;
-}
-.skin-light-green .sidebar .active,
-.skin-light-green .sidebar .active:hover {
-	background-color: #44BB55;
-}
-.skin-light-green .sidebar .active:hover textview {
-	color: #fff;
-}
-.skin-light-green .sidebar .active textview {
-	color: #fff;
-}
-.skin-light-green .content-wrapper {
+.container {
 	background-color: #fff;
+	width: 100%;
+	height: 100%;
 }
-.skin-light-green .navbar {
-	background-color: #414849;
+.test-box-1 {
+	padding: 50px;
+	width: 600px;
+	height: 600px;
+	background-color: #fafafa;
+	border: 1px solid #ddd;
 }
-.skin-light-green .navbar textview {
-	color: #fff;
-}
-.skin-light-green .navbar .navbar-btn:hover {
-	background-color: #4C5556;
-}
-.skin-light-green .navbar .navbar-btn:active {
-	background-color: #616C6D;
-}
-.skin-light-green .btn-link textview {
-	color: #44BB55;
-}
-.skin-light-green .btn-link:hover textview {
-	color: #2E7D39;
+.test-box-2 {
+	padding: 50px;
+	width: 200px;
+	height: 200px;
+	background-color: #ffaaaa;
+	border: 1px solid #ddd;
 }
