@@ -40,15 +40,20 @@
 typedef enum {
 	STATE_NONE,
 	STATE_STARTED,
+	STATE_SAVING,
 	STATE_FINISHED
 } SyncTaskState;
 
 /** 文件列表同步任务 */
 typedef struct SyncTaskRec_ {
-	wchar_t *scan_dir;		/**< 需扫描的目录 */
-	wchar_t *data_dir;		/**< 数据存放目录 */
-	SyncTaskState state;		/**< 任务状态 */
-	unsigned long int count;	/**< 当前已经缓存的文件数量 */
+	wchar_t *file;				/**< 数据文件 */
+	wchar_t *tmpfile;			/**< 临时数据文件 */
+	wchar_t *scan_dir;			/**< 需扫描的目录 */
+	wchar_t *data_dir;			/**< 数据存放目录 */
+	SyncTaskState state;			/**< 任务状态 */
+	unsigned long int total_files;		/**< 当前缓存的总文件数量 */
+	unsigned long int added_files;		/**< 当前缓存的新增的文件数量 */
+	unsigned long int deleted_files;	/**< 当前缓存的删除的文件数量 */
 } SyncTaskRec, *SyncTask;
 
 typedef void(*FileHanlder)(void*, const wchar_t*);
@@ -69,6 +74,9 @@ int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data );
 
 /** 开始同步文件列表 */
 int SyncTask_Start( SyncTask t );
+
+/** 提交文件列表的变更 */
+void SyncTask_Commit( SyncTask t );
 
 /** 终止同步文件列表 */
 void LCFinder_StopSync( SyncTask t );

@@ -3,17 +3,20 @@
 #include <string.h>
 #include <wchar.h>
 #include <locale.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <direct.h>
+#define mkdir(PATH) _wmkdir(PATH)
+#endif
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
 #include "finder.h"
 #include "ui.h"
 #define EVENT_TOTAL 2
-
-#ifdef _WIN32
-#include <direct.h>
-#define mkdir(PATH) _wmkdir(PATH)
-#endif
 
 Finder finder;
 static LCUI_EventBox finder_events;
@@ -100,14 +103,39 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 	return dir;
 }
 
-static void CheckAddedFile( void *data, const wchar_t *path )
+typedef struct DirStatusDataPackRec_ {
+	FileSyncStatus status;
+	DB_Dir dir;
+} DirStatusDataPackRec, *DirStatusDataPack;
+
+static int getfilectime( const wchar_t *path )
 {
-	wprintf(L"add file: %s\n", path);
+	struct stat buf;
+	int fd, ctime = 0;
+	fd = _wopen( path, _O_RDONLY );
+	if( fstat( fd, &buf ) == 0 ) {
+		ctime = (int)buf.st_ctime;
+	}
+	_close( fd );
+	return ctime;
 }
 
-static void CheckDeletedFile( void *data, const wchar_t *path )
+static void SyncAddedFile( void *data, const wchar_t *wpath )
 {
-	wprintf(L"delete file: %s\n", path);
+	static char path[PATH_LEN];
+	DirStatusDataPack pack = data;
+	int ctime = getfilectime( wpath );
+	pack->status->synced_files += 1;
+	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
+	//DB_AddFile( pack->dir, path, ctime );
+	wprintf(L"sync: add file: %s, ctime: %d\n", path, ctime);
+}
+
+static void SyncDeletedFile( void *data, const wchar_t *path )
+{
+	DirStatusDataPack pack = data;
+	pack->status->synced_files += 1;
+	wprintf(L"sync: delete file: %s\n", path);
 }
 
 int LCFinder_SyncFiles( FileSyncStatus s )
@@ -115,8 +143,14 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 	int i, len;
 	DB_Dir dir;
 	wchar_t *path;
-	s->count = 0;
+	s->task = NULL;
+	s->tasks = NULL;
+	s->added_files = 0;
+	s->synced_files = 0;
+	s->scaned_files = 0;
+	s->deleted_files = 0;
 	s->state = STATE_STARTED;
+	s->tasks = NEW( SyncTask, finder.n_dirs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
 		len = strlen( dir->path ) + 1;
@@ -125,16 +159,32 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		path[len] = 0;
 		s->task = SyncTask_NewW( finder.fileset_dir, path );
 		SyncTask_Start( s->task );
-		s->count += s->task->count;
-		SyncTask_Delete( &s->task );
+		s->added_files += s->task->added_files;
+		s->scaned_files += s->task->total_files;
+		s->deleted_files += s->task->deleted_files;
+		s->tasks[i] = s->task;
 		free( path );
 	}
-	return s->count;
+	s->state = STATE_SAVING;
+	wprintf(L"\n\nstart sync\n");
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		DirStatusDataPackRec pack;
+		pack.dir = finder.dirs[i];
+		pack.status = s;
+		s->task = s->tasks[i];
+		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
+		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
+		SyncTask_Commit( s->task );
+		SyncTask_Delete( &s->task );
+	}
+	s->state = STATE_FINISHED;
+	s->task = NULL;
+	free( s->tasks );
+	s->tasks = NULL;
+	return s->synced_files;
 }
 
 #ifdef _WIN32
-#include <io.h>
-#include <fcntl.h>
 
 static void InitConsoleWindow( void )
 {
@@ -169,6 +219,7 @@ static LCFinder_InitWorkDir( void )
 	mkdir( finder.data_dir );
 	mkdir( finder.fileset_dir );
 	mkdir( finder.thumbs_dir );
+	_wsetlocale(LC_ALL, L"chs");
 }
 
 int main( int argc, char **argv )

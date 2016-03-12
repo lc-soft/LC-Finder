@@ -14,8 +14,6 @@
 #include <LCUI/gui/widget/textview.h>
 #include "finder.h"
 
-#define PATH_LEN 2048
-
 static struct SettingsViewData {
 	LCUI_Widget dirlist;
 } this_view;

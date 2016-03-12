@@ -40,6 +40,8 @@
 #include "file_search.h"
 #include "sqlite3.h"
 
+#define STORAGE_PATH "data/storage.db"
+
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -137,7 +139,7 @@ int DB_Init( void )
 	int ret;
 	char *errmsg;
 	printf( "[database] initializing database ...\n" );
-	ret = sqlite3_open( "res/data.db", &self.db );
+	ret = sqlite3_open( STORAGE_PATH, &self.db );
 	if( ret != SQLITE_OK ) {
 		printf("[database] open failed\n");
 		return -1;

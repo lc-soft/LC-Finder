@@ -16,6 +16,8 @@ typedef struct Finder_ {
 
 typedef void( *EventHandler )(void*, void*);
 
+#define PATH_LEN 2048
+
 #ifdef _WIN32
 #define PATH_SEP '\\'
 #else
@@ -24,8 +26,12 @@ typedef void( *EventHandler )(void*, void*);
 
 typedef struct FileSyncStatusRec_ {
 	int state;
-	int count;
-	SyncTask task;
+	int added_files;
+	int deleted_files;
+	int scaned_files;
+	int synced_files;
+	SyncTask task;		/**< 当前正执行的任务 */
+	SyncTask *tasks;	/**< 所有任务 */
 } FileSyncStatusRec, *FileSyncStatus;
 
 extern Finder finder;

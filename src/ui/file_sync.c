@@ -5,7 +5,8 @@
 #include "finder.h"
 #include "ui.h"
 
-#define TEXT_SYNCING	L"已扫描 %d 个文件"
+#define TEXT_SCANING	L"已扫描 %d 个文件"
+#define TEXT_SAVING	L"正同步 %d/%d 个文件"
 #define TEXT_FINISHED	L"资源同步完成！"
 
 static struct SyncContextRec_ {
@@ -20,11 +21,22 @@ static struct SyncContextRec_ {
 static void OnUpdateStats( void *arg )
 {
 	wchar_t wstr[256];
-	int count = self.status.count;
-	if( self.status.task ) {
-		count += self.status.task->count;
+	int count, total;
+	switch( self.status.state ) {
+	case STATE_STARTED:
+		count = self.status.scaned_files;
+		if( self.status.task ) {
+			count += self.status.task->total_files;
+		}
+		wsprintf( wstr, TEXT_SCANING, count );
+		break;
+	case STATE_SAVING:
+		count = self.status.synced_files;
+		total = self.status.added_files + self.status.deleted_files;
+		wsprintf( wstr, TEXT_SAVING, count, total );
+		break;
+	default:return;
 	}
-	wsprintf( wstr, TEXT_SYNCING, count );
 	TextView_SetTextW( self.text, wstr );
 }
 
@@ -39,9 +51,12 @@ static void FileSyncThread( void *arg )
 	LCUI_Widget alert = self.text->parent;
 	Widget_RemoveClass( alert, "hide" );
 	LCFinder_SyncFiles( &self.status );
+	OnUpdateStats( NULL );
+	LCUITimer_Free( self.timer );
 	TextView_SetTextW( self.title, TEXT_FINISHED );
 	LCUITimer_Set( 3000, OnHideTip, NULL, FALSE );
 	self.is_syncing = FALSE;
+	self.timer = 0;
 }
 
 static void OnStartSyncFiles( void *privdata, void *data )
@@ -56,10 +71,7 @@ static void OnStartSyncFiles( void *privdata, void *data )
 
 void UI_InitFileSyncTip( void )
 {
-	self.is_syncing = FALSE;
-	self.status.count = 0;
-	self.status.task = NULL;
-	self.status.state = STATE_NONE;
+	memset( &self, 0, sizeof( self ) );
 	self.text = LCUIWidget_GetById( "folders-view-sync-stats" );
 	self.title = LCUIWidget_GetById( "folders-view-sync-title" );
 	LCFinder_BindEvent( "sync", OnStartSyncFiles, NULL );
