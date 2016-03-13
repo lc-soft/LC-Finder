@@ -127,8 +127,8 @@ static void SyncAddedFile( void *data, const wchar_t *wpath )
 	int ctime = getfilectime( wpath );
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
-	//DB_AddFile( pack->dir, path, ctime );
-	wprintf(L"sync: add file: %s, ctime: %d\n", path, ctime);
+	DB_AddFile( pack->dir, path, ctime );
+	wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
 static void SyncDeletedFile( void *data, const wchar_t *path )
@@ -174,6 +174,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		s->task = s->tasks[i];
 		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
 		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
+		DB_Flush();
 		SyncTask_Commit( s->task );
 		SyncTask_Delete( &s->task );
 	}

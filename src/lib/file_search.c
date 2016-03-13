@@ -117,18 +117,21 @@ file_tag_relation ftr WHERE d.id = f,did";
 /** 缓存 SQL 代码，等到调用 DB_Flush() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )
 {
-	char *buf;
-	int len = self.sql_buf_len + strlen(sql) + 2;
+	int len;
+	char *buf, *tail;
+	len = strlen( sql ) + 2;
 	if( self.sql_buf ) {
-		buf = realloc( self.sql_buf, sizeof( char )*len );
+		len += self.sql_buf_len;
+		buf = realloc( self.sql_buf, sizeof( char )*(len + 1) );
+		tail = buf + self.sql_buf_len;
 	} else {
-		buf = malloc( sizeof(char)*len );
+		buf = malloc( sizeof( char )*(len + 1) );
+		tail = buf;
 	}
 	if( !buf ) {
 		return -1;
 	}
-	strcat( buf, ";\n" );
-	strcat( buf, sql );
+	sprintf( tail, "%s;\n", sql );
 	self.sql_buf = buf;
 	self.sql_buf_len = len;
 	return 0;
