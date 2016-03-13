@@ -87,6 +87,9 @@ DB_Tag DB_AddTag( const char *tagname );
 /** 添加一个文件记录 */
 void DB_AddFile( DB_Dir dir, const char *filepath, int create_time );
 
+/** 删除一个文件记录 */
+void DB_DeleteFile( DB_Dir dir, const char *filepath );
+
 /** 获取全部标签记录 */
 int DB_GetTags( DB_Tag **outlist );
 

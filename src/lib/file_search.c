@@ -41,6 +41,7 @@
 #include "sqlite3.h"
 
 #define STORAGE_PATH "data/storage.db"
+#define SQL_BUF_SIZE 1024
 
 #ifdef WIN32
 #define strdup _strdup
@@ -105,8 +106,9 @@ static const char *sql_file_remove_tag = "\
 DELETE FROM file_tag_relation WHERE fid = %d AND tid = %d;\
 ";
 static const char *sql_add_file = "\
-INSERT INTO file(did, path, create_time) VALUES(%d, \"%s\", %d);\
-";
+INSERT INTO file(did, path, create_time) VALUES(%d, \"%s\", %d);";
+static const char *sql_del_file = "\
+DELETE FROM file WHERE did = %d AND path = \"%s\";";
 static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
 static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 static const char *sql_search_files = "SELECT f.id, f.did, f.score, f.path \
@@ -162,7 +164,7 @@ DB_Dir DB_AddDir( const char *dirpath )
 	int ret;
 	DB_Dir dir;
 	sqlite3_stmt *stmt;
-	char *errmsg, sql[1024];
+	char *errmsg, sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_add_dir, dirpath );
 	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
 	if( ret != SQLITE_OK ) {
@@ -228,7 +230,7 @@ DB_Tag DB_AddTag( const char *tagname )
 	int ret;
 	DB_Tag tag;
 	sqlite3_stmt *stmt;
-	char *errmsg, sql[1024];
+	char *errmsg, sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_add_tag, tagname );
 	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
 	if( ret != SQLITE_OK ) {
@@ -251,11 +253,17 @@ DB_Tag DB_AddTag( const char *tagname )
 
 void DB_AddFile( DB_Dir dir, const char *filepath, int create_time )
 {
-	char sql[1024];
+	char sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_add_file, dir->id, filepath, create_time );
 	DB_CacheSQL( sql );
 }
 
+void DB_DeleteFile( DB_Dir dir, const char *filepath )
+{
+	char sql[SQL_BUF_SIZE];
+	sprintf( sql, sql_del_file, dir->id, filepath );
+	DB_CacheSQL( sql );
+}
 int DB_GetTags( DB_Tag **outlist )
 {
 	DB_Tag *list, tag;
@@ -300,28 +308,28 @@ int DB_GetTags( DB_Tag **outlist )
 
 void DBTag_Remove( DB_Tag tag )
 {
-	char sql[1024];
+	char sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_remove_tag, tag->id );
 	DB_CacheSQL( sql );
 }
 
 void DBFile_RemoveTag( DB_File file, DB_Tag tag )
 {
-	char sql[1024];
+	char sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_file_remove_tag, file->id, tag->id );
 	DB_CacheSQL( sql );
 }
 
 void DBFile_AddTag( DB_File file, DB_Tag tag )
 {
-	char sql[1024];
+	char sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_file_add_tag, file->id, file->did, tag->id );
 	DB_CacheSQL( sql );
 }
 
 void DBFile_SetScore( DB_File file, int score )
 {
-	char sql[1024];
+	char sql[SQL_BUF_SIZE];
 	sprintf( sql, sql_file_set_score, score, file->id );
 	DB_CacheSQL( sql );
 }
@@ -371,7 +379,7 @@ static int DB_DoSearchFiles( const char *sql, int limit, DB_File **outfiles )
 int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
 {
 	int i;
-	char buf[256], sql[1024], sql_terms[1024];
+	char buf[256], sql[SQL_BUF_SIZE], sql_terms[1024];
 	strcpy( sql, sql_search_files );
 	if( q->n_tags > 0 && q->tags ) {
 		strcat( sql_terms, " AND ftr.tid IN (" );

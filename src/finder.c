@@ -131,11 +131,14 @@ static void SyncAddedFile( void *data, const wchar_t *wpath )
 	wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
-static void SyncDeletedFile( void *data, const wchar_t *path )
+static void SyncDeletedFile( void *data, const wchar_t *wpath )
 {
+	static char path[PATH_LEN];
 	DirStatusDataPack pack = data;
 	pack->status->synced_files += 1;
-	wprintf(L"sync: delete file: %s\n", path);
+	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
+	DB_DeleteFile( pack->dir, path );
+	wprintf(L"sync: delete file: %s\n", wpath);
 }
 
 int LCFinder_SyncFiles( FileSyncStatus s )
@@ -178,6 +181,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		SyncTask_Commit( s->task );
 		SyncTask_Delete( &s->task );
 	}
+	wprintf(L"\n\nend sync\n");
 	s->state = STATE_FINISHED;
 	s->task = NULL;
 	free( s->tasks );
