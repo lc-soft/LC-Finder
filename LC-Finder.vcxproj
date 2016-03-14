@@ -21,10 +21,12 @@
   <ItemGroup>
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\file_cache.c" />
+    <ClCompile Include="src\lib\file_info.c" />
     <ClCompile Include="src\lib\file_search.c" />
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\lib\thumb_pool.c" />
+    <ClCompile Include="src\lib\tile_item.c" />
     <ClCompile Include="src\ui\file_sync.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_settings.c" />
@@ -49,6 +51,7 @@
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\thumb_cache.h" />
     <ClInclude Include="include\thumb_pool.h" />
+    <ClInclude Include="include\tile_item.h" />
     <ClInclude Include="include\ui.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -3,6 +3,7 @@
 
 #include "file_cache.h"
 #include "file_search.h"
+#include "thumb_cache.h" 
 
 typedef struct Finder_ {
 	DB_Dir *dirs;
@@ -12,6 +13,7 @@ typedef struct Finder_ {
 	wchar_t *data_dir;
 	wchar_t *fileset_dir;
 	wchar_t *thumbs_dir;
+	ThumbCache *thumb_caches;
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);

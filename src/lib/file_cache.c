@@ -99,27 +99,6 @@ static DictType DictType_Files = {
 	NULL
 };
 
-wchar_t *encode( const wchar_t *wstr )
-{
-	int i, len;
-	SHA1_CTX ctx;
-	uint8_t results[20];
-	wchar_t *out_wstr, elem[4];
-
-	SHA1Init( &ctx );
-	len = wcslen( wstr );
-	len *= sizeof( wchar_t ) / sizeof( unsigned char );
-	SHA1Update( &ctx, (unsigned char*)wstr, len );
-	SHA1Final( results, &ctx );
-	out_wstr = malloc( sizeof( wchar_t ) * 42 );
-	out_wstr[0] = 0;
-	for( i = 0; i < 20; ++i ) {
-		wsprintf( elem, L"%02x", results[i] );
-		wcscat( out_wstr, elem );
-	}
-	return out_wstr;
-}
-
 SyncTask SyncTask_New( const char *data_dir, const char *scan_dir )
 {
 	SyncTask t;
@@ -152,7 +131,7 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	t->scan_dir = malloc( sizeof( wchar_t ) * len2 );
 	wcscpy( t->data_dir, data_dir );
 	wcscpy( t->scan_dir, scan_dir );
-	name = encode( t->scan_dir );
+	name = EncodeSHA1( t->scan_dir );
 	n = wcslen( t->data_dir );
 	len = n + wcslen( name ) + 2 + WCSLEN( suffix );
 	t->tmpfile = malloc( len * sizeof( wchar_t ) );

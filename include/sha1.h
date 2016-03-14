@@ -19,4 +19,6 @@ void SHA1Update( SHA1_CTX * context, const unsigned char *data, uint32_t len );
 void SHA1Final( unsigned char digest[20], SHA1_CTX * context );
 void SHA1( char *hash_out, const char *str, int len );
 
+wchar_t *EncodeSHA1( const wchar_t *wstr );
+
 #endif /* SHA1_H */

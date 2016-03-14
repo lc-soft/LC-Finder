@@ -39,14 +39,8 @@
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
 #include "thumb_cache.h"
-#include "unqlite.h"
 
 #define THUMB_MAX_SIZE 8553600
-
-typedef struct ThumbDatakRec_ {
-	int modify_time;
-	LCUI_Graph graph;
-} ThumbDataRec, *ThumbData;
 
 typedef struct ThumbDataBlockRec_ {
 	size_t width;
@@ -55,8 +49,6 @@ typedef struct ThumbDataBlockRec_ {
 	int color_type;
 	int modify_time;
 } ThumbDataBlockRec, *ThumbDataBlock;
-
-typedef unqlite* ThumbCache;
 
 ThumbCache ThumbCache_New( const char *filepath )
 {

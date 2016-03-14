@@ -16,6 +16,8 @@
 #include <LCUI/font/charset.h>
 #include "finder.h"
 #include "ui.h"
+#include "sha1.h"
+
 #define EVENT_TOTAL 2
 
 Finder finder;
@@ -205,7 +207,7 @@ static void InitConsoleWindow( void )
 
 #endif
 
-static LCFinder_InitWorkDir( void )
+static void LCFinder_InitWorkDir( void )
 {
 	int len;
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
@@ -227,6 +229,33 @@ static LCFinder_InitWorkDir( void )
 	_wsetlocale(LC_ALL, L"chs");
 }
 
+
+#define DecodeUTF8(BUF, PATH, LEN) LCUI_DecodeString( BUF, PATH, LEN, ENCODING_UTF8 )
+
+static void LCFinder_InitThumbCache( void )
+{
+	int i;
+	ThumbCache cache;
+	char path[PATH_LEN];
+	wchar_t *name, wpath[PATH_LEN];
+	if( finder.n_dirs > 0 ) {
+		finder.thumb_caches = NEW(ThumbCache, finder.n_dirs);
+	} else {
+		finder.thumb_caches = NULL;
+	}
+	printf("[thumbcache] init...\n");
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		strcpy( path, finder.dirs[i]->path );
+		DecodeUTF8( wpath, path, PATH_LEN );
+		name = EncodeSHA1( wpath );
+		wsprintf( wpath, L"%s%s", finder.thumbs_dir, name );
+		LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_ANSI );
+		cache = ThumbCache_New( path );
+		finder.thumb_caches[i] = cache;
+	}
+	printf("[thumbcache] init done\n");
+}
+
 int main( int argc, char **argv )
 {
 #ifdef LCUI_BUILD_IN_WIN32
@@ -237,6 +266,7 @@ int main( int argc, char **argv )
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
 	LCFinder_InitWorkDir();
+	LCFinder_InitThumbCache();
 	LCFinder_InitEvents();
 	UI_Init();
 	return UI_Run();
