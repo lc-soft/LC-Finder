@@ -114,7 +114,10 @@ void DBFile_SetScore( DB_File file, int score );
  */
 int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total );
 
-/** 刷新缓存，将数据写入至数据库 */
-int DB_Flush( void );
+/** 事物开始 */
+void DB_Begin( void );
+
+/** 提交事务 */
+int DB_Commit( void );
 
 #endif

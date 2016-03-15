@@ -170,6 +170,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		s->tasks[i] = s->task;
 		free( path );
 	}
+	DB_Begin();
 	s->state = STATE_SAVING;
 	wprintf(L"\n\nstart sync\n");
 	for( i = 0; i < finder.n_dirs; ++i ) {
@@ -179,10 +180,10 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		s->task = s->tasks[i];
 		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
 		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
-		DB_Flush();
 		SyncTask_Commit( s->task );
 		SyncTask_Delete( &s->task );
 	}
+	DB_Commit();
 	wprintf(L"\n\nend sync\n");
 	s->state = STATE_FINISHED;
 	s->task = NULL;
