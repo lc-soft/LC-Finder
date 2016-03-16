@@ -115,7 +115,7 @@ void DBFile_SetScore( DB_File file, int score );
 int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total );
 
 /** 事物开始 */
-void DB_Begin( void );
+int DB_Begin( void );
 
 /** 提交事务 */
 int DB_Commit( void );

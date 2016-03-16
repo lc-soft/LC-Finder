@@ -257,6 +257,11 @@ static void LCFinder_InitThumbCache( void )
 	printf("[thumbcache] init done\n");
 }
 
+static void LCFinder_Exit( void )
+{
+	printf("exit\n");
+}
+
 int main( int argc, char **argv )
 {
 #ifdef LCUI_BUILD_IN_WIN32
@@ -270,5 +275,6 @@ int main( int argc, char **argv )
 	LCFinder_InitThumbCache();
 	LCFinder_InitEvents();
 	UI_Init();
+	LCUI_AtQuit( LCFinder_Exit );
 	return UI_Run();
 }

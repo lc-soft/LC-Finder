@@ -53,6 +53,7 @@ enum SQLCodeList {
 	SQL_GET_DIR_TOTAL,
 	SQL_GET_DIR_LIST,
 	SQL_ADD_TAG,
+	SQL_ADD_DIR,
 	SQL_TOTAL
 };
 
@@ -103,8 +104,8 @@ WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;\
 ";
 static const char *sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 static const char *sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
-static const char *sql_add_dir = "INSERT INTO dir(path) VALUES(\"%s\");";
-static const char *sql_add_tag = "INSERT INTO tag(name) VALUES(\"%s\");";
+static const char *sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
+static const char *sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 static const char *sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
 static const char *sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
 static const char *sql_file_add_tag = "\
@@ -162,6 +163,8 @@ int DB_Init( void )
 	}
 	self.sqls[SQL_ADD_FILE] = sql_add_file;
 	self.sqls[SQL_DEL_FILE] = sql_del_file;
+	self.sqls[SQL_ADD_DIR] = sql_add_dir;
+	self.sqls[SQL_ADD_TAG] = sql_add_tag;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
 	self.sqls[SQL_GET_DIR_TOTAL] = sql_get_dir_total;
 	for( i = 0; i < SQL_TOTAL; ++i ) {
@@ -173,6 +176,7 @@ int DB_Init( void )
 		} else {
 			self.stmts[i] = NULL;
 		}
+		stmt = NULL;
 	}
 	self.sql_buf = NULL;
 	self.sql_buf_len = 0;
@@ -184,11 +188,12 @@ DB_Dir DB_AddDir( const char *dirpath )
 	int ret;
 	DB_Dir dir;
 	sqlite3_stmt *stmt;
-	char *errmsg, sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_add_dir, dirpath );
-	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
-	if( ret != SQLITE_OK ) {
-		printf( "[database] error: %s\n", errmsg );
+	char sql[SQL_BUF_SIZE];
+	stmt = self.stmts[SQL_ADD_DIR];
+	sqlite3_bind_text( stmt, 1, dirpath, strlen( dirpath ), NULL );
+	ret = sqlite3_step( stmt );
+	if( ret != SQLITE_DONE ) {
+		printf( "[database] error: %s\n", dirpath );
 		return NULL;
 	}
 	sprintf( sql, sql_get_dir_id, dirpath );
@@ -276,11 +281,10 @@ void DB_AddFile( DB_Dir dir, const char *filepath, int create_time )
 	int ret;
 	sqlite3_stmt *stmt = self.stmts[SQL_ADD_FILE];
 	sqlite3_reset( stmt );
-	sqlite3_bind_int( stmt, 1, dir->id );
-	sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
-	sqlite3_bind_int( stmt, 3, create_time );
+	ret = sqlite3_bind_int( stmt, 1, dir->id );
+	ret = sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
+	ret = sqlite3_bind_int( stmt, 3, create_time );
 	ret = sqlite3_step( stmt );
-	printf( "ret: %d\n", ret );
 }
 
 void DB_DeleteFile( DB_Dir dir, const char *filepath )
@@ -466,27 +470,12 @@ int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
 	return DB_DoSearchFiles( sql, q->limit, outfiles );
 }
 
-void DB_Begin( void )
+int DB_Begin( void )
 {
-	sqlite3_exec( self.db, "begin;", NULL, NULL, NULL );
+	return sqlite3_exec( self.db, "begin;", NULL, NULL, NULL );
 }
 
 int DB_Commit( void )
 {
-	int ret;
-	char *errmsg, *sql;
-	if( !self.sql_buf ) {
-		return 0;
-	}
-	sql = self.sql_buf;
-	self.sql_buf = NULL;
-	self.sql_buf_len = 0;
-	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
-	if( ret != SQLITE_OK ) {
-		printf( "[database] flush error: %s\n", errmsg );
-		return -1;
-	}
-	sqlite3_exec( self.db, "commit;", NULL, NULL, NULL );
-	free( sql );
-	return 0;
+	return sqlite3_exec( self.db, "commit;", NULL, NULL, NULL );
 }
