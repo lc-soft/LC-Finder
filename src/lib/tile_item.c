@@ -1,4 +1,4 @@
-
+﻿
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/display.h>
@@ -42,7 +42,7 @@ LCUI_Widget CreateFolderItem( const char *filepath )
 	return item;
 }
 
-static LCUI_Widget CreatePictureItem( const char *filepath )
+LCUI_Widget CreatePictureItem( const char *filepath, LCUI_Graph *pic )
 {
 	LCUI_Widget item = LCUIWidget_New( NULL );
 	return item;

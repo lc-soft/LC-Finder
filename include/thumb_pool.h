@@ -41,4 +41,8 @@
 typedef void* ThumbPool;
 #endif
 
+ThumbPool ThumbPool_New( size_t max_size, void( *on_remove )(void*) );
+
+int ThumbPool_Add( ThumbPool pool, LCUI_Graph *thumb, void *privdata );
+
 #endif

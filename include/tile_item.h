@@ -1,11 +1,11 @@
-
+ï»¿
 #ifndef __TILE_ITEM_H__
 #define __TILE_ITEM_H__
 
-/** ĞÂ½¨ÎÄ¼ş¼Ğ´ÅÌùÏî */
+/** æ–°å»ºæ–‡ä»¶å¤¹ç£è´´é¡¹ */
 LCUI_Widget CreateFolderItem( const char *filepath );
 
-/** ĞÂ½¨Í¼Æ¬´ÅÌùÏî */
-LCUI_Widget CreatePictureItem( const char *filepath );
+/** æ–°å»ºå›¾ç‰‡ç£è´´é¡¹ */
+LCUI_Widget CreatePictureItem( const char *filepath, LCUI_Graph *pic );
 
 #endif

@@ -38,12 +38,6 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
-#include "thumb_pool.h"
-
-typedef struct ThumbDataNodeRec_ {
-	LCUI_Graph graph;		/** 缩略图 */
-	void *privdata;			/** 私有数据 */
-} ThumbDataNodeRec, ThumbDataNode;
 
 /** 缓存池的数据结构 */
 typedef struct ThumbPoolRec_ {
@@ -52,6 +46,13 @@ typedef struct ThumbPoolRec_ {
 	LinkedList thumbs;		/**< 缩略图缓存列表 */
 	void (*on_remove)(void*);	/** 回调函数，当缩略图被移出缓存池时被调用 */
 } ThumbPoolRec, *ThumbPool;
+
+#include "thumb_pool.h"
+
+typedef struct ThumbDataNodeRec_ {
+	LCUI_Graph graph;		/** 缩略图 */
+	void *privdata;			/** 私有数据 */
+} ThumbDataNodeRec, ThumbDataNode;
 
 ThumbPool ThumbPool_New( size_t max_size, void (*on_remove)(void*) )
 {
