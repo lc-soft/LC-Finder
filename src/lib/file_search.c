@@ -37,8 +37,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "file_search.h"
 #include "sqlite3.h"
+#define __FILE_SEARCH_C__
+#include "file_search.h"
 
 #define STORAGE_PATH "data/storage.db"
 #define SQL_BUF_SIZE 1024
@@ -119,7 +120,7 @@ DELETE FROM file WHERE did = ? AND path = ?;";
 static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
 static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 static const char *sql_search_files = "SELECT f.id, f.did, f.score, f.path \
-d.path FROM file f, dir d, file_tag_relation ftr WHERE d.id = f,did";
+FROM file f, dir d, file_tag_relation ftr WHERE d.id = f,did";
 static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f, dir d, \
 file_tag_relation ftr WHERE d.id = f,did";
 
@@ -366,108 +367,134 @@ void DBFile_SetScore( DB_File file, int score )
 	DB_CacheSQL( sql );
 }
 
-/** 执行文件搜索操作，处理SQL查询结果 */
-static int DB_DoSearchFiles( const char *sql, int limit, DB_File **outfiles )
+int DBQuery_GetTotalFiles( DB_Query query )
 {
-	int i = 0;
-	DB_File *files;
+	int total = 0;
 	sqlite3_stmt *stmt;
-	if( !outfiles ) {
-		return 0;
-	}
+	char sql[SQL_BUF_SIZE];
+	strcpy( sql, sql_count_files );
+	strcat( sql, query->sql_terms );
 	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
-	files = malloc( sizeof( DB_File )*(limit + 1) );
-	if( !files ) {
-		return -1;
-	}
-	while( sqlite3_step( stmt ) == SQLITE_ROW && i < limit ) {
-		int len, n;
-		const char *path, *dirpath;
-		DB_File f = malloc( sizeof( DB_FileRec ) );
-		f->id = sqlite3_column_int( stmt, 0 );
-		f->did = sqlite3_column_int( stmt, 1 );
-		f->score = sqlite3_column_int( stmt, 2 );
-		path = sqlite3_column_text( stmt, 3 );
-		dirpath = sqlite3_column_text( stmt, 4 );
-		n = strlen( dirpath );
-		len = strlen( f->path ) + n + 2;
-		f->path = malloc( len*sizeof( char ) );
-		/* 拼接文件夹路径和文件路径 */
-		strcpy( f->path, dirpath );
-		if( f->path[n - 1] != '/' ) {
-			f->path[n] = '/';
-			f->path[n + 1] = 0;
-		}
-		strcat( f->path, path );
-		files[i] = f;
-		++i;
+	if( sqlite3_step( stmt ) == SQLITE_ROW ) {
+		total = sqlite3_column_int( stmt, 0 );
 	}
 	sqlite3_finalize( stmt );
-	files[limit] = NULL;
-	*outfiles = files;
-	return i;
+	return total;
 }
 
-int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total )
+static int escape( char *buf, const char *str )
+{
+	char *outptr = buf;
+	const char *inptr = str;
+	while( *inptr ) {
+		switch( *inptr ) {
+		case '_':
+		case '%':
+		case '\\':
+			*outptr = '\\';
+			++outptr;
+		default: break;
+		}
+		*outptr = *inptr;
+		++outptr;
+	}
+	*outptr = 0;
+	return outptr - buf;
+}
+
+DB_File DBQuery_FetchFile( DB_Query query )
+{
+	int ret;
+	DB_File file;
+	const char *path;
+	ret = sqlite3_step( query->stmt );
+	if( ret != SQLITE_ROW ) {
+		return NULL;
+	}
+	file = malloc( sizeof( DB_FileRec ) );
+	file->id = sqlite3_column_int( query->stmt, 0 );
+	file->did = sqlite3_column_int( query->stmt, 1 );
+	file->score = sqlite3_column_int( query->stmt, 2 );
+	path = sqlite3_column_text( query->stmt, 3 );
+	file->path = malloc( (strlen( path ) + 1)*sizeof( char ) );
+	strcpy( file->path, path );
+	return file;
+}
+
+DB_Query DB_NewQuery( const DB_QueryTerms terms )
 {
 	int i;
-	char buf[256], sql[SQL_BUF_SIZE], sql_terms[1024];
+	char buf[256], sql[SQL_BUF_SIZE];
+	DB_Query q = malloc( sizeof(DB_QueryRec) );
+	q->sql_terms = malloc( sizeof( char )*SQL_BUF_SIZE );
 	strcpy( sql, sql_search_files );
-	if( q->n_tags > 0 && q->tags ) {
-		strcat( sql_terms, " AND ftr.tid IN (" );
-		for( i = 0; i < q->n_dirs; ++i ) {
-			sprintf( buf, "%d", q->tags[i]->id );
+	if( terms->n_tags > 0 && terms->tags ) {
+		strcat( q->sql_terms, " AND ftr.tid IN (" );
+		for( i = 0; i < terms->n_dirs; ++i ) {
+			sprintf( buf, "%d", terms->tags[i]->id );
 			if( i > 0 ) {
-				strcat( sql_terms, ", " );
+				strcat( q->sql_terms, ", " );
 			}
-			strcat( sql_terms, buf );
+			strcat( q->sql_terms, buf );
 		}
-		strcat( sql_terms, ") AND ftr.fid = f.id" );
+		strcat( q->sql_terms, ") AND ftr.fid = f.id" );
 	}
-	if( q->n_dirs > 0 && q->dirs ) {
-		strcat( sql_terms, " AND f.did IN (" );
-		for( i = 0; i < q->n_dirs; ++i ) {
-			sprintf( buf, "%d", q->dirs[i]->id );
+	if( terms->n_dirs > 0 && terms->dirs ) {
+		strcat( q->sql_terms, " AND f.did IN (" );
+		for( i = 0; i < terms->n_dirs; ++i ) {
+			sprintf( buf, "%d", terms->dirs[i]->id );
 			if( i > 0 ) {
-				strcat( sql_terms, ", " );
+				strcat( q->sql_terms, ", " );
 			}
-			strcat( sql_terms, buf );
+			strcat( q->sql_terms, buf );
 		}
 	}
-	if( q->create_time == DESC ) {
-		strcat( sql_terms, " ORDER BY f.create_time DESC" );
-	} else if( q->create_time == ASC ) {
-		strcat( sql_terms, " ORDER BY f.create_time ASC" );
+	if( terms->dirpath ) {
+		char *path;
+		i = 2 * strlen( terms->dirpath );
+		path = malloc( i * sizeof( char ) );
+		escape( path, terms->dirpath );
+		strcat( q->sql_terms, " AND f.path LIKE '" );
+		strcat( q->sql_terms, path );
+		strcat( q->sql_terms, "%' ESCAPE '\\'");
 	}
-	if( q->score != NONE ) {
-		if( q->create_time != NONE ) {
-			strcat( sql_terms, ", " );
+	if( terms->create_time == DESC ) {
+		strcat( q->sql_terms, " ORDER BY f.create_time DESC" );
+	} else if( terms->create_time == ASC ) {
+		strcat( q->sql_terms, " ORDER BY f.create_time ASC" );
+	}
+	if( terms->score != NONE ) {
+		if( terms->create_time != NONE ) {
+			strcat( q->sql_terms, ", " );
 		} else {
-			strcat( sql_terms, " ORDER BY " );
+			strcat( q->sql_terms, " ORDER BY " );
 		}
-		if( q->score == DESC ) {
-			strcat( sql_terms, "f.score DESC" );
+		if( terms->score == DESC ) {
+			strcat( q->sql_terms, "f.score DESC" );
 		} else {
-			strcat( sql_terms, "f.score ASC" );
+			strcat( q->sql_terms, "f.score ASC" );
 		}
 	}
-	if( total ) {
-		sqlite3_stmt *stmt;
-		strcpy( sql, sql_count_files );
-		strcat( sql, sql_terms );
-		sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
-		if( sqlite3_step( stmt ) == SQLITE_ROW ) {
-			*total = sqlite3_column_int( stmt, 0 );
-		} else {
-			*total = 0;
-		}
-		sqlite3_finalize( stmt );
-	}
-	sprintf( buf, " LIMIT %d OFFSET %d", q->limit, q->offset );
+	sprintf( buf, " LIMIT %d OFFSET %d", terms->limit, terms->offset );
 	strcpy( sql, sql_search_files );
-	strcat( sql_terms, buf );
-	strcat( sql, sql_terms );
-	return DB_DoSearchFiles( sql, q->limit, outfiles );
+	strcat( q->sql_terms, buf );
+	strcat( sql, q->sql_terms );
+	i = sqlite3_prepare_v2( self.db, sql, -1, &q->stmt, NULL );
+	if( i == SQLITE_DONE ) {
+		return q;
+	}
+	free( q->sql_terms );
+	free( q );
+	return NULL;
+}
+
+void DB_DeleteQuery( DB_Query query )
+{
+	free( query->sql_terms );
+	sqlite3_finalize( query->stmt );
+	query->sql_terms = NULL;
+	query->stmt = NULL;
+	free( query );
 }
 
 int DB_Begin( void )

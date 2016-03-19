@@ -61,16 +61,26 @@ typedef struct DB_FileRec_ {
 	char *path;		/**< 文件路径 */
 } DB_FileRec, *DB_File;
 
-typedef struct DB_QueryRec_ {
-	DB_Dir *dirs;			/**< 文件夹列表 */
+typedef struct DB_QueryTermsRec_ {
+	DB_Dir *dirs;			/**< 源文件夹列表 */
 	DB_Tag *tags;			/**< 标签列表 */
 	int n_dirs;			/**< 文件夹数量 */
 	int n_tags;			/**< 标签数量 */
 	int offset;			/**< 从何处开始取数据记录 */
 	int limit;			/**< 数据记录的最大数量 */
+	char *dirpath;			/**< 文件所在的目录路径 */
 	enum order score;		/**< 按评分排序时使用的排序规则 */
 	enum order create_time;		/**< 按创建时间排序时使用的排序规则 */
-} DB_QueryRec, *DB_Query;		/**< 搜索规则定义 */
+} DB_QueryTermsRec, *DB_QueryTerms;	/**< 搜索规则定义 */
+
+#ifdef __FILE_SEARCH_C__
+typedef struct DB_QueryRec_ {
+	char *sql_terms;
+	sqlite3_stmt *stmt;
+} DB_QueryRec, *DB_Query;
+#else
+typedef void* DB_Query;
+#endif
 
 /** 初始化数据库模块 */
 int DB_Init( void );
@@ -105,14 +115,17 @@ void DBFile_AddTag( DB_File file, DB_Tag tag );
 /** 为文件评分 */
 void DBFile_SetScore( DB_File file, int score );
 
-/** 
- * 按照指定条件搜索文件 
- * @param[in] q 搜索条件
- * @param[out] outfiles 搜索到的文件列表
- * @param[out] total 符合搜索条件的文件总数
- * @return 文件列表的长度
- */
-int DB_SearchFiles( const DB_Query q, DB_File **outfiles, int *total );
+/** 获取符合查询条件的文件总数 */
+int DBQuery_GetTotalFiles( DB_Query query );
+
+/** 从查询结果中获取下个文件 */
+DB_File DBQuery_FetchFile( DB_Query query );
+
+/** 新建一个查询实例 */
+DB_Query DB_NewQuery( const DB_QueryTerms terms );
+
+/** 删除一个查询实例 */
+void DB_DeleteQuery( DB_Query query );
 
 /** 事物开始 */
 int DB_Begin( void );
