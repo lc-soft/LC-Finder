@@ -29,6 +29,8 @@ static struct FoldersViewData {
 	LinkedList *cache;
 } this_view;
 
+void OpenFolder( const char *dirpath );
+
 static void OnAddDir( void *privdata, void *data )
 {
 	LCUI_Widget item = CreateFolderItem( data );
@@ -140,38 +142,61 @@ static void FileScannerThread( void *arg )
 	LCUIThread_Exit( NULL );
 }
 
+static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
+{
+	FileEntry entry = e->data;
+	_DEBUG_MSG( "open file: %s\n", entry->path );
+	if( entry->is_dir ) {
+		OpenFolder( entry->path );
+	}
+}
+
 static void SyncViewItems( void *arg )
 {
 	int i;
 	DB_Dir dir = arg;
+	FileEntry entry;
 	LCUI_Widget item;
-	LinkedListNode *node;
+	LinkedList *list;
+	LinkedListNode *node, *prev_node;
 	ThumbCache tcache = NULL;
-	ThumbData tdata;
 
-	for( i = 0; i < finder.n_dirs; ++i ) {
-		if( dir == finder.dirs[i] ) {
-			tcache = finder.thumb_caches[i];
-			break;
+	if( dir ) {
+		for( i = 0; i < finder.n_dirs; ++i ) {
+			if( dir == finder.dirs[i] ) {
+				tcache = finder.thumb_caches[i];
+				break;
+			}
 		}
 	}
-	LinkedList_ForEach( node, this_view.cache ) {
-		FileEntry entry = node->data;
+	list = this_view.cache;
+	if( this_view.cache == this_view.files_cache ) {
+		this_view.cache = &this_view.files_cache[1];
+	} else {
+		this_view.cache = this_view.files_cache;
+	}
+	LinkedList_ForEach( node, list ) {
+		entry = node->data;
+		prev_node = node->prev;
 		if( entry->is_dir ) {
 			item = CreateFolderItem( entry->path );
 		} else {
+			continue;
 			item = CreatePictureItem( entry->path, NULL );
 		}
-		tdata = ThumbCache_Load( tcache, entry->path );
+		LinkedList_Unlink( list, node );
+		LinkedList_AppendNode( &this_view.files, node );
 		Widget_Append( this_view.items, item );
+		Widget_BindEvent( item, "click", OnItemClick, entry, NULL );
+		node = prev_node;
 	}
 }
 
 static void OpenFolder( const char *dirpath )
 {
-	DB_Dir dir;
 	int i, len;
 	char *path = NULL;
+	DB_Dir dir = NULL;
 	if( dirpath ) {
 		len = strlen( dirpath );
 		path = malloc( sizeof( char )*len );

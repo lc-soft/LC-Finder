@@ -120,7 +120,7 @@ DELETE FROM file WHERE did = ? AND path = ?;";
 static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
 static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 static const char *sql_search_files = "SELECT f.id, f.did, f.score, f.path \
-FROM file f, dir d, file_tag_relation ftr WHERE d.id = f,did";
+FROM file f, dir d, file_tag_relation ftr WHERE d.id = f.did";
 static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f, dir d, \
 file_tag_relation ftr WHERE d.id = f,did";
 
@@ -397,6 +397,7 @@ static int escape( char *buf, const char *str )
 		}
 		*outptr = *inptr;
 		++outptr;
+		++inptr;
 	}
 	*outptr = 0;
 	return outptr - buf;
@@ -427,6 +428,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	char buf[256], sql[SQL_BUF_SIZE];
 	DB_Query q = malloc( sizeof(DB_QueryRec) );
 	q->sql_terms = malloc( sizeof( char )*SQL_BUF_SIZE );
+	q->sql_terms[0] = 0;
 	strcpy( sql, sql_search_files );
 	if( terms->n_tags > 0 && terms->tags ) {
 		strcat( q->sql_terms, " AND ftr.tid IN (" );
@@ -480,7 +482,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	strcat( q->sql_terms, buf );
 	strcat( sql, q->sql_terms );
 	i = sqlite3_prepare_v2( self.db, sql, -1, &q->stmt, NULL );
-	if( i == SQLITE_DONE ) {
+	if( i == SQLITE_OK ) {
 		return q;
 	}
 	free( q->sql_terms );
