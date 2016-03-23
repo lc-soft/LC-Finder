@@ -29,14 +29,14 @@ void UI_Init(void)
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
-		Widget_Unwrap( &box );
+		Widget_Unwrap( box );
 	}
 	Widget_UpdateStyle( LCUIWidget_GetRoot(), TRUE );
 	UI_InitSidebar();
 	UI_InitSettingsView();
 	UI_InitFoldersView();
 	UI_InitFileSyncTip();
-	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
+	//LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 }
 
 int UI_Run(void)

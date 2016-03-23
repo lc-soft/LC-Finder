@@ -76,6 +76,8 @@ typedef struct DB_QueryTermsRec_ {
 #ifdef __FILE_SEARCH_C__
 typedef struct DB_QueryRec_ {
 	char *sql_terms;
+	char *sql_tables;
+	char *sql_options;
 	sqlite3_stmt *stmt;
 } DB_QueryRec, *DB_Query;
 #else

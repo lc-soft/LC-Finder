@@ -14,10 +14,8 @@
 
 typedef struct FileEntryRec_ {
 	LCUI_BOOL is_dir;
-	union {
-		DB_File file;
-		char *path;
-	};
+	DB_File file;
+	char *path;
 } FileEntryRec, *FileEntry;
 
 static struct FoldersViewData {
@@ -40,6 +38,18 @@ static void OnAddDir( void *privdata, void *data )
 static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
 {
 	LCFinder_SendEvent( "sync", NULL );
+}
+
+static void OnDeleteFileEntry( void *arg )
+{
+	FileEntry entry = arg;
+	if( entry->is_dir ) {
+		free( entry->path );
+	} else {
+		free( entry->file->path );
+		free( entry->file );
+	}
+	free( entry );
 }
 
 static void ScanDirs( char *path )
@@ -93,11 +103,12 @@ static void ScanFiles( char *path )
 	terms.dirs = NULL;
 	terms.create_time = NONE;
 	query = DB_NewQuery( &terms );
-	total = DBQuery_GetTotalFiles( query ) + terms.limit;
-	while( terms.offset < total && this_view.is_scaning ) {
+	total = DBQuery_GetTotalFiles( query );
+	while( this_view.is_scaning && total > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &terms );
-		for( i = 0; i < terms.limit; ++i ) {
+		i = total < terms.limit ? total : terms.limit;
+		for( ; this_view.is_scaning && i > 0; --i ) {
 			file = DBQuery_FetchFile( query );
 			if( !file ) {
 				break;
@@ -107,8 +118,8 @@ static void ScanFiles( char *path )
 			entry->file = file;
 			entry->path = file->path;
 			LinkedList_Append( this_view.cache, entry );
-			printf( "fetch file: %s\n", file->path );
 		}
+		total -= terms.limit;
 		terms.offset += terms.limit;
 	}
 }
@@ -121,7 +132,7 @@ static void LoadSourceDirs( void )
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		entry = NEW( FileEntryRec, 1 );
 		len = strlen( finder.dirs[i]->path ) + 1;
-		path = malloc( sizeof( wchar_t ) * len );
+		path = malloc( sizeof( char ) * len );
 		strcpy( path, finder.dirs[i]->path );
 		entry->path = path;
 		entry->is_dir = TRUE;
@@ -132,7 +143,7 @@ static void LoadSourceDirs( void )
 static void FileScannerThread( void *arg )
 {
 	if( arg ) {
-		ScanDirs( arg );
+		//ScanDirs( arg );
 		ScanFiles( arg );
 		free( arg );
 	} else {
@@ -178,17 +189,18 @@ static void SyncViewItems( void *arg )
 	LinkedList_ForEach( node, list ) {
 		entry = node->data;
 		prev_node = node->prev;
+		LinkedList_Unlink( list, node );
+		LinkedList_AppendNode( &this_view.files, node );
+		node = prev_node;
 		if( entry->is_dir ) {
 			item = CreateFolderItem( entry->path );
 		} else {
+			_DEBUG_MSG("%s\n", entry->path);
 			continue;
 			item = CreatePictureItem( entry->path, NULL );
 		}
-		LinkedList_Unlink( list, node );
-		LinkedList_AppendNode( &this_view.files, node );
 		Widget_Append( this_view.items, item );
 		Widget_BindEvent( item, "click", OnItemClick, entry, NULL );
-		node = prev_node;
 	}
 }
 
@@ -199,7 +211,7 @@ static void OpenFolder( const char *dirpath )
 	DB_Dir dir = NULL;
 	if( dirpath ) {
 		len = strlen( dirpath );
-		path = malloc( sizeof( char )*len );
+		path = malloc( sizeof( char )*(len + 2) );
 		strcpy( path, dirpath );
 		if( path[len - 1] != PATH_SEP ) {
 			path[len++] = PATH_SEP;
@@ -217,6 +229,8 @@ static void OpenFolder( const char *dirpath )
 		LCUIThread_Join( this_view.scanner_tid, NULL );
 	}
 	this_view.is_scaning = TRUE;
+	Widget_Empty( this_view.items );
+	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
 	LCUIThread_Create( &this_view.scanner_tid, FileScannerThread, path );
 	LCUITimer_Set( 200, SyncViewItems, dir, TRUE );
 }
@@ -226,6 +240,7 @@ void UI_InitFoldersView( void )
 	LCUI_Widget btn = LCUIWidget_GetById( "btn-sync-folder-files" );
 	LCUI_Widget list = LCUIWidget_GetById( "current-folder-list" );
 	this_view.items = list;
+	LinkedList_Init( &this_view.files );
 	LinkedList_Init( &this_view.files_cache[0] );
 	LinkedList_Init( &this_view.files_cache[1] );
 	this_view.cache = &this_view.files_cache[0];

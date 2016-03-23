@@ -119,10 +119,9 @@ static const char *sql_del_file = "\
 DELETE FROM file WHERE did = ? AND path = ?;";
 static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
 static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
-static const char *sql_search_files = "SELECT f.id, f.did, f.score, f.path \
-FROM file f, dir d, file_tag_relation ftr WHERE d.id = f.did";
-static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f, dir d, \
-file_tag_relation ftr WHERE d.id = f,did";
+static const char *sql_search_files = "\
+SELECT f.id, f.did, f.score, f.path FROM file f";
+static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f";
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )
@@ -373,6 +372,7 @@ int DBQuery_GetTotalFiles( DB_Query query )
 	sqlite3_stmt *stmt;
 	char sql[SQL_BUF_SIZE];
 	strcpy( sql, sql_count_files );
+	strcat( sql, query->sql_tables );
 	strcat( sql, query->sql_terms );
 	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
 	if( sqlite3_step( stmt ) == SQLITE_ROW ) {
@@ -425,13 +425,29 @@ DB_File DBQuery_FetchFile( DB_Query query )
 DB_Query DB_NewQuery( const DB_QueryTerms terms )
 {
 	int i;
-	char buf[256], sql[SQL_BUF_SIZE];
+	char buf[256] = "", sql[SQL_BUF_SIZE];
 	DB_Query q = malloc( sizeof(DB_QueryRec) );
 	q->sql_terms = malloc( sizeof( char )*SQL_BUF_SIZE );
-	q->sql_terms[0] = 0;
-	strcpy( sql, sql_search_files );
+	q->sql_tables = malloc( sizeof( char )*SQL_BUF_SIZE );
+	q->sql_tables[0] = 0;
+	strcpy( q->sql_terms, " WHERE" );
+	if( terms->n_dirs > 0 && terms->dirs ) {
+		strcat( q->sql_tables, ", dir d" );
+		strcat( q->sql_terms, " f.did = d.did" );
+		strcat( q->sql_terms, " AND f.did IN (" );
+		for( i = 0; i < terms->n_dirs; ++i ) {
+			sprintf( buf, "%d", terms->dirs[i]->id );
+			if( i > 0 ) {
+				strcat( q->sql_terms, ", " );
+			}
+			strcat( q->sql_terms, buf );
+		}
+		strcpy( buf, " AND" );
+	}
 	if( terms->n_tags > 0 && terms->tags ) {
-		strcat( q->sql_terms, " AND ftr.tid IN (" );
+		strcat( q->sql_tables, ", file_tag_relation ftr" );
+		strcat( q->sql_terms, buf );
+		strcat( q->sql_terms, " ftr.tid IN (" );
 		for( i = 0; i < terms->n_dirs; ++i ) {
 			sprintf( buf, "%d", terms->tags[i]->id );
 			if( i > 0 ) {
@@ -441,22 +457,13 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 		}
 		strcat( q->sql_terms, ") AND ftr.fid = f.id" );
 	}
-	if( terms->n_dirs > 0 && terms->dirs ) {
-		strcat( q->sql_terms, " AND f.did IN (" );
-		for( i = 0; i < terms->n_dirs; ++i ) {
-			sprintf( buf, "%d", terms->dirs[i]->id );
-			if( i > 0 ) {
-				strcat( q->sql_terms, ", " );
-			}
-			strcat( q->sql_terms, buf );
-		}
-	}
 	if( terms->dirpath ) {
 		char *path;
 		i = 2 * strlen( terms->dirpath );
 		path = malloc( i * sizeof( char ) );
 		escape( path, terms->dirpath );
-		strcat( q->sql_terms, " AND f.path LIKE '" );
+		strcat( q->sql_terms, buf );
+		strcat( q->sql_terms, " f.path LIKE '" );
 		strcat( q->sql_terms, path );
 		strcat( q->sql_terms, "%' ESCAPE '\\'");
 	}
@@ -479,8 +486,10 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	}
 	sprintf( buf, " LIMIT %d OFFSET %d", terms->limit, terms->offset );
 	strcpy( sql, sql_search_files );
+	strcat( sql, q->sql_tables );
 	strcat( q->sql_terms, buf );
 	strcat( sql, q->sql_terms );
+	printf("sql: %s\n", sql);
 	i = sqlite3_prepare_v2( self.db, sql, -1, &q->stmt, NULL );
 	if( i == SQLITE_OK ) {
 		return q;
