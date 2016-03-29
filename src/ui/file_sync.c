@@ -110,5 +110,5 @@ void UI_InitFileSyncTip( void )
 	memset( &self, 0, sizeof( self ) );
 	self.text = LCUIWidget_GetById( "folders-view-sync-stats" );
 	self.title = LCUIWidget_GetById( "folders-view-sync-title" );
-	LCFinder_BindEvent( "sync", OnStartSyncFiles, NULL );
+	LCFinder_BindEvent( EVENT_SYNC, OnStartSyncFiles, NULL );
 }

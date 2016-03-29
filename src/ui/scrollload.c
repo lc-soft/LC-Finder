@@ -43,7 +43,7 @@ typedef struct ScrollLoadingRec_ {
 	LCUI_Widget container;
 } ScrollLoadingRec, *ScrollLoading;
 
-static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
+static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	_DEBUG_MSG("on scroll\n");
 }

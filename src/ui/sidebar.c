@@ -16,7 +16,7 @@ static const char *btn_view_ids[MAX_VIEWS][2] = {
 	{"sidebar-btn-settings", "view-settings"},
 };
 
-static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent *e, void *unused )
+static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unused )
 {
 	int i;
 	LCUI_Widget sidebar;

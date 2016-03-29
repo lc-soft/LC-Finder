@@ -3,13 +3,11 @@
 * 版权所有 (C) 2016 归属于 刘超 <root@lc-soft.io>
 */
 
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
+#include "finder.h"
+#include <string.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include <string.h>
-#include "finder.h"
 #include "tile_item.h"
 
 typedef struct FileEntryRec_ {
@@ -35,9 +33,9 @@ static void OnAddDir( void *privdata, void *data )
 	Widget_Append( this_view.items, item );
 }
 
-static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
+static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	LCFinder_SendEvent( "sync", NULL );
+	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
 }
 
 static void OnDeleteFileEntry( void *arg )
@@ -153,7 +151,7 @@ static void FileScannerThread( void *arg )
 	LCUIThread_Exit( NULL );
 }
 
-static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
+static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	FileEntry entry = e->data;
 	_DEBUG_MSG( "open file: %s\n", entry->path );

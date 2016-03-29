@@ -1,9 +1,17 @@
 ﻿#ifndef __LC_FINDER_H__
 #define __LC_FINDER_H__
 
+#include <LCUI_Build.h>
+#include <LCUI/LCUI.h>
 #include "file_cache.h"
 #include "file_search.h"
 #include "thumb_cache.h" 
+
+enum LCFinderEventType {
+	EVENT_DIR_ADD,
+	EVENT_DIR_DEL,
+	EVENT_SYNC
+};
 
 typedef struct Finder_ {
 	DB_Dir *dirs;
@@ -14,6 +22,7 @@ typedef struct Finder_ {
 	wchar_t *fileset_dir;
 	wchar_t *thumbs_dir;
 	ThumbCache *thumb_caches;
+	LCUI_EventTrigger trigger;
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);
@@ -41,10 +50,10 @@ extern Finder finder;
 void LCFinder_Init( void );
 
 /** 绑定事件 */
-int LCFinder_BindEvent( const char *name, EventHandler handler, void *data );
+int LCFinder_BindEvent( int event_id, EventHandler handler, void *data );
 
 /** 触发事件 */
-int LCFinder_SendEvent( const char *name, void *data );
+int LCFinder_TriggerEvent( int event_id, void *data );
 
 int LCFinder_SyncFiles( FileSyncStatus s );
 

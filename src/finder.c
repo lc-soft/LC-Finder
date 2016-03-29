@@ -48,53 +48,42 @@
 #include <direct.h>
 #define mkdir(PATH) _wmkdir(PATH)
 #endif
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
-#include <LCUI/font/charset.h>
 #include "finder.h"
 #include "ui.h"
 #include "sha1.h"
+#include <LCUI/font/charset.h>
 
 #define EVENT_TOTAL 2
 
 Finder finder;
-static LCUI_EventBox finder_events;
+
+typedef struct DirStatusDataPackRec_ {
+	FileSyncStatus status;
+	DB_Dir dir;
+} DirStatusDataPackRec, *DirStatusDataPack;
 
 typedef struct EventPackRec_ {
 	EventHandler handler;
 	void *data;
 } EventPackRec, *EventPack;
 
-static const char *event_names[EVENT_TOTAL] = { "dir.add", "dir.del" };
-
-void LCFinder_InitEvents( void )
-{
-	int i;
-	LCUI_EventBox *events;
-	events = LCUIEventBox_Create();
-	for( i = 0; i < EVENT_TOTAL; ++i ) {
-		LCUIEventBox_AddEvent( events, event_names[i], i );
-	}
-	finder_events = events;
-}
-
-static void OnEvent( LCUI_Event *e, void *arg )
+static void OnEvent( LCUI_Event e, void *arg )
 {
 	EventPack pack = arg;
 	pack->handler( pack->data, e->data );
 }
 
-int LCFinder_BindEvent( const char *name, EventHandler handler, void *data )
+int LCFinder_BindEvent( int event_id, EventHandler handler, void *data )
 {
 	EventPack pack = NEW( EventPackRec, 1 );
 	pack->handler = handler;
 	pack->data = data;
-	return LCUIEventBox_Bind( finder_events, name, OnEvent, pack, free );
+	return EventTrigger_Bind( finder.trigger, event_id, OnEvent, pack, free );
 }
 
-int LCFinder_SendEvent( const char *name, void *data )
+int LCFinder_TriggerEvent( int event_id, void *data )
 {
-	return LCUIEventBox_Send( finder_events, name, data );
+	return  EventTrigger_Trigger( finder.trigger, event_id, data );
 }
 
 DB_Dir LCFinder_GetDir( const char *dirpath )
@@ -141,11 +130,6 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 	finder.dirs = dirs;
 	return dir;
 }
-
-typedef struct DirStatusDataPackRec_ {
-	FileSyncStatus status;
-	DB_Dir dir;
-} DirStatusDataPackRec, *DirStatusDataPack;
 
 static int getfilectime( const wchar_t *path )
 {
@@ -308,9 +292,9 @@ int main( int argc, char **argv )
 	DB_Init();
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
+	finder.trigger = EventTrigger();
 	LCFinder_InitWorkDir();
 	LCFinder_InitThumbCache();
-	LCFinder_InitEvents();
 	UI_Init();
 	LCUI_AtQuit( LCFinder_Exit );
 	return UI_Run();

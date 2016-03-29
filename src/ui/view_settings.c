@@ -7,12 +7,10 @@
 #include <Windows.h>
 #include <ShlObj.h>
 #endif
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
+#include "finder.h"
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include "finder.h"
 
 static struct SettingsViewData {
 	LCUI_Widget dirlist;
@@ -52,10 +50,10 @@ static void UI_InitDirList( LCUI_Widget view )
 		item = NewDirListItem( finder.dirs[i] );
 		Widget_Append( view, item );
 	}
-	LCFinder_BindEvent( "dir.add", OnAddDir, NULL );
+	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 }
 
-static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
+static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	int len;
 	HWND hwnd;
@@ -89,7 +87,7 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent *e, void *arg )
 	_DEBUG_MSG( "add dir: %s\n", dirpath );
 	dir = LCFinder_AddDir( dirpath );
 	if( dir ) {
-		LCFinder_SendEvent( "dir.add", dir );
+		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 	}
 }
 
