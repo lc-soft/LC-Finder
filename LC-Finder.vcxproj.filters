@@ -57,7 +57,10 @@
     <ClCompile Include="src\lib\file_info.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\lib\tile_item.c">
+    <ClCompile Include="src\ui\tile_item.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\scrollload.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>

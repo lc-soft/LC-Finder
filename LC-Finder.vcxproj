@@ -26,8 +26,9 @@
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\lib\thumb_pool.c" />
-    <ClCompile Include="src\lib\tile_item.c" />
     <ClCompile Include="src\ui\file_sync.c" />
+    <ClCompile Include="src\ui\scrollload.c" />
+    <ClCompile Include="src\ui\tile_item.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_settings.c" />
     <ClCompile Include="src\ui\sidebar.c" />
@@ -178,7 +179,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
