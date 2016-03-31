@@ -3,6 +3,7 @@
 
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include "common.h"
 #include "file_cache.h"
 #include "file_search.h"
 #include "thumb_cache.h" 
@@ -26,14 +27,6 @@ typedef struct Finder_ {
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);
-
-#define PATH_LEN 2048
-
-#ifdef _WIN32
-#define PATH_SEP '\\'
-#else
-#define PATH_SEP '/'
-#endif
 
 typedef struct FileSyncStatusRec_ {
 	int state;

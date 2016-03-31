@@ -50,19 +50,26 @@
           </widget>
         </widget>
         <widget class="view-body">
-          <widget class="view-content">
-            <widget id="btn-switch-to-settings" class="btn btn-link">
-              <widget type="textview">选择照片的源文件夹。</widget>
-            </widget>
-            <widget id="tip-no-folders" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
-            <widget id="current-folder-list" class="folder-list"></widget>
-            <widget class="alert alert-primary hide">
-              <widget class="alert-header">
-                <widget type="spin" class="ion ion-android-sync"></widget>
-                <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
+          <widget id="view-folders-content-wrapper" class="view-content-wrapper">
+            <widget id="view-folders-content" class="view-content">
+              <widget id="view-folders-info-box" class="folder-info-box hide">
+                <widget id="view-folders-info-box-name" type="textview" class="folder-info-box-name"></widget>
+                <widget id="view-folders-info-box-path" type="textview" class="folder-info-box-path"></widget>
+                <widget id="btn-return-root-folder" class="btn btn-link">
+                  <widget type="textview">返回到源文件夹</widget>
+                </widget>
               </widget>
-              <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
+              <widget id="tip-empty-folder" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
+              <widget id="current-folder-list" class="folder-list"></widget>
+              <widget class="alert alert-primary hide">
+                <widget class="alert-header">
+                  <widget type="spin" class="ion ion-android-sync"></widget>
+                  <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
+                </widget>
+                <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
+              </widget>
             </widget>
+            <widget type="scrollbar" data-parent="view-folders-content-wrapper" data-layer="current-folder-list"/>
           </widget>
         </widget>
       </widget>

@@ -9,18 +9,6 @@
 #include "finder.h"
 #include "ui.h"
 
-static const char *getdirname( const char *path )
-{
-	int i;
-	const char *p = NULL;
-	for( i = 0; path[i]; ++i ) {
-		if( path[i] == PATH_SEP ) {
-			p = path + i + 1;
-		}
-	}
-	return p;
-}
-
 LCUI_Widget CreateFolderItem( const char *filepath )
 {
 	LCUI_Widget item = LCUIWidget_New( NULL );

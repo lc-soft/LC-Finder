@@ -18,6 +18,10 @@ typedef struct FileEntryRec_ {
 
 static struct FoldersViewData {
 	LCUI_Widget items;
+	LCUI_Widget info;
+	LCUI_Widget info_name;
+	LCUI_Widget info_path;
+	LCUI_Widget tip_empty;
 	LCUI_BOOL is_scaning;
 	LCUI_Thread scanner_tid;
 	LinkedList files;
@@ -38,30 +42,38 @@ static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
 }
 
+static void OnBtnReturnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	OpenFolder( NULL );
+}
+
 static void OnDeleteFileEntry( void *arg )
 {
 	FileEntry entry = arg;
 	if( entry->is_dir ) {
 		free( entry->path );
 	} else {
+		_DEBUG_MSG("%s\n", entry->file);
 		free( entry->file->path );
 		free( entry->file );
 	}
 	free( entry );
 }
 
-static void ScanDirs( char *path )
+static int ScanDirs( char *path )
 {
 	char *name;
-	wchar_t *wpath;
-	int len, dirpath_len;
 	LCUI_Dir dir;
-	LCUI_DirEntry *entry;
 	FileEntry file;
+	wchar_t *wpath;
+	LCUI_DirEntry *entry;
+	int count, len, dirpath_len;
 
+	count = 0;
 	len = strlen( path );
+	dirpath_len = len;
 	wpath = malloc( sizeof(wchar_t) * (len + 1) );
-	dirpath_len = LCUI_DecodeString( wpath, path, len, ENCODING_UTF8 );
+	LCUI_DecodeString( wpath, path, len, ENCODING_UTF8 );
 	LCUI_OpenDirW( wpath, &dir );
 	while( (entry = LCUI_ReadDir( &dir )) && this_view.is_scaning ) {
 		wchar_t *wname = LCUI_GetFileNameW( entry );
@@ -72,19 +84,25 @@ static void ScanDirs( char *path )
 				continue;
 			}
 		}
+		if( !LCUI_FileIsDirectory( entry ) ) {
+			continue;
+		}
 		file = NEW( FileEntryRec, 1 );
+		file->is_dir = TRUE;
+		file->file = NULL;
 		len = LCUI_EncodeString( NULL, wname, 0, ENCODING_UTF8 ) + 1;
 		name = malloc( sizeof(char) * len );
-		LCUI_EncodeString( name, wname, len, ENCODING_UTF8 );
-		file->is_dir = LCUI_FileIsDirectory( entry );
 		file->path = malloc( sizeof( char ) * (len + dirpath_len) );
+		LCUI_EncodeString( name, wname, len, ENCODING_UTF8 );
 		sprintf( file->path, "%s%s", path, name );
 		LinkedList_Append( this_view.cache, file );
+		++count;
 	}
 	LCUI_CloseDir( &dir );
+	return count;
 }
 
-static void ScanFiles( char *path )
+static int ScanFiles( char *path )
 {
 	int i, total;
 	DB_File file;
@@ -120,9 +138,10 @@ static void ScanFiles( char *path )
 		total -= terms.limit;
 		terms.offset += terms.limit;
 	}
+	return total;
 }
 
-static void LoadSourceDirs( void )
+static int LoadSourceDirs( void )
 {
 	char *path;
 	int i, len;
@@ -136,16 +155,25 @@ static void LoadSourceDirs( void )
 		entry->is_dir = TRUE;
 		LinkedList_Append( this_view.cache, entry );
 	}
+	return i;
 }
 
 static void FileScannerThread( void *arg )
 {
+	int count;
 	if( arg ) {
-		//ScanDirs( arg );
-		ScanFiles( arg );
+		count = ScanDirs( arg );
+		//ScanFiles( arg );
 		free( arg );
 	} else {
-		LoadSourceDirs();
+		count = LoadSourceDirs();
+	}
+	if( count > 0 ) {
+		Widget_AddClass( this_view.tip_empty, "hide" );
+		Widget_Hide( this_view.tip_empty );
+	} else {
+		Widget_RemoveClass( this_view.tip_empty, "hide" );
+		Widget_Show( this_view.tip_empty );
 	}
 	this_view.is_scaning = FALSE;
 	LCUIThread_Exit( NULL );
@@ -221,6 +249,13 @@ static void OpenFolder( const char *dirpath )
 				break;
 			}
 		}
+		TextView_SetText( this_view.info_name, getdirname( dirpath ) );
+		TextView_SetText( this_view.info_path, dirpath );
+		Widget_RemoveClass( this_view.info, "hide" );
+		Widget_Show( this_view.info );
+	} else {
+		Widget_AddClass( this_view.info, "hide" );
+		Widget_Hide( this_view.info );
 	}
 	if( this_view.is_scaning ) {
 		this_view.is_scaning = FALSE;
@@ -236,6 +271,7 @@ static void OpenFolder( const char *dirpath )
 void UI_InitFoldersView( void )
 {
 	LCUI_Widget btn = LCUIWidget_GetById( "btn-sync-folder-files" );
+	LCUI_Widget btn_return = LCUIWidget_GetById( "btn-return-root-folder" );
 	LCUI_Widget list = LCUIWidget_GetById( "current-folder-list" );
 	this_view.items = list;
 	LinkedList_Init( &this_view.files );
@@ -243,5 +279,10 @@ void UI_InitFoldersView( void )
 	LinkedList_Init( &this_view.files_cache[1] );
 	this_view.cache = &this_view.files_cache[0];
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
+	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
+	this_view.info = LCUIWidget_GetById( "view-folders-info-box" );
+	this_view.info_name = LCUIWidget_GetById( "view-folders-info-box-name" );
+	this_view.info_path = LCUIWidget_GetById( "view-folders-info-box-path" );
+	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
 	OpenFolder( NULL );
 }

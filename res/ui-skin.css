@@ -78,3 +78,6 @@
 .skin-light-green .btn-link:hover textview {
 	color: #2E7D39;
 }
+.skin-light-green .folder-list .folder-list-item:hover {
+	border-color: #44BB55;
+}

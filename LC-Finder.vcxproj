@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\finder.c" />
+    <ClCompile Include="src\lib\common.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_info.c" />
     <ClCompile Include="src\lib\file_search.c" />
@@ -46,6 +47,7 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\common.h" />
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\finder.h" />

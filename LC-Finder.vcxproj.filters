@@ -63,6 +63,9 @@
     <ClCompile Include="src\ui\scrollload.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\lib\common.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -102,6 +105,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\tile_item.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\common.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
