@@ -149,7 +149,7 @@
 .source-list .source-list-item .text {
 	display: inline-block;
 }
-.folder-list .folder-list-item {
+.file-list .file-list-item-folder {
 	width: 300px;
 	height: 134px;
 	display: inline-block;
@@ -157,7 +157,7 @@
 	margin: 0 10px 10px 0;
 	border: 1px solid #eee;
 }
-.folder-list .folder-list-item .info {
+.file-list .file-list-item-folder .info {
 	left: 0;
 	bottom: 0;
 	width: 100%;
@@ -168,7 +168,7 @@
 	padding: 10px 50px 10px 10px;
 	box-sizing: border-box;
 }
-.folder-list .folder-list-item .info .icon {
+.file-list .file-list-item-folder .info .icon {
 	top: 10px;
 	right: 10px;
 	width: 34px;
@@ -179,22 +179,48 @@
 	position: absolute;
 	color: #888;
 }
-.folder-list .folder-list-item .info .path {
+.file-list .file-list-item-folder .info .path {
 	color: #888;
 	font-size: 13px;
 }
-.folder-list .folder-list-item .info .path,
-.folder-list .folder-list-item .info .name {
+.file-list .file-list-item-folder .info .path,
+.file-list .file-list-item-folder .info .name {
 	width: 190px;
 }
+.file-list .file-list-item-picture {
+	height: 226px;
+	width: 226px;
+	display: inline-block;
+	border: 1px solid #eee;
+}
+.full-height {
+	height: 100%;
+}
+.view-content {
+border: 1px solid #f00;
+}
 .folder-info-box {
-	margin: 0 0 10px 0;
+	top: 50px;
+	width: 100%;
+	display: none;
+	position: absolute;
+	background-color: #fff;
 }
 .folder-info-box-name {
 	font-size: 18px;
 }
 .folder-info-box-path {
 	color: #888;
+}
+.show-folder-info-box .view-body {
+	padding-top: 120px;
+}
+.show-folder-info-box .view-content {
+	padding-top: 10px;
+}
+.show-folder-info-box .folder-info-box {
+	display: block;
+	padding: 5px 15px;
 }
 .alert {
 	top: 20px;
