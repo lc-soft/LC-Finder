@@ -6,6 +6,7 @@
 #include "common.h"
 #include "file_cache.h"
 #include "file_search.h"
+#include "thumb_db.h" 
 #include "thumb_cache.h" 
 
 enum LCFinderEventType {
@@ -22,7 +23,7 @@ typedef struct Finder_ {
 	wchar_t *data_dir;
 	wchar_t *fileset_dir;
 	wchar_t *thumbs_dir;
-	ThumbCache *thumb_caches;
+	ThumbDB *thumb_dbs;
 	LCUI_EventTrigger trigger;
 } Finder;
 

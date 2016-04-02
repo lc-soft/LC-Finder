@@ -38,25 +38,82 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/gui/widget.h>
-
-typedef struct ScrollLoadingRec_ {
-	LCUI_Widget container;
-} ScrollLoadingRec, *ScrollLoading;
+#include "scrollload.h"
 
 static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	_DEBUG_MSG("on scroll\n");
 }
 
-ScrollLoading NewScrollLoading( LCUI_Widget container )
+ScrollLoading ScrollLoading_New( LCUI_Widget container )
 {
 	ScrollLoading ctx = NEW( ScrollLoadingRec, 1 );
+	ctx->top = 0;
+	ctx->top_child = NULL;
 	ctx->container = container;
+	ctx->event_id = LCUIWidget_AllocEventId();
+	LCUIWidget_SetEventName( ctx->event_id, "scrollload" );
 	Widget_BindEvent( container, "scroll", OnScroll, ctx, NULL );
 	return ctx;
 }
 
-int ScrollLoading_Bind( ScrollLoading ctx, LCUI_Widget target )
+void ScrollLoading_Delete( ScrollLoading ctx )
 {
-	return 0;
+	ctx->top = 0;
+	ctx->top_child = NULL;
+	Widget_UnbindEvent( ctx->container, "scroll", OnScroll );
+	free( ctx );
+}
+
+void ScrollLoading_Reset( ScrollLoading ctx )
+{
+	ctx->top = 0;
+	ctx->top_child = NULL;
+}
+
+int ScrollLoading_Update( ScrollLoading ctx )
+{
+	LCUI_Widget w;
+	LinkedListNode *node;
+	LCUI_WidgetEventRec e;
+	int count = 0, top, bottom;
+	e.type = ctx->event_id;
+	e.cancel_bubble = TRUE;
+	bottom = top = ctx->top;
+	bottom += ctx->container->box.padding.height;
+	if( !ctx->top_child ) {
+		node = ctx->container->children_show.head.next;
+		ctx->top_child = node->data;
+	}
+	if( !ctx->top_child ) {
+		return 0;
+	}
+	if( ctx->top_child->box.border.top > bottom ) {
+		node = Widget_GetNode( ctx->top_child );
+		ctx->top_child = NULL;
+		while( node ) {
+			w = node->data;
+			if( w->box.border.y < bottom ) {
+				ctx->top_child = w;
+				break;
+			}
+			node = node->prev;
+		}
+		if( !ctx->top_child ) {
+			return 0;
+		}
+	}
+	node = Widget_GetNode( ctx->top_child );
+	while( node ) {
+		w = node->data;
+		if( w->box.border.y > bottom ) {
+			break;
+		}
+		if( w->box.border.y + w->box.border.height >= top ) {
+			Widget_PostEvent( w, &e, NULL, NULL );
+			++count;
+		}
+		node = node->next;
+	}
+	return count;
 }

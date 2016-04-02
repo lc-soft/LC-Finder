@@ -251,34 +251,33 @@ static void LCFinder_InitWorkDir( void )
 	_wsetlocale(LC_ALL, L"chs");
 }
 
-
 #define DecodeUTF8(BUF, PATH, LEN) LCUI_DecodeString( BUF, PATH, LEN, ENCODING_UTF8 )
 
-static void LCFinder_InitThumbCache( void )
+static void LCFinder_InitThumbDB( void )
 {
 	int i;
-	ThumbCache cache;
+	ThumbDB db;
 	char path[PATH_LEN];
 	wchar_t *name, wpath[PATH_LEN];
 	if( finder.n_dirs > 0 ) {
-		finder.thumb_caches = NEW(ThumbCache, finder.n_dirs);
+		finder.thumb_dbs = NEW(ThumbDB, finder.n_dirs);
 	} else {
-		finder.thumb_caches = NULL;
+		finder.thumb_dbs = NULL;
 	}
-	printf("[thumbcache] init...\n");
+	printf("[thumbdb] init...\n");
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		strcpy( path, finder.dirs[i]->path );
 		DecodeUTF8( wpath, path, PATH_LEN );
 		name = EncodeSHA1( wpath );
 		wsprintf( wpath, L"%s%s", finder.thumbs_dir, name );
 		LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_ANSI );
-		cache = ThumbCache_New( path );
-		finder.thumb_caches[i] = cache;
+		db = ThumbDB_New( path );
+		finder.thumb_dbs[i] = db;
 	}
-	printf("[thumbcache] init done\n");
+	printf("[thumbdb] init done\n");
 }
 
-static void LCFinder_Exit( void )
+static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 {
 	printf("exit\n");
 }
@@ -294,8 +293,8 @@ int main( int argc, char **argv )
 	finder.n_tags = DB_GetTags( &finder.tags );
 	finder.trigger = EventTrigger();
 	LCFinder_InitWorkDir();
-	LCFinder_InitThumbCache();
+	LCFinder_InitThumbDB();
 	UI_Init();
-	LCUI_AtQuit( LCFinder_Exit );
+	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );
 	return UI_Run();
 }

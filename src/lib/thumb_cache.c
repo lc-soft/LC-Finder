@@ -34,74 +34,145 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#define __THUMBNAIL_CACHE_C__
+#define __THUMBNAIL_POOL_C__
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
+
+/** 缓存区的数据结构 */
+typedef struct ThumbCacheRec_ {
+	size_t size;			/**< 当前大小 */
+	size_t max_size;		/**< 最大大小 */
+	LinkedList thumbs;		/**< 缩略图缓存列表 */
+	Dict *paths;			/**< 缩略图路径映射表 */
+	void (*on_remove)(void*);	/**< 回调函数，当缩略图被移出缓存池时被调用 */
+} ThumbCacheRec, *ThumbCache;
+
 #include "thumb_cache.h"
 
-#define THUMB_MAX_SIZE 8553600
+typedef struct ThumbDataNodeRec_ {
+	LCUI_Graph graph;		/**< 缩略图 */
+	char *path;			/**< 路径 */
+	void *privdata;			/**< 私有数据 */
+	LinkedListNode node;		/**< 在列表中的节点 */
+} ThumbDataNodeRec, *ThumbDataNode;
 
-typedef struct ThumbDataBlockRec_ {
-	size_t width;
-	size_t height;
-	size_t mem_size;
-	int color_type;
-	int modify_time;
-} ThumbDataBlockRec, *ThumbDataBlock;
-
-ThumbCache ThumbCache_New( const char *filepath )
+static unsigned int Dict_KeyHash( const void *key )
 {
-	int rc;
-	ThumbCache cache;
-	rc = unqlite_open( &cache, filepath, UNQLITE_OPEN_CREATE );
-	if( rc != UNQLITE_OK ) {
-		return NULL;
+	const char *buf = key;
+	unsigned int hash = 5381;
+	while( *buf ) {
+		hash = ((hash << 5) + hash) + (*buf++);
 	}
+	return hash;
+}
+
+static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
+{
+	if( strcmp( key1, key2 ) == 0 ) {
+		return 1;
+	}
+	return 0;
+}
+
+static void *Dict_KeyDup( void *privdata, const void *key )
+{
+	char *newkey = malloc( (wcslen( key ) + 1)*sizeof( char ) );
+	strcpy( newkey, key );
+	return newkey;
+}
+
+static void *Dict_ValueDup( void *privdata, const void *val )
+{
+	int *newval = malloc( sizeof( int ) );
+	*newval = *((int*)val);
+	return newval;
+}
+
+static void Dict_KeyDestructor( void *privdata, void *key )
+{
+	free( key );
+}
+
+static void Dict_ValueDestructor( void *privdata, void *val )
+{
+	free( val );
+}
+
+static DictType DictType_String = {
+	Dict_KeyHash,
+	Dict_KeyDup,
+	Dict_ValueDup,
+	Dict_KeyCompare,
+	Dict_KeyDestructor,
+	Dict_ValueDestructor
+};
+
+ThumbCache ThumbCache_New( size_t max_size, void (*on_remove)(void*) )
+{
+	ThumbCache cache = NEW( ThumbCacheRec, 1 );
+	LinkedList_Init( &cache->thumbs );
+	cache->max_size = max_size;
+	cache->on_remove = on_remove;
+	cache->paths = Dict_Create( &DictType_String, NULL );
 	return cache;
 }
 
-ThumbData ThumbCache_Load( ThumbCache cache, const char *filepath )
+LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path )
 {
-	int rc;
-	ThumbData data;
-	ThumbDataBlock block;
-	unqlite_int64 size;
-	rc = unqlite_kv_fetch( cache, filepath, -1, NULL, &size );
-	if( rc != UNQLITE_OK ) {
-		return NULL;
+	ThumbDataNode data = Dict_FetchValue( cache->paths, path );
+	if( data ) {
+		return &data->graph;
 	}
-	block = malloc( (size_t)size );
-	data = NEW( ThumbDataRec, 1 );
-	Graph_Init( &data->graph );
-	data->graph.width = block->width;
-	data->graph.height = block->height;
-	data->graph.mem_size = block->mem_size;
-	data->graph.color_type = block->color_type;
-	data->graph.bytes = (uchar_t*)block + sizeof(ThumbDataBlockRec);
-	data->modify_time = block->modify_time;
-	return data;
+	return NULL;
 }
 
-int ThumbCache_Save( ThumbCache cache, const char *filepath, ThumbData data )
+int ThumbCache_Add( ThumbCache cache, const char *path, 
+		    LCUI_Graph *thumb, void *privdata )
 {
-	int rc;
-	uchar_t *buff;
-	ThumbDataBlock block;
-	size_t head_size = sizeof( ThumbDataBlockRec );
-	size_t size = head_size + data->graph.mem_size;
-	if( size > THUMB_MAX_SIZE ) {
-		return -1;
+	size_t size;
+	int count = 0, len;
+	ThumbDataNode tdn;
+	LinkedListNode *node, *prev_node;
+	size = cache->size + thumb->mem_size;
+	if( size > cache->max_size ) {
+		LinkedList_ForEach( node, &cache->thumbs ) {
+			++count;
+			tdn = node->data;
+			size -= tdn->graph.mem_size;
+			if( size < cache->max_size ) {
+				break;
+			}
+		}
+		if( size > cache->max_size ) {
+			return -1;
+		}
+		/** 移除老的缩略图数据 */
+		LinkedList_ForEach( node, &cache->thumbs ) {
+			--count;
+			if( count < 0 ) {
+				break;
+			}
+			tdn = node->data;
+			prev_node = node->prev;
+			Graph_Free( &tdn->graph );
+			if( cache->on_remove ) {
+				cache->on_remove( tdn->privdata );
+			}
+			Dict_Delete( cache->paths, tdn->path );
+			LinkedList_DeleteNode( &cache->thumbs, node );
+			node = prev_node;
+			free( tdn );
+		}
 	}
-	block = malloc( size );
-	buff = (uchar_t*)block + head_size;
-	block->width = data->graph.width;
-	block->height = data->graph.height;
-	block->mem_size = data->graph.mem_size;
-	block->modify_time = data->modify_time;
-	block->color_type = data->graph.color_type;
-	memcpy( buff, data->graph.bytes, data->graph.mem_size );
-	rc = unqlite_kv_store( cache, filepath, -1, block, size );
-	free( block );
-	return rc == UNQLITE_OK ? 0 : -2;
+	tdn = NEW( ThumbDataNodeRec, 1 );
+	tdn->graph = *thumb;
+	tdn->privdata = privdata;
+	len = strlen( path ) + 1;
+	tdn->path = NEW( char, len );
+	strncpy( tdn->path, path, len );
+	LinkedList_AppendNode( &cache->thumbs, &tdn->node );
+	Dict_Add( cache->paths, tdn->path, tdn );
+	cache->size = size;
+	return 0;
 }

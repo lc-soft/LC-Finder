@@ -8,7 +8,10 @@
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include "tile_item.h"
+#include "tileitem.h"
+#include "scrollload.h"
+
+#define THUMB_CACHE_SIZE (20*1024*1024)
 
 typedef struct FileEntryRec_ {
 	LCUI_BOOL is_dir;
@@ -17,6 +20,7 @@ typedef struct FileEntryRec_ {
 } FileEntryRec, *FileEntry;
 
 static struct FoldersViewData {
+	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget info;
 	LCUI_Widget info_name;
@@ -27,6 +31,7 @@ static struct FoldersViewData {
 	LinkedList files;
 	LinkedList files_cache[2];
 	LinkedList *cache;
+	ThumbCache thumb_cache;
 } this_view;
 
 void OpenFolder( const char *dirpath );
@@ -163,13 +168,12 @@ static void FileScannerThread( void *arg )
 	int count;
 	if( arg ) {
 		count = ScanDirs( arg );
-		//ScanFiles( arg );
+		count += ScanFiles( arg );
 		free( arg );
 	} else {
 		count = LoadSourceDirs();
 	}
 	if( count > 0 ) {
-		Widget_AddClass( this_view.tip_empty, "hide" );
 		Widget_Hide( this_view.tip_empty );
 	} else {
 		Widget_RemoveClass( this_view.tip_empty, "hide" );
@@ -191,17 +195,17 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void SyncViewItems( void *arg )
 {
 	int i;
-	DB_Dir dir = arg;
 	FileEntry entry;
+	DB_Dir dir = arg;
 	LCUI_Widget item;
 	LinkedList *list;
+	ThumbDB tcache = NULL;
 	LinkedListNode *node, *prev_node;
-	ThumbCache tcache = NULL;
 
 	if( dir ) {
 		for( i = 0; i < finder.n_dirs; ++i ) {
 			if( dir == finder.dirs[i] ) {
-				tcache = finder.thumb_caches[i];
+				tcache = finder.thumb_dbs[i];
 				break;
 			}
 		}
@@ -221,9 +225,8 @@ static void SyncViewItems( void *arg )
 		if( entry->is_dir ) {
 			item = CreateFolderItem( entry->path );
 		} else {
-			_DEBUG_MSG("%s\n", entry->path);
-			continue;
-			item = CreatePictureItem( entry->path, NULL );
+			item = CreatePictureItem( this_view.thumb_cache, 
+						  entry->path );
 		}
 		Widget_Append( this_view.items, item );
 		Widget_BindEvent( item, "click", OnItemClick, entry, NULL );
@@ -251,11 +254,9 @@ static void OpenFolder( const char *dirpath )
 		}
 		TextView_SetText( this_view.info_name, getdirname( dirpath ) );
 		TextView_SetText( this_view.info_path, dirpath );
-		Widget_RemoveClass( this_view.info, "hide" );
-		Widget_Show( this_view.info );
+		Widget_AddClass( this_view.view, "show-folder-info-box" );
 	} else {
-		Widget_AddClass( this_view.info, "hide" );
-		Widget_Hide( this_view.info );
+		Widget_RemoveClass( this_view.view, "show-folder-info-box" );
 	}
 	if( this_view.is_scaning ) {
 		this_view.is_scaning = FALSE;
@@ -268,11 +269,16 @@ static void OpenFolder( const char *dirpath )
 	LCUITimer_Set( 200, SyncViewItems, dir, TRUE );
 }
 
+static void OnRemoveThumb( void *data )
+{
+	_DEBUG_MSG("remove thumb\n");
+}
+
 void UI_InitFoldersView( void )
 {
 	LCUI_Widget btn = LCUIWidget_GetById( "btn-sync-folder-files" );
 	LCUI_Widget btn_return = LCUIWidget_GetById( "btn-return-root-folder" );
-	LCUI_Widget list = LCUIWidget_GetById( "current-folder-list" );
+	LCUI_Widget list = LCUIWidget_GetById( "current-file-list" );
 	this_view.items = list;
 	LinkedList_Init( &this_view.files );
 	LinkedList_Init( &this_view.files_cache[0] );
@@ -280,9 +286,11 @@ void UI_InitFoldersView( void )
 	this_view.cache = &this_view.files_cache[0];
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
+	this_view.view = LCUIWidget_GetById( "view-folders");
 	this_view.info = LCUIWidget_GetById( "view-folders-info-box" );
 	this_view.info_name = LCUIWidget_GetById( "view-folders-info-box-name" );
 	this_view.info_path = LCUIWidget_GetById( "view-folders-info-box-path" );
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
+	this_view.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
 	OpenFolder( NULL );
 }

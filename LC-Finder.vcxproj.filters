@@ -42,12 +42,6 @@
     <ClCompile Include="src\ui\view_folders.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\lib\thumb_pool.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\thumb_cache.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\lib\sha1.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -57,14 +51,20 @@
     <ClCompile Include="src\lib\file_info.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\tile_item.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\scrollload.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\lib\common.c">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\thumb_db.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\thumb_cache.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\tileitem.c">
+      <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -95,19 +95,22 @@
     <ClInclude Include="include\finder.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\thumb_cache.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\thumb_pool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\sha1.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\tile_item.h">
+    <ClInclude Include="include\common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\common.h">
+    <ClInclude Include="include\thumb_db.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\thumb_cache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\scrollload.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tileitem.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

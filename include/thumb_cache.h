@@ -1,4 +1,4 @@
-ï»¿/* ***************************************************************************
+/* ***************************************************************************
 * thumb_cache.h -- thumbnail data cache
 *
 * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
@@ -18,44 +18,34 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* thumb_cache.h -- ç¼©ç•¥å›¾æ•°æ®ç¼“å­˜
+* thumb_cache.h -- ËõÂÔÍ¼Êı¾İ»º´æ
 *
-* ç‰ˆæƒæ‰€æœ‰ (C) 2016 å½’å±äº åˆ˜è¶… <lc-soft@live.cn>
+* °æÈ¨ËùÓĞ (C) 2016 ¹éÊôÓÚ Áõ³¬ <lc-soft@live.cn>
 *
-* è¿™ä¸ªæ–‡ä»¶æ˜¯ LC-Finder é¡¹ç›®çš„ä¸€éƒ¨åˆ†ï¼Œå¹¶ä¸”åªå¯ä»¥æ ¹æ®GPLv2è®¸å¯åè®®æ¥ä½¿ç”¨ã€æ›´æ”¹å’Œ
-* å‘å¸ƒã€‚
+* Õâ¸öÎÄ¼şÊÇ LC-Finder ÏîÄ¿µÄÒ»²¿·Ö£¬²¢ÇÒÖ»¿ÉÒÔ¸ù¾İGPLv2Ğí¿ÉĞ­ÒéÀ´Ê¹ÓÃ¡¢¸ü¸ÄºÍ
+* ·¢²¼¡£
 *
-* ç»§ç»­ä½¿ç”¨ã€ä¿®æ”¹æˆ–å‘å¸ƒæœ¬æ–‡ä»¶ï¼Œè¡¨æ˜æ‚¨å·²ç»é˜…è¯»å¹¶å®Œå…¨ç†è§£å’Œæ¥å—è¿™ä¸ªè®¸å¯åè®®ã€‚
+* ¼ÌĞøÊ¹ÓÃ¡¢ĞŞ¸Ä»ò·¢²¼±¾ÎÄ¼ş£¬±íÃ÷ÄúÒÑ¾­ÔÄ¶Á²¢ÍêÈ«Àí½âºÍ½ÓÊÜÕâ¸öĞí¿ÉĞ­Òé¡£
 *
-* LC-Finder é¡¹ç›®æ˜¯åŸºäºä½¿ç”¨ç›®çš„è€ŒåŠ ä»¥æ•£å¸ƒçš„ï¼Œä½†ä¸è´Ÿä»»ä½•æ‹…ä¿è´£ä»»ï¼Œç”šè‡³æ²¡æœ‰é€‚é”€
-* æ€§æˆ–ç‰¹å®šç”¨é€”çš„éšå«æ‹…ä¿ï¼Œè¯¦æƒ…è¯·å‚ç…§GPLv2è®¸å¯åè®®ã€‚
+* LC-Finder ÏîÄ¿ÊÇ»ùÓÚÊ¹ÓÃÄ¿µÄ¶ø¼ÓÒÔÉ¢²¼µÄ£¬µ«²»¸ºÈÎºÎµ£±£ÔğÈÎ£¬ÉõÖÁÃ»ÓĞÊÊÏú
+* ĞÔ»òÌØ¶¨ÓÃÍ¾µÄÒşº¬µ£±££¬ÏêÇéÇë²ÎÕÕGPLv2Ğí¿ÉĞ­Òé¡£
 *
-* æ‚¨åº”å·²æ”¶åˆ°é™„éšäºæœ¬æ–‡ä»¶çš„GPLv2è®¸å¯åè®®çš„å‰¯æœ¬ï¼Œå®ƒé€šå¸¸åœ¨ LICENSE æ–‡ä»¶ä¸­ï¼Œå¦‚æœ
-* æ²¡æœ‰ï¼Œè¯·æŸ¥çœ‹ï¼š<http://www.gnu.org/licenses/>.
+* ÄúÓ¦ÒÑÊÕµ½¸½ËæÓÚ±¾ÎÄ¼şµÄGPLv2Ğí¿ÉĞ­ÒéµÄ¸±±¾£¬ËüÍ¨³£ÔÚ LICENSE ÎÄ¼şÖĞ£¬Èç¹û
+* Ã»ÓĞ£¬Çë²é¿´£º<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __THUMBNAIL_CACHE_H__
-#define __THUMBNAIL_CACHE_H__
+#ifndef __THUMBNAIL_POOL_H__
+#define __THUMBNAIL_POOL_H__
 
-#ifndef __THUMBNAIL_CACHE_C__
+#ifndef __THUMBNAIL_POOL_C__
 typedef void* ThumbCache;
-#else
-#include "unqlite.h"
-typedef unqlite* ThumbCache;
 #endif
 
-typedef struct ThumbDatakRec_ {
-	int modify_time;
-	LCUI_Graph graph;
-} ThumbDataRec, *ThumbData;
+ThumbCache ThumbCache_New( size_t max_size, void( *on_remove )(void*) );
 
-/** æ–°å»ºä¸€ä¸ªç¼“å­˜å®ä¾‹ */
-ThumbCache ThumbCache_New( const char *filepath );
+LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path );
 
-/** ä»ç¼“å­˜ä¸­è½½å…¥æŒ‡å®šæ–‡ä»¶è·¯å¾„çš„ç¼©ç•¥å›¾æ•°æ® */
-ThumbData ThumbCache_Load( ThumbCache cache, const char *filepath );
-
-/** å°†ç¼©ç•¥å›¾æ•°æ®ä¿å­˜è‡³ç¼“å­˜ä¸­ */
-int ThumbCache_Save( ThumbCache cache, const char *filepath, ThumbData data );
+int ThumbCache_Add( ThumbCache cache, const char *path,
+		    LCUI_Graph *thumb, void *privdata );
 
 #endif
