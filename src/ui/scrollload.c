@@ -42,18 +42,22 @@
 
 static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	_DEBUG_MSG("on scroll\n");
+	int *scroll_pos = arg;
+	ScrollLoading ctx = e->data;
+	ctx->top = *scroll_pos;
+	_DEBUG_MSG("on scroll, pos: %d\n", ctx->top);
+	ScrollLoading_Update( ctx );
 }
 
-ScrollLoading ScrollLoading_New( LCUI_Widget container )
+ScrollLoading ScrollLoading_New( LCUI_Widget scrolllayer )
 {
 	ScrollLoading ctx = NEW( ScrollLoadingRec, 1 );
 	ctx->top = 0;
 	ctx->top_child = NULL;
-	ctx->container = container;
+	ctx->scrolllayer = scrolllayer;
 	ctx->event_id = LCUIWidget_AllocEventId();
 	LCUIWidget_SetEventName( ctx->event_id, "scrollload" );
-	Widget_BindEvent( container, "scroll", OnScroll, ctx, NULL );
+	Widget_BindEvent( scrolllayer, "scroll", OnScroll, ctx, NULL );
 	return ctx;
 }
 
@@ -61,7 +65,7 @@ void ScrollLoading_Delete( ScrollLoading ctx )
 {
 	ctx->top = 0;
 	ctx->top_child = NULL;
-	Widget_UnbindEvent( ctx->container, "scroll", OnScroll );
+	Widget_UnbindEvent( ctx->scrolllayer, "scroll", OnScroll );
 	free( ctx );
 }
 
@@ -80,9 +84,9 @@ int ScrollLoading_Update( ScrollLoading ctx )
 	e.type = ctx->event_id;
 	e.cancel_bubble = TRUE;
 	bottom = top = ctx->top;
-	bottom += ctx->container->box.padding.height;
+	bottom += ctx->scrolllayer->parent->box.padding.height;
 	if( !ctx->top_child ) {
-		node = ctx->container->children_show.head.next;
+		node = ctx->scrolllayer->children.head.next;
 		ctx->top_child = node->data;
 	}
 	if( !ctx->top_child ) {
@@ -110,7 +114,7 @@ int ScrollLoading_Update( ScrollLoading ctx )
 			break;
 		}
 		if( w->box.border.y + w->box.border.height >= top ) {
-			Widget_PostEvent( w, &e, NULL, NULL );
+			Widget_TriggerEvent( w, &e, NULL, NULL );
 			++count;
 		}
 		node = node->next;

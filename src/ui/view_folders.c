@@ -32,6 +32,7 @@ static struct FoldersViewData {
 	LinkedList files_cache[2];
 	LinkedList *cache;
 	ThumbCache thumb_cache;
+	ScrollLoading ctx_scrollload;
 } this_view;
 
 void OpenFolder( const char *dirpath );
@@ -58,7 +59,6 @@ static void OnDeleteFileEntry( void *arg )
 	if( entry->is_dir ) {
 		free( entry->path );
 	} else {
-		_DEBUG_MSG("%s\n", entry->file);
 		free( entry->file->path );
 		free( entry->file );
 	}
@@ -109,10 +109,10 @@ static int ScanDirs( char *path )
 
 static int ScanFiles( char *path )
 {
-	int i, total;
 	DB_File file;
 	DB_Query query;
 	FileEntry entry;
+	int i, total, count;
 	DB_QueryTermsRec terms;
 	terms.dirpath = path;
 	terms.n_dirs = 0;
@@ -124,11 +124,11 @@ static int ScanFiles( char *path )
 	terms.dirs = NULL;
 	terms.create_time = NONE;
 	query = DB_NewQuery( &terms );
-	total = DBQuery_GetTotalFiles( query );
-	while( this_view.is_scaning && total > 0 ) {
+	count = total = DBQuery_GetTotalFiles( query );
+	while( this_view.is_scaning && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &terms );
-		i = total < terms.limit ? total : terms.limit;
+		i = count < terms.limit ? count : terms.limit;
 		for( ; this_view.is_scaning && i > 0; --i ) {
 			file = DBQuery_FetchFile( query );
 			if( !file ) {
@@ -138,9 +138,10 @@ static int ScanFiles( char *path )
 			entry->is_dir = FALSE;
 			entry->file = file;
 			entry->path = file->path;
+			//_DEBUG_MSG("file: %s\n", file->path);
 			LinkedList_Append( this_view.cache, entry );
 		}
-		total -= terms.limit;
+		count -= terms.limit;
 		terms.offset += terms.limit;
 	}
 	return total;
@@ -174,6 +175,7 @@ static void FileScannerThread( void *arg )
 		count = LoadSourceDirs();
 	}
 	if( count > 0 ) {
+		Widget_AddClass( this_view.tip_empty, "hide" );
 		Widget_Hide( this_view.tip_empty );
 	} else {
 		Widget_RemoveClass( this_view.tip_empty, "hide" );
@@ -190,6 +192,15 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( entry->is_dir ) {
 		OpenFolder( entry->path );
 	}
+}
+
+static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	FileEntry entry = e->data;
+	if( entry->is_dir ) {
+	} else {
+	}
+	_DEBUG_MSG( "scroll load: %s\n", entry->path );
 }
 
 static void SyncViewItems( void *arg )
@@ -229,7 +240,12 @@ static void SyncViewItems( void *arg )
 						  entry->path );
 		}
 		Widget_Append( this_view.items, item );
+		Widget_BindEvent( item, "scrollload", OnScrollLoad, entry, NULL );
 		Widget_BindEvent( item, "click", OnItemClick, entry, NULL );
+	}
+	ScrollLoading_Update( this_view.ctx_scrollload );
+	if( this_view.cache->length > 0 && this_view.is_scaning ) {
+		LCUITimer_Set( 200, SyncViewItems, dir, FALSE );
 	}
 }
 
@@ -266,7 +282,8 @@ static void OpenFolder( const char *dirpath )
 	Widget_Empty( this_view.items );
 	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
 	LCUIThread_Create( &this_view.scanner_tid, FileScannerThread, path );
-	LCUITimer_Set( 200, SyncViewItems, dir, TRUE );
+	ScrollLoading_Reset( this_view.ctx_scrollload );
+	LCUITimer_Set( 200, SyncViewItems, dir, FALSE );
 }
 
 static void OnRemoveThumb( void *data )
@@ -292,5 +309,6 @@ void UI_InitFoldersView( void )
 	this_view.info_path = LCUIWidget_GetById( "view-folders-info-box-path" );
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
 	this_view.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
+	this_view.ctx_scrollload = ScrollLoading_New( list );
 	OpenFolder( NULL );
 }

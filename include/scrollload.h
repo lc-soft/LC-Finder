@@ -41,7 +41,7 @@
 typedef struct ScrollLoadingRec_ {
 	int top;
 	int event_id;
-	LCUI_Widget container;
+	LCUI_Widget scrolllayer;
 	LCUI_Widget top_child;
 } ScrollLoadingRec, *ScrollLoading;
 
