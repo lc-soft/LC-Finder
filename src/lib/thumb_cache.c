@@ -38,6 +38,7 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
+#include "common.h"
 
 /** 缓存区的数据结构 */
 typedef struct ThumbCacheRec_ {
@@ -57,56 +58,17 @@ typedef struct ThumbDataNodeRec_ {
 	LinkedListNode node;		/**< 在列表中的节点 */
 } ThumbDataNodeRec, *ThumbDataNode;
 
-static unsigned int Dict_KeyHash( const void *key )
-{
-	const char *buf = key;
-	unsigned int hash = 5381;
-	while( *buf ) {
-		hash = ((hash << 5) + hash) + (*buf++);
-	}
-	return hash;
-}
-
-static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
-{
-	if( strcmp( key1, key2 ) == 0 ) {
-		return 1;
-	}
-	return 0;
-}
-
-static void *Dict_KeyDup( void *privdata, const void *key )
-{
-	char *newkey = malloc( (wcslen( key ) + 1)*sizeof( char ) );
-	strcpy( newkey, key );
-	return newkey;
-}
-
-static void *Dict_ValueDup( void *privdata, const void *val )
+static void *Dict_ValDup( void *privdata, const void *val )
 {
 	int *newval = malloc( sizeof( int ) );
 	*newval = *((int*)val);
 	return newval;
 }
 
-static void Dict_KeyDestructor( void *privdata, void *key )
-{
-	free( key );
-}
-
-static void Dict_ValueDestructor( void *privdata, void *val )
+static void Dict_ValDel( void *privdata, void *val )
 {
 	free( val );
 }
-
-static DictType DictType_String = {
-	Dict_KeyHash,
-	Dict_KeyDup,
-	Dict_ValueDup,
-	Dict_KeyCompare,
-	Dict_KeyDestructor,
-	Dict_ValueDestructor
-};
 
 ThumbCache ThumbCache_New( size_t max_size, void (*on_remove)(void*) )
 {
@@ -114,7 +76,7 @@ ThumbCache ThumbCache_New( size_t max_size, void (*on_remove)(void*) )
 	LinkedList_Init( &cache->thumbs );
 	cache->max_size = max_size;
 	cache->on_remove = on_remove;
-	cache->paths = Dict_Create( &DictType_String, NULL );
+	cache->paths = StrDict_Create( Dict_ValDup, Dict_ValDel );
 	return cache;
 }
 

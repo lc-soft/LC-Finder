@@ -54,6 +54,7 @@
 #include <LCUI/font/charset.h>
 
 #define EVENT_TOTAL 2
+#define DecodeUTF8(BUF, PATH, LEN) LCUI_DecodeString( BUF, PATH, LEN, ENCODING_UTF8 )
 
 Finder finder;
 
@@ -164,6 +165,19 @@ static void SyncDeletedFile( void *data, const wchar_t *wpath )
 	wprintf(L"sync: delete file: %s\n", wpath);
 }
 
+DB_Dir LCFinder_GetSourceDir( const char *filepath )
+{
+	int i;
+	DB_Dir dir;
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		dir = finder.dirs[i];
+		if( strstr(filepath, dir->path) == filepath ) {
+			return dir;
+		}
+	}
+	return NULL;
+}
+
 int LCFinder_SyncFiles( FileSyncStatus s )
 {
 	int i, len;
@@ -251,7 +265,10 @@ static void LCFinder_InitWorkDir( void )
 	_wsetlocale(LC_ALL, L"chs");
 }
 
-#define DecodeUTF8(BUF, PATH, LEN) LCUI_DecodeString( BUF, PATH, LEN, ENCODING_UTF8 )
+static ThumbDBDict_ValDel( void *privdata, void *val )
+{
+	ThumbDB_Delete( val );
+}
 
 static void LCFinder_InitThumbDB( void )
 {
@@ -259,20 +276,16 @@ static void LCFinder_InitThumbDB( void )
 	ThumbDB db;
 	char path[PATH_LEN];
 	wchar_t *name, wpath[PATH_LEN];
-	if( finder.n_dirs > 0 ) {
-		finder.thumb_dbs = NEW(ThumbDB, finder.n_dirs);
-	} else {
-		finder.thumb_dbs = NULL;
-	}
+	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
 	printf("[thumbdb] init...\n");
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		strcpy( path, finder.dirs[i]->path );
 		DecodeUTF8( wpath, path, PATH_LEN );
 		name = EncodeSHA1( wpath );
-		wsprintf( wpath, L"%s%s", finder.thumbs_dir, name );
+		wpathjoin( wpath, finder.thumbs_dir, name );
 		LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_ANSI );
 		db = ThumbDB_New( path );
-		finder.thumb_dbs[i] = db;
+		Dict_Add( finder.thumb_dbs, finder.dirs[i]->path, db );
 	}
 	printf("[thumbdb] init done\n");
 }

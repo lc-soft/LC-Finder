@@ -49,13 +49,16 @@ typedef struct ThumbDatakRec_ {
 	LCUI_Graph graph;
 } ThumbDataRec, *ThumbData;
 
-/** 新建一个缓存实例 */
+/** 新建一个缩略图数据库实例 */
 ThumbDB ThumbDB_New( const char *filepath );
 
+/** 销毁缩略图数据库实例 */
+void ThumbDB_Delete( ThumbDB db );
+
 /** 从缓存中载入指定文件路径的缩略图数据 */
-ThumbData ThumbDB_Load( ThumbDB cache, const char *filepath );
+ThumbData ThumbDB_Load( ThumbDB db, const char *filepath );
 
 /** 将缩略图数据保存至缓存中 */
-int ThumbDB_Save( ThumbDB cache, const char *filepath, ThumbData data );
+int ThumbDB_Save( ThumbDB db, const char *filepath, ThumbData data );
 
 #endif

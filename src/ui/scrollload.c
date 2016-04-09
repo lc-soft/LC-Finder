@@ -114,7 +114,7 @@ int ScrollLoading_Update( ScrollLoading ctx )
 			break;
 		}
 		if( w->box.border.y + w->box.border.height >= top ) {
-			Widget_TriggerEvent( w, &e, NULL, NULL );
+			Widget_TriggerEvent( w, &e, NULL );
 			++count;
 		}
 		node = node->next;

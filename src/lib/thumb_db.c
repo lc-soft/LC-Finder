@@ -53,21 +53,26 @@ typedef struct ThumbDataBlockRec_ {
 ThumbDB ThumbDB_New( const char *filepath )
 {
 	int rc;
-	ThumbDB cache;
-	rc = unqlite_open( &cache, filepath, UNQLITE_OPEN_CREATE );
+	ThumbDB db;
+	rc = unqlite_open( &db, filepath, UNQLITE_OPEN_CREATE );
 	if( rc != UNQLITE_OK ) {
 		return NULL;
 	}
-	return cache;
+	return db;
 }
 
-ThumbData ThumbDB_Load( ThumbDB cache, const char *filepath )
+void ThumbDB_Delete( ThumbDB db )
+{
+	unqlite_close( db );
+}
+
+ThumbData ThumbDB_Load( ThumbDB db, const char *filepath )
 {
 	int rc;
 	ThumbData data;
 	ThumbDataBlock block;
 	unqlite_int64 size;
-	rc = unqlite_kv_fetch( cache, filepath, -1, NULL, &size );
+	rc = unqlite_kv_fetch( db, filepath, -1, NULL, &size );
 	if( rc != UNQLITE_OK ) {
 		return NULL;
 	}
@@ -83,7 +88,7 @@ ThumbData ThumbDB_Load( ThumbDB cache, const char *filepath )
 	return data;
 }
 
-int ThumbDB_Save( ThumbDB cache, const char *filepath, ThumbData data )
+int ThumbDB_Save( ThumbDB db, const char *filepath, ThumbData data )
 {
 	int rc;
 	uchar_t *buff;
@@ -101,7 +106,7 @@ int ThumbDB_Save( ThumbDB cache, const char *filepath, ThumbData data )
 	block->modify_time = data->modify_time;
 	block->color_type = data->graph.color_type;
 	memcpy( buff, data->graph.bytes, data->graph.mem_size );
-	rc = unqlite_kv_store( cache, filepath, -1, block, size );
+	rc = unqlite_kv_store( db, filepath, -1, block, size );
 	free( block );
 	return rc == UNQLITE_OK ? 0 : -2;
 }

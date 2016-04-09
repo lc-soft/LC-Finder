@@ -8,6 +8,7 @@
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include <LCUI/gui/widget/scrollbar.h>
 #include "tileitem.h"
 #include "scrollload.h"
 
@@ -19,7 +20,20 @@ typedef struct FileEntryRec_ {
 	char *path;
 } FileEntryRec, *FileEntry;
 
+typedef struct ThumbLoading {
+	LCUI_Cond cond;
+	LCUI_Mutex mutex;
+	LCUI_Thread thread;
+	LinkedList tasks;
+} ThumbLoading;
+
+typedef struct ThumbLoadingTaskRec_ {
+	LCUI_Widget widget;
+	FileEntry entry;
+} ThumbLoadingTaskRec, *ThumbLoadingTask;
+
 static struct FoldersViewData {
+	DB_Dir dir;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget info;
@@ -31,8 +45,10 @@ static struct FoldersViewData {
 	LinkedList files;
 	LinkedList files_cache[2];
 	LinkedList *cache;
+	ThumbDB thumb_db;
 	ThumbCache thumb_cache;
 	ScrollLoading ctx_scrollload;
+	ThumbLoading ctx_thumbload;
 } this_view;
 
 void OpenFolder( const char *dirpath );
@@ -194,18 +210,107 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+#define THUMB_MAX_WIDTH 240
+
+LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
+{
+	int len;
+	DB_Dir dir;
+	ThumbDB db;
+	ThumbData tdata;
+	const char *path;
+	LCUI_Graph *thumb;
+	char apath[PATH_LEN];
+	wchar_t wpath[PATH_LEN];
+	if( entry->is_dir ) {
+		return NULL;
+	}
+	dir = LCFinder_GetSourceDir( entry->path );
+	if( !dir ) {
+		return NULL;
+	}
+	db = Dict_FetchValue( finder.thumb_dbs, dir->path );
+	if( !db ) {
+		return NULL;
+	}
+	len = strlen( dir->path );
+	path = entry->path + len;
+	if( path[0] == PATH_SEP ) {
+		++path;
+	}
+	/* 将路径的编码方式由 UTF-8 转换成 ANSI */
+	LCUI_DecodeString( wpath, entry->path, PATH_LEN, ENCODING_UTF8 );
+	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
+	tdata = ThumbDB_Load( db, path );
+	if( !tdata ) {
+		LCUI_Graph img;
+		ThumbDataRec buf;
+		Graph_Init( &img );
+		Graph_Init( &buf.graph );
+		if( Graph_LoadImage( apath, &img ) != 0 ) {
+			return NULL;
+		}
+		if( img.width > THUMB_MAX_WIDTH ) {
+			Graph_Zoom( &img, &buf.graph, TRUE,
+				    THUMB_MAX_WIDTH, 0 );
+		} else {
+			buf.graph = img;
+		}
+		tdata = &buf;
+		ThumbDB_Save( db, path, tdata );
+	}
+	thumb = &tdata->graph;
+	ThumbCache_Add( this_view.thumb_cache, entry->path, thumb, privdata );
+	return thumb;
+}
+
+static void ExecThumbLoadingTask( ThumbLoadingTask task )
+{
+	LCUI_Graph *thumb;
+	thumb = ThumbCache_Get( this_view.thumb_cache, task->entry->path );
+	if( !thumb ) {
+		thumb = LoadThumb( task->entry, task->widget );
+		if( !thumb ) {
+			return;
+		}
+	}
+	SetStyle( task->widget->custom_style, key_background_image, thumb, image );
+	Widget_UpdateStyle( task->widget, FALSE );
+}
+
+static void ThumbLoadingThread( void *arg )
+{
+	LinkedListNode *node, *prev;
+	ThumbLoading *ctx = &this_view.ctx_thumbload;
+	while( 1 ) {
+		LCUICond_Wait( &ctx->cond, &ctx->mutex );
+		LinkedList_ForEach( node, &ctx->tasks ) {
+			prev = node->prev;
+			LinkedList_Unlink( &ctx->tasks, node );
+			ExecThumbLoadingTask( node->data );
+			free( node->data );
+			node->data = NULL;
+			free( node );
+			node = prev;
+		}
+	}
+}
+
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	FileEntry entry = e->data;
-	if( entry->is_dir ) {
-	} else {
+	ThumbLoadingTask task;
+	if( w->custom_style->sheet[key_background_image].is_valid ) {
+		return;
 	}
-	_DEBUG_MSG( "scroll load: %s\n", entry->path );
+	task = NEW( ThumbLoadingTaskRec, 1 );
+	task->widget = w;
+	task->entry = e->data;
+	LinkedList_Append( &this_view.ctx_thumbload.tasks, task );
+	LCUICond_Signal( &this_view.ctx_thumbload.cond );
 }
 
 static void SyncViewItems( void *arg )
 {
-	int i;
 	FileEntry entry;
 	DB_Dir dir = arg;
 	LCUI_Widget item;
@@ -214,12 +319,7 @@ static void SyncViewItems( void *arg )
 	LinkedListNode *node, *prev_node;
 
 	if( dir ) {
-		for( i = 0; i < finder.n_dirs; ++i ) {
-			if( dir == finder.dirs[i] ) {
-				tcache = finder.thumb_dbs[i];
-				break;
-			}
-		}
+		tcache = Dict_FetchValue( finder.thumb_dbs, dir->path );
 	}
 	list = this_view.cache;
 	if( this_view.cache == this_view.files_cache ) {
@@ -253,6 +353,7 @@ static void OpenFolder( const char *dirpath )
 {
 	int i, len;
 	char *path = NULL;
+	ThumbDB db = NULL;
 	DB_Dir dir = NULL;
 	if( dirpath ) {
 		len = strlen( dirpath );
@@ -278,6 +379,7 @@ static void OpenFolder( const char *dirpath )
 		this_view.is_scaning = FALSE;
 		LCUIThread_Join( this_view.scanner_tid, NULL );
 	}
+	this_view.dir = dir;
 	this_view.is_scaning = TRUE;
 	Widget_Empty( this_view.items );
 	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
@@ -289,6 +391,15 @@ static void OpenFolder( const char *dirpath )
 static void OnRemoveThumb( void *data )
 {
 	_DEBUG_MSG("remove thumb\n");
+}
+
+static void UI_InitThumbLoading( void )
+{
+	ThumbLoading *ctx = &this_view.ctx_thumbload;
+	LCUICond_Init( &ctx->cond );
+	LCUIMutex_Init( &ctx->mutex );
+	LinkedList_Init( &ctx->tasks );
+	LCUIThread_Create( &ctx->thread, ThumbLoadingThread, NULL );
 }
 
 void UI_InitFoldersView( void )
@@ -310,5 +421,6 @@ void UI_InitFoldersView( void )
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
 	this_view.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
 	this_view.ctx_scrollload = ScrollLoading_New( list );
+	UI_InitThumbLoading();
 	OpenFolder( NULL );
 }

@@ -23,7 +23,7 @@ typedef struct Finder_ {
 	wchar_t *data_dir;
 	wchar_t *fileset_dir;
 	wchar_t *thumbs_dir;
-	ThumbDB *thumb_dbs;
+	Dict *thumb_dbs;
 	LCUI_EventTrigger trigger;
 } Finder;
 
@@ -48,6 +48,8 @@ int LCFinder_BindEvent( int event_id, EventHandler handler, void *data );
 
 /** 触发事件 */
 int LCFinder_TriggerEvent( int event_id, void *data );
+
+DB_Dir LCFinder_GetSourceDir( const char *filepath );
 
 int LCFinder_SyncFiles( FileSyncStatus s );
 
