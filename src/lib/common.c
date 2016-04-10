@@ -1,7 +1,46 @@
-﻿#include <stdio.h>
+﻿#include <wchar.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include "sha1.h"
 #include "common.h"
+
+void EncodeSHA1( char *hash_out, const char *str, int len )
+{
+	int i;
+	SHA1_CTX ctx;
+	uint8_t results[20];
+	char elem[4];
+
+	SHA1Init( &ctx );
+	len *= sizeof( wchar_t ) / sizeof( unsigned char );
+	SHA1Update( &ctx, (unsigned char*)str, len );
+	SHA1Final( results, &ctx );
+	hash_out[0] = 0;
+	for( i = 0; i < 20; ++i ) {
+		sprintf( elem, "%02x", results[i] );
+		strcat( hash_out, elem );
+	}
+}
+
+void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len )
+{
+	int i;
+	SHA1_CTX ctx;
+	uint8_t results[20];
+	wchar_t elem[4];
+
+	SHA1Init( &ctx );
+	len *= sizeof( wchar_t ) / sizeof( unsigned char );
+	SHA1Update( &ctx, (unsigned char*)wstr, len );
+	SHA1Final( results, &ctx );
+	hash_out[0] = 0;
+	for( i = 0; i < 20; ++i ) {
+		swprintf( elem, 4, L"%02x", results[i] );
+		wcscat( hash_out, elem );
+	}
+}
 
 static unsigned int Dict_KeyHash( const void *key )
 {

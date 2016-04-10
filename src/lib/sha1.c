@@ -259,27 +259,3 @@ void SHA1( char *hash_out, const char *str, int len )
 	SHA1Final( (unsigned char *)hash_out, &ctx );
 	hash_out[20] = '\0';
 }
-
-#include <stdlib.h>
-#include <wchar.h>
-
-wchar_t *EncodeSHA1( const wchar_t *wstr )
-{
-	int i, len;
-	SHA1_CTX ctx;
-	uint8_t results[20];
-	wchar_t *out_wstr, elem[4];
-
-	SHA1Init( &ctx );
-	len = wcslen( wstr );
-	len *= sizeof( wchar_t ) / sizeof( unsigned char );
-	SHA1Update( &ctx, (unsigned char*)wstr, len );
-	SHA1Final( results, &ctx );
-	out_wstr = malloc( sizeof( wchar_t ) * 42 );
-	out_wstr[0] = 0;
-	for( i = 0; i < 20; ++i ) {
-		swprintf( elem, 4, L"%02x", results[i] );
-		wcscat( out_wstr, elem );
-	}
-	return out_wstr;
-}
