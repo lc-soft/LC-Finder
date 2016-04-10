@@ -50,10 +50,10 @@ typedef struct ThumbDatakRec_ {
 } ThumbDataRec, *ThumbData;
 
 /** 新建一个缩略图数据库实例 */
-ThumbDB ThumbDB_New( const char *filepath );
+ThumbDB ThumbDB_Open( const char *filepath );
 
 /** 销毁缩略图数据库实例 */
-void ThumbDB_Delete( ThumbDB db );
+void ThumbDB_Close( ThumbDB db );
 
 /** 从缓存中载入指定文件路径的缩略图数据 */
 ThumbData ThumbDB_Load( ThumbDB db, const char *filepath );

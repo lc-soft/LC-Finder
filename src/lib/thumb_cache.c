@@ -89,8 +89,8 @@ LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path )
 	return NULL;
 }
 
-int ThumbCache_Add( ThumbCache cache, const char *path, 
-		    LCUI_Graph *thumb, void *privdata )
+LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path, 
+			    LCUI_Graph *thumb, void *privdata )
 {
 	size_t size;
 	int count = 0, len;
@@ -107,7 +107,7 @@ int ThumbCache_Add( ThumbCache cache, const char *path,
 			}
 		}
 		if( size > cache->max_size ) {
-			return -1;
+			return NULL;
 		}
 		/** 移除老的缩略图数据 */
 		LinkedList_ForEach( node, &cache->thumbs ) {
@@ -136,5 +136,5 @@ int ThumbCache_Add( ThumbCache cache, const char *path,
 	LinkedList_AppendNode( &cache->thumbs, &tdn->node );
 	Dict_Add( cache->paths, tdn->path, tdn );
 	cache->size = size;
-	return 0;
+	return &tdn->graph;
 }

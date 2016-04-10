@@ -87,7 +87,9 @@ int ScrollLoading_Update( ScrollLoading ctx )
 	bottom += ctx->scrolllayer->parent->box.padding.height;
 	if( !ctx->top_child ) {
 		node = ctx->scrolllayer->children.head.next;
-		ctx->top_child = node->data;
+		if( node ) {
+			ctx->top_child = node->data;
+		}
 	}
 	if( !ctx->top_child ) {
 		return 0;

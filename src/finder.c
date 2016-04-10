@@ -50,11 +50,10 @@
 #endif
 #include "finder.h"
 #include "ui.h"
-#include "sha1.h"
 #include <LCUI/font/charset.h>
 
 #define EVENT_TOTAL 2
-#define DecodeUTF8(BUF, PATH, LEN) LCUI_DecodeString( BUF, PATH, LEN, ENCODING_UTF8 )
+#define EncodeUTF8(STR, WSTR, LEN) LCUI_EncodeString( STR, WSTR, LEN, ENCODING_UTF8 )
 
 Finder finder;
 
@@ -70,8 +69,8 @@ typedef struct EventPackRec_ {
 
 static void OnEvent( LCUI_Event e, void *arg )
 {
-	EventPack pack = arg;
-	pack->handler( pack->data, e->data );
+	EventPack pack = e->data;
+	pack->handler( pack->data, arg );
 }
 
 int LCFinder_BindEvent( int event_id, EventHandler handler, void *data )
@@ -267,32 +266,49 @@ static void LCFinder_InitWorkDir( void )
 
 static ThumbDBDict_ValDel( void *privdata, void *val )
 {
-	ThumbDB_Delete( val );
+	ThumbDB_Close( val );
 }
 
 static void LCFinder_InitThumbDB( void )
 {
 	int i;
 	ThumbDB db;
-	char path[PATH_LEN];
-	wchar_t *name, wpath[PATH_LEN];
+	char dirpath[PATH_LEN], path[PATH_LEN], name[44];
 	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
 	printf("[thumbdb] init...\n");
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		strcpy( path, finder.dirs[i]->path );
-		DecodeUTF8( wpath, path, PATH_LEN );
-		name = EncodeSHA1( wpath );
-		wpathjoin( wpath, finder.thumbs_dir, name );
-		LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_ANSI );
-		db = ThumbDB_New( path );
+		EncodeSHA1( name, path, strlen(path) );
+		EncodeUTF8( dirpath, finder.thumbs_dir, PATH_LEN );
+		pathjoin( path, dirpath, name );
+		db = ThumbDB_Open( path );
 		Dict_Add( finder.thumb_dbs, finder.dirs[i]->path, db );
 	}
 	printf("[thumbdb] init done\n");
 }
 
+static void LCFinder_ExitThumbDB( void )
+{
+	ThumbDB db;
+	DictEntry *entry;
+	DictIterator *iter;
+	printf("[thumbdb] exit ..\n");
+	iter = Dict_GetIterator( finder.thumb_dbs );
+	entry = Dict_Next( iter );
+	while( entry ) {
+		db = DictEntry_GetVal( entry );
+		ThumbDB_Close( db );
+		entry = Dict_Next( iter );
+	}
+	Dict_ReleaseIterator( iter );
+	Dict_Release( finder.thumb_dbs );
+	finder.thumb_dbs = NULL;
+	printf("[thumbdb] exit done\n");
+}
 static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 {
 	printf("exit\n");
+	LCFinder_ExitThumbDB();
 }
 
 int main( int argc, char **argv )

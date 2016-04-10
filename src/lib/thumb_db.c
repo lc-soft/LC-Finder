@@ -50,7 +50,7 @@ typedef struct ThumbDataBlockRec_ {
 	int modify_time;
 } ThumbDataBlockRec, *ThumbDataBlock;
 
-ThumbDB ThumbDB_New( const char *filepath )
+ThumbDB ThumbDB_Open( const char *filepath )
 {
 	int rc;
 	ThumbDB db;
@@ -58,10 +58,14 @@ ThumbDB ThumbDB_New( const char *filepath )
 	if( rc != UNQLITE_OK ) {
 		return NULL;
 	}
+	rc = unqlite_kv_store( db, "__program__", -1, "LCFinder", 9 );
+	if( rc != UNQLITE_OK ) {
+		printf( "[thumbdb] cannot open db: %s\n", filepath );
+	}
 	return db;
 }
 
-void ThumbDB_Delete( ThumbDB db )
+void ThumbDB_Close( ThumbDB db )
 {
 	unqlite_close( db );
 }

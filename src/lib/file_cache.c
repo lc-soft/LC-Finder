@@ -37,8 +37,8 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
+#include "common.h"
 #include "file_cache.h"
-#include "sha1.h"
 
 #ifdef _WIN32
 #define PATH_SEP '\\'
@@ -118,7 +118,7 @@ SyncTask SyncTask_New( const char *data_dir, const char *scan_dir )
 SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 {
 	int n, len;
-	wchar_t *name;
+	wchar_t name[44];
 	const wchar_t suffix[] = L".tmp";
 	size_t len1 = wcslen( data_dir ) + 1;
 	size_t len2 = wcslen( scan_dir ) + 1;
@@ -131,9 +131,9 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	t->scan_dir = malloc( sizeof( wchar_t ) * len2 );
 	wcscpy( t->data_dir, data_dir );
 	wcscpy( t->scan_dir, scan_dir );
-	name = EncodeSHA1( t->scan_dir );
+	WEncodeSHA1( name, t->scan_dir, len2 );
 	n = wcslen( t->data_dir );
-	len = n + wcslen( name ) + 2 + WCSLEN( suffix );
+	len = n + 22 + WCSLEN( suffix );
 	t->tmpfile = malloc( len * sizeof( wchar_t ) );
 	t->file = malloc( len * sizeof( wchar_t ) );
 	wcscpy( t->tmpfile, t->data_dir );

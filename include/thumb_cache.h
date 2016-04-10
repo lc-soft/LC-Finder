@@ -45,7 +45,7 @@ ThumbCache ThumbCache_New( size_t max_size, void( *on_remove )(void*) );
 
 LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path );
 
-int ThumbCache_Add( ThumbCache cache, const char *path,
-		    LCUI_Graph *thumb, void *privdata );
+LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
+			    LCUI_Graph *thumb, void *privdata );
 
 #endif

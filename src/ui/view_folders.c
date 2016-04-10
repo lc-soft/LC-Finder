@@ -259,8 +259,8 @@ LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 		tdata = &buf;
 		ThumbDB_Save( db, path, tdata );
 	}
-	thumb = &tdata->graph;
-	ThumbCache_Add( this_view.thumb_cache, entry->path, thumb, privdata );
+	thumb = ThumbCache_Add( this_view.thumb_cache, entry->path, 
+				&tdata->graph, privdata );
 	return thumb;
 }
 
