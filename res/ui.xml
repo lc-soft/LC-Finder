@@ -61,15 +61,15 @@
             <widget id="view-folders-content" class="view-content full-height">
               <widget id="tip-empty-folder" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
               <widget id="current-file-list" class="scrolllayer file-list"></widget>
-              <widget class="alert alert-primary hide">
-                <widget class="alert-header">
-                  <widget type="spin" class="ion ion-android-sync"></widget>
-                  <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
-                </widget>
-                <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
-              </widget>
               <widget type="scrollbar" data-parent="view-folders-content-wrapper" data-layer="current-file-list"/>
             </widget>
+          </widget>
+          <widget class="alert alert-primary hide">
+            <widget class="alert-header">
+              <widget type="spin" class="ion ion-android-sync"></widget>
+              <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
+            </widget>
+            <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
           </widget>
         </widget>
       </widget>
