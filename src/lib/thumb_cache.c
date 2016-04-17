@@ -58,13 +58,6 @@ typedef struct ThumbDataNodeRec_ {
 	LinkedListNode node;		/**< 在列表中的节点 */
 } ThumbDataNodeRec, *ThumbDataNode;
 
-static void *Dict_ValDup( void *privdata, const void *val )
-{
-	int *newval = malloc( sizeof( int ) );
-	*newval = *((int*)val);
-	return newval;
-}
-
 static void Dict_ValDel( void *privdata, void *val )
 {
 	free( val );
@@ -76,7 +69,7 @@ ThumbCache ThumbCache_New( size_t max_size, void (*on_remove)(void*) )
 	LinkedList_Init( &cache->thumbs );
 	cache->max_size = max_size;
 	cache->on_remove = on_remove;
-	cache->paths = StrDict_Create( Dict_ValDup, Dict_ValDel );
+	cache->paths = StrDict_Create( NULL, Dict_ValDel );
 	return cache;
 }
 

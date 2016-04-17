@@ -45,18 +45,21 @@ typedef unqlite* ThumbDB;
 #endif
 
 typedef struct ThumbDatakRec_ {
-	int modify_time;
+	unsigned int modify_time;
 	LCUI_Graph graph;
 } ThumbDataRec, *ThumbData;
 
 /** 新建一个缩略图数据库实例 */
 ThumbDB ThumbDB_Open( const char *filepath );
 
+/** 提交对缩略图数据库的修改 */
+void ThumbDB_Commit( ThumbDB db );
+
 /** 销毁缩略图数据库实例 */
 void ThumbDB_Close( ThumbDB db );
 
-/** 从缓存中载入指定文件路径的缩略图数据 */
-ThumbData ThumbDB_Load( ThumbDB db, const char *filepath );
+/** 从数据库中载入指定文件路径的缩略图数据 */
+int ThumbDB_Load( ThumbDB db, const char *filepath, ThumbData data );
 
 /** 将缩略图数据保存至缓存中 */
 int ThumbDB_Save( ThumbDB db, const char *filepath, ThumbData data );

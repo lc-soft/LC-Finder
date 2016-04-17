@@ -35,6 +35,7 @@
 * ****************************************************************************/
 
 #define __THUMBNAIL_CACHE_C__
+#include <stdio.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
@@ -65,31 +66,39 @@ ThumbDB ThumbDB_Open( const char *filepath )
 	return db;
 }
 
+void ThumbDB_Commit( ThumbDB db )
+{
+	unqlite_commit( db );
+}
+
 void ThumbDB_Close( ThumbDB db )
 {
 	unqlite_close( db );
 }
 
-ThumbData ThumbDB_Load( ThumbDB db, const char *filepath )
+int ThumbDB_Load( ThumbDB db, const char *filepath, ThumbData data )
 {
 	int rc;
-	ThumbData data;
-	ThumbDataBlock block;
+	uchar_t *bytes;
 	unqlite_int64 size;
+	ThumbDataBlock block;
 	rc = unqlite_kv_fetch( db, filepath, -1, NULL, &size );
 	if( rc != UNQLITE_OK ) {
-		return NULL;
+		return -1;
 	}
 	block = malloc( (size_t)size );
-	data = NEW( ThumbDataRec, 1 );
+	bytes = (uchar_t*)block + sizeof( ThumbDataBlockRec );
+	rc = unqlite_kv_fetch( db, filepath, -1, block, &size );
+	if( rc != UNQLITE_OK ) {
+		return -1;
+	}
 	Graph_Init( &data->graph );
-	data->graph.width = block->width;
-	data->graph.height = block->height;
-	data->graph.mem_size = block->mem_size;
 	data->graph.color_type = block->color_type;
-	data->graph.bytes = (uchar_t*)block + sizeof(ThumbDataBlockRec);
+	Graph_Create( &data->graph, block->width, block->height );
+	memcpy( data->graph.bytes, bytes, block->mem_size );
 	data->modify_time = block->modify_time;
-	return data;
+	free( block );
+	return 0;
 }
 
 int ThumbDB_Save( ThumbDB db, const char *filepath, ThumbData data )
