@@ -23,7 +23,7 @@ void UI_Init(void)
 {
 	LCUI_Widget box;
 	LCUI_Init();
-	LCUIDisplay_SetMode( LDM_WINDOWED );
+	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 540 );
 	//LCUIDisplay_ShowRectBorder();
 	box = LCUIBuilder_LoadFile( XML_PATH );
@@ -36,7 +36,7 @@ void UI_Init(void)
 	UI_InitSettingsView();
 	UI_InitFoldersView();
 	UI_InitFileSyncTip();
-	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
+	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 
 int UI_Run(void)

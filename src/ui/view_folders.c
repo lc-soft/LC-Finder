@@ -4,7 +4,9 @@
 */
 
 #include "finder.h"
+#include <stdio.h>
 #include <string.h>
+#include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
@@ -41,6 +43,7 @@ static struct FoldersViewData {
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_BOOL is_scaning;
+	LCUI_BOOL is_loading;
 	LCUI_Thread scanner_tid;
 	LinkedList files;
 	LinkedList files_cache[2];
@@ -217,9 +220,9 @@ LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 	int len;
 	DB_Dir dir;
 	ThumbDB db;
-	ThumbData tdata;
-	const char *path;
+	ThumbDataRec tdata;
 	LCUI_Graph *thumb;
+	const char *path;
 	char apath[PATH_LEN];
 	wchar_t wpath[PATH_LEN];
 	if( entry->is_dir ) {
@@ -241,30 +244,30 @@ LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 	/* 将路径的编码方式由 UTF-8 转换成 ANSI */
 	LCUI_DecodeString( wpath, entry->path, PATH_LEN, ENCODING_UTF8 );
 	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
-	tdata = ThumbDB_Load( db, path );
-	if( !tdata ) {
+	if( ThumbDB_Load( db, path, &tdata ) != 0 ) {
 		LCUI_Graph img;
-		ThumbDataRec buf;
 		Graph_Init( &img );
-		Graph_Init( &buf.graph );
+		Graph_Init( &tdata.graph );
+		_DEBUG_MSG("open image file: %s\n", apath);
 		if( Graph_LoadImage( apath, &img ) != 0 ) {
+			_DEBUG_MSG("open image file faild\n");
 			return NULL;
 		}
 		if( img.width > THUMB_MAX_WIDTH ) {
-			Graph_Zoom( &img, &buf.graph, TRUE,
+			Graph_Zoom( &img, &tdata.graph, TRUE,
 				    THUMB_MAX_WIDTH, 0 );
 		} else {
-			buf.graph = img;
+			tdata.graph = img;
 		}
-		tdata = &buf;
-		ThumbDB_Save( db, path, tdata );
+		ThumbDB_Save( db, path, &tdata );
 	}
+	_DEBUG_MSG("thumb data: size = (%d,%d)\n", tdata.graph.width, tdata.graph.height);
 	thumb = ThumbCache_Add( this_view.thumb_cache, entry->path, 
-				&tdata->graph, privdata );
+				&tdata.graph, privdata );
 	return thumb;
 }
 
-static void ExecThumbLoadingTask( ThumbLoadingTask task )
+static void ThumbLoading_ExecTask( ThumbLoadingTask task )
 {
 	LCUI_Graph *thumb;
 	thumb = ThumbCache_Get( this_view.thumb_cache, task->entry->path );
@@ -278,35 +281,72 @@ static void ExecThumbLoadingTask( ThumbLoadingTask task )
 	Widget_UpdateStyle( task->widget, FALSE );
 }
 
-static void ThumbLoadingThread( void *arg )
+static void ThumbLoading_TaskThread( void *arg )
 {
+	DictEntry *entry;
+	DictIterator *iter;
 	LinkedListNode *node, *prev;
-	ThumbLoading *ctx = &this_view.ctx_thumbload;
+	ThumbLoading *ctx = arg;
 	while( 1 ) {
 		LCUICond_Wait( &ctx->cond, &ctx->mutex );
+		this_view.is_loading = TRUE;
 		LinkedList_ForEach( node, &ctx->tasks ) {
 			prev = node->prev;
 			LinkedList_Unlink( &ctx->tasks, node );
-			ExecThumbLoadingTask( node->data );
+			ThumbLoading_ExecTask( node->data );
 			free( node->data );
 			node->data = NULL;
 			free( node );
 			node = prev;
+			if( !this_view.is_loading ) {
+				break;
+			}
 		}
+		this_view.is_loading = FALSE;
+		LCUIMutex_Unlock( &ctx->mutex );
+		iter = Dict_GetIterator( finder.thumb_dbs );
+		entry = Dict_Next( iter );
+		while( entry ) {
+			ThumbDB db = DictEntry_GetVal( entry );
+			ThumbDB_Commit( db );
+			entry = Dict_Next( iter );
+		}
+		Dict_ReleaseIterator( iter );
 	}
+}
+
+static void ThumbLoading_AddTask( LCUI_Widget w, FileEntry entry )
+{
+	ThumbLoadingTask task;
+	task = NEW( ThumbLoadingTaskRec, 1 );
+	task->widget = w;
+	task->entry = entry;
+	LinkedList_Append( &this_view.ctx_thumbload.tasks, task );
+	LCUICond_Signal( &this_view.ctx_thumbload.cond );
+}
+
+static void ThumbLoading_Init( ThumbLoading *ctx )
+{
+	LCUICond_Init( &ctx->cond );
+	LCUIMutex_Init( &ctx->mutex );
+	LinkedList_Init( &ctx->tasks );
+	LCUIThread_Create( &ctx->thread, ThumbLoading_TaskThread, ctx );
+}
+
+static void ThumbLoading_Reset( ThumbLoading *ctx )
+{
+	this_view.is_loading = FALSE;
+	LCUIMutex_Lock( &ctx->mutex );
+	LinkedList_Clear( &ctx->tasks, free );
+	LCUIMutex_Unlock( &ctx->mutex );
 }
 
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	ThumbLoadingTask task;
 	if( w->custom_style->sheet[key_background_image].is_valid ) {
 		return;
 	}
-	task = NEW( ThumbLoadingTaskRec, 1 );
-	task->widget = w;
-	task->entry = e->data;
-	LinkedList_Append( &this_view.ctx_thumbload.tasks, task );
-	LCUICond_Signal( &this_view.ctx_thumbload.cond );
+	ThumbLoading_AddTask( w, e->data );
 }
 
 static void SyncViewItems( void *arg )
@@ -379,6 +419,7 @@ static void OpenFolder( const char *dirpath )
 		this_view.is_scaning = FALSE;
 		LCUIThread_Join( this_view.scanner_tid, NULL );
 	}
+	ThumbLoading_Reset( &this_view.ctx_thumbload );
 	this_view.dir = dir;
 	this_view.is_scaning = TRUE;
 	Widget_Empty( this_view.items );
@@ -391,15 +432,6 @@ static void OpenFolder( const char *dirpath )
 static void OnRemoveThumb( void *data )
 {
 	_DEBUG_MSG("remove thumb\n");
-}
-
-static void UI_InitThumbLoading( void )
-{
-	ThumbLoading *ctx = &this_view.ctx_thumbload;
-	LCUICond_Init( &ctx->cond );
-	LCUIMutex_Init( &ctx->mutex );
-	LinkedList_Init( &ctx->tasks );
-	LCUIThread_Create( &ctx->thread, ThumbLoadingThread, NULL );
 }
 
 void UI_InitFoldersView( void )
@@ -421,6 +453,6 @@ void UI_InitFoldersView( void )
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
 	this_view.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
 	this_view.ctx_scrollload = ScrollLoading_New( list );
-	UI_InitThumbLoading();
+	ThumbLoading_Init( &this_view.ctx_thumbload );
 	OpenFolder( NULL );
 }

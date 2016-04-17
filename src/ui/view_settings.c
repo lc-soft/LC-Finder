@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <ShlObj.h>
 #endif
+#include <stdio.h>
 #include "finder.h"
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>

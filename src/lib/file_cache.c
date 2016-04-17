@@ -34,6 +34,7 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
+#include <stdio.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
@@ -133,7 +134,7 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	wcscpy( t->scan_dir, scan_dir );
 	WEncodeSHA1( name, t->scan_dir, len2 );
 	n = wcslen( t->data_dir );
-	len = n + 22 + WCSLEN( suffix );
+	len = n + WCSLEN(name) + WCSLEN( suffix );
 	t->tmpfile = malloc( len * sizeof( wchar_t ) );
 	t->file = malloc( len * sizeof( wchar_t ) );
 	wcscpy( t->tmpfile, t->data_dir );
