@@ -215,6 +215,29 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 #define THUMB_MAX_WIDTH 240
 
+static int GetDirThumbFilePath( char *filepath, char *dirpath )
+{
+	int total;
+	DB_File file;
+	DB_Query query;
+	DB_QueryTermsRec terms;
+	terms.dirpath = dirpath;
+	terms.n_dirs = 1;
+	terms.n_tags = 0;
+	terms.limit = 10;
+	terms.offset = 0;
+	terms.tags = NULL;
+	terms.dirs = NULL;
+	terms.create_time = DESC;
+	query = DB_NewQuery( &terms );
+	total = DBQuery_GetTotalFiles( query );
+	if( total > 0 ) {
+		file = DBQuery_FetchFile( query );
+		strcpy( filepath, file->path );
+	}
+	return total;
+}
+
 LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 {
 	int len;
@@ -222,12 +245,9 @@ LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 	ThumbDB db;
 	ThumbDataRec tdata;
 	LCUI_Graph *thumb;
-	const char *path;
+	const char *filename;
 	char apath[PATH_LEN];
 	wchar_t wpath[PATH_LEN];
-	if( entry->is_dir ) {
-		return NULL;
-	}
 	dir = LCFinder_GetSourceDir( entry->path );
 	if( !dir ) {
 		return NULL;
@@ -237,14 +257,22 @@ LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 		return NULL;
 	}
 	len = strlen( dir->path );
-	path = entry->path + len;
-	if( path[0] == PATH_SEP ) {
-		++path;
+	filename = entry->path + len;
+	if( filename[0] == PATH_SEP ) {
+		++filename;
 	}
-	/* 将路径的编码方式由 UTF-8 转换成 ANSI */
-	LCUI_DecodeString( wpath, entry->path, PATH_LEN, ENCODING_UTF8 );
+	if( entry->is_dir ) {
+		char path[PATH_LEN];
+		if( GetDirThumbFilePath( path, entry->path ) == 0 ) {
+			return NULL;
+		}
+		LCUI_DecodeString( wpath, path, PATH_LEN, ENCODING_UTF8 );
+	} else {
+		/* 将路径的编码方式由 UTF-8 转换成 ANSI */
+		LCUI_DecodeString( wpath, entry->path, PATH_LEN, ENCODING_UTF8 );
+	}
 	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
-	if( ThumbDB_Load( db, path, &tdata ) != 0 ) {
+	if( ThumbDB_Load( db, filename, &tdata ) != 0 ) {
 		LCUI_Graph img;
 		Graph_Init( &img );
 		Graph_Init( &tdata.graph );
@@ -259,7 +287,7 @@ LCUI_Graph *LoadThumb( FileEntry entry, void *privdata )
 		} else {
 			tdata.graph = img;
 		}
-		ThumbDB_Save( db, path, &tdata );
+		ThumbDB_Save( db, filename, &tdata );
 	}
 	_DEBUG_MSG("thumb data: size = (%d,%d)\n", tdata.graph.width, tdata.graph.height);
 	thumb = ThumbCache_Add( this_view.thumb_cache, entry->path, 
