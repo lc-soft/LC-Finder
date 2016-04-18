@@ -151,6 +151,8 @@
 }
 .file-list {
 	width: 100%;
+	padding: 0 0 20px 0;
+	border: 2px solid #f00;
 }
 .file-list .file-list-item-folder {
 	width: 300px;
@@ -199,6 +201,13 @@
 	border: 1px solid #eee;
 	background-position: top center;
 	background-size: cover;
+}
+.hide-path .info .path {
+	display: none;
+}
+.hide-path .info .name {
+	height: 34px;
+	line-height: 34px;
 }
 .full-height {
 	height: 100%;

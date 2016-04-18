@@ -13,7 +13,7 @@ typedef struct PictureItemDataRec_ {
 	ThumbCache cache;
 } PictureItemDataRec, *PictureItemData;
 
-LCUI_Widget CreateFolderItem( const char *filepath )
+LCUI_Widget CreateFolderItem( const char *filepath, LCUI_BOOL show_path )
 {
 	LCUI_Widget item = LCUIWidget_New( NULL );
 	LCUI_Widget infobar = LCUIWidget_New( NULL );
@@ -21,6 +21,9 @@ LCUI_Widget CreateFolderItem( const char *filepath )
 	LCUI_Widget path = LCUIWidget_New( "textview" );
 	LCUI_Widget icon = LCUIWidget_New( "textview" );
 	Widget_AddClass( item, "file-list-item-folder" );
+	if( !show_path ) {
+		Widget_AddClass( item, "hide-path" );
+	}
 	Widget_AddClass( infobar, "info" );
 	Widget_AddClass( name, "name" );
 	Widget_AddClass( path, "path" );

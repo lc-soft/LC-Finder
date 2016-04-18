@@ -58,7 +58,7 @@ void OpenFolder( const char *dirpath );
 
 static void OnAddDir( void *privdata, void *data )
 {
-	LCUI_Widget item = CreateFolderItem( data );
+	LCUI_Widget item = CreateFolderItem( data, TRUE );
 	Widget_Append( this_view.items, item );
 }
 
@@ -402,7 +402,8 @@ static void SyncViewItems( void *arg )
 		LinkedList_AppendNode( &this_view.files, node );
 		node = prev_node;
 		if( entry->is_dir ) {
-			item = CreateFolderItem( entry->path );
+			_DEBUG_MSG("%p\n", dir);
+			item = CreateFolderItem( entry->path, dir == NULL );
 		} else {
 			item = CreatePictureItem( this_view.thumb_cache, 
 						  entry->path );
@@ -427,15 +428,15 @@ static void OpenFolder( const char *dirpath )
 		len = strlen( dirpath );
 		path = malloc( sizeof( char )*(len + 2) );
 		strcpy( path, dirpath );
-		if( path[len - 1] != PATH_SEP ) {
-			path[len++] = PATH_SEP;
-			path[len] = 0;
-		}
 		for( i = 0; i < finder.n_dirs; ++i ) {
 			if( strcmp( finder.dirs[i]->path, path ) == 0 ) {
 				dir = finder.dirs[i];
 				break;
 			}
+		}
+		if( path[len - 1] != PATH_SEP ) {
+			path[len++] = PATH_SEP;
+			path[len] = 0;
 		}
 		TextView_SetText( this_view.info_name, getdirname( dirpath ) );
 		TextView_SetText( this_view.info_path, dirpath );
