@@ -80,6 +80,7 @@
 .view .view-content {
 	width: 100%;
 	padding: 15px 0 0 0;
+	box-sizing: border-box;
 }
 .view .item-group {
 	padding: 0 10px;
@@ -151,8 +152,7 @@
 }
 .file-list {
 	width: 100%;
-	padding: 0 0 20px 0;
-	border: 2px solid #f00;
+	margin: 0 0 20px 0;
 }
 .file-list .file-list-item-folder {
 	width: 300px;
@@ -201,6 +201,11 @@
 	border: 1px solid #eee;
 	background-position: top center;
 	background-size: cover;
+}
+.file-list .divider {
+	width: 100%;
+	display: block;
+	height: 20px;
 }
 .hide-path .info .path {
 	display: none;

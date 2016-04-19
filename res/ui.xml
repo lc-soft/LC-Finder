@@ -60,8 +60,8 @@
           <widget id="view-folders-content-wrapper" class="view-content-wrapper">
             <widget id="view-folders-content" class="view-content full-height">
               <widget id="tip-empty-folder" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
-              <widget id="current-file-list" class="scrolllayer file-list"></widget>
-              <widget type="scrollbar" data-parent="view-folders-content-wrapper" data-layer="current-file-list"/>
+              <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
+              <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
             </widget>
           </widget>
           <widget class="alert alert-primary hide">
