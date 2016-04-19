@@ -60,10 +60,10 @@
     <ClCompile Include="src\lib\thumb_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\tileitem.c">
+    <ClCompile Include="src\ui\file_sync.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\file_sync.c">
+    <ClCompile Include="src\ui\thumbview.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,7 +110,7 @@
     <ClInclude Include="include\scrollload.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\tileitem.h">
+    <ClInclude Include="include\thumbview.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

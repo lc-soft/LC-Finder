@@ -3,13 +3,14 @@
 * 版权所有 (C) 2016 归属于 刘超 <root@lc-soft.io>
 */
 
+#include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
 #include <LCUI/gui/builder.h>
-#include <stdlib.h>
 #include "ui.h"
+#include "thumbview.h"
 #include "finder.h"
 
 #define XML_PATH "res/ui.xml"
@@ -23,6 +24,7 @@ void UI_Init(void)
 {
 	LCUI_Widget box;
 	LCUI_Init();
+	LCUIWidget_AddTThumbView();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 540 );
 	//LCUIDisplay_ShowRectBorder();

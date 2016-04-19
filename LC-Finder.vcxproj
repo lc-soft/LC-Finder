@@ -29,7 +29,7 @@
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\ui\file_sync.c" />
     <ClCompile Include="src\ui\scrollload.c" />
-    <ClCompile Include="src\ui\tileitem.c" />
+    <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_settings.c" />
     <ClCompile Include="src\ui\sidebar.c" />
@@ -55,7 +55,7 @@
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\thumb_db.h" />
     <ClInclude Include="include\thumb_cache.h" />
-    <ClInclude Include="include\tileitem.h" />
+    <ClInclude Include="include\thumbview.h" />
     <ClInclude Include="include\ui.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

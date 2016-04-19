@@ -122,6 +122,7 @@ LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
 	}
 	tdn = NEW( ThumbDataNodeRec, 1 );
 	tdn->graph = *thumb;
+	tdn->node.data = tdn;
 	tdn->privdata = privdata;
 	len = strlen( path ) + 1;
 	tdn->path = NEW( char, len );
