@@ -19,4 +19,7 @@ void UI_InitFoldersView( void );
 /** 初始化文件同步时的提示框 */
 void UI_InitFileSyncTip( void );
 
+/** 初始化首页集锦视图 */
+void UI_InitHomeView( void );
+
 #endif

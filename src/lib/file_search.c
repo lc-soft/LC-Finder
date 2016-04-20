@@ -425,13 +425,14 @@ DB_File DBQuery_FetchFile( DB_Query query )
 DB_Query DB_NewQuery( const DB_QueryTerms terms )
 {
 	int i;
-	char buf[256] = "", sql[SQL_BUF_SIZE];
+	char buf[256] = " WHERE", sql[SQL_BUF_SIZE];
 	DB_Query q = malloc( sizeof(DB_QueryRec) );
 	q->sql_terms = malloc( sizeof( char )*SQL_BUF_SIZE );
 	q->sql_tables = malloc( sizeof( char )*SQL_BUF_SIZE );
+	q->sql_terms[0] = 0;
 	q->sql_tables[0] = 0;
-	strcpy( q->sql_terms, " WHERE" );
 	if( terms->n_dirs > 0 && terms->dirs ) {
+		strcpy( q->sql_terms, buf );
 		strcat( q->sql_tables, ", dir d" );
 		strcat( q->sql_terms, " f.did = d.did" );
 		strcat( q->sql_terms, " AND f.did IN (" );
@@ -456,6 +457,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 			strcat( q->sql_terms, buf );
 		}
 		strcat( q->sql_terms, ") AND ftr.fid = f.id" );
+		strcpy( buf, " AND" );
 	}
 	if( terms->dirpath ) {
 		char *path;
