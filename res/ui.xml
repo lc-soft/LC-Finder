@@ -37,8 +37,21 @@
       <widget id="view-home" class="view">
         <widget class="view-navbar">
           <widget type="textview" class="view-navbar-title">集锦</widget>
+          <widget class="pull-right">
+            <widget id="btn-sync-collection-files" class="view-navbar-btn">
+              <widget type="textview" class="icon ion ion-android-sync"></widget>
+            </widget>
+          </widget>
         </widget>
-        <widget class="view-body"></widget>
+        <widget class="view-body">
+          <widget id="view-home-content-wrapper" class="view-content-wrapper">
+            <widget id="view-home-content" class="view-content full-height">
+              <widget id="tip-empty-collection" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
+              <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
+              <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
+            </widget>
+          </widget>
+        </widget>
       </widget>
       <widget id="view-folders" class="view hide">
         <widget class="view-navbar">
@@ -63,13 +76,6 @@
               <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
               <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
             </widget>
-          </widget>
-          <widget class="alert alert-primary hide">
-            <widget class="alert-header">
-              <widget type="spin" class="ion ion-android-sync"></widget>
-              <widget id="folders-view-sync-title" type="textview" class="alert-title">正在同步你的资源</widget>
-            </widget>
-            <widget id="folders-view-sync-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
           </widget>
         </widget>
       </widget>
@@ -100,6 +106,13 @@
             <widget type="scrollbar" data-parent="view-settings-content-wrapper" data-layer="view-settings-content"/>
           </widget>
         </widget>
+      </widget>
+      <widget class="alert alert-primary hide">
+        <widget class="alert-header">
+          <widget type="spin" class="ion ion-android-sync"></widget>
+          <widget id="file-sync-tip-title" type="textview" class="alert-title">正在同步你的资源</widget>
+        </widget>
+        <widget id="file-sync-tip-stats" type="textview" class="alert-text">已扫描 0 个文件</widget>
       </widget>
     </widget>
   </ui>
