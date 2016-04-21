@@ -55,10 +55,11 @@ typedef struct DB_DirRec_ {
 } DB_DirRec, *DB_Dir;
 
 typedef struct DB_FileRec_ {
-	int id;			/**< 文件标识号 */
-	int did;		/**< 文件夹标识号 */
-	int score;		/**< 文件评分 */
-	char *path;		/**< 文件路径 */
+	int id;				/**< 文件标识号 */
+	int did;			/**< 文件夹标识号 */
+	int score;			/**< 文件评分 */
+	char *path;			/**< 文件路径 */
+	unsigned int create_time;	/**< 创建时间 */
 } DB_FileRec, *DB_File;
 
 typedef struct DB_QueryTermsRec_ {

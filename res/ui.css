@@ -210,6 +210,16 @@
 	width: 100%;
 	display: block;
 	height: 10px;
+	border: 1px solid #ddd;
+}
+.time-separator-title {
+	font-size: 18px;
+	margin: 30px 0 5px 0;
+}
+.time-separator-subtitle {
+	color: #666;
+	width: 100%;
+	display: block;
 }
 .hide-path .info .path {
 	display: none;

@@ -120,7 +120,7 @@ DELETE FROM file WHERE did = ? AND path = ?;";
 static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
 static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 static const char *sql_search_files = "\
-SELECT f.id, f.did, f.score, f.path FROM file f";
+SELECT f.id, f.did, f.score, f.path, f.create_time FROM file f";
 static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f";
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
@@ -417,6 +417,7 @@ DB_File DBQuery_FetchFile( DB_Query query )
 	file->did = sqlite3_column_int( query->stmt, 1 );
 	file->score = sqlite3_column_int( query->stmt, 2 );
 	path = sqlite3_column_text( query->stmt, 3 );
+	file->create_time = sqlite3_column_int( query->stmt, 4 );
 	file->path = malloc( (strlen( path ) + 1)*sizeof( char ) );
 	strcpy( file->path, path );
 	return file;

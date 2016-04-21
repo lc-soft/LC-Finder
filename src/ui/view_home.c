@@ -1,4 +1,4 @@
-/* ***************************************************************************
+ï»¿/* ***************************************************************************
 * view_home.c -- home view
 *
 * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
@@ -18,38 +18,45 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* view_home.c -- Ö÷Ò³¼¯½õÊÓÍ¼
+* view_home.c -- ä¸»é¡µé›†é”¦è§†å›¾
 *
-* °æÈ¨ËùÓĞ (C) 2016 ¹éÊôÓÚ Áõ³¬ <lc-soft@live.cn>
+* ç‰ˆæƒæ‰€æœ‰ (C) 2016 å½’å±äº åˆ˜è¶… <lc-soft@live.cn>
 *
-* Õâ¸öÎÄ¼şÊÇ LC-Finder ÏîÄ¿µÄÒ»²¿·Ö£¬²¢ÇÒÖ»¿ÉÒÔ¸ù¾İGPLv2Ğí¿ÉĞ­ÒéÀ´Ê¹ÓÃ¡¢¸ü¸ÄºÍ
-* ·¢²¼¡£
+* è¿™ä¸ªæ–‡ä»¶æ˜¯ LC-Finder é¡¹ç›®çš„ä¸€éƒ¨åˆ†ï¼Œå¹¶ä¸”åªå¯ä»¥æ ¹æ®GPLv2è®¸å¯åè®®æ¥ä½¿ç”¨ã€æ›´æ”¹å’Œ
+* å‘å¸ƒã€‚
 *
-* ¼ÌĞøÊ¹ÓÃ¡¢ĞŞ¸Ä»ò·¢²¼±¾ÎÄ¼ş£¬±íÃ÷ÄúÒÑ¾­ÔÄ¶Á²¢ÍêÈ«Àí½âºÍ½ÓÊÜÕâ¸öĞí¿ÉĞ­Òé¡£
+* ç»§ç»­ä½¿ç”¨ã€ä¿®æ”¹æˆ–å‘å¸ƒæœ¬æ–‡ä»¶ï¼Œè¡¨æ˜æ‚¨å·²ç»é˜…è¯»å¹¶å®Œå…¨ç†è§£å’Œæ¥å—è¿™ä¸ªè®¸å¯åè®®ã€‚
 *
-* LC-Finder ÏîÄ¿ÊÇ»ùÓÚÊ¹ÓÃÄ¿µÄ¶ø¼ÓÒÔÉ¢²¼µÄ£¬µ«²»¸ºÈÎºÎµ£±£ÔğÈÎ£¬ÉõÖÁÃ»ÓĞÊÊÏú
-* ĞÔ»òÌØ¶¨ÓÃÍ¾µÄÒşº¬µ£±££¬ÏêÇéÇë²ÎÕÕGPLv2Ğí¿ÉĞ­Òé¡£
+* LC-Finder é¡¹ç›®æ˜¯åŸºäºä½¿ç”¨ç›®çš„è€ŒåŠ ä»¥æ•£å¸ƒçš„ï¼Œä½†ä¸è´Ÿä»»ä½•æ‹…ä¿è´£ä»»ï¼Œç”šè‡³æ²¡æœ‰é€‚é”€
+* æ€§æˆ–ç‰¹å®šç”¨é€”çš„éšå«æ‹…ä¿ï¼Œè¯¦æƒ…è¯·å‚ç…§GPLv2è®¸å¯åè®®ã€‚
 *
-* ÄúÓ¦ÒÑÊÕµ½¸½ËæÓÚ±¾ÎÄ¼şµÄGPLv2Ğí¿ÉĞ­ÒéµÄ¸±±¾£¬ËüÍ¨³£ÔÚ LICENSE ÎÄ¼şÖĞ£¬Èç¹û
-* Ã»ÓĞ£¬Çë²é¿´£º<http://www.gnu.org/licenses/>.
+* æ‚¨åº”å·²æ”¶åˆ°é™„éšäºæœ¬æ–‡ä»¶çš„GPLv2è®¸å¯åè®®çš„å‰¯æœ¬ï¼Œå®ƒé€šå¸¸åœ¨ LICENSE æ–‡ä»¶ä¸­ï¼Œå¦‚æœ
+* æ²¡æœ‰ï¼Œè¯·æŸ¥çœ‹ï¼š<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#include "finder.h"
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 
-typedef struct FileEntryRec_ {
-	LCUI_BOOL is_dir;
-	DB_File file;
-	char *path;
-} FileEntryRec, *FileEntry;
+#define TEXT_TIME_TITLE		L"%då¹´%dæœˆ"
+#define TEXT_TIME_SUBTITLE	L"%dæœˆ%dæ—¥ %då¼ ç…§ç‰‡"
+#define TEXT_TIME_SUBTITLE2	L"%dæœˆ%dæ—¥ - %dæœˆ%dæ—¥ %då¼ ç…§ç‰‡"
 
-static struct FoldersViewData {
+/** æ—¶é—´åˆ†å‰²çº¿åŠŸèƒ½çš„æ•°æ® */
+typedef struct TimeSeparatorRec_ {
+	int files;		/**< å½“å‰æ—¶é—´æ®µå†…çš„æ–‡ä»¶æ€»æ•° */
+	struct tm time;		/**< å½“å‰æ—¶é—´æ®µçš„èµ·å§‹æ—¶é—´ */
+	LCUI_Widget subtitle;	/**< å­æ ‡é¢˜ */
+} TimeSeparatorRec, *TimeSeparator;
+
+/** ä¸»é¡µé›†é”¦è§†å›¾çš„ç›¸å…³æ•°æ® */
+static struct HomeCollectionViewData {
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget info_path;
@@ -59,6 +66,7 @@ static struct FoldersViewData {
 	LinkedList files;
 	LinkedList files_cache[2];
 	LinkedList *cache;
+	TimeSeparatorRec separator;
 } this_view;
 
 static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -66,23 +74,17 @@ static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
 }
 
-static void OnDeleteFileEntry( void *arg )
+static void OnDeleteDBFile( void *arg )
 {
-	FileEntry entry = arg;
-	if( entry->is_dir ) {
-		free( entry->path );
-	} else {
-		free( entry->file->path );
-		free( entry->file );
-	}
-	free( entry );
+	DB_File f = arg;
+	free( f->path );
+	free( f );
 }
 
 static int ScanAllFiles( void )
 {
 	DB_File file;
 	DB_Query query;
-	FileEntry entry;
 	int i, total, count;
 	DB_QueryTermsRec terms;
 	terms.dirpath = NULL;
@@ -105,11 +107,7 @@ static int ScanAllFiles( void )
 			if( !file ) {
 				break;
 			}
-			entry = NEW( FileEntryRec, 1 );
-			entry->is_dir = FALSE;
-			entry->file = file;
-			entry->path = file->path;
-			LinkedList_Append( this_view.cache, entry );
+			LinkedList_Append( this_view.cache, file );
 		}
 		count -= terms.limit;
 		terms.offset += terms.limit;
@@ -134,36 +132,73 @@ static void FileScannerThread( void *arg )
 
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	FileEntry entry = e->data;
-	_DEBUG_MSG( "open file: %s\n", entry->path );
+	DB_File f = e->data;
+	_DEBUG_MSG( "open file: %s\n", f->path );
 }
 
 static void SyncViewItems( void *arg )
 {
-	FileEntry entry;
+	time_t time;
+	struct tm *t;
+	DB_File file;
+	wchar_t text[128];
 	LCUI_Widget item;
+	TimeSeparator ts;
 	LinkedList *list;
-	ThumbDB tcache = NULL;
-	int prev_item_type = -1;
 	LinkedListNode *node, *prev_node;
 	list = this_view.cache;
+	ts = &this_view.separator;
 	if( this_view.cache == this_view.files_cache ) {
 		this_view.cache = &this_view.files_cache[1];
 	} else {
 		this_view.cache = this_view.files_cache;
 	}
 	LinkedList_ForEach( node, list ) {
-		entry = node->data;
+		file = node->data;
 		prev_node = node->prev;
 		LinkedList_Unlink( list, node );
 		LinkedList_AppendNode( &this_view.files, node );
 		node = prev_node;
-		prev_item_type = entry->is_dir;
-		if( entry->is_dir ) {
-			continue;
+		time = file->create_time;
+		t = localtime( &time );
+		/* å¦‚æœå½“å‰æ–‡ä»¶çš„åˆ›å»ºæ—¶é—´è¶…å‡ºå½“å‰æ—¶é—´æ®µï¼Œåˆ™æ–°å»ºåˆ†å‰²çº¿ */
+		if( t->tm_year != ts->time.tm_year ||
+		    t->tm_mon != ts->time.tm_mon ) {
+			LCUI_Widget title = LCUIWidget_New( "textview" );
+			/** å¦‚æœæ˜¯ç¬¬ä¸€ä¸ªæ—¶é—´æ®µï¼Œåˆ™å–æ¶ˆé¡¶éƒ¨çš„è¾¹è· */
+			if( ts->files == 0 ) {
+				SetStyle( title->custom_style, 
+					  key_margin_top, 0, px );
+			}
+			ts->subtitle = LCUIWidget_New( "textview" );
+			Widget_AddClass( ts->subtitle, 
+					 "time-separator-subtitle" );
+			Widget_AddClass( title, "time-separator-title" );
+			/* è®¾ç½®æ—¶é—´æ®µçš„æ ‡é¢˜ */
+			swprintf( text, 128, TEXT_TIME_TITLE, 
+				  1900 + t->tm_year, t->tm_mon + 1 );
+			TextView_SetTextW( title, text );
+			Widget_Append( this_view.items, title );
+			Widget_Append( this_view.items, ts->subtitle );
+			ts->files = 0;
+			ts->time = *t;
 		}
-		item = ThumbView_AppendPicture( this_view.items, entry->path );
-		Widget_BindEvent( item, "click", OnItemClick, entry, NULL );
+		ts->files += 1;
+		/** å¦‚æœæ—¶é—´è·¨åº¦ä¸è¶…è¿‡ä¸€å¤© */
+		if( t->tm_year == ts->time.tm_year && 
+		    t->tm_mon == ts->time.tm_mon &&
+		    t->tm_mday == ts->time.tm_mday ) {
+			swprintf( text, 128, TEXT_TIME_SUBTITLE, 
+				  t->tm_mon + 1, t->tm_mday, ts->files );
+		} else {
+			swprintf( text, 128, TEXT_TIME_SUBTITLE2, 
+				  t->tm_mon + 1, t->tm_mday, 
+				  ts->time.tm_mon + 1, ts->time.tm_mday,
+				  ts->files );
+		}
+		TextView_SetTextW( ts->subtitle, text );
+		item = ThumbView_AppendPicture( this_view.items, file->path );
+		Widget_BindEvent( item, "click", OnItemClick, file, NULL );
 	}
 	if( this_view.cache->length > 0 && this_view.is_scaning ) {
 		LCUITimer_Set( 200, SyncViewItems, NULL, FALSE );
@@ -177,11 +212,13 @@ static void LoadcollectionFiles( void )
 		this_view.is_scaning = FALSE;
 		LCUIThread_Join( this_view.scanner_tid, NULL );
 	}
+	this_view.separator.files = 0;
+	memset( &this_view.separator.time, 0, sizeof(TimeSeparatorRec) );
 	ThumbView_Lock( this_view.items );
 	ThumbView_Reset( this_view.items );
 	Widget_Empty( this_view.items );
 	this_view.is_scaning = TRUE;
-	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
+	LinkedList_ClearData( &this_view.files, OnDeleteDBFile );
 	LCUIThread_Create( &this_view.scanner_tid, FileScannerThread, path );
 	LCUITimer_Set( 200, SyncViewItems, NULL, FALSE );
 	ThumbView_Unlock( this_view.items );
