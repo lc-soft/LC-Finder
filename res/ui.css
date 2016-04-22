@@ -149,7 +149,6 @@
 	padding: 0 8px;
 	width: 24px;
 	display: inline-block;
-	text-align: center;
 }
 .source-list .source-list-item .text {
 	display: inline-block;
@@ -210,7 +209,6 @@
 	width: 100%;
 	display: block;
 	height: 10px;
-	border: 1px solid #ddd;
 }
 .time-separator-title {
 	font-size: 18px;

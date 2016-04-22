@@ -25,9 +25,9 @@ static LCUI_Widget NewDirListItem( DB_Dir dir )
 	text = LCUIWidget_New( "textview" );
 	btn = LCUIWidget_New( "textview" );
 	Widget_AddClass( item, "source-list-item" );
-	Widget_AddClass( icon, "icon ion ion-android-folder-open" );
+	Widget_AddClass( icon, "icon mdi mdi-folder-outline" );
 	Widget_AddClass( text, "text" );
-	Widget_AddClass( btn, "btn-delete ion ion-close-round" );
+	Widget_AddClass( btn, "btn-delete mdi mdi-close" );
 	TextView_SetText( text, dir->path );
 	Widget_Append( item, icon );
 	Widget_Append( item, text );
