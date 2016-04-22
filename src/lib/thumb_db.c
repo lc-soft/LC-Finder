@@ -66,11 +66,6 @@ ThumbDB ThumbDB_Open( const char *filepath )
 	return db;
 }
 
-void ThumbDB_Commit( ThumbDB db )
-{
-	unqlite_commit( db );
-}
-
 void ThumbDB_Close( ThumbDB db )
 {
 	unqlite_close( db );

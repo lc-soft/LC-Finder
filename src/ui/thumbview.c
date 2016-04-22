@@ -251,6 +251,8 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		} else {
 			tdata.graph = img;
 		}
+		_DEBUG_MSG("save thumb, size: (%d,%d), name: %s, db: %p\n", 
+			    tdata.graph.width, tdata.graph.height, filename, db);
 		ThumbDB_Save( db, filename, &tdata );
 	}
 	thumb = ThumbCache_Add( view->cache, info->path, &tdata.graph, w );
@@ -273,10 +275,8 @@ static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 
 static void ThumbView_TaskThread( void *arg )
 {
-	DictEntry *entry;
-	DictIterator *iter;
-	LinkedListNode *node, *prev;
 	ThumbView view = arg;
+	LinkedListNode *node, *prev;
 	while( 1 ) {
 		LCUICond_Wait( &view->cond, &view->mutex );
 		view->is_loading = TRUE;
@@ -295,14 +295,6 @@ static void ThumbView_TaskThread( void *arg )
 		}
 		view->is_loading = FALSE;
 		LCUIMutex_Unlock( &view->mutex );
-		iter = Dict_GetIterator( view->dbs );
-		entry = Dict_Next( iter );
-		while( entry ) {
-			ThumbDB db = DictEntry_GetVal( entry );
-			ThumbDB_Commit( db );
-			entry = Dict_Next( iter );
-		}
-		Dict_ReleaseIterator( iter );
 	}
 }
 
@@ -377,7 +369,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_AddClass( infobar, "info" );
 	Widget_AddClass( name, "name" );
 	Widget_AddClass( path, "path" );
-	Widget_AddClass( icon, "icon ion ion-android-folder-open" );
+	Widget_AddClass( icon, "icon mdi mdi-folder-outline" );
 	TextView_SetText( name, getdirname( filepath ) );
 	TextView_SetText( path, filepath );
 	Widget_Append( item, infobar );

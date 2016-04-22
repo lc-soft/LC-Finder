@@ -52,9 +52,6 @@ typedef struct ThumbDatakRec_ {
 /** 新建一个缩略图数据库实例 */
 ThumbDB ThumbDB_Open( const char *filepath );
 
-/** 提交对缩略图数据库的修改 */
-void ThumbDB_Commit( ThumbDB db );
-
 /** 销毁缩略图数据库实例 */
 void ThumbDB_Close( ThumbDB db );
 

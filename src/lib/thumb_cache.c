@@ -58,18 +58,13 @@ typedef struct ThumbDataNodeRec_ {
 	LinkedListNode node;		/**< 在列表中的节点 */
 } ThumbDataNodeRec, *ThumbDataNode;
 
-static void Dict_ValDel( void *privdata, void *val )
-{
-	free( val );
-}
-
 ThumbCache ThumbCache_New( size_t max_size, void (*on_remove)(void*) )
 {
 	ThumbCache cache = NEW( ThumbCacheRec, 1 );
 	LinkedList_Init( &cache->thumbs );
 	cache->max_size = max_size;
 	cache->on_remove = on_remove;
-	cache->paths = StrDict_Create( NULL, Dict_ValDel );
+	cache->paths = StrDict_Create( NULL, NULL );
 	return cache;
 }
 
@@ -114,9 +109,10 @@ LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
 			if( cache->on_remove ) {
 				cache->on_remove( tdn->privdata );
 			}
+			LinkedList_Unlink( &cache->thumbs, node );
 			Dict_Delete( cache->paths, tdn->path );
-			LinkedList_DeleteNode( &cache->thumbs, node );
 			node = prev_node;
+			free( tdn->path );
 			free( tdn );
 		}
 	}
