@@ -74,7 +74,7 @@
 .view .view-body {
 	height: 100%;
 	width: 100%;
-	padding: 48px 0 0 15px;
+	padding: 48px 0 0 20px;
 	box-sizing: border-box;
 }
 .view .view-content-wrapper {
@@ -83,7 +83,7 @@
 }
 .view .view-content {
 	width: 100%;
-	padding: 15px 0 0 0;
+	padding: 15px 20px 0 0;
 	box-sizing: border-box;
 }
 .view .item-group {
@@ -203,12 +203,18 @@
 	display: inline-block;
 	border: 1px solid #eee;
 	background-position: top center;
+	box-sizing: border-box;
 	background-size: cover;
 }
 .file-list .divider {
 	width: 100%;
 	display: block;
 	height: 10px;
+}
+.file-list .full-width {
+	margin-left: 0;
+	margin-right: 0;
+	width: 100%;
 }
 .time-separator-title {
 	font-size: 18px;

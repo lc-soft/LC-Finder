@@ -17,7 +17,7 @@
           <widget type="textview" class="icon mdi mdi-magnify"></widget>
           <widget type="textview" class="text">搜索</widget>
         </widget>
-        <widget id="sidebar-btn-home" class="sidebar-item">
+        <widget id="sidebar-btn-home" class="sidebar-item active">
           <widget type="textview" class="icon mdi mdi-image-multiple"></widget>
           <widget type="textview" class="text">集锦</widget>
         </widget>
