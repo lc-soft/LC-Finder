@@ -249,7 +249,7 @@ static void SyncViewItems( void *arg )
 		if( prev_item_type != -1 && prev_item_type != entry->is_dir ) {
 			LCUI_Widget separator = LCUIWidget_New(NULL);
 			Widget_AddClass( separator, "divider" );
-			Widget_Append( this_view.items, separator );
+			ThumbView_Append( this_view.items, separator );
 		}
 		prev_item_type = entry->is_dir;
 		if( entry->is_dir ) {
@@ -260,7 +260,10 @@ static void SyncViewItems( void *arg )
 			item = ThumbView_AppendPicture( this_view.items,
 							entry->path );
 		}
-		Widget_BindEvent( item, "click", OnItemClick, entry, NULL );
+		if( item ) {
+			Widget_BindEvent( item, "click", OnItemClick, 
+					  entry, NULL );
+		}
 	}
 	if( this_view.cache->length > 0 && this_view.is_scaning ) {
 		LCUITimer_Set( 200, SyncViewItems, dir, FALSE );

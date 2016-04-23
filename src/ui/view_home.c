@@ -178,12 +178,17 @@ static void SyncViewItems( void *arg )
 			swprintf( text, 128, TEXT_TIME_TITLE, 
 				  1900 + t->tm_year, t->tm_mon + 1 );
 			TextView_SetTextW( title, text );
-			Widget_Append( this_view.items, title );
-			Widget_Append( this_view.items, ts->subtitle );
+			ThumbView_Append( this_view.items, title );
+			ThumbView_Append( this_view.items, ts->subtitle );
 			ts->files = 0;
 			ts->time = *t;
 		}
-		ts->files += 1;
+		item = ThumbView_AppendPicture( this_view.items, file->path );
+		if( item ) {
+			ts->files += 1;
+			Widget_BindEvent( item, "click", OnItemClick,
+					  file, NULL );
+		}
 		/** 如果时间跨度不超过一天 */
 		if( t->tm_year == ts->time.tm_year && 
 		    t->tm_mon == ts->time.tm_mon &&
@@ -197,8 +202,6 @@ static void SyncViewItems( void *arg )
 				  ts->files );
 		}
 		TextView_SetTextW( ts->subtitle, text );
-		item = ThumbView_AppendPicture( this_view.items, file->path );
-		Widget_BindEvent( item, "click", OnItemClick, file, NULL );
 	}
 	if( this_view.cache->length > 0 && this_view.is_scaning ) {
 		LCUITimer_Set( 200, SyncViewItems, NULL, FALSE );
