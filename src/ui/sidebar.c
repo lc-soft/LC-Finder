@@ -39,12 +39,14 @@
 #include <LCUI/gui/widget.h>
 #include "ui.h"
 
-#define MAX_VIEWS 3
+#define MAX_VIEWS 5
 
 static const char *btn_view_ids[MAX_VIEWS][2] = {
 	{"sidebar-btn-folders", "view-folders"},
 	{"sidebar-btn-home", "view-home"},
 	{"sidebar-btn-settings", "view-settings"},
+	{"sidebar-btn-albums", "view-albums"},
+	{"sidebar-btn-search", "view-search"}
 };
 
 static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unused )
@@ -73,14 +75,11 @@ static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unuse
 
 void UI_InitSidebar(void)
 {
+	int i;
 	LCUI_Widget btn, view;
-	btn = LCUIWidget_GetById( "sidebar-btn-home" );
-	view = LCUIWidget_GetById( "view-home" );
-	Widget_BindEvent( btn, "click", OnSidebarBtnClick, view, NULL );
-	btn = LCUIWidget_GetById( "sidebar-btn-folders" );
-	view = LCUIWidget_GetById( "view-folders" );
-	Widget_BindEvent( btn, "click", OnSidebarBtnClick, view, NULL );
-	btn = LCUIWidget_GetById( "sidebar-btn-settings" );
-	view = LCUIWidget_GetById( "view-settings" );
-	Widget_BindEvent( btn, "click", OnSidebarBtnClick, view, NULL );
+	for( i = 0; i < MAX_VIEWS; ++i ) {
+		btn = LCUIWidget_GetById( btn_view_ids[i][0] );
+		view = LCUIWidget_GetById( btn_view_ids[i][1] );
+		Widget_BindEvent( btn, "click", OnSidebarBtnClick, view, NULL );
+	}
 }

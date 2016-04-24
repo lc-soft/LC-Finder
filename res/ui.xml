@@ -4,6 +4,11 @@
   <resource type="text/css" src="res/ui-skin.css"/>
   <resource type="text/css" src="res/materialdesignicons.min.css"/>
   <resource type="application/font-ttf" src="res/materialdesignicons-webfont.ttf"/>
+  <dui>
+    <widget class="test-window">
+      <widget class="test-box"></widget>
+    </widget>
+  </dui>
   <ui>
     <widget class="window skin-light-green">
       <widget id="main-sidebar" class="sidebar sidebar-mini">
@@ -49,6 +54,30 @@
               <widget id="tip-empty-collection" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
               <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
+            </widget>
+          </widget>
+        </widget>
+      </widget>
+      <widget id="view-search" class="view hide">
+        <widget class="view-navbar">
+          <widget type="textview" class="view-navbar-title">搜索</widget>
+        </widget>
+        <widget class="view-body">
+          <widget class="view-content-wrapper">
+            <widget class="view-content">
+              <widget type="textview">暂无该功能。</widget>
+            </widget>
+          </widget>
+        </widget>
+      </widget>
+      <widget id="view-albums" class="view hide">
+        <widget class="view-navbar">
+          <widget type="textview" class="view-navbar-title">相册</widget>
+        </widget>
+        <widget class="view-body">
+          <widget class="view-content-wrapper">
+            <widget class="view-content">
+              <widget type="textview">暂无该功能。</widget>
             </widget>
           </widget>
         </widget>
