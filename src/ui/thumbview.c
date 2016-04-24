@@ -284,6 +284,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		_DEBUG_MSG("save thumb, size: (%d,%d), name: %s, db: %p\n", 
 			    tdata.graph.width, tdata.graph.height, filename, db);
 		ThumbDB_Save( db, filename, &tdata );
+		Graph_Free( &img );
 	}
 	thumb = ThumbCache_Add( view->cache, info->path, &tdata.graph, w );
 	return thumb;
