@@ -27,7 +27,7 @@
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
-    <ClCompile Include="src\ui\file_sync.c" />
+    <ClCompile Include="src\ui\filesync.c" />
     <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_home.c" />

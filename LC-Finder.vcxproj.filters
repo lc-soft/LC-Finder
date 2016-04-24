@@ -57,13 +57,13 @@
     <ClCompile Include="src\lib\thumb_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\file_sync.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\thumbview.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\view_home.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\filesync.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>

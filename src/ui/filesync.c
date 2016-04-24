@@ -94,6 +94,7 @@ static void FileSyncThread( void *arg )
 	LCUITimer_Set( 3000, OnHideTip, NULL, FALSE );
 	self.is_syncing = FALSE;
 	self.timer = 0;
+	LCFinder_TriggerEvent( EVENT_SYNC_DONE, NULL );
 }
 
 static void OnStartSyncFiles( void *privdata, void *data )
