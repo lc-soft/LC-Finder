@@ -41,11 +41,16 @@ void ThumbView_Lock( LCUI_Widget w );
 
 void ThumbView_Unlock( LCUI_Widget w );
 
-void ThumbView_Reset( LCUI_Widget w );
+void ThumbView_Empty( LCUI_Widget w );
 
+/** 追加子部件 */
+void ThumbView_Append( LCUI_Widget w, LCUI_Widget child );
+
+/** 追加文件夹 */
 LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 				    LCUI_BOOL show_path );
 
+/** 追加图片 */
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path );
 
 void LCUIWidget_AddTThumbView( void );

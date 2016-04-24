@@ -46,6 +46,8 @@
 #define FOLDER_MAX_WIDTH 388
 #define FOLDER_FIXED_HEIGHT 134
 #define PICTURE_FIXED_HEIGHT 226
+/** 文件夹的右外边距，需要与 CSS 文件定义的样式一致 */
+#define FOLDER_MARGIN_RIGHT 10
 #define FOLDER_CLASS "file-list-item-folder"
 #define PICTURE_CLASS "file-list-item-picture"
 
@@ -75,6 +77,7 @@ typedef struct ThumbViewRec_ {
 	Dict *dbs;
 	ThumbCache cache;
 	LinkedList tasks;
+	LinkedList files;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
 	LCUI_Thread thread;
@@ -133,9 +136,11 @@ static int ScrollLoading_Update( ScrollLoading ctx )
 		ctx->top_child = NULL;
 		while( node ) {
 			w = node->data;
-			if( w->box.border.y < bottom ) {
-				ctx->top_child = w;
-				break;
+			if( w ) {
+				if( w->box.border.y < bottom ) {
+					ctx->top_child = w;
+					break;
+				}
 			}
 			node = node->prev;
 		}
@@ -221,7 +226,10 @@ static int GetDirThumbFilePath( char *filepath, char *dirpath )
 
 static void OnRemoveThumb( void *data )
 {
+	LCUI_Widget w = data;
 	_DEBUG_MSG("remove thumb\n");
+	w->custom_style->sheet[key_background_image].is_valid = FALSE;
+	Widget_UpdateStyle( w, FALSE );
 }
 
 static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
@@ -302,7 +310,6 @@ static void ThumbView_TaskThread( void *arg )
 	while( 1 ) {
 		LCUICond_Wait( &view->cond, &view->mutex );
 		view->is_loading = TRUE;
-		//_DEBUG_MSG("[%p] loading thumb...\n", view);
 		LinkedList_ForEach( node, &view->tasks ) {
 			prev = node->prev;
 			LinkedList_Unlink( &view->tasks, node );
@@ -332,13 +339,39 @@ void ThumbView_Unlock( LCUI_Widget w )
 	ScrollLoading_Enable( view->scrollload, TRUE );
 }
 
-void ThumbView_Reset( LCUI_Widget w )
+static void ThumbView_UpdateLayoutContext( LCUI_Widget w )
+{
+	int max_width, n;
+	ThumbView view = w->private_data;
+	if( view->layout.max_width == 0 ) {
+		view->layout.max_width = w->box.content.width;
+	}
+	max_width = view->layout.max_width;
+	n = max_width / FOLDER_MAX_WIDTH;
+	if( max_width % FOLDER_MAX_WIDTH > 0 ) {
+		n = n + 1;
+	}
+	view->layout.folders_per_row = n;
+}
+
+void ThumbView_Empty( LCUI_Widget w )
 {
 	ThumbView view;
+	LinkedListNode *node;
 	view = w->private_data;
 	view->is_loading = FALSE;
 	LCUIMutex_Lock( &view->mutex );
+	LCUIMutex_Lock( &view->layout.row_mutex );
 	LinkedList_Clear( &view->tasks, free );
+	LinkedList_Clear( &view->layout.row, NULL );
+	ThumbView_UpdateLayoutContext( w );
+	view->layout.count = 0;
+	LinkedList_ForEach( node, &view->files ) {
+		ThumbCache_Delete( view->cache, node->data );
+	}
+	LinkedList_Clear( &view->files, NULL );
+	Widget_Empty( w );
+	LCUIMutex_Unlock( &view->layout.row_mutex );
 	LCUIMutex_Unlock( &view->mutex );
 	ScrollLoading_Reset( view->scrollload );
 }
@@ -404,27 +437,39 @@ static void AppendPicture( ThumbView view, LCUI_Widget w )
 	}
 }
 
+static void AppendFolder( ThumbView view, LCUI_Widget w )
+{
+	int width, n;
+	++view->layout.folder_count;
+	UpdateThumbRow( view );
+	view->layout.current = w;
+	if( view->layout.max_width < 480 ) {
+		Widget_AddClass( w, "full-width" );
+		return;
+	} else {
+		Widget_RemoveClass( w, "full-width" );
+	}
+	n = view->layout.folders_per_row;
+	width = view->layout.max_width / n - FOLDER_MARGIN_RIGHT;
+	/* 设置每行最后一个文件夹的右边距为 0px */
+	if( view->layout.folder_count % n == 0 ) {
+		SetStyle( w->custom_style, key_margin_right, 0, px );
+	}
+	SetStyle( w->custom_style, key_width, width, px );
+	Widget_UpdateStyle( w, FALSE );
+}
+
 static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
 {
+	int count;
 	LCUI_Widget child;
 	LinkedListNode *node;
 	ThumbView view = w->private_data;
-	int width, n, max_width, count, folder_width;
-	if( view->layout.max_width == 0 ) {
-		view->layout.max_width = w->box.content.width;
-	}
 	if( view->layout.current ) {
 		node = Widget_GetNode( view->layout.current );
 	} else {
 		node = LinkedList_GetNode( &w->children, 0 );
 	}
-	max_width = view->layout.max_width;
-	n = max_width / FOLDER_MAX_WIDTH;
-	if( max_width % FOLDER_MAX_WIDTH > 0 ) {
-		n = n + 1;
-	}
-	folder_width = max_width / n;
-	view->layout.folders_per_row = n;
 	for( count = 0; node && --limit > 0; node = node->next ) {
 		child = node->data;
 		view->layout.count += 1;
@@ -436,21 +481,7 @@ static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
 			AppendPicture( view, child );
 		} else if( Widget_HasClass( child, FOLDER_CLASS ) ) {
 			++count;
-			++view->layout.folder_count;
-			UpdateThumbRow( view );
-			view->layout.current = child;
-			if( max_width < 480 ) {
-				Widget_AddClass( child, "full-width" );
-				continue;
-			}
-			width = folder_width - child->margin.right;
-			/* 设置每行最后一个文件夹的右边距为 0px */
-			if( view->layout.folder_count % n == 0 ) {
-				SetStyle( child->custom_style, 
-					  key_margin_right, 0, px );
-			}
-			SetStyle( child->custom_style, key_width, width, px );
-			Widget_UpdateStyle( child, FALSE );
+			AppendFolder( view, child );
 		} else {
 			UpdateThumbRow( view );
 		}
@@ -465,11 +496,11 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 	LCUI_Widget w = arg1;
 	ThumbView view = w->private_data;
 	Widget_LockLayout( w );
-	n = ThumbView_ExecUpdateLayout( w, 32 );
+	n = ThumbView_ExecUpdateLayout( w, 8 );
 	Widget_UnlockLayout( w );
 	Widget_AddTask( w, WTT_LAYOUT );
 	/* 如果还有未布局的缩略图则下次再继续 */
-	if( n == 32 ) {
+	if( n == 8 ) {
 		LCUI_AppTaskRec task;
 		task.func = OnLayoutStep;
 		task.arg[0] = w;
@@ -498,9 +529,9 @@ static void ThumbView_UpdateLayout( LCUI_Widget w )
 	LCUIMutex_Lock( &view->layout.row_mutex );
 	view->layout.x = 0;
 	view->layout.count = 0;
-	view->layout.max_width = 0;
 	view->layout.current = NULL;
 	view->layout.is_running = TRUE;
+	ThumbView_UpdateLayoutContext( w );
 	LinkedList_Clear( &view->layout.row, NULL );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
 	/* 如果已经有延迟布局任务，则重置该任务的定时 */
@@ -582,7 +613,8 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_Append( w, item );
 	data->view->need_update = TRUE;
 	LCUITimer_Set( 200, UpdateView, w, FALSE );
-	UpdateThumbRow( data->view );
+	AppendFolder( data->view, item );
+	LinkedList_Append( &data->view->files, data->info.path );
 	return item;
 }
 
@@ -620,11 +652,9 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
 	Widget_Append( w, item );
 	data->view->need_update = TRUE;
-	if( data->view->layout.max_width == 0 ) {
-		data->view->layout.max_width = w->box.content.width;
-	}
 	AppendPicture( data->view, item );
 	LCUITimer_Set( 200, UpdateView, w, FALSE );
+	LinkedList_Append( &data->view->files, data->info.path );
 	return item;
 }
 
@@ -638,6 +668,7 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	LCUICond_Init( &self->cond );
 	LCUIMutex_Init( &self->mutex );
 	LinkedList_Init( &self->tasks );
+	LinkedList_Init( &self->files );
 	self->layout.x = 0;
 	self->layout.count = 0;
 	self->layout.max_width = 0;
