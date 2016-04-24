@@ -34,7 +34,7 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#define __THUMBNAIL_POOL_C__
+#define __THUMBNAIL_CACHE_C__
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
@@ -77,43 +77,48 @@ LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path )
 	return NULL;
 }
 
+int ThumbCache_Delete( ThumbCache cache, const char *path )
+{
+	ThumbDataNode tdn;
+	tdn = Dict_FetchValue( cache->paths, path );
+	if( !tdn ) {
+		return -1;
+	}
+	LinkedList_Unlink( &cache->thumbs, &tdn->node );
+	if( cache->on_remove ) {
+		cache->on_remove( tdn->privdata );
+	}
+	cache->size -= tdn->graph.mem_size;
+	Dict_Delete( cache->paths, path );
+	Graph_Free( &tdn->graph );
+	free( tdn->path );
+	free( tdn );
+	return 0;
+}
+
 LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path, 
 			    LCUI_Graph *thumb, void *privdata )
 {
+	int len;
 	size_t size;
-	int count = 0, len;
 	ThumbDataNode tdn;
 	LinkedListNode *node, *prev_node;
 	size = cache->size + thumb->mem_size;
 	if( size > cache->max_size ) {
 		LinkedList_ForEach( node, &cache->thumbs ) {
-			++count;
 			tdn = node->data;
-			size -= tdn->graph.mem_size;
+			size = cache->size + thumb->mem_size;
 			if( size < cache->max_size ) {
 				break;
 			}
+			/** 移除老的缩略图数据 */
+			prev_node = node->prev;
+			ThumbCache_Delete( cache, tdn->path );
+			node = prev_node;
 		}
+		size = cache->size + thumb->mem_size;
 		if( size > cache->max_size ) {
 			return NULL;
-		}
-		/** 移除老的缩略图数据 */
-		LinkedList_ForEach( node, &cache->thumbs ) {
-			--count;
-			if( count < 0 ) {
-				break;
-			}
-			tdn = node->data;
-			prev_node = node->prev;
-			Graph_Free( &tdn->graph );
-			if( cache->on_remove ) {
-				cache->on_remove( tdn->privdata );
-			}
-			LinkedList_Unlink( &cache->thumbs, node );
-			Dict_Delete( cache->paths, tdn->path );
-			node = prev_node;
-			free( tdn->path );
-			free( tdn );
 		}
 	}
 	tdn = NEW( ThumbDataNodeRec, 1 );

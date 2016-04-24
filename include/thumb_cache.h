@@ -34,16 +34,18 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __THUMBNAIL_POOL_H__
-#define __THUMBNAIL_POOL_H__
+#ifndef __THUMBNAIL_CACHE_H__
+#define __THUMBNAIL_CACHE_H__
 
-#ifndef __THUMBNAIL_POOL_C__
+#ifndef __THUMBNAIL_CACHE_C__
 typedef void* ThumbCache;
 #endif
 
 ThumbCache ThumbCache_New( size_t max_size, void( *on_remove )(void*) );
 
 LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path );
+
+int ThumbCache_Delete( ThumbCache cache, const char *path );
 
 LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
 			    LCUI_Graph *thumb, void *privdata );
