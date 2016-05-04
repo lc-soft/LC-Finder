@@ -4,13 +4,8 @@
   <resource type="text/css" src="res/ui-skin.css"/>
   <resource type="text/css" src="res/materialdesignicons.min.css"/>
   <resource type="application/font-ttf" src="res/materialdesignicons-webfont.ttf"/>
-  <dui>
-    <widget class="test-window">
-      <widget class="test-box"></widget>
-    </widget>
-  </dui>
   <ui>
-    <widget class="window skin-light-green">
+    <widget id="main-window" class="window skin-light-green">
       <widget id="main-sidebar" class="sidebar sidebar-mini">
         <widget class="sidebar-header">
           <widget type="sidebar-toggle">
