@@ -66,6 +66,9 @@
     <ClCompile Include="src\ui\filesync.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\dialog_confirm.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -108,6 +111,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\thumbview.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dialog_confirm.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
