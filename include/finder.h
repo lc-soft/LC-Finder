@@ -49,7 +49,8 @@
 enum LCFinderEventType {
 	EVENT_DIR_ADD,
 	EVENT_DIR_DEL,
-	EVENT_SYNC
+	EVENT_SYNC,
+	EVENT_SYNC_DONE
 };
 
 typedef struct Finder_ {
@@ -93,5 +94,7 @@ int LCFinder_SyncFiles( FileSyncStatus s );
 DB_Dir LCFinder_GetDir( const char *dirpath );
 
 DB_Dir LCFinder_AddDir( const char *dirpath );
+
+void LCFinder_DeleteDir( DB_Dir dir );
 
 #endif

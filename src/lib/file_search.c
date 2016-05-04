@@ -55,6 +55,7 @@ enum SQLCodeList {
 	SQL_GET_DIR_LIST,
 	SQL_ADD_TAG,
 	SQL_ADD_DIR,
+	SQL_DEL_DIR,
 	SQL_TOTAL
 };
 
@@ -106,6 +107,7 @@ WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;\
 static const char *sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 static const char *sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
 static const char *sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
+static const char *sql_del_dir = "DELETE FROM dir WHERE path = ?;";
 static const char *sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 static const char *sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
 static const char *sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
@@ -164,6 +166,7 @@ int DB_Init( void )
 	self.sqls[SQL_ADD_FILE] = sql_add_file;
 	self.sqls[SQL_DEL_FILE] = sql_del_file;
 	self.sqls[SQL_ADD_DIR] = sql_add_dir;
+	self.sqls[SQL_DEL_DIR] = sql_del_dir;
 	self.sqls[SQL_ADD_TAG] = sql_add_tag;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
 	self.sqls[SQL_GET_DIR_TOTAL] = sql_get_dir_total;
@@ -190,12 +193,14 @@ DB_Dir DB_AddDir( const char *dirpath )
 	sqlite3_stmt *stmt;
 	char sql[SQL_BUF_SIZE];
 	stmt = self.stmts[SQL_ADD_DIR];
+	sqlite3_reset( stmt );
 	sqlite3_bind_text( stmt, 1, dirpath, strlen( dirpath ), NULL );
 	ret = sqlite3_step( stmt );
 	if( ret != SQLITE_DONE ) {
 		printf( "[database] error: %s\n", dirpath );
 		return NULL;
 	}
+	stmt = NULL;
 	sprintf( sql, sql_get_dir_id, dirpath );
 	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
 	ret = sqlite3_step( stmt );
@@ -207,6 +212,14 @@ DB_Dir DB_AddDir( const char *dirpath )
 	dir->path = strdup( dirpath );
 	sqlite3_finalize( stmt );
 	return dir;
+}
+
+void DB_DeleteDir( const char *dirpath )
+{
+	sqlite3_stmt *stmt = self.stmts[SQL_DEL_DIR];
+	sqlite3_reset( stmt );
+	sqlite3_bind_text( stmt, 1, dirpath, strlen( dirpath ), NULL );
+	sqlite3_step( stmt );
 }
 
 int DB_GetDirs( DB_Dir **outlist )
@@ -371,6 +384,9 @@ int DBQuery_GetTotalFiles( DB_Query query )
 	int total = 0;
 	sqlite3_stmt *stmt;
 	char sql[SQL_BUF_SIZE];
+	if( !query ) {
+		return 0;
+	}
 	strcpy( sql, sql_count_files );
 	strcat( sql, query->sql_tables );
 	strcat( sql, query->sql_terms );

@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
-* file_sync.c -- file sync and sync status view function.
+* filesync.c -- file sync and sync status view function.
 *
 * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
 *
@@ -18,7 +18,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* file_sync.c -- 文件同步和状态提示功能。
+* filesync.c -- 文件同步和状态提示功能。
 *
 * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
 *
@@ -35,11 +35,10 @@
 * ****************************************************************************/
 
 #include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
+#include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include "finder.h"
 #include "ui.h"
 
 #define TEXT_SCANING	L"已扫描 %d 个文件"

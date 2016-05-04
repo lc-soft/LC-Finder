@@ -92,7 +92,7 @@ DB_Dir LCFinder_GetDir( const char *dirpath )
 	DB_Dir dir;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
-		if( strcmp(dir->path, dirpath) == 0 ) {
+		if( dir && strcmp(dir->path, dirpath) == 0 ) {
 			return dir;
 		}
 	}
@@ -113,22 +113,43 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 	}
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
-		if( strstr( dir->path, path ) ) {
+		if( dir && strstr( dir->path, path ) ) {
+			free( path );
+			_DEBUG_MSG("1\n");
 			return NULL;
 		}
 	}
 	dir = DB_AddDir( dirpath );
 	if( !dir ) {
+		_DEBUG_MSG("2\n");
+		free( path );
 		return NULL;
 	}
 	finder.n_dirs += 1;
 	dirs = realloc( finder.dirs, sizeof( DB_Dir )*finder.n_dirs );
 	if( !dirs ) {
 		finder.n_dirs -= 1;
-		return dir;
+		_DEBUG_MSG("3\n");
+		return NULL;
 	}
+	dirs[finder.n_dirs - 1] = dir;
 	finder.dirs = dirs;
 	return dir;
+}
+
+void LCFinder_DeleteDir( DB_Dir dir )
+{
+	int i;
+	DB_DeleteDir( dir->path );
+	LCFinder_TriggerEvent( EVENT_DIR_DEL, dir );
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		dir = finder.dirs[i];
+		if( dir == finder.dirs[i] ) {
+			finder.dirs[i] = NULL;
+			free( dir->path );
+			free( dir );
+		}
+	}
 }
 
 static int getfilectime( const wchar_t *path )
@@ -170,7 +191,7 @@ DB_Dir LCFinder_GetSourceDir( const char *filepath )
 	DB_Dir dir;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
-		if( strstr(filepath, dir->path) == filepath ) {
+		if( dir && strstr(filepath, dir->path) == filepath ) {
 			return dir;
 		}
 	}
@@ -192,6 +213,9 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 	s->tasks = NEW( SyncTask, finder.n_dirs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
+		if( !dir ) {
+			continue;
+		}
 		len = strlen( dir->path ) + 1;
 		path = malloc( sizeof( wchar_t )*len );
 		len = LCUI_DecodeString( path, dir->path, len, ENCODING_UTF8 );
@@ -210,6 +234,9 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		DirStatusDataPackRec pack;
 		pack.dir = finder.dirs[i];
+		if( !pack.dir ) {
+			continue;
+		}
 		pack.status = s;
 		s->task = s->tasks[i];
 		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );

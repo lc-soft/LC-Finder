@@ -455,6 +455,8 @@ static void AppendFolder( ThumbView view, LCUI_Widget w )
 	/* 设置每行最后一个文件夹的右边距为 0px */
 	if( view->layout.folder_count % n == 0 ) {
 		SetStyle( w->custom_style, key_margin_right, 0, px );
+	} else {
+		w->custom_style->sheet[key_margin_right].is_valid = FALSE;
 	}
 	SetStyle( w->custom_style, key_width, width, px );
 	Widget_UpdateStyle( w, FALSE );
@@ -500,6 +502,7 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 	n = ThumbView_ExecUpdateLayout( w, 8 );
 	Widget_UnlockLayout( w );
 	Widget_AddTask( w, WTT_LAYOUT );
+	_DEBUG_MSG("layout\n");
 	/* 如果还有未布局的缩略图则下次再继续 */
 	if( n == 8 ) {
 		LCUI_AppTaskRec task;

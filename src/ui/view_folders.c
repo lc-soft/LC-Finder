@@ -84,9 +84,16 @@ void OpenFolder( const char *dirpath );
 
 static void OnAddDir( void *privdata, void *data )
 {
+	DB_Dir dir = data;
+	_DEBUG_MSG("add dir: %s\n", dir->path);
 	if( !this_view.dir ) {
-		ThumbView_AppendFolder( this_view.items, data, TRUE );
+		ThumbView_AppendFolder( this_view.items, dir->path, TRUE );
 	}
+}
+
+static void OnDelDir( void *privdata, void *data )
+{
+	OpenFolder( NULL );
 }
 
 static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -201,6 +208,9 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 	FileEntry entry;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		entry = NEW( FileEntryRec, 1 );
+		if( !finder.dirs[i] ) {
+			continue;
+		}
 		len = strlen( finder.dirs[i]->path ) + 1;
 		path = malloc( sizeof( char ) * len );
 		strcpy( path, finder.dirs[i]->path );
@@ -399,6 +409,8 @@ void UI_InitFoldersView( void )
 	LCUIMutex_Init( &this_view.viewsync.mutex );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
+	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
+	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
 	OpenFolder( NULL );
 }
 

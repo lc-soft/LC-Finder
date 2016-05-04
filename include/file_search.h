@@ -88,8 +88,11 @@ typedef void* DB_Query;
 /** 初始化数据库模块 */
 int DB_Init( void );
 
-/** 获取添加一个文件夹 */
+/** 添加一个文件夹 */
 DB_Dir DB_AddDir( const char *dirpath );
+
+/** 删除一个文件夹 */
+void DB_DeleteDir( const char *dirpath );
 
 /** 获取所有文件夹 */
 int DB_GetDirs( DB_Dir **outlist );
