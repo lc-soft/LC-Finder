@@ -120,19 +120,19 @@
 }
 .source-list .source-list-item {
 	width: 340px;
-	padding: 8px 0;
+	padding: 12px 0;
 }
 .source-list .source-list-item .text {
 	width: 240px;
 	display: inline-block;
-	vertical-align: middle;
-	line-height: 20px;
+	line-height: 24px;
+	min-height: 24px;
 }
 .source-list .source-list-item:hover {
 	background-color: #fafafa;
 }
 .source-list .source-list-item .btn-delete {
-	top: 8px;
+	top: 12px;
 	right: 0;
 	width: 48px;
 	height: 48px;
@@ -151,6 +151,8 @@
 	font-size: 24px;
 	padding: 0 8px;
 	width: 24px;
+	line-height: 24px;
+	height: 24px;
 	display: inline-block;
 	vertical-align: middle;
 }
@@ -202,10 +204,27 @@
 	height: 226px;
 	width: 226px;
 	display: inline-block;
-	border: 1px solid #eee;
+	border: 1px solid rgba(0,0,0,0);
 	background-position: top center;
 	box-sizing: border-box;
 	background-size: cover;
+}
+.file-list .file-list-item-picture .picture-cover {
+	top: 0;
+	left: 0; 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	border: 2px solid rgba(0,0,0,0);
+}
+.file-list .file-list-item-picture .picture-cover:hover {
+	top: 0;
+	left: 0; 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	border: 2px solid #ddd;
 }
 .file-list .divider {
 	width: 100%;
@@ -263,6 +282,7 @@
 	right: 20px;
 	position: absolute;
 	padding: 10px;
+	min-width: 164px;
 	background-color: #fafafa;
 	border: 1px solid #eee;
 }

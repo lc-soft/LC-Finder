@@ -48,8 +48,8 @@
             <widget id="view-home-content" class="view-content full-height">
               <widget id="tip-empty-collection" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
-              <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
             </widget>
+            <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
           </widget>
         </widget>
       </widget>
@@ -98,8 +98,8 @@
             <widget id="view-folders-content" class="view-content full-height">
               <widget id="tip-empty-folder" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
               <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
-              <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
             </widget>
+            <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
           </widget>
         </widget>
       </widget>

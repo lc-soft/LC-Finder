@@ -81,3 +81,11 @@
 .skin-light-green .file-list .file-list-item-folder:hover {
 	border-color: #44BB55;
 }
+.file-list .file-list-item-picture .picture-cover:hover {
+	top: 0;
+	left: 0; 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	border: 2px solid #44BB55;
+}

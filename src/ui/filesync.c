@@ -41,6 +41,7 @@
 #include <LCUI/gui/widget/textview.h>
 #include "ui.h"
 
+#define TEXT_STARED	L"正在同步你的资源"
 #define TEXT_SCANING	L"已扫描 %d 个文件"
 #define TEXT_SAVING	L"正同步 %d/%d 个文件"
 #define TEXT_FINISHED	L"资源同步完成！"
@@ -85,6 +86,7 @@ static void OnHideTip( void *arg )
 static void FileSyncThread( void *arg )
 {
 	LCUI_Widget alert = self.text->parent;
+	TextView_SetTextW( self.title, TEXT_STARED );
 	Widget_RemoveClass( alert, "hide" );
 	LCFinder_SyncFiles( &self.status );
 	OnUpdateStats( NULL );
