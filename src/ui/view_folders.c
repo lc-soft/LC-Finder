@@ -87,7 +87,7 @@ static void OnAddDir( void *privdata, void *data )
 	DB_Dir dir = data;
 	_DEBUG_MSG("add dir: %s\n", dir->path);
 	if( !this_view.dir ) {
-		ThumbView_AppendFolder( this_view.items, dir->path, TRUE );
+		OpenFolder( NULL );
 	}
 }
 

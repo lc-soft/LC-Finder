@@ -67,6 +67,7 @@ static void OnAddDir( void *privdata, void *arg )
 	DB_Dir dir = arg;
 	LCUI_Widget item = NewDirListItem( dir );
 	Widget_Append( this_view.dirlist, item );
+	Dict_Add( this_view.dirpaths, dir->path, item );
 }
 
 /** 初始化文件夹目录控件 */

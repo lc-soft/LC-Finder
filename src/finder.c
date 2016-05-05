@@ -99,6 +99,18 @@ DB_Dir LCFinder_GetDir( const char *dirpath )
 	return NULL;
 }
 
+static void LCFinder_InitThumbDBForDir( const char *dirpath )
+{
+	ThumbDB db;
+	char dbpath[PATH_LEN], path[PATH_LEN], name[44];
+	strcpy( path, dirpath );
+	EncodeSHA1( name, path, strlen(path) );
+	EncodeUTF8( dbpath, finder.thumbs_dir, PATH_LEN );
+	pathjoin( dbpath, dbpath, name );
+	db = ThumbDB_Open( dbpath );
+	Dict_Add( finder.thumb_dbs, path, db );
+}
+
 DB_Dir LCFinder_AddDir( const char *dirpath )
 {
 	int i, len;
@@ -132,6 +144,7 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 		_DEBUG_MSG("3\n");
 		return NULL;
 	}
+	LCFinder_InitThumbDBForDir( dir->path );
 	dirs[finder.n_dirs - 1] = dir;
 	finder.dirs = dirs;
 	return dir;
@@ -140,16 +153,26 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 void LCFinder_DeleteDir( DB_Dir dir )
 {
 	int i;
-	DB_DeleteDir( dir->path );
-	LCFinder_TriggerEvent( EVENT_DIR_DEL, dir );
+	SyncTask t;
+	wchar_t *wpath;
 	for( i = 0; i < finder.n_dirs; ++i ) {
-		dir = finder.dirs[i];
 		if( dir == finder.dirs[i] ) {
-			finder.dirs[i] = NULL;
-			free( dir->path );
-			free( dir );
+			break;
 		}
 	}
+	if( i >= finder.n_dirs ) {
+		return;
+	}
+	finder.dirs[i] = NULL;
+	_DEBUG_MSG("delete dir: %s\n", dir->path);
+	wpath = NEW( wchar_t, strlen( dir->path ) + 1 );
+	t = SyncTask_NewW( finder.data_dir, wpath );
+	LCFinder_TriggerEvent( EVENT_DIR_DEL, dir );
+	SyncTask_ClearCache( t );
+	DB_DeleteDir( dir );
+	free( dir->path );
+	free( dir );
+	free( wpath );
 }
 
 static int getfilectime( const wchar_t *path )
@@ -275,6 +298,7 @@ static void LCFinder_InitWorkDir( void )
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	wchar_t data_dir[1024] = L"F:\\代码库\\GitHub\\LC-Finder\\data\\";
 	len = wcslen( data_dir );
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 	if( data_dir[len - 1] != PATH_SEP ) {
 		data_dir[len++] = PATH_SEP;
 		data_dir[len] = 0;
@@ -291,6 +315,13 @@ static void LCFinder_InitWorkDir( void )
 	_wsetlocale(LC_ALL, L"chs");
 }
 
+static void LCFInder_InitFileDB( void )
+{
+	DB_Init();
+	finder.n_dirs = DB_GetDirs( &finder.dirs );
+	finder.n_tags = DB_GetTags( &finder.tags );
+}
+
 static ThumbDBDict_ValDel( void *privdata, void *val )
 {
 	ThumbDB_Close( val );
@@ -299,17 +330,10 @@ static ThumbDBDict_ValDel( void *privdata, void *val )
 static void LCFinder_InitThumbDB( void )
 {
 	int i;
-	ThumbDB db;
-	char dirpath[PATH_LEN], path[PATH_LEN], name[44];
 	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
-	printf("[thumbdb] init...\n");
+	printf("[thumbdb] init ...\n");
 	for( i = 0; i < finder.n_dirs; ++i ) {
-		strcpy( path, finder.dirs[i]->path );
-		EncodeSHA1( name, path, strlen(path) );
-		EncodeUTF8( dirpath, finder.thumbs_dir, PATH_LEN );
-		pathjoin( path, dirpath, name );
-		db = ThumbDB_Open( path );
-		Dict_Add( finder.thumb_dbs, finder.dirs[i]->path, db );
+		LCFinder_InitThumbDBForDir( finder.dirs[i]->path );
 	}
 	printf("[thumbdb] init done\n");
 }
@@ -343,13 +367,10 @@ int main( int argc, char **argv )
 #ifdef LCUI_BUILD_IN_WIN32
 	InitConsoleWindow();
 #endif
-	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
-	DB_Init();
-	finder.n_dirs = DB_GetDirs( &finder.dirs );
-	finder.n_tags = DB_GetTags( &finder.tags );
-	finder.trigger = EventTrigger();
 	LCFinder_InitWorkDir();
+	LCFInder_InitFileDB();
 	LCFinder_InitThumbDB();
+	finder.trigger = EventTrigger();
 	UI_Init();
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );
 	return UI_Run();

@@ -68,6 +68,7 @@ static struct DB_Module {
 } self;
 
 static const char *sql_init = "\
+PRAGMA foreign_keys=ON;\
 CREATE TABLE IF NOT EXISTS dir (\
 	visible INTEGER DEFAULT 1,\
 	id INTEGER PRIMARY KEY AUTOINCREMENT,\
@@ -107,7 +108,7 @@ WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;\
 static const char *sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 static const char *sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
 static const char *sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
-static const char *sql_del_dir = "DELETE FROM dir WHERE path = ?;";
+static const char *sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 static const char *sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 static const char *sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
 static const char *sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
@@ -152,7 +153,7 @@ int DB_Init( void )
 {
 	int i, ret;
 	char *errmsg;
-	printf( "[database] initializing database ...\n" );
+	printf( "[database] init ...\n" );
 	ret = sqlite3_open( STORAGE_PATH, &self.db );
 	if( ret != SQLITE_OK ) {
 		printf("[database] open failed\n");
@@ -183,6 +184,7 @@ int DB_Init( void )
 	}
 	self.sql_buf = NULL;
 	self.sql_buf_len = 0;
+	printf( "[database] init done\n" );
 	return 0;
 }
 
@@ -214,11 +216,11 @@ DB_Dir DB_AddDir( const char *dirpath )
 	return dir;
 }
 
-void DB_DeleteDir( const char *dirpath )
+void DB_DeleteDir( DB_Dir dir )
 {
 	sqlite3_stmt *stmt = self.stmts[SQL_DEL_DIR];
 	sqlite3_reset( stmt );
-	sqlite3_bind_text( stmt, 1, dirpath, strlen( dirpath ), NULL );
+	sqlite3_bind_int( stmt, 1, dir->id );
 	sqlite3_step( stmt );
 }
 

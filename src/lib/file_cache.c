@@ -151,6 +151,12 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	return t;
 }
 
+void SyncTask_ClearCache( SyncTask t )
+{
+	_wremove( t->file );
+	_wremove( t->tmpfile );
+}
+
 void SyncTask_Delete( SyncTask *tptr )
 {
 	SyncTask t = *tptr;

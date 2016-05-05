@@ -63,6 +63,9 @@ SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
 /** 新建同步任务 */
 SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir );
 
+/** 清除缓存数据 */
+void SyncTask_ClearCache( SyncTask t );
+
 /** 删除同步任务 */
 void SyncTask_Delete( SyncTask *tptr );
 

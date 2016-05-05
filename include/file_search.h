@@ -92,7 +92,7 @@ int DB_Init( void );
 DB_Dir DB_AddDir( const char *dirpath );
 
 /** 删除一个文件夹 */
-void DB_DeleteDir( const char *dirpath );
+void DB_DeleteDir( DB_Dir dir );
 
 /** 获取所有文件夹 */
 int DB_GetDirs( DB_Dir **outlist );
