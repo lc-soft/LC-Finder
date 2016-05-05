@@ -1,38 +1,38 @@
 ﻿/* ***************************************************************************
-* thumbview.c -- thumbnail list view
-*
-* Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
-*
-* This file is part of the LC-Finder project, and may only be used, modified,
-* and distributed under the terms of the GPLv2.
-*
-* By continuing to use, modify, or distribute this file you indicate that you
-* have read the license and understand and accept it fully.
-*
-* The LC-Finder project is distributed in the hope that it will be useful, but
-* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-* or FITNESS FOR A PARTICULAR PURPOSE. See the GPL v2 for more details.
-*
-* You should have received a copy of the GPLv2 along with this file. It is
-* usually in the LICENSE.TXT file, If not, see <http://www.gnu.org/licenses/>.
-* ****************************************************************************/
+ * thumbview.c -- thumbnail list view
+ *
+ * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ *
+ * This file is part of the LC-Finder project, and may only be used, modified,
+ * and distributed under the terms of the GPLv2.
+ *
+ * By continuing to use, modify, or distribute this file you indicate that you
+ * have read the license and understand and accept it fully.
+ *
+ * The LC-Finder project is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GPL v2 for more details.
+ *
+ * You should have received a copy of the GPLv2 along with this file. It is
+ * usually in the LICENSE.TXT file, If not, see <http://www.gnu.org/licenses/>.
+ * ****************************************************************************/
 
 /* ****************************************************************************
-* thumbview.c -- 缩略图列表视图部件，主要用于以缩略图形式显示文件夹和文件列表
-*
-* 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
-*
-* 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
-* 发布。
-*
-* 继续使用、修改或发布本文件，表明您已经阅读并完全理解和接受这个许可协议。
-*
-* LC-Finder 项目是基于使用目的而加以散布的，但不负任何担保责任，甚至没有适销
-* 性或特定用途的隐含担保，详情请参照GPLv2许可协议。
-*
-* 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在 LICENSE 文件中，如果
-* 没有，请查看：<http://www.gnu.org/licenses/>.
-* ****************************************************************************/
+ * thumbview.c -- 缩略图列表视图部件，主要用于以缩略图形式显示文件夹和文件列表
+ *
+ * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ *
+ * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
+ * 发布。
+ *
+ * 继续使用、修改或发布本文件，表明您已经阅读并完全理解和接受这个许可协议。
+ *
+ * LC-Finder 项目是基于使用目的而加以散布的，但不负任何担保责任，甚至没有适销
+ * 性或特定用途的隐含担保，详情请参照GPLv2许可协议。
+ *
+ * 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在 LICENSE 文件中，如果
+ * 没有，请查看：<http://www.gnu.org/licenses/>.
+ * ****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -344,9 +344,7 @@ static void ThumbView_UpdateLayoutContext( LCUI_Widget w )
 {
 	int max_width, n;
 	ThumbView view = w->private_data;
-	if( view->layout.max_width == 0 ) {
-		view->layout.max_width = w->box.content.width;
-	}
+	view->layout.max_width = w->box.content.width;
 	max_width = view->layout.max_width;
 	n = max_width / FOLDER_MAX_WIDTH;
 	if( max_width % FOLDER_MAX_WIDTH > 0 ) {
@@ -386,11 +384,11 @@ static void UpdateThumbRow( ThumbView view )
 	int overflow_width;
 	overflow_width = view->layout.x - view->layout.max_width;
 	/**
-	 * 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
-	 * 的比例，分别缩减相应的宽度。
-	 */
+	* 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
+	* 的比例，分别缩减相应的宽度。
+	*/
 	if( overflow_width > 0 ) {
-		int width, thumb_width, rest_width;
+		int i = 0, debug_width = 0, width, thumb_width, rest_width;
 		rest_width = overflow_width;
 		LCUIMutex_Lock( &view->layout.row_mutex );
 		LinkedList_ForEach( node, &view->layout.row ) {
@@ -401,17 +399,18 @@ static void UpdateThumbRow( ThumbView view )
 			width = overflow_width * thumb_width;
 			width /= view->layout.x;
 			/** 
-			 * 以上按比例分配的扣除宽度有误差，通常会少扣除几个像素的
-			 * 宽度，这里用 rest_width 变量记录剩余待扣除的宽度，最
-			 * 后一个缩略图的宽度直接减去 rest_width，以补全少扣除的
-			 * 宽度。
-			 */
+			* 以上按比例分配的扣除宽度有误差，通常会少扣除几个像素的
+			* 宽度，这里用 rest_width 变量记录剩余待扣除的宽度，最
+			* 后一个缩略图的宽度直接减去 rest_width，以补全少扣除的
+			* 宽度。
+			*/
 			if( node->next ) {
 				rest_width -= width;
 				width = thumb_width - width;
 			} else {
 				width = thumb_width - rest_width;
 			}
+			debug_width += width;
 			SetStyle( w->custom_style, key_width, width, px );
 			Widget_UpdateStyle( w, FALSE );
 		}
@@ -473,10 +472,11 @@ static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
 	} else {
 		node = LinkedList_GetNode( &w->children, 0 );
 	}
-	for( count = 0; node && --limit > 0; node = node->next ) {
+	for( count = 0; node && --limit >= 0; node = node->next ) {
 		child = node->data;
 		view->layout.count += 1;
 		if( !child->computed_style.visible ) {
+			++limit;
 			continue;
 		}
 		if( Widget_HasClass( child, PICTURE_CLASS ) ) {
@@ -487,6 +487,13 @@ static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
 			AppendFolder( view, child );
 		} else {
 			UpdateThumbRow( view );
+			++limit;
+		}
+	}
+	if( view->layout.current ) {
+		node = Widget_GetNode( view->layout.current );
+		if( node->next ) {
+			view->layout.current = node->next->data;
 		}
 	}
 	return count;
@@ -499,21 +506,22 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 	LCUI_Widget w = arg1;
 	ThumbView view = w->private_data;
 	Widget_LockLayout( w );
-	n = ThumbView_ExecUpdateLayout( w, 8 );
+	n = ThumbView_ExecUpdateLayout( w, 4 );
 	Widget_UnlockLayout( w );
 	Widget_AddTask( w, WTT_LAYOUT );
-	_DEBUG_MSG("layout\n");
 	/* 如果还有未布局的缩略图则下次再继续 */
-	if( n == 8 ) {
+	if( n == 4 ) {
 		LCUI_AppTaskRec task;
-		task.func = OnLayoutStep;
 		task.arg[0] = w;
 		task.arg[1] = NULL;
+		task.func = OnLayoutStep;
 		task.destroy_arg[0] = NULL;
 		task.destroy_arg[1] = NULL;
 		LCUI_AddTask( &task );
 	} else {
+		UpdateThumbRow( view );
 		view->layout.is_running = FALSE;
+		view->layout.current = NULL;
 	}
 }
 
@@ -522,7 +530,6 @@ static void OnDelayLayout( void *arg )
 {
 	LCUI_Widget w = arg;
 	ThumbView view = w->private_data;
-	view->layout.is_delaying = FALSE;
 	OnLayoutStep( arg, NULL );
 }
 
@@ -535,6 +542,7 @@ static void ThumbView_UpdateLayout( LCUI_Widget w )
 	view->layout.count = 0;
 	view->layout.current = NULL;
 	view->layout.is_running = TRUE;
+	view->layout.is_delaying = FALSE;
 	ThumbView_UpdateLayoutContext( w );
 	LinkedList_Clear( &view->layout.row, NULL );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
@@ -617,6 +625,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_Append( w, item );
 	data->view->need_update = TRUE;
 	LCUITimer_Set( 200, UpdateView, w, FALSE );
+	ThumbView_UpdateLayoutContext( w );
 	AppendFolder( data->view, item );
 	LinkedList_Append( &data->view->files, data->info.path );
 	return item;
@@ -632,8 +641,8 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 {
 	char *apath;
 	wchar_t *wpath;
-	LCUI_Widget item;
 	ThumbItemData data;
+	LCUI_Widget item, cover;
 	int len, width, height;
 	len = strlen( path ) + 1;
 	apath = malloc( sizeof(char) * len );
@@ -645,6 +654,7 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 		return NULL;
 	}
 	item = LCUIWidget_New( NULL );
+	cover = LCUIWidget_New( NULL );
 	data = Widget_NewPrivateData( item, ThumbItemDataRec );
 	data->width = width;
 	data->height = height;
@@ -653,9 +663,12 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 	data->info.path = malloc( sizeof( char )*len );
 	strncpy( data->info.path, path, len );
 	Widget_AddClass( item, PICTURE_CLASS );
+	Widget_AddClass( cover, "picture-cover" );
 	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
+	Widget_Append( item, cover );
 	Widget_Append( w, item );
 	data->view->need_update = TRUE;
+	ThumbView_UpdateLayoutContext( w );
 	AppendPicture( data->view, item );
 	LCUITimer_Set( 200, UpdateView, w, FALSE );
 	LinkedList_Append( &data->view->files, data->info.path );
