@@ -361,10 +361,13 @@ void ThumbView_Empty( LCUI_Widget w )
 	view->is_loading = FALSE;
 	LCUIMutex_Lock( &view->mutex );
 	LCUIMutex_Lock( &view->layout.row_mutex );
+	view->layout.x = 0;
+	view->layout.count = 0;
+	view->layout.current = NULL;
+	view->layout.folder_count = 0;
 	LinkedList_Clear( &view->tasks, free );
 	LinkedList_Clear( &view->layout.row, NULL );
 	ThumbView_UpdateLayoutContext( w );
-	view->layout.count = 0;
 	LinkedList_ForEach( node, &view->files ) {
 		ThumbCache_Delete( view->cache, node->data );
 	}
@@ -505,6 +508,9 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 	int n;
 	LCUI_Widget w = arg1;
 	ThumbView view = w->private_data;
+	if( !view->layout.is_running ) {
+		return;
+	}
 	Widget_LockLayout( w );
 	n = ThumbView_ExecUpdateLayout( w, 4 );
 	Widget_UnlockLayout( w );
@@ -517,7 +523,7 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 		task.func = OnLayoutStep;
 		task.destroy_arg[0] = NULL;
 		task.destroy_arg[1] = NULL;
-		LCUI_AddTask( &task );
+		LCUI_PostTask( &task );
 	} else {
 		UpdateThumbRow( view );
 		view->layout.is_running = FALSE;
@@ -541,6 +547,7 @@ static void ThumbView_UpdateLayout( LCUI_Widget w )
 	view->layout.x = 0;
 	view->layout.count = 0;
 	view->layout.current = NULL;
+	view->layout.folder_count = 0;
 	view->layout.is_running = TRUE;
 	view->layout.is_delaying = FALSE;
 	ThumbView_UpdateLayoutContext( w );
