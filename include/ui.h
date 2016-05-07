@@ -22,4 +22,8 @@ void UI_InitFileSyncTip( void );
 /** 初始化首页集锦视图 */
 void UI_InitHomeView( void );
 
+void UI_InitPictureView( void );
+
+void UIPictureView_Open( const char *filepath );
+
 #endif

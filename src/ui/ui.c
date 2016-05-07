@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
 #include <LCUI/gui/builder.h>
@@ -70,6 +71,7 @@ void UI_Init(void)
 	UI_InitSettingsView();
 	UI_InitFoldersView();
 	UI_InitFileSyncTip();
+	UI_InitPictureView();
 	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 

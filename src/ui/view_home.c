@@ -18,7 +18,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* view_home.c -- 主页集锦视图
+* view_home.c -- 主页"集锦"视图
 *
 * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
 *
@@ -37,6 +37,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include "ui.h"
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
@@ -91,7 +92,7 @@ static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DB_File f = e->data;
-	_DEBUG_MSG( "open file: %s\n", f->path );
+	UIPictureView_Open( f->path );
 }
 
 static void OnDeleteDBFile( void *arg )

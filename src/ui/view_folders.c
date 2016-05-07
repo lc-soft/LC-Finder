@@ -18,7 +18,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* view_home.c -- 文件夹视图
+* view_home.c -- "文件夹" 视图
 *
 * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
 *
@@ -34,6 +34,7 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
+#include "ui.h"
 #include "finder.h"
 #include <stdio.h>
 #include <string.h>
@@ -157,6 +158,7 @@ static int FileScanner_ScanDirs( FileScanner scanner, char *path )
 		++count;
 	}
 	LCUI_CloseDir( &dir );
+	_DEBUG_MSG("dir count: %d\n");
 	return count;
 }
 
@@ -198,6 +200,7 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 		count -= terms.limit;
 		terms.offset += terms.limit;
 	}
+	_DEBUG_MSG("file count: %d\n", total);
 	return total;
 }
 
@@ -297,6 +300,8 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	_DEBUG_MSG( "open file: %s\n", entry->path );
 	if( entry->is_dir ) {
 		OpenFolder( entry->path );
+	} else {
+		UIPictureView_Open( entry->path );
 	}
 }
 

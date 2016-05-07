@@ -32,6 +32,7 @@
     <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_home.c" />
+    <ClCompile Include="src\ui\view_picture.c" />
     <ClCompile Include="src\ui\view_settings.c" />
     <ClCompile Include="src\ui\sidebar.c" />
     <ClCompile Include="src\ui\ui.c" />
