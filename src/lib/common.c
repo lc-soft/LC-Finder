@@ -33,7 +33,12 @@
 * 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在 LICENSE 文件中，如果
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
-
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
 #include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -150,6 +155,33 @@ const char *getdirname( const char *path )
 		}
 	}
 	return p;
+}
+
+int wgetfilectime( const wchar_t *path )
+{
+	struct stat buf;
+	int fd, ctime = 0;
+	fd = _wopen( path, _O_RDONLY );
+	if( fstat( fd, &buf ) == 0 ) {
+		ctime = (int)buf.st_ctime;
+	}
+	_close( fd );
+	return ctime;
+}
+
+int64_t wgetfilesize( const wchar_t *path )
+{
+	int fd;
+	int64_t size;
+	struct stat buf;
+	fd = _wopen( path, _O_RDONLY );
+	if( fstat( fd, &buf ) == 0 ) {
+		size = buf.st_size;
+	} else {
+		size = 0;
+	}
+	_close( fd );
+	return size;
 }
 
 int pathjoin( char *path, const char *path1, const char *path2 )

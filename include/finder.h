@@ -61,6 +61,7 @@ typedef struct Finder_ {
 	wchar_t *data_dir;
 	wchar_t *fileset_dir;
 	wchar_t *thumbs_dir;
+	wchar_t **thumb_paths;
 	Dict *thumb_dbs;
 	LCUI_EventTrigger trigger;
 } Finder;

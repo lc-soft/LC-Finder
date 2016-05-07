@@ -99,22 +99,28 @@ DB_Dir LCFinder_GetDir( const char *dirpath )
 	return NULL;
 }
 
-static void LCFinder_InitThumbDBForDir( const char *dirpath )
+static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 {
+	int len;
 	ThumbDB db;
+	wchar_t *wpath;
 	char dbpath[PATH_LEN], path[PATH_LEN], name[44];
 	strcpy( path, dirpath );
 	EncodeSHA1( name, path, strlen(path) );
 	EncodeUTF8( dbpath, finder.thumbs_dir, PATH_LEN );
-	pathjoin( dbpath, dbpath, name );
+	len = pathjoin( dbpath, dbpath, name );
 	db = ThumbDB_Open( dbpath );
 	Dict_Add( finder.thumb_dbs, path, db );
+	wpath = malloc( sizeof( wchar_t )*(len + 1) );
+	LCUI_DecodeString( wpath, dbpath, len, ENCODING_UTF8 );
+	return wpath;
 }
 
 DB_Dir LCFinder_AddDir( const char *dirpath )
 {
 	int i, len;
 	char *path;
+	wchar_t **paths;
 	DB_Dir dir, *dirs;
 	len = strlen( dirpath );
 	path = malloc( (len + 2) * sizeof( char ) );
@@ -137,6 +143,7 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 		free( path );
 		return NULL;
 	}
+	i = finder.n_dirs;
 	finder.n_dirs += 1;
 	dirs = realloc( finder.dirs, sizeof( DB_Dir )*finder.n_dirs );
 	if( !dirs ) {
@@ -144,9 +151,17 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 		_DEBUG_MSG("3\n");
 		return NULL;
 	}
-	LCFinder_InitThumbDBForDir( dir->path );
-	dirs[finder.n_dirs - 1] = dir;
+	paths = realloc( finder.thumb_paths, 
+			 sizeof( wchar_t* )*finder.n_dirs );
+	if( !path ) {
+		finder.n_dirs -= 1;
+		_DEBUG_MSG("3\n");
+		return NULL;
+	}
+	dirs[i] = dir;
+	paths[i] = LCFinder_CreateThumbDB( dir->path );
 	finder.dirs = dirs;
+	finder.thumb_paths = paths;
 	return dir;
 }
 
@@ -175,23 +190,11 @@ void LCFinder_DeleteDir( DB_Dir dir )
 	free( wpath );
 }
 
-static int getfilectime( const wchar_t *path )
-{
-	struct stat buf;
-	int fd, ctime = 0;
-	fd = _wopen( path, _O_RDONLY );
-	if( fstat( fd, &buf ) == 0 ) {
-		ctime = (int)buf.st_ctime;
-	}
-	_close( fd );
-	return ctime;
-}
-
 static void SyncAddedFile( void *data, const wchar_t *wpath )
 {
 	static char path[PATH_LEN];
 	DirStatusDataPack pack = data;
-	int ctime = getfilectime( wpath );
+	int ctime = wgetfilectime( wpath );
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
 	DB_AddFile( pack->dir, path, ctime );
@@ -330,10 +333,13 @@ static ThumbDBDict_ValDel( void *privdata, void *val )
 static void LCFinder_InitThumbDB( void )
 {
 	int i;
-	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
+	wchar_t *path;
 	printf("[thumbdb] init ...\n");
+	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
+	finder.thumb_paths = malloc( sizeof( wchar_t )*finder.n_dirs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
-		LCFinder_InitThumbDBForDir( finder.dirs[i]->path );
+		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
+		finder.thumb_paths[i] = path;
 	}
 	printf("[thumbdb] init done\n");
 }

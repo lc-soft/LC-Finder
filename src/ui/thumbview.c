@@ -447,6 +447,7 @@ static void AppendFolder( ThumbView view, LCUI_Widget w )
 	UpdateThumbRow( view );
 	view->layout.current = w;
 	if( view->layout.max_width < 480 ) {
+		w->custom_style->sheet[key_width].is_valid = FALSE;
 		Widget_AddClass( w, "full-width" );
 		return;
 	} else {
@@ -512,11 +513,11 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 		return;
 	}
 	Widget_LockLayout( w );
-	n = ThumbView_ExecUpdateLayout( w, 4 );
+	n = ThumbView_ExecUpdateLayout( w, 16 );
 	Widget_UnlockLayout( w );
 	Widget_AddTask( w, WTT_LAYOUT );
 	/* 如果还有未布局的缩略图则下次再继续 */
-	if( n == 4 ) {
+	if( n == 16 ) {
 		LCUI_AppTaskRec task;
 		task.arg[0] = w;
 		task.arg[1] = NULL;
@@ -536,6 +537,16 @@ static void OnDelayLayout( void *arg )
 {
 	LCUI_Widget w = arg;
 	ThumbView view = w->private_data;
+	LCUIMutex_Lock( &view->layout.row_mutex );
+	view->layout.x = 0;
+	view->layout.count = 0;
+	view->layout.current = NULL;
+	view->layout.folder_count = 0;
+	view->layout.is_delaying = FALSE;
+	view->layout.is_running = TRUE;
+	ThumbView_UpdateLayoutContext( w );
+	LinkedList_Clear( &view->layout.row, NULL );
+	LCUIMutex_Unlock( &view->layout.row_mutex );
 	OnLayoutStep( arg, NULL );
 }
 
@@ -543,16 +554,9 @@ static void OnDelayLayout( void *arg )
 static void ThumbView_UpdateLayout( LCUI_Widget w )
 {
 	ThumbView view = w->private_data;
-	LCUIMutex_Lock( &view->layout.row_mutex );
-	view->layout.x = 0;
-	view->layout.count = 0;
-	view->layout.current = NULL;
-	view->layout.folder_count = 0;
-	view->layout.is_running = TRUE;
-	view->layout.is_delaying = FALSE;
-	ThumbView_UpdateLayoutContext( w );
-	LinkedList_Clear( &view->layout.row, NULL );
-	LCUIMutex_Unlock( &view->layout.row_mutex );
+	if( view->layout.is_running ) {
+		return;
+	}
 	/* 如果已经有延迟布局任务，则重置该任务的定时 */
 	if( view->layout.is_delaying ) {
 		LCUITimer_Reset( view->layout.timer, 1000 );
