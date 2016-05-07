@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+  <ui>
+    <widget id="picture-viewer-window" class="window skin-light-green">
+      <widget class="window-navbar">
+        <widget type="textview" class="window-navbar-title"></widget>
+      </widget>
+      <widget class="window-body">
+        <widget id="picture-viewer-target" class="picture-container"></widget>
+        <widget class="picture-option-group">
+          <widget class="picture-option-btn">
+            <widget class="icon mdi mdi-minus" type="textview"></widget>
+          </widget>
+          <widget class="picture-option-btn">
+            <widget class="icon mdi mdi-plus" type="textview"></widget>
+          </widget>
+        </widget>
+      </widget>
+    </widget>
+  </ui>
+</lcui-app>

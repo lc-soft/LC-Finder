@@ -4,6 +4,14 @@
   <resource type="text/css" src="res/ui-skin.css"/>
   <resource type="text/css" src="res/materialdesignicons.min.css"/>
   <resource type="application/font-ttf" src="res/materialdesignicons-webfont.ttf"/>
+  <dui>
+    <widget class="test-box-root">
+      <widget class="test-box-1">
+        <widget class="test-box-2"></widget>
+        <widget id="test-widget"></widget>
+      </widget>
+    </widget>
+  </dui>
   <ui>
     <widget id="main-window" class="window skin-light-green">
       <widget id="main-sidebar" class="sidebar sidebar-mini">
@@ -110,6 +118,18 @@
         <widget class="view-body">
           <widget id="view-settings-content-wrapper" class="view-content-wrapper">
             <widget id="view-settings-content" class="scrolllayer view-content">
+              <widget type="textview" class="title">缓存</widget>
+              <widget class="item-group">
+                <widget class="text-line">
+                  <widget type="textview">当前缩略图缓存共占用 </widget>
+                  <widget id="text-thumb-db-space-usage" type="textview">0KB</widget>
+                  <widget type="textview"> 的空间</widget>
+                </widget>
+                <widget id="test-text" class="text-line text-muted" type="textview">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
+                <widget id="btn-clear-thumb-db" class="btn btn-default">
+                  <widget type="textview">清除</widget>
+                </widget>
+              </widget>
               <widget type="textview" class="title">源</widget>
               <widget class="source-list">
                 <widget id="current-source-list"></widget>
@@ -120,10 +140,18 @@
               </widget>
               <widget type="textview" class="title">关于此应用</widget>
               <widget class="item-group">
-                <widget type="textview" class="text">LC-Finder 0.1.0</widget>
-                <widget type="textview" class="text">© 2016 LC's Software</widget>
-                <widget id="btn-open-license" class="btn btn-link">
-                  <widget type="textview">GNU通用公共许可协议</widget>
+                <widget type="textview" class="text">LC-Finder 0.1.0 Alpha</widget>
+                <widget type="textview" class="text">© 2016 LC's Software，保留所有权利。</widget>
+                <widget class="btn-group">
+                  <widget id="btn-open-license" class="btn btn-link">
+                    <widget type="textview">许可协议</widget>
+                  </widget>
+                  <widget id="btn-open-website" class="btn btn-link">
+                    <widget type="textview">官方网站</widget>
+                  </widget>
+                  <widget id="btn-open-feedback" class="btn btn-link">
+                    <widget type="textview">问题反馈</widget>
+                  </widget>
                 </widget>
               </widget>
             </widget>

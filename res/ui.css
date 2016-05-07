@@ -89,6 +89,8 @@
 .view .item-group {
 	padding: 0 10px;
 	margin: 0 0 15px 0;
+	box-sizing: border-box;
+	width: 100%;
 }
 .view-navbar .view-navbar-title {
 	font-size: 16px;
@@ -131,6 +133,9 @@
 .source-list .source-list-item:hover {
 	background-color: #fafafa;
 }
+.source-list .source-list-item:active {
+	background-color: #f0f0f0;
+}
 .source-list .source-list-item .btn-delete {
 	top: 12px;
 	right: 0;
@@ -169,6 +174,7 @@
 	background-position: top center;
 	margin: 0 10px 10px 0;
 	border: 1px solid #eee;
+	box-sizing: border-box;
 }
 .file-list .file-list-item-folder .info {
 	left: 0;
@@ -212,9 +218,9 @@
 .file-list .file-list-item-picture .picture-cover {
 	top: 0;
 	left: 0; 
-	position: absolute;
 	width: 100%;
 	height: 100%;
+	position: absolute;
 	box-sizing: border-box;
 	border: 2px solid rgba(0,0,0,0);
 }
@@ -260,6 +266,8 @@
 	width: 100%;
 	display: none;
 	position: absolute;
+	padding: 5px 15px 0 15px;
+	background-color: #fff;
 }
 .folder-info-box-name {
 	font-size: 18px;
@@ -275,7 +283,6 @@
 }
 .show-folder-info-box .folder-info-box {
 	display: block;
-	padding: 5px 15px;
 }
 .alert {
 	top: 60px;
@@ -307,6 +314,24 @@
 textview {
 	font-size: 14px;
 }
+.text-muted {
+	color: #888;
+}
+.text-line {
+	margin-bottom: 5px;
+	width: 100%;
+}
+.text-line textview {
+	display: inline-block;
+}
+.btn {
+	padding: 8px 14px;
+}
+.btn-link {
+	padding-left: 0;
+	padding-right: 0;
+	margin-right: 20px;
+}
 .btn-link textview {
 	color: #007acc;
 	padding: 4px 0;
@@ -314,25 +339,23 @@ textview {
 .btn-link:hover textview {
 	color: #23527c;
 }
+.btn-default {
+	background-color: #eee;
+}
+.btn-default:hover {
+	background-color: #ccc;
+}
+.btn-default:active {
+	background-color: #aaa;
+}
+.btn-group .btn {
+	display: inline-block;
+}
 .container {
 	background-color: #fff;
 	width: 100%;
 	height: 100%;
 }
-
-.test-window {
-	width: 100%;
-	hegiht: 100%:
-	background-color: #fff;
-}
-.test-box {
-	margin: 50px;
-	width: 320px;
-	height: 240px:
-	background-color: #000;
-	box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
 .dialog {
 	background-color: rgba(0,0,0,0.5);
 	width: 100%;
@@ -401,4 +424,82 @@ textview {
 	width: 100%;
 	text-align: center;
 	line-height: 30px;
+}
+
+#picture-viewer-window {
+	top: 0;
+	left: 0;
+	z-index: 10;
+	position: absolute;
+}
+#picture-viewer-window .picture-option-group {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+#picture-viewer-window .window-body,
+#picture-viewer-window .picture-container {
+	width: 100%;
+	height: 100%;
+}
+#picture-viewer-window .picture-option-btn {
+	display: inline-block;
+	background-color: rgba(0,0,0,0.1);
+}
+#picture-viewer-window .picture-option-btn .icon {
+	color: #444;
+	width: 42px;
+	height: 32px;
+	font-size: 20px;
+	line-height: 32px;
+	text-align: center;
+}
+#picture-viewer-window .picture-option-btn:hover {
+	background-color: rgba(0,0,0,0.2);
+}
+#picture-viewer-window .picture-option-btn:active {
+	background-color: rgba(0,0,0,0.3);
+}
+#picture-viewer-window .contain-mode {
+	background-size: contain;
+	background-position: center;
+}
+
+#test-widget {
+	width: 100px;
+	height: 100px;
+	background-color: #ddd;
+	position: absolute;
+}
+.test-box-root {
+	padding: 10px;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	width: 500px;
+	height: 500px;
+}
+.test-box-1 {
+	margin-left: 50px;
+	margin-top: 50px;
+	width: 300px;
+	height: 300px;
+	background-color: #fff;
+	border: 1px solid #ddd;
+}
+.test-box-1 {
+	margin-left: 50px;
+	margin-top: 50px;
+	width: 300px;
+	height: 300px;
+	background-color: #fff;
+	border: 1px solid #ddd;
+}
+
+.test-box-2 {
+	margin-left: 50px;
+	margin-top: 50px;
+	width: 100px;
+	height: 100px;
+	background-color: #f00;
+	border: 1px solid #ddd;
 }
