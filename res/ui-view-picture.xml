@@ -3,17 +3,25 @@
   <ui>
     <widget id="picture-viewer-window" class="window skin-light-green">
       <widget class="window-navbar">
-        <widget type="textview" class="window-navbar-title"></widget>
+        <widget class="window-navbar-btn" id="btn-close-picture-viewer">
+          <widget type="textview" class="icon mdi mdi-arrow-left"></widget>
+        </widget>
       </widget>
       <widget class="window-body">
         <widget id="picture-viewer-target" class="picture-container"></widget>
         <widget class="picture-option-group">
           <widget class="picture-option-btn">
-            <widget class="icon mdi mdi-minus" type="textview"></widget>
+            <widget id="btn-picture-reset-size" class="icon mdi mdi-fullscreen" type="textview"></widget>
           </widget>
           <widget class="picture-option-btn">
+            <widget id="btn-picture-zoom-out" class="icon mdi mdi-minus" type="textview"></widget>
+          </widget>
+          <widget id="btn-picture-zoom-in" class="picture-option-btn">
             <widget class="icon mdi mdi-plus" type="textview"></widget>
           </widget>
+        </widget>
+        <widget id="picture-loading-tip">
+          <widget type="textview">图片载入中...</widget>
         </widget>
       </widget>
     </widget>
