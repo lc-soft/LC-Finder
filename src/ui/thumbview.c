@@ -454,7 +454,8 @@ static void AppendFolder( ThumbView view, LCUI_Widget w )
 		Widget_RemoveClass( w, "full-width" );
 	}
 	n = view->layout.folders_per_row;
-	width = view->layout.max_width / n - FOLDER_MARGIN_RIGHT;
+	width = view->layout.max_width;
+	width = (width - FOLDER_MARGIN_RIGHT*(n - 1)) / n;
 	/* 设置每行最后一个文件夹的右边距为 0px */
 	if( view->layout.folder_count % n == 0 ) {
 		SetStyle( w->custom_style, key_margin_right, 0, px );
