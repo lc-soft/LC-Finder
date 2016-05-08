@@ -51,6 +51,8 @@ void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len );
 
 const char *getdirname( const char *path );
 
+const wchar_t *wgetfilename( const wchar_t *path );
+
 int wgetfilectime( const wchar_t *path );
 
 int64_t wgetfilesize( const wchar_t *path );

@@ -22,8 +22,10 @@ void UI_InitFileSyncTip( void );
 /** 初始化首页集锦视图 */
 void UI_InitHomeView( void );
 
+/** 初始化图片视图 */
 void UI_InitPictureView( void );
 
+/** 在图片视图中打开一张图片 */
 void UIPictureView_Open( const char *filepath );
 
 #endif

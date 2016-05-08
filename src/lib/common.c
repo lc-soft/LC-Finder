@@ -157,6 +157,18 @@ const char *getdirname( const char *path )
 	return p;
 }
 
+const wchar_t *wgetfilename( const wchar_t *path )
+{
+	int i;
+	const wchar_t *p = path;
+	for( i = 0; path[i]; ++i ) {
+		if( path[i] == PATH_SEP ) {
+			p = path + i + 1;
+		}
+	}
+	return p;
+}
+
 int wgetfilectime( const wchar_t *path )
 {
 	struct stat buf;

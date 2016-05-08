@@ -54,7 +54,7 @@ static void onTimer( void *arg )
 
 void UI_Init(void)
 {
-	LCUI_Widget box;
+	LCUI_Widget box, root;
 	LCUI_Init();
 	LCUIWidget_AddTThumbView();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
@@ -65,14 +65,16 @@ void UI_Init(void)
 		Widget_Top( box );
 		Widget_Unwrap( box );
 	}
-	Widget_UpdateStyle( LCUIWidget_GetRoot(), TRUE );
+	root = LCUIWidget_GetRoot();
+	Widget_SetTitleW( root, L"LC-Finder" );
+	Widget_UpdateStyle( root, TRUE );
 	UI_InitSidebar();
 	UI_InitHomeView();
 	UI_InitSettingsView();
 	UI_InitFoldersView();
 	UI_InitFileSyncTip();
 	UI_InitPictureView();
-	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
+	//LCUITimer_Set( 10000, onTimer, NULL, FALSE );
 }
 
 int UI_Run(void)
