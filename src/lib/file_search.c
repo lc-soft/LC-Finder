@@ -510,7 +510,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	strcat( sql, q->sql_tables );
 	strcat( q->sql_terms, buf );
 	strcat( sql, q->sql_terms );
-	printf("sql: %s\n", sql);
+	//printf("sql: %s\n", sql);
 	i = sqlite3_prepare_v2( self.db, sql, -1, &q->stmt, NULL );
 	if( i == SQLITE_OK ) {
 		return q;

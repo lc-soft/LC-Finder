@@ -19,7 +19,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* finder.h -- LCUI-Finder 主程序代码，负责整个程序的初始化和其它功能的调度。
+* finder.h -- LC-Finder 主程序代码，负责整个程序的初始化和其它功能的调度。
 *
 * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
 *
@@ -46,6 +46,7 @@
 #include "thumb_db.h" 
 #include "thumb_cache.h" 
 
+/** 事件类型 */
 enum LCFinderEventType {
 	EVENT_DIR_ADD,
 	EVENT_DIR_DEL,
@@ -53,27 +54,29 @@ enum LCFinderEventType {
 	EVENT_SYNC_DONE
 };
 
+/** LCFinder 的主要数据记录 */
 typedef struct Finder_ {
-	DB_Dir *dirs;
-	DB_Tag *tags;
-	int n_dirs;
-	int n_tags;
-	wchar_t *data_dir;
-	wchar_t *fileset_dir;
-	wchar_t *thumbs_dir;
-	wchar_t **thumb_paths;
-	Dict *thumb_dbs;
-	LCUI_EventTrigger trigger;
+	DB_Dir *dirs;			/** 源文件夹列表 */
+	DB_Tag *tags;			/** 标签列表 */
+	int n_dirs;			/** 多少个源文件夹 */
+	int n_tags;			/** 多少个标签 */
+	wchar_t *data_dir;		/**< 数据文件夹 */
+	wchar_t *fileset_dir;		/**< 文件列表缓存所在文件夹 */
+	wchar_t *thumbs_dir;		/**< 缩略图数据库所在文件夹 */
+	wchar_t **thumb_paths;		/**< 缩略图数据库路径列表 */
+	Dict *thumb_dbs;		/**< 缩略图数据库记录，以源文件夹路径作为索引 */
+	LCUI_EventTrigger trigger;	/**< 事件触发器 */
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);
 
+/** 文件同步状态记录 */
 typedef struct FileSyncStatusRec_ {
-	int state;
-	int added_files;
-	int deleted_files;
-	int scaned_files;
-	int synced_files;
+	int state;		/**< 当前状态 */
+	int added_files;	/**< 增加的文件数量 */
+	int deleted_files;	/**< 删除的文件数量 */
+	int scaned_files;	/**< 已扫描的文件数量 */
+	int synced_files;	/**< 已同步的文件数量 */
 	SyncTask task;		/**< 当前正执行的任务 */
 	SyncTask *tasks;	/**< 所有任务 */
 } FileSyncStatusRec, *FileSyncStatus;
@@ -88,8 +91,13 @@ int LCFinder_BindEvent( int event_id, EventHandler handler, void *data );
 /** 触发事件 */
 int LCFinder_TriggerEvent( int event_id, void *data );
 
+/** 获取指定文件路径所处的源文件夹 */
 DB_Dir LCFinder_GetSourceDir( const char *filepath );
 
+/** 获取缩略图数据库总大小 */
+int64_t LCFinder_GetThumbDBTotalSize( void );
+
+/** 同步文件 */
 int LCFinder_SyncFiles( FileSyncStatus s );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );

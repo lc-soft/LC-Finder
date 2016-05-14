@@ -58,7 +58,7 @@ void UI_Init(void)
 	LCUI_Init();
 	LCUIWidget_AddTThumbView();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
-	LCUIDisplay_SetSize( 960, 540 );
+	LCUIDisplay_SetSize( 960, 640 );
 	//LCUIDisplay_ShowRectBorder();
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
@@ -74,7 +74,7 @@ void UI_Init(void)
 	UI_InitFoldersView();
 	UI_InitFileSyncTip();
 	UI_InitPictureView();
-	//LCUITimer_Set( 10000, onTimer, NULL, FALSE );
+	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 
 int UI_Run(void)

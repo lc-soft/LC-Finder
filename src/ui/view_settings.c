@@ -156,15 +156,12 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 更新缩略图数据库的空间占用量 */
 static void UpdateThumbDBSpaceUsage( void )
 {
-	int i;
 	double size;
 	int64_t sum_size;
 	wchar_t text[128];
 	LCUI_Widget widget;
+	sum_size = LCFinder_GetThumbDBTotalSize();
 	widget = LCUIWidget_GetById( "text-thumb-db-space-usage" );
-	for( i = 0, sum_size = 0; i < finder.n_dirs; ++i ) {
-		sum_size += wgetfilesize( finder.thumb_paths[i] );
-	}
 	if( sum_size > 1024*1024*1024 ) {
 		size = sum_size / 1024.0 / 1024.0 / 1024.0;
 		swprintf( text, 128, L"%0.2fGB", size );

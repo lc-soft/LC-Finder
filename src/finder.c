@@ -224,6 +224,16 @@ DB_Dir LCFinder_GetSourceDir( const char *filepath )
 	return NULL;
 }
 
+int64_t LCFinder_GetThumbDBTotalSize( void )
+{
+	int i;
+	int64_t sum_size;
+	for( i = 0, sum_size = 0; i < finder.n_dirs; ++i ) {
+		sum_size += wgetfilesize( finder.thumb_paths[i] );
+	}
+	return sum_size;
+}
+
 int LCFinder_SyncFiles( FileSyncStatus s )
 {
 	int i, len;
