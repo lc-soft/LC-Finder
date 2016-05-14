@@ -60,9 +60,9 @@ typedef struct TimeSeparatorRec_ {
 typedef struct FileScannerRec_ {
 	LCUI_Thread tid;
 	LCUI_Cond cond;
+	LCUI_Mutex mutex;
 	LCUI_BOOL is_running;
-	LinkedList *cache;
-	LinkedList files_cache[2];
+	LinkedList files;
 } FileScannerRec, *FileScanner;
 
 /** 视图同步功能的相关数据 */
@@ -129,13 +129,14 @@ static int FileScanner_ScanAll( FileScanner scanner )
 			if( !file ) {
 				break;
 			}
-			LinkedList_Append( scanner->cache, file );
+			LCUIMutex_Lock( &scanner->mutex );
+			LinkedList_Append( &scanner->files, file );
+			LCUICond_Signal( &scanner->cond );
+			LCUIMutex_Unlock( &scanner->mutex );
 		}
 		count -= terms.limit;
 		terms.offset += terms.limit;
-		LCUICond_Signal( &scanner->cond );
 	}
-	LCUICond_Signal( &scanner->cond );
 	return total;
 }
 
@@ -143,9 +144,8 @@ static int FileScanner_ScanAll( FileScanner scanner )
 static void FileScanner_Init( FileScanner scanner )
 {
 	LCUICond_Init( &scanner->cond );
-	LinkedList_Init( &scanner->files_cache[0] );
-	LinkedList_Init( &scanner->files_cache[1] );
-	this_view.scanner.cache = &scanner->files_cache[0];
+	LCUIMutex_Init( &scanner->mutex );
+	LinkedList_Init( &scanner->files );
 }
 
 /** 重置文件扫描 */
@@ -155,9 +155,9 @@ static void FileScanner_Reset( FileScanner scanner )
 		this_view.scanner.is_running = FALSE;
 		LCUIThread_Join( this_view.scanner.tid, NULL );
 	}
-	LinkedList_Clear( &scanner->files_cache[0], OnDeleteDBFile );
-	LinkedList_Clear( &scanner->files_cache[1], OnDeleteDBFile );
-	this_view.scanner.cache = &scanner->files_cache[0];
+	LCUIMutex_Lock( &scanner->mutex );
+	LinkedList_Clear( &scanner->files, OnDeleteDBFile );
+	LCUIMutex_Unlock( &scanner->mutex );
 }
 
 /** 文件扫描线程 */
@@ -183,92 +183,86 @@ static void FileScanner_Start( FileScanner scanner )
 	LCUIThread_Create( &scanner->tid, FileScanner_Thread, NULL );
 }
 
-/** 获取已扫描的文件列表 */
-static LinkedList *FileScanner_GetFiles( FileScanner scanner )
-{
-	LinkedList *list = scanner->cache;
-	if( scanner->cache == scanner->files_cache ) {
-		scanner->cache = &scanner->files_cache[1];
-	} else {
-		scanner->cache = scanner->files_cache;
-	}
-	return list;
-}
-
-/** 载入列表项 */
-static void ViewSync_LoadItems( LinkedList *list )
+/** 向视图追加文件 */
+static void HomeView_AppendFile( DB_File file )
 {
 	time_t time;
 	struct tm *t;
-	wchar_t text[128];
+	TimeSeparator ts;
 	LCUI_Widget item;
-	LinkedListNode *node, *prev_node;
-	TimeSeparator ts = &this_view.separator;
-	LinkedList_ForEach( node, list ) {
-		DB_File file = node->data;
-		prev_node = node->prev;
-		LinkedList_Unlink( list, node );
-		LinkedList_AppendNode( &this_view.files, node );
-		node = prev_node;
-		time = file->create_time;
-		t = localtime( &time );
-		/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
-		if( t->tm_year != ts->time.tm_year ||
-		    t->tm_mon != ts->time.tm_mon ) {
-			LCUI_Widget title = LCUIWidget_New( "textview" );
-			/** 如果是第一个时间段，则取消顶部的边距 */
-			if( ts->files == 0 ) {
-				SetStyle( title->custom_style, 
-					  key_margin_top, 0, px );
-			}
-			ts->subtitle = LCUIWidget_New( "textview" );
-			Widget_AddClass( ts->subtitle, 
-					 "time-separator-subtitle" );
-			Widget_AddClass( title, "time-separator-title" );
-			/* 设置时间段的标题 */
-			swprintf( text, 128, TEXT_TIME_TITLE, 
-				  1900 + t->tm_year, t->tm_mon + 1 );
-			TextView_SetTextW( title, text );
-			ThumbView_Append( this_view.items, title );
-			ThumbView_Append( this_view.items, ts->subtitle );
-			ts->files = 0;
-			ts->time = *t;
+	wchar_t text[128];
+	ts = &this_view.separator;
+	time = file->create_time;
+	t = localtime( &time );
+	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
+	if( t->tm_year != ts->time.tm_year ||
+	    t->tm_mon != ts->time.tm_mon ) {
+		LCUI_Widget title = LCUIWidget_New( "textview" );
+		/** 如果是第一个时间段，则取消顶部的边距 */
+		if( ts->files == 0 ) {
+			SetStyle( title->custom_style, 
+				  key_margin_top, 0, px );
 		}
-		item = ThumbView_AppendPicture( this_view.items, file->path );
-		if( item ) {
-			ts->files += 1;
-			Widget_BindEvent( item, "click", OnItemClick,
-					  file, NULL );
-		}
-		/** 如果时间跨度不超过一天 */
-		if( t->tm_year == ts->time.tm_year && 
-		    t->tm_mon == ts->time.tm_mon &&
-		    t->tm_mday == ts->time.tm_mday ) {
-			swprintf( text, 128, TEXT_TIME_SUBTITLE, 
-				  t->tm_mon + 1, t->tm_mday, ts->files );
-		} else {
-			swprintf( text, 128, TEXT_TIME_SUBTITLE2, 
-				  t->tm_mon + 1, t->tm_mday, 
-				  ts->time.tm_mon + 1, ts->time.tm_mday,
-				  ts->files );
-		}
-		TextView_SetTextW( ts->subtitle, text );
+		ts->subtitle = LCUIWidget_New( "textview" );
+		Widget_AddClass( ts->subtitle, 
+				 "time-separator-subtitle" );
+		Widget_AddClass( title, "time-separator-title" );
+		/* 设置时间段的标题 */
+		swprintf( text, 128, TEXT_TIME_TITLE, 
+			  1900 + t->tm_year, t->tm_mon + 1 );
+		TextView_SetTextW( title, text );
+		ThumbView_Append( this_view.items, title );
+		ThumbView_Append( this_view.items, ts->subtitle );
+		ts->files = 0;
+		ts->time = *t;
 	}
+	item = ThumbView_AppendPicture( this_view.items, file->path );
+	if( item ) {
+		ts->files += 1;
+		Widget_BindEvent( item, "click", OnItemClick,
+				  file, NULL );
+	}
+	/** 如果时间跨度不超过一天 */
+	if( t->tm_year == ts->time.tm_year && 
+	    t->tm_mon == ts->time.tm_mon &&
+	    t->tm_mday == ts->time.tm_mday ) {
+		swprintf( text, 128, TEXT_TIME_SUBTITLE, 
+			  t->tm_mon + 1, t->tm_mday, ts->files );
+	} else {
+		swprintf( text, 128, TEXT_TIME_SUBTITLE2, 
+			  t->tm_mon + 1, t->tm_mday, 
+			  ts->time.tm_mon + 1, ts->time.tm_mday,
+			  ts->files );
+	}
+	TextView_SetTextW( ts->subtitle, text );
 }
 
 /** 视图同步线程 */
-static void ViewSync_Thread( void *arg )
+static void HomeView_SyncThread( void *arg )
 {
 	ViewSync vs;
-	LinkedList *list;
+	DB_File file;
+	FileScanner scanner;
+	LinkedListNode *node;
 	vs = &this_view.viewsync;
+	scanner = &this_view.scanner;
 	vs->is_running = TRUE;
 	while( this_view.viewsync.is_running ) {
-		LCUICond_Wait( &this_view.scanner.cond, &vs->mutex );
-		list = FileScanner_GetFiles( &this_view.scanner );
-		if( list->length > 0 ) {
-			ViewSync_LoadItems( list );
+		if( scanner->files.length == 0 ) {
+			LCUICond_Wait( &scanner->cond, &scanner->mutex );
 		}
+		LCUIMutex_Lock( &vs->mutex );
+		node = LinkedList_GetNode( &scanner->files, 0 );
+		if( !node ) {
+			LCUIMutex_Unlock( &vs->mutex );
+			LCUIMutex_Unlock( &scanner->mutex );
+			continue;
+		}
+		file = node->data;
+		LinkedList_Unlink( &scanner->files, node );
+		LCUIMutex_Unlock( &scanner->mutex );
+		LinkedList_AppendNode( &this_view.files, node );
+		HomeView_AppendFile( file );
 		LCUIMutex_Unlock( &vs->mutex );
 	}
 }
@@ -296,15 +290,17 @@ static void OnSyncDone( LCUI_Event e, void *arg )
 void UI_InitHomeView( void )
 {
 	LCUI_Widget btn;
+	LCUI_Thread tid;
 	LinkedList_Init( &this_view.files );
+	FileScanner_Init( &this_view.scanner );
+	LCUIMutex_Init( &this_view.viewsync.mutex );
+	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );
 	btn = LCUIWidget_GetById( "btn-sync-collection-files" );
 	this_view.view = LCUIWidget_GetById( "view-home" );
 	this_view.items = LCUIWidget_GetById( "home-collection-list" );
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-collection" );
+	this_view.viewsync.tid = tid;
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
-	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
-	FileScanner_Init( &this_view.scanner );
-	LCUIMutex_Init( &this_view.viewsync.mutex );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LoadCollectionFiles();
 }
