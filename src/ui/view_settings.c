@@ -177,6 +177,56 @@ static void UpdateThumbDBSpaceUsage( void )
 	TextView_SetTextW( widget, text );
 }
 
+static void OnBtnSettingsClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	UpdateThumbDBSpaceUsage();
+}
+
+static void OnThumbDBDelDone( LCUI_Event e, void *arg )
+{
+	UpdateThumbDBSpaceUsage();
+}
+
+/** 在“清除”按钮被点击时 */
+static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e, 
+				    void *arg )
+{
+	LCUI_Widget text;
+	LinkedListNode *node;
+	LinkedList_ForEach( node, &w->children ) {
+		LCUI_Widget child = node->data;
+		if( child->type && strcmp(child->type, "textview") == 0 ) {
+			text = child;
+			break;
+		}
+	}
+	Widget_AddClass( w, "disabled" );
+	TextView_SetTextW( text, L"正在清除..." );
+	Widget_UnbindEvent( w, "click", OnBtnClearThumbDBClick );
+	LCFinder_ClearThumbDB();
+	Widget_RemoveClass( w, "disabled" );
+	TextView_SetTextW( text, L"清除" );
+	Widget_BindEvent( w, "click", OnBtnClearThumbDBClick, NULL, NULL );
+}
+
+/** 在“许可协议”按钮被点击时 */
+static void OnBtnLicenseClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	system( "start http://www.gnu.org/licenses/gpl-2.0.html" );
+}
+
+/** 在“官方网站”按钮被点击时 */
+static void OnBtnWebSiteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	system( "start https://lc-soft.io/" );
+}
+
+/** 在“问题反馈”按钮被点击时 */
+static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
+{
+	system( "start https://github.com/lc-soft/LC-Finder/issues/new" );
+}
+
 void UI_InitSettingsView( void )
 {
 	LCUI_Widget btn = LCUIWidget_GetById( "btn-add-source" );
@@ -185,4 +235,15 @@ void UI_InitSettingsView( void )
 	UI_InitDirList( dirlist );
 	UpdateThumbDBSpaceUsage();
 	this_view.dirlist = dirlist;
+	btn = LCUIWidget_GetById( "sidebar-btn-settings" );
+	Widget_BindEvent( btn, "click", OnBtnSettingsClick, NULL, NULL );
+	LCFinder_BindEvent( EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL );
+	btn = LCUIWidget_GetById( "btn-clear-thumb-db" );
+	Widget_BindEvent( btn, "click", OnBtnClearThumbDBClick, NULL, NULL );
+	btn = LCUIWidget_GetById( "btn-open-license" );
+	Widget_BindEvent( btn, "click", OnBtnLicenseClick, NULL, NULL );
+	btn = LCUIWidget_GetById( "btn-open-website" );
+	Widget_BindEvent( btn, "click", OnBtnWebSiteClick, NULL, NULL );
+	btn = LCUIWidget_GetById( "btn-open-feedback" );
+	Widget_BindEvent( btn, "click", OnBtnFeedbackClick, NULL, NULL );
 }
