@@ -50,6 +50,7 @@
 #define FOLDER_MARGIN_RIGHT 10
 #define FOLDER_CLASS "file-list-item-folder"
 #define PICTURE_CLASS "file-list-item-picture"
+#define ANIMATION_DURATION 1000
 
 typedef struct ScrollLoadingRec_ {
 	int top;
@@ -74,17 +75,18 @@ typedef struct LayoutContextRec_ {
 } LayoutContextRec, *LayoutContext;
 
 typedef struct ThumbViewRec_ {
-	Dict *dbs;
-	ThumbCache cache;
-	LinkedList tasks;
-	LinkedList files;
-	LCUI_Cond cond;
-	LCUI_Mutex mutex;
-	LCUI_Thread thread;
-	LCUI_BOOL is_loading;
-	LCUI_BOOL need_update;
-	ScrollLoading scrollload;
-	LayoutContextRec layout;
+	Dict *dbs;			/**< 缩略图数据库字典，以目录路径进行索引 */
+	ThumbCache cache;		/**< 缩略图缓存 */
+	LinkedList tasks;		/**< 当前任务队列 */
+	LinkedList files;		/**< 当前视图下的文件列表 */
+	LCUI_Cond cond;			/**< 条件变量 */
+	LCUI_Mutex mutex;		/**< 互斥锁 */
+	LCUI_Thread thread;		/**< 任务处理线程 */
+	LCUI_BOOL is_loading;		/**< 是否处于载入中状态 */
+	LCUI_BOOL need_update;		/**< 是否需要更新视图内容 */
+	ScrollLoading scrollload;	/**< 滚动加载功能所需的相关数据 */
+	LayoutContextRec layout;	/**< 缩略图布局功能所需的相关数据 */
+	int timer;			/**< 定时器，用于延迟更新视图内容 */
 } ThumbViewRec, *ThumbView;
 
 typedef struct ThumbFileInfoRec_ {
@@ -103,6 +105,7 @@ typedef struct ThumbItemDataRec_ {
 	int width, height;
 } ThumbItemDataRec, *ThumbItemData;
 
+#define DIR_COVER_THUMB "__dir_cover_thumb__"
 #define THUMB_CACHE_SIZE (20*1024*1024)
 #define THUMB_MAX_WIDTH 240
 
@@ -227,9 +230,13 @@ static int GetDirThumbFilePath( char *filepath, char *dirpath )
 static void OnRemoveThumb( void *data )
 {
 	LCUI_Widget w = data;
-	_DEBUG_MSG("remove thumb\n");
+	_DEBUG_MSG("remove thumb start\n");
+	Widget_Lock( w );
+	Graph_Init( &w->computed_style.background.image );
 	w->custom_style->sheet[key_background_image].is_valid = FALSE;
 	Widget_UpdateStyle( w, FALSE );
+	Widget_Unlock( w );
+	_DEBUG_MSG("remove thumb end\n");
 }
 
 static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
@@ -252,18 +259,19 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		return NULL;
 	}
 	len = strlen( dir->path );
-	filename = info->path + len;
-	if( filename[0] == PATH_SEP ) {
-		++filename;
-	}
 	if( info->is_dir ) {
 		char path[PATH_LEN];
 		pathjoin( path, info->path, "" );
 		if( GetDirThumbFilePath( path, path ) == 0 ) {
 			return NULL;
 		}
+		filename = DIR_COVER_THUMB;
 		LCUI_DecodeString( wpath, path, PATH_LEN, ENCODING_UTF8 );
 	} else {
+		filename = info->path + len;
+		if( filename[0] == PATH_SEP ) {
+			++filename;
+		}
 		/* 将路径的编码方式由 UTF-8 转换成 ANSI */
 		LCUI_DecodeString( wpath, info->path, PATH_LEN, ENCODING_UTF8 );
 	}
@@ -513,10 +521,7 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 	if( !view->layout.is_running ) {
 		return;
 	}
-	Widget_LockLayout( w );
 	n = ThumbView_ExecUpdateLayout( w, 16 );
-	Widget_UnlockLayout( w );
-	Widget_AddTask( w, WTT_LAYOUT );
 	/* 如果还有未布局的缩略图则下次再继续 */
 	if( n == 16 ) {
 		LCUI_AppTaskRec task;
@@ -530,6 +535,9 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 		UpdateThumbRow( view );
 		view->layout.is_running = FALSE;
 		view->layout.current = NULL;
+		Widget_UnlockLayout( w );
+		Widget_UpdateLayout( w );
+		Widget_LockLayout( w );
 	}
 }
 
@@ -548,6 +556,7 @@ static void OnDelayLayout( void *arg )
 	ThumbView_UpdateLayoutContext( w );
 	LinkedList_Clear( &view->layout.row, NULL );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
+	Widget_LockLayout( w );
 	OnLayoutStep( arg, NULL );
 }
 
@@ -600,6 +609,7 @@ static void UpdateView( void *arg )
 	if( !view->need_update ) {
 		return;
 	}
+	view->timer = -1;
 	view->need_update = FALSE;
 	ScrollLoading_Update( view->scrollload );
 }
@@ -649,6 +659,17 @@ void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 	UpdateThumbRow( w->private_data );
 }
 
+static void ThumbView_DelayUpdate( LCUI_Widget w )
+{
+	ThumbView view = w->private_data;
+	if( view->need_update && view->timer > 0 ) {
+		LCUITimer_Reset( view->timer, 200 );
+	} else {
+		view->need_update = TRUE;
+		view->timer = LCUITimer_Set( 200, UpdateView, w, FALSE );
+	}
+}
+
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 {
 	char *apath;
@@ -679,10 +700,9 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
 	Widget_Append( item, cover );
 	Widget_Append( w, item );
-	data->view->need_update = TRUE;
+	ThumbView_DelayUpdate( w );
 	ThumbView_UpdateLayoutContext( w );
 	AppendPicture( data->view, item );
-	LCUITimer_Set( 200, UpdateView, w, FALSE );
 	LinkedList_Append( &data->view->files, data->info.path );
 	return item;
 }
@@ -691,13 +711,10 @@ static void ThumbView_OnInit( LCUI_Widget w )
 {
 	ThumbView self;
 	self = Widget_NewPrivateData( w, ThumbViewRec );
-	self->is_loading = FALSE;
-	self->need_update = FALSE;
 	self->dbs = finder.thumb_dbs;
-	LCUICond_Init( &self->cond );
-	LCUIMutex_Init( &self->mutex );
-	LinkedList_Init( &self->tasks );
-	LinkedList_Init( &self->files );
+	self->need_update = FALSE;
+	self->is_loading = FALSE;
+	self->timer = -1;
 	self->layout.x = 0;
 	self->layout.count = 0;
 	self->layout.max_width = 0;
@@ -706,6 +723,10 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->layout.is_running = FALSE;
 	self->layout.is_delaying = FALSE;
 	self->layout.folders_per_row = 1;
+	LCUICond_Init( &self->cond );
+	LCUIMutex_Init( &self->mutex );
+	LinkedList_Init( &self->tasks );
+	LinkedList_Init( &self->files );
 	LinkedList_Init( &self->layout.row );
 	LCUIMutex_Init( &self->layout.row_mutex );
 	self->scrollload = ScrollLoading_New( w );
