@@ -40,6 +40,7 @@
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
+#include <LCUI/cursor.h>
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
@@ -49,21 +50,99 @@
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
-	char *filepath;			/**< 当前需加载的图片文件路径  */
-	LCUI_Graph *img;		/**< 当前已经加载的图片数据 */
-	LCUI_Widget window;		/**< 图片查看器窗口 */
-	LCUI_Widget target;		/**< 用于显示目标图片的部件 */
-	LCUI_Widget tip;		/**< 图片载入提示框 */
-	LCUI_BOOL is_loading;		/**< 是否正在载入图片 */
-	LCUI_BOOL is_working;		/**< 当前视图是否在工作 */
-	LCUI_BOOL is_opening;		/**< 当前视图是否为打开状态 */
-	LCUI_BOOL is_zoom_mode;		/**< 当前视图是否为放大/缩小模式 */
-	double scale;			/**< 图片缩放比例 */
-	double min_scale;		/**< 图片最小缩放比例 */
-	LCUI_Cond cond;			/**< 条件变量 */
-	LCUI_Mutex mutex;		/**< 互斥锁 */
-	LCUI_Thread th_picloader;	/**< 图片加载器线程 */
+	char *filepath;				/**< 当前需加载的图片文件路径  */
+	LCUI_Graph *img;			/**< 当前已经加载的图片数据 */
+	LCUI_Widget window;			/**< 图片查看器窗口 */
+	LCUI_Widget target;			/**< 用于显示目标图片的部件 */
+	LCUI_Widget tip;			/**< 图片载入提示框 */
+	LCUI_BOOL is_loading;			/**< 是否正在载入图片 */
+	LCUI_BOOL is_working;			/**< 当前视图是否在工作 */
+	LCUI_BOOL is_opening;			/**< 当前视图是否为打开状态 */
+	LCUI_BOOL is_zoom_mode;			/**< 当前视图是否为放大/缩小模式 */
+	double scale;				/**< 图片缩放比例 */
+	double min_scale;			/**< 图片最小缩放比例 */
+	LCUI_Cond cond;				/**< 条件变量 */
+	LCUI_Mutex mutex;			/**< 互斥锁 */
+	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
+	int focus_x, focus_y;			/**< 当前焦点位置，相对于按比例缩放后的图片 */
+	int origin_focus_x, origin_focus_y;	/**< 当前焦点位置，相对于原始尺寸的图片 */
+	struct PictureDrag {
+		int focus_x, focus_y;		/**< 拖动开始时的图片坐标，相对于按比例缩放后的图片 */
+		int mouse_x, mouse_y;		/**< 拖动开始时的鼠标坐标 */
+		LCUI_BOOL is_running;		/**< 是否正在执行拖动操作 */
+		LCUI_BOOL is_started;		/**< 是否已经拖动过一次 */
+		LCUI_BOOL with_x;		/**< 拖动时是否需要改变图片X坐标 */
+		LCUI_BOOL with_y;		/**< 拖动时是否需要改变图片Y坐标 */
+		int eids[2];			/**< 事件绑定ID */
+	} drag;					/**< 实现图片拖动浏览功能所需的数据 */
 } this_view;
+
+/** 更新图片位置 */
+static void UpdatePicturePosition( void )
+{
+	LCUI_Style sheet;
+	int x, y, width, height;
+	sheet = this_view.target->custom_style->sheet;
+	width = (int)(this_view.img->width * this_view.scale);
+	height = (int)(this_view.img->height * this_view.scale);
+	/** 若缩放后的图片宽度小于图片查看器的宽度 */
+	if( width <= this_view.target->width ) {
+		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
+		this_view.drag.with_x = FALSE;
+		this_view.focus_x = width / 2;
+		this_view.origin_focus_x = this_view.img->width / 2;
+		x = (this_view.target->width - width) / 2;
+		SetStyle( this_view.target->custom_style,
+			  key_background_position_x, x, px );
+	} else {
+		this_view.drag.with_x = TRUE;
+		x = this_view.origin_focus_x;
+		this_view.focus_x = (int)(x * this_view.scale);
+		x = this_view.focus_x - this_view.target->width / 2;
+		/* X坐标调整，确保查看器的图片浏览范围不超出图片 */
+		if( x < 0 ) {
+			x = 0;
+			this_view.focus_x = this_view.target->width / 2;
+		}
+		if( x + this_view.target->width > width ) {
+			x = width - this_view.target->width;
+			this_view.focus_x = x + this_view.target->width / 2;
+		}
+		SetStyle( this_view.target->custom_style,
+			  key_background_position_x, -x, px );
+		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
+		x = (int)(this_view.focus_x / this_view.scale);
+		this_view.origin_focus_x = x;
+	}
+	/* 原理同上 */
+	if( height <= this_view.target->height ) {
+		this_view.drag.with_y = FALSE;
+		this_view.focus_y = height / 2;
+		this_view.origin_focus_y = this_view.img->height / 2;
+		sheet[key_background_position_y].is_valid = FALSE;
+		y = (this_view.target->height - height) / 2;
+		SetStyle( this_view.target->custom_style,
+			  key_background_position_y, y, px );
+	} else {
+		this_view.drag.with_y = TRUE;
+		y = this_view.origin_focus_y;
+		this_view.focus_y = (int)(y * this_view.scale);
+		y = this_view.focus_y - this_view.target->height / 2;
+		if( y < 0 ) {
+			y = 0;
+			this_view.focus_y = this_view.target->height / 2;
+		}
+		if( y + this_view.target->height > height ) {
+			y = width - this_view.target->height;
+			this_view.focus_y = y + this_view.target->height / 2;
+		}
+		SetStyle( this_view.target->custom_style,
+			  key_background_position_y, -y, px );
+		y = (int)(this_view.focus_y / this_view.scale);
+		this_view.origin_focus_y = y;
+	}
+	Widget_UpdateStyle( this_view.target, FALSE );
+}
 
 /** 重置当前显示的图片的尺寸 */
 static void ResetPictureSize( void )
@@ -74,6 +153,7 @@ static void ResetPictureSize( void )
 	if( !img ) {
 		return;
 	}
+	/* 如果尺寸小于图片查看器尺寸 */
 	if( img && img->width < this_view.target->width && 
 	    img->height < this_view.target->height ) {
 		Widget_RemoveClass( this_view.target, "contain-mode" );
@@ -97,6 +177,7 @@ static void ResetPictureSize( void )
 	sheet[key_background_size_width].is_valid = FALSE;
 	sheet[key_background_size_height].is_valid = FALSE;
 	Widget_UpdateStyle( this_view.target, FALSE );
+	UpdatePicturePosition();
 }
 
 /** 在返回按钮被点击的时候 */
@@ -113,9 +194,11 @@ static OnBtnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 }
 
 /** 在图片视图尺寸发生变化的时候 */
-static void OnResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnPictureResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	if( !this_view.is_zoom_mode ) {
+	if( this_view.is_zoom_mode ) {
+		UpdatePicturePosition();
+	} else {
 		ResetPictureSize();
 	}
 }
@@ -131,12 +214,10 @@ static void SetPictureScale( double scale )
 	} else {
 		this_view.is_zoom_mode = TRUE;
 	}
-	_DEBUG_MSG("scale: %0.2lf\n", scale);
 	if( scale > MAX_SCALE ) {
 		scale = MAX_SCALE;
 	}
 	sheet = this_view.target->custom_style;
-	_DEBUG_MSG("scale: %0.2lf\n", scale);
 	width = (int)(scale * this_view.img->width);
 	height = (int)(scale * this_view.img->height);
 	SetStyle( sheet, key_background_size_width, width, px );
@@ -144,6 +225,7 @@ static void SetPictureScale( double scale )
 	Widget_RemoveClass( this_view.target, "contain-mode" );
 	Widget_UpdateStyle( this_view.target, FALSE );
 	this_view.scale = scale;
+	UpdatePicturePosition();
 }
 
 /** 在”放大“按钮被点击的时候 */
@@ -173,9 +255,7 @@ static void PictureLoader( void *arg )
 	LCUI_Graph *old_img = NULL;
 	LCUI_StyleSheet sheet = this_view.target->custom_style;
 	while( this_view.is_working ) {
-		_DEBUG_MSG("wait\n");
 		LCUICond_Wait( &this_view.cond, &this_view.mutex );
-		_DEBUG_MSG("end wait\n");
 		if( !this_view.is_opening && img ) {
 			Widget_Lock( this_view.target );
 			Graph_Free( img );
@@ -188,7 +268,6 @@ static void PictureLoader( void *arg )
 			continue;
 		}
 		filepath = this_view.filepath;
-		_DEBUG_MSG("start load picture: %s\n", filepath);
 		this_view.filepath = NULL;
 		LCUIMutex_Unlock( &this_view.mutex );
 		if( old_img ) {
@@ -208,12 +287,89 @@ static void PictureLoader( void *arg )
 		this_view.img = img;
 		ResetPictureSize();
 		free( filepath );
-		_DEBUG_MSG("end load picture\n");
 		this_view.is_loading = FALSE;
 		LCUITimer_Free( timer );
 		Widget_Hide( this_view.tip );
 	}
 	LCUIThread_Exit( NULL );
+}
+
+/** 当鼠标按钮在图片容器上释放的时候 */
+static void OnMouseUp( LCUI_SysEvent e, void *arg )
+{
+	this_view.drag.is_running = FALSE;
+}
+
+/** 当鼠标在图片容器上移动的时候 */
+static void OnMouseMove( LCUI_SysEvent e, void *arg )
+{
+	LCUI_Pos pos;
+	LCUI_Style sheet;
+	if( !this_view.drag.is_running ) {
+		return;
+	}
+	LCUICursor_GetPos( &pos );
+	sheet = this_view.target->custom_style->sheet;
+	if( this_view.drag.with_x ) {
+		int x, width;
+		width = (int)(this_view.img->width * this_view.scale);
+		this_view.focus_x = this_view.drag.focus_x;
+		this_view.focus_x -= pos.x - this_view.drag.mouse_x;
+		x = this_view.focus_x - this_view.target->width / 2;
+		if( x < 0 ) {
+			x = 0;
+			this_view.focus_x = this_view.target->width / 2;
+		}
+		if( x + this_view.target->width > width ) {
+			x = width - this_view.target->width;
+			this_view.focus_x = x + this_view.target->width / 2;
+		}
+		SetStyle( this_view.target->custom_style,
+			  key_background_position_x, -x, px );
+		x = (int)(this_view.focus_x / this_view.scale);
+		this_view.origin_focus_x = x;
+	} else {
+		sheet[key_background_position_x].is_valid = FALSE;
+	}
+	if( this_view.drag.with_y ) {
+		int y, height;
+		height = (int)(this_view.img->height * this_view.scale);
+		this_view.focus_y = this_view.drag.focus_y;
+		this_view.focus_y -= pos.y - this_view.drag.mouse_y;
+		y = this_view.focus_y - this_view.target->height / 2;
+		if( y < 0 ) {
+			y = 0;
+			this_view.focus_y = this_view.target->height / 2;
+		}
+		if( y + this_view.target->height > height ) {
+			y = height - this_view.target->height;
+			this_view.focus_y = y + this_view.target->height / 2;
+		}
+		SetStyle( this_view.target->custom_style,
+			  key_background_position_y, -y, px );
+		y = (int)(this_view.focus_y / this_view.scale);
+		this_view.origin_focus_y = y;
+	} else {
+		sheet[key_background_position_y].is_valid = FALSE;
+	}
+	Widget_UpdateStyle( this_view.target, FALSE );
+}
+
+/** 当鼠标按钮在图片容器上点住的时候 */
+static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	int *eids;
+	LCUI_Pos pos;
+	LCUICursor_GetPos( &pos );
+	eids = this_view.drag.eids;
+	this_view.drag.mouse_x = pos.x;
+	this_view.drag.mouse_y = pos.y;
+	this_view.drag.is_started = TRUE;
+	this_view.drag.is_running = TRUE;
+	this_view.drag.focus_x = this_view.focus_x;
+	this_view.drag.focus_y = this_view.focus_y;
+	eids[0] = LCUI_BindEvent( LCUI_MOUSEMOVE, OnMouseMove, NULL, NULL );
+	eids[1] = LCUI_BindEvent( LCUI_MOUSEUP, OnMouseUp, NULL, NULL );
 }
 
 void UI_InitPictureView( void )
@@ -239,7 +395,10 @@ void UI_InitPictureView( void )
 	Widget_BindEvent( btn[0], "click", OnBtnResetClick, NULL, NULL );
 	Widget_BindEvent( btn[1], "click", OnBtnZoomInClick, NULL, NULL );
 	Widget_BindEvent( btn[2], "click", OnBtnZoomOutClick, NULL, NULL );
-	Widget_BindEvent( this_view.target, "resize", OnResize, NULL, NULL );
+	Widget_BindEvent( this_view.target, "resize", OnPictureResize,
+			  NULL, NULL );
+	Widget_BindEvent( this_view.target, "mousedown", OnPictureMouseDown,
+			  NULL, NULL );
 	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
 	Widget_Hide( this_view.window );
 }
