@@ -247,6 +247,7 @@ static void HomeView_SyncThread( void *arg )
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
 	vs->is_running = TRUE;
+	LCUIMutex_Lock( &scanner->mutex );
 	while( this_view.viewsync.is_running ) {
 		if( scanner->files.length == 0 ) {
 			LCUICond_Wait( &scanner->cond, &scanner->mutex );
@@ -255,7 +256,6 @@ static void HomeView_SyncThread( void *arg )
 		node = LinkedList_GetNode( &scanner->files, 0 );
 		if( !node ) {
 			LCUIMutex_Unlock( &vs->mutex );
-			LCUIMutex_Unlock( &scanner->mutex );
 			continue;
 		}
 		file = node->data;
@@ -265,6 +265,7 @@ static void HomeView_SyncThread( void *arg )
 		HomeView_AppendFile( file );
 		LCUIMutex_Unlock( &vs->mutex );
 	}
+	LCUIMutex_Unlock( &scanner->mutex );
 }
 
 /** 载入集锦中的文件列表 */

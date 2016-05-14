@@ -229,3 +229,10 @@ int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 	}
 	return len;
 }
+
+void wgetcurdir( wchar_t *path, int max_len )
+{
+#ifdef _WIN32
+	GetCurrentDirectoryW( max_len, path );
+#endif
+}

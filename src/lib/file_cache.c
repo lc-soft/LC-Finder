@@ -221,16 +221,13 @@ static int SyncTask_LoadCache( SyncTask t, FILE *fp )
 		}
 		size = fread( buf, sizeof( wchar_t ), len, fp );
 		if( size < len || size > MAX_PATH_LEN ) {
-			_DEBUG_MSG("size = %d, len = %d, feof(fp) = %d\n", size, len, feof(fp));
 			((wchar_t*)buf)[size] = 0;
-			wprintf(L"%s\n", buf);
 			break;
 		}
 		path = (wchar_t*)buf;
 		path[len] = 0;
 		Dict_Add( ds->files, path, (void*)1 );
 		Dict_Add( ds->deleted_files, path, (void*)1 );
-		wprintf(L"cached file: %s, len: %d\n", path, len);
 		++count;
 	}
 	t->deleted_files = count;
@@ -283,15 +280,15 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 		if( Dict_FetchValue( ds->files, filepath ) ) {
 			Dict_Delete( ds->deleted_files, filepath );
 			--t->deleted_files;
-			wprintf(L"unchange: %s\n", filepath);
+			//wprintf(L"unchange: %s\n", filepath);
 		} else {
-			wprintf(L"added: %s\n", filepath);
+			//wprintf(L"added: %s\n", filepath);
 			Dict_Add( ds->added_files, filepath, (void*)1 );
 			++t->added_files;
 		}
 		fwrite( &len, sizeof( int ), 1, fp );
 		i = fwrite( filepath, sizeof( wchar_t ), len, fp );
-		wprintf(L"scan file: %s, len: %d, writed: %d\n", filepath, len, i);
+		//wprintf(L"scan file: %s, len: %d, writed: %d\n", filepath, len, i);
 		++t->total_files;
 	}
 	LCUI_CloseDir( &dir );
@@ -302,7 +299,7 @@ int SyncTask_Start( SyncTask t )
 {
 	int n;
 	FILE *fp;
-	wprintf( L"\n\nscan dir: %s\n", t->scan_dir );
+	//wprintf( L"\n\nscan dir: %s\n", t->scan_dir );
 	fp = _wfopen( t->file, L"rb" );
 	if( fp ) {
 		SyncTask_LoadCache( t, fp );

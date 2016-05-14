@@ -51,7 +51,8 @@ enum LCFinderEventType {
 	EVENT_DIR_ADD,
 	EVENT_DIR_DEL,
 	EVENT_SYNC,
-	EVENT_SYNC_DONE
+	EVENT_SYNC_DONE,
+	EVENT_THUMBDB_DEL_DONE
 };
 
 /** LCFinder 的主要数据记录 */
@@ -96,6 +97,9 @@ DB_Dir LCFinder_GetSourceDir( const char *filepath );
 
 /** 获取缩略图数据库总大小 */
 int64_t LCFinder_GetThumbDBTotalSize( void );
+
+/** 清除缩略图数据库 */
+void LCFinder_ClearThumbDB( void );
 
 /** 同步文件 */
 int LCFinder_SyncFiles( FileSyncStatus s );

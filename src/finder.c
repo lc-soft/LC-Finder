@@ -198,7 +198,7 @@ static void SyncAddedFile( void *data, const wchar_t *wpath )
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
 	DB_AddFile( pack->dir, path, ctime );
-	wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
+	//wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
 static void SyncDeletedFile( void *data, const wchar_t *wpath )
@@ -208,7 +208,7 @@ static void SyncDeletedFile( void *data, const wchar_t *wpath )
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
 	DB_DeleteFile( pack->dir, path );
-	wprintf(L"sync: delete file: %s\n", wpath);
+	//wprintf(L"sync: delete file: %s\n", wpath);
 }
 
 DB_Dir LCFinder_GetSourceDir( const char *filepath )
@@ -305,13 +305,17 @@ static void InitConsoleWindow( void )
 
 #endif
 
+/** 初始化工作目录 */
 static void LCFinder_InitWorkDir( void )
 {
 	int len;
+	wchar_t data_dir[1024];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
-	wchar_t data_dir[1024] = L"F:\\代码库\\GitHub\\LC-Finder\\data\\";
-	len = wcslen( data_dir );
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
+	wgetcurdir( data_dir, 1024 );
+	wprintf(L"data_dir: %s\n", data_dir);
+	wpathjoin( data_dir, data_dir, L"data" );
+	len = wcslen( data_dir );
 	if( data_dir[len - 1] != PATH_SEP ) {
 		data_dir[len++] = PATH_SEP;
 		data_dir[len] = 0;
@@ -328,6 +332,7 @@ static void LCFinder_InitWorkDir( void )
 	_wsetlocale(LC_ALL, L"chs");
 }
 
+/** 初始化文件数据库 */
 static void LCFInder_InitFileDB( void )
 {
 	DB_Init();
@@ -340,13 +345,14 @@ static ThumbDBDict_ValDel( void *privdata, void *val )
 	ThumbDB_Close( val );
 }
 
+/** 初始化缩略图数据库 */
 static void LCFinder_InitThumbDB( void )
 {
 	int i;
 	wchar_t *path;
 	printf("[thumbdb] init ...\n");
 	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
-	finder.thumb_paths = malloc( sizeof( wchar_t )*finder.n_dirs );
+	finder.thumb_paths = malloc( sizeof( wchar_t* )*finder.n_dirs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
 		finder.thumb_paths[i] = path;
@@ -354,8 +360,10 @@ static void LCFinder_InitThumbDB( void )
 	printf("[thumbdb] init done\n");
 }
 
+/** 退出缩略图数据库 */
 static void LCFinder_ExitThumbDB( void )
 {
+	int i;
 	ThumbDB db;
 	DictEntry *entry;
 	DictIterator *iter;
@@ -369,12 +377,48 @@ static void LCFinder_ExitThumbDB( void )
 	}
 	Dict_ReleaseIterator( iter );
 	Dict_Release( finder.thumb_dbs );
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		free( finder.thumb_paths[i] );
+		finder.thumb_paths[i] = NULL;
+	}
+	free( finder.thumb_paths );
+	finder.thumb_paths = NULL;
 	finder.thumb_dbs = NULL;
 	printf("[thumbdb] exit done\n");
 }
+
+/** 清除缩略图数据库 */
+void LCFinder_ClearThumbDB( void )
+{
+	int i;
+	ThumbDB db;
+	wchar_t *path;
+	DictEntry *entry;
+	DictIterator *iter;
+	iter = Dict_GetIterator( finder.thumb_dbs );
+	entry = Dict_Next( iter );
+	while( entry ) {
+		db = DictEntry_GetVal( entry );
+		ThumbDB_Close( db );
+		entry = Dict_Next( iter );
+	}
+	Dict_ReleaseIterator( iter );
+	Dict_Release( finder.thumb_dbs );
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		path = finder.thumb_paths[i];
+		finder.thumb_paths[i] = NULL;
+		_wremove( path );
+		free( path );
+	}
+	free( finder.thumb_paths );
+	finder.thumb_paths = NULL;
+	finder.thumb_dbs = NULL;
+	LCFinder_InitThumbDB();
+	LCFinder_TriggerEvent( EVENT_THUMBDB_DEL_DONE, NULL );
+}
+
 static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 {
-	printf("exit\n");
 	LCFinder_ExitThumbDB();
 }
 

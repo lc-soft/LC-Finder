@@ -44,6 +44,7 @@
 #define TEXT_STARED	L"正在同步你的资源"
 #define TEXT_SCANING	L"已扫描 %d 个文件"
 #define TEXT_SAVING	L"正同步 %d/%d 个文件"
+#define TEXT_SAVED	L"已同步 %d 个文件"
 #define TEXT_FINISHED	L"资源同步完成！"
 
 static struct SyncContextRec_ {
@@ -71,6 +72,10 @@ static void OnUpdateStats( void *arg )
 		count = self.status.synced_files;
 		total = self.status.added_files + self.status.deleted_files;
 		wsprintf( wstr, TEXT_SAVING, count, total );
+		break;
+	case STATE_FINISHED:
+		count = self.status.synced_files;
+		wsprintf( wstr, TEXT_SAVED, count );
 		break;
 	default:return;
 	}

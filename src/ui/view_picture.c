@@ -254,8 +254,10 @@ static void PictureLoader( void *arg )
 	LCUI_Graph *img = NULL;
 	LCUI_Graph *old_img = NULL;
 	LCUI_StyleSheet sheet = this_view.target->custom_style;
+	LCUIMutex_Lock( &this_view.mutex );
 	while( this_view.is_working ) {
 		LCUICond_Wait( &this_view.cond, &this_view.mutex );
+		_DEBUG_MSG("wakeup\n");
 		if( !this_view.is_opening && img ) {
 			Widget_Lock( this_view.target );
 			Graph_Free( img );
@@ -269,7 +271,6 @@ static void PictureLoader( void *arg )
 		}
 		filepath = this_view.filepath;
 		this_view.filepath = NULL;
-		LCUIMutex_Unlock( &this_view.mutex );
 		if( old_img ) {
 			Graph_Free( old_img );
 			free( old_img );
@@ -291,6 +292,7 @@ static void PictureLoader( void *arg )
 		LCUITimer_Free( timer );
 		Widget_Hide( this_view.tip );
 	}
+	LCUIMutex_Unlock( &this_view.mutex );
 	LCUIThread_Exit( NULL );
 }
 

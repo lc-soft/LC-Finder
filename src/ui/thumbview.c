@@ -50,28 +50,32 @@
 #define FOLDER_MARGIN_RIGHT 10
 #define FOLDER_CLASS "file-list-item-folder"
 #define PICTURE_CLASS "file-list-item-picture"
-#define ANIMATION_DURATION 1000
+#define DIR_COVER_THUMB "__dir_cover_thumb__"
+#define THUMB_CACHE_SIZE (20*1024*1024)
+#define THUMB_MAX_WIDTH 240
 
+/** 滚动加载功能的相关数据 */
 typedef struct ScrollLoadingRec_ {
-	int top;
-	int event_id;
-	LCUI_BOOL enabled;
-	LCUI_Widget scrolllayer;
-	LCUI_Widget top_child;
+	int top;			/**< 当前可见区域上边界的 Y 轴坐标 */
+	int event_id;			/**< 滚动加载功能的事件ID */
+	LCUI_BOOL enabled;		/**< 是否启用滚动加载功能 */
+	LCUI_Widget scrolllayer;	/**< 滚动层 */
+	LCUI_Widget top_child;		/**< 当前可见区域第一个子部件 */
 } ScrollLoadingRec, *ScrollLoading;
 
+/** 缩略图列表布局功能的相关数据 */
 typedef struct LayoutContextRec_ {
-	int x;
-	int count;
-	int max_width;
-	LCUI_BOOL is_running;
-	LCUI_BOOL is_delaying;
-	LCUI_Widget current;
-	LinkedList row;
-	LCUI_Mutex row_mutex;
-	int timer;
-	int folder_count;
-	int folders_per_row;
+	int x;				/** 当前对象的 X 轴坐标 */
+	int count;			/** 当前处理的总对象数量 */
+	int max_width;			/** 最大宽度 */
+	LCUI_BOOL is_running;		/** 是否正在布局 */
+	LCUI_BOOL is_delaying;		/** 是否处于延迟状态 */
+	LCUI_Widget current;		/** 当前处理的部件 */
+	LinkedList row;			/** 当前行的部件 */
+	LCUI_Mutex row_mutex;		/** 当前行的互斥锁 */
+	int timer;			/** 定时器 */
+	int folder_count;		/**< 当前处理的文件夹数量 */
+	int folders_per_row;		/**< 每行有多少个文件夹 */
 } LayoutContextRec, *LayoutContext;
 
 typedef struct ThumbViewRec_ {
@@ -89,25 +93,24 @@ typedef struct ThumbViewRec_ {
 	int timer;			/**< 定时器，用于延迟更新视图内容 */
 } ThumbViewRec, *ThumbView;
 
+/** 文件信息 */
 typedef struct ThumbFileInfoRec_ {
-	LCUI_BOOL is_dir;
-	char *path;
+	LCUI_BOOL is_dir;	/**< 是否为目录 */
+	char *path;		/**< 路径 */
 } ThumbFileInfoRec, *ThumbFileInfo;
 
+/** 缩略图加载任务 */
 typedef struct ThumbViewTaskRec_ {
-	LCUI_Widget widget;
-	ThumbFileInfo info;
+	LCUI_Widget widget;	/**< 需加载缩略图的部件 */
+	ThumbFileInfo info;	/**< 缩略图源文件的信息 */
 } ThumbViewTaskRec, *ThumbViewTask;
 
+/** 缩略图列表项的数据 */
 typedef struct ThumbItemDataRec_ {
-	ThumbFileInfoRec info;
-	ThumbView view;
-	int width, height;
+	ThumbFileInfoRec info;	/**< 缩略图源文件的信息 */
+	ThumbView view;		/**< 所属缩略图列表视图部件 */
+	int width, height;	/**< 图片原始尺寸 */
 } ThumbItemDataRec, *ThumbItemData;
-
-#define DIR_COVER_THUMB "__dir_cover_thumb__"
-#define THUMB_CACHE_SIZE (20*1024*1024)
-#define THUMB_MAX_WIDTH 240
 
 static int scrollload_event = -1;
 
@@ -174,7 +177,8 @@ static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ScrollLoading_Update( ctx );
 }
 
-ScrollLoading ScrollLoading_New( LCUI_Widget scrolllayer )
+/** 新建一个滚动加载功能实例 */
+static ScrollLoading ScrollLoading_New( LCUI_Widget scrolllayer )
 {
 	ScrollLoading ctx = NEW( ScrollLoadingRec, 1 );
 	ctx->top = 0;
@@ -185,6 +189,7 @@ ScrollLoading ScrollLoading_New( LCUI_Widget scrolllayer )
 	return ctx;
 }
 
+/** 删除滚动加载功能实例 */
 static void ScrollLoading_Delete( ScrollLoading ctx )
 {
 	ctx->top = 0;
@@ -193,17 +198,20 @@ static void ScrollLoading_Delete( ScrollLoading ctx )
 	free( ctx );
 }
 
+/** 重置滚动加载 */
 static void ScrollLoading_Reset( ScrollLoading ctx )
 {
 	ctx->top = 0;
 	ctx->top_child = NULL;
 }
 
+/** 启用/金庸滚动加载 */
 static void ScrollLoading_Enable( ScrollLoading ctx, LCUI_BOOL enable )
 {
 	ctx->enabled = enable;
 }
 
+/** 获取文件夹缩略图文件路径 */
 static int GetDirThumbFilePath( char *filepath, char *dirpath )
 {
 	int total;
@@ -227,18 +235,18 @@ static int GetDirThumbFilePath( char *filepath, char *dirpath )
 	return total;
 }
 
+/** 当移除缩略图的时候 */
 static void OnRemoveThumb( void *data )
 {
 	LCUI_Widget w = data;
-	_DEBUG_MSG("remove thumb start\n");
 	Widget_Lock( w );
 	Graph_Init( &w->computed_style.background.image );
 	w->custom_style->sheet[key_background_image].is_valid = FALSE;
 	Widget_UpdateStyle( w, FALSE );
 	Widget_Unlock( w );
-	_DEBUG_MSG("remove thumb end\n");
 }
 
+/** 载入缩略图 */
 static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 			      LCUI_Widget w )
 {
@@ -289,7 +297,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		} else {
 			tdata.graph = img;
 		}
-		_DEBUG_MSG("save thumb, size: (%d,%d), name: %s, db: %p\n", 
+		DEBUG_MSG("save thumb, size: (%d,%d), name: %s, db: %p\n", 
 			    tdata.graph.width, tdata.graph.height, filename, db);
 		ThumbDB_Save( db, filename, &tdata );
 		Graph_Free( &img );
@@ -298,6 +306,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 	return thumb;
 }
 
+/** 执行缩略图加载任务 */
 static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 {
 	LCUI_Graph *thumb;
@@ -312,10 +321,12 @@ static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 	Widget_UpdateStyle( t->widget, FALSE );
 }
 
+/** 缩略图加载任务处理线程 */
 static void ThumbView_TaskThread( void *arg )
 {
 	ThumbView view = arg;
 	LinkedListNode *node, *prev;
+	LCUIMutex_Lock( &view->mutex );
 	while( 1 ) {
 		LCUICond_Wait( &view->cond, &view->mutex );
 		view->is_loading = TRUE;
@@ -332,8 +343,8 @@ static void ThumbView_TaskThread( void *arg )
 			}
 		}
 		view->is_loading = FALSE;
-		LCUIMutex_Unlock( &view->mutex );
 	}
+	LCUIMutex_Unlock( &view->mutex );
 }
 
 void ThumbView_Lock( LCUI_Widget w )
@@ -381,6 +392,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	}
 	LinkedList_Clear( &view->files, NULL );
 	Widget_Empty( w );
+	LCUICond_Signal( &view->cond );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
 	LCUIMutex_Unlock( &view->mutex );
 	ScrollLoading_Reset( view->scrollload );
@@ -448,6 +460,7 @@ static void AppendPicture( ThumbView view, LCUI_Widget w )
 	}
 }
 
+/** 追加文件夹，并处理布局 */
 static void AppendFolder( ThumbView view, LCUI_Widget w )
 {
 	int width, n;
@@ -474,6 +487,7 @@ static void AppendFolder( ThumbView view, LCUI_Widget w )
 	Widget_UpdateStyle( w, FALSE );
 }
 
+/** 直接执行布局更新操作 */
 static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
 {
 	int count;
@@ -597,8 +611,10 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	task = NEW( ThumbViewTaskRec, 1 );
 	task->widget = w;
 	task->info = &data->info;
+	LCUIMutex_Lock( &data->view->mutex );
 	LinkedList_Append( &data->view->tasks, task );
 	LCUICond_Signal( &data->view->cond );
+	LCUIMutex_Unlock( &data->view->mutex );
 	//_DEBUG_MSG("on scroll load: %s\n", task->info->path);
 }
 
