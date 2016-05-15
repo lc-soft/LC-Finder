@@ -133,13 +133,11 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 		dir = finder.dirs[i];
 		if( dir && strstr( dir->path, path ) ) {
 			free( path );
-			_DEBUG_MSG("1\n");
 			return NULL;
 		}
 	}
 	dir = DB_AddDir( dirpath );
 	if( !dir ) {
-		_DEBUG_MSG("2\n");
 		free( path );
 		return NULL;
 	}
@@ -148,14 +146,12 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 	dirs = realloc( finder.dirs, sizeof( DB_Dir )*finder.n_dirs );
 	if( !dirs ) {
 		finder.n_dirs -= 1;
-		_DEBUG_MSG("3\n");
 		return NULL;
 	}
 	paths = realloc( finder.thumb_paths, 
 			 sizeof( wchar_t* )*finder.n_dirs );
 	if( !path ) {
 		finder.n_dirs -= 1;
-		_DEBUG_MSG("3\n");
 		return NULL;
 	}
 	dirs[i] = dir;
@@ -179,7 +175,6 @@ void LCFinder_DeleteDir( DB_Dir dir )
 		return;
 	}
 	finder.dirs[i] = NULL;
-	_DEBUG_MSG("delete dir: %s\n", dir->path);
 	wpath = NEW( wchar_t, strlen( dir->path ) + 1 );
 	t = SyncTask_NewW( finder.data_dir, wpath );
 	LCFinder_TriggerEvent( EVENT_DIR_DEL, dir );
@@ -229,7 +224,9 @@ int64_t LCFinder_GetThumbDBTotalSize( void )
 	int i;
 	int64_t sum_size;
 	for( i = 0, sum_size = 0; i < finder.n_dirs; ++i ) {
-		sum_size += wgetfilesize( finder.thumb_paths[i] );
+		if( finder.thumb_paths[i] ) {
+			sum_size += wgetfilesize( finder.thumb_paths[i] );
+		}
 	}
 	return sum_size;
 }
@@ -311,6 +308,7 @@ static void LCFinder_InitWorkDir( void )
 	int len;
 	wchar_t data_dir[1024];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
+	/* 如果要调试此程序，需手动设置程序所在目录 */
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 	wgetcurdir( data_dir, 1024 );
 	wprintf(L"data_dir: %s\n", data_dir);

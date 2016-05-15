@@ -87,7 +87,7 @@ static void OnDelDir( void *privdata, void *arg )
 	DB_Dir dir = arg;
 	LCUI_Widget item = Dict_FetchValue( this_view.dirpaths, dir->path );
 	if( item ) {
-		_DEBUG_MSG("destroy item: %p\n", item);
+		DEBUG_MSG("destroy item: %p\n", item);
 		Dict_Delete( this_view.dirpaths, dir->path );
 		Widget_Destroy( item );
 	}

@@ -162,7 +162,6 @@ static int FileScanner_ScanDirs( FileScanner scanner, char *path )
 		++count;
 	}
 	LCUI_CloseDir( &dir );
-	_DEBUG_MSG("dir count: %d\n");
 	return count;
 }
 
@@ -197,7 +196,7 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 			entry->is_dir = FALSE;
 			entry->file = file;
 			entry->path = file->path;
-			//_DEBUG_MSG("file: %s\n", file->path);
+			DEBUG_MSG("file: %s\n", file->path);
 			LCUIMutex_Lock( &scanner->mutex );
 			LinkedList_Append( &scanner->files, entry );
 			LCUICond_Signal( &scanner->cond );
@@ -206,7 +205,6 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 		count -= terms.limit;
 		terms.offset += terms.limit;
 	}
-	_DEBUG_MSG("file count: %d\n", total);
 	return total;
 }
 
@@ -228,7 +226,7 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 		LCUIMutex_Lock( &scanner->mutex );
 		LinkedList_Append( &scanner->files, entry );
 		LCUICond_Signal( &scanner->cond );
-		_DEBUG_MSG("dir: %s\n", entry->path);
+		DEBUG_MSG("dir: %s\n", entry->path);
 		LCUIMutex_Unlock( &scanner->mutex );
 	}
 	return i;
@@ -273,7 +271,7 @@ static void FileScanner_Thread( void *arg )
 	} else {
 		count = FileScanner_LoadSourceDirs( scanner );
 	}
-	_DEBUG_MSG("scan files: %d\n", count);
+	DEBUG_MSG("scan files: %d\n", count);
 	if( count > 0 ) {
 		Widget_AddClass( this_view.tip_empty, "hide" );
 		Widget_Hide( this_view.tip_empty );
@@ -294,7 +292,7 @@ static void FileScanner_Start( FileScanner scanner, char *path )
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	FileEntry entry = e->data;
-	_DEBUG_MSG( "open file: %s\n", entry->path );
+	DEBUG_MSG( "open file: %s\n", entry->path );
 	if( entry->is_dir ) {
 		OpenFolder( entry->path );
 	} else {
@@ -363,7 +361,7 @@ static void OpenFolder( const char *dirpath )
 		path = malloc( sizeof( char )*(len + 2) );
 		strcpy( path, dirpath );
 		for( i = 0; i < finder.n_dirs; ++i ) {
-			if( strcmp( finder.dirs[i]->path, path ) == 0 ) {
+			if( finder.dirs[i] && strcmp( finder.dirs[i]->path, path ) == 0 ) {
 				dir = finder.dirs[i];
 				break;
 			}
@@ -378,19 +376,19 @@ static void OpenFolder( const char *dirpath )
 	} else {
 		Widget_RemoveClass( this_view.view, "show-folder-info-box" );
 	}
-	_DEBUG_MSG("dirpath: %s\n", dirpath);
-	_DEBUG_MSG("reset file scanner\n");
+	DEBUG_MSG("dirpath: %s\n", dirpath);
+	DEBUG_MSG("reset file scanner\n");
 	FileScanner_Reset( &this_view.scanner );
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
 	ThumbView_Lock( this_view.items );
-	_DEBUG_MSG("clear thumb view items\n");
+	DEBUG_MSG("clear thumb view items\n");
 	ThumbView_Empty( this_view.items );
 	this_view.dir = dir;
 	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
 	FileScanner_Start( &this_view.scanner, path );
 	ThumbView_Unlock( this_view.items );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
-	_DEBUG_MSG("done\n");
+	DEBUG_MSG("done\n");
 }
 
 static void OnSyncDone( LCUI_Event e, void *arg )

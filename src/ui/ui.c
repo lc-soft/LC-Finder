@@ -56,7 +56,7 @@ void UI_Init(void)
 {
 	LCUI_Widget box, root;
 	LCUI_Init();
-	LCUIWidget_AddTThumbView();
+	LCUIWidget_AddThumbView();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 640 );
 	//LCUIDisplay_ShowRectBorder();

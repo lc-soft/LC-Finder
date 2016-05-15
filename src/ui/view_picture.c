@@ -257,11 +257,12 @@ static void PictureLoader( void *arg )
 	LCUIMutex_Lock( &this_view.mutex );
 	while( this_view.is_working ) {
 		LCUICond_Wait( &this_view.cond, &this_view.mutex );
-		_DEBUG_MSG("wakeup\n");
 		if( !this_view.is_opening && img ) {
 			Widget_Lock( this_view.target );
 			Graph_Free( img );
+			_DEBUG_MSG("free graph: %p\n", img);
 			sheet->sheet[key_background_image].is_valid = FALSE;
+			Widget_UpdateBackground( this_view.target );
 			Widget_UpdateStyle( this_view.target, FALSE );
 			Widget_Unlock( this_view.target );
 			continue;

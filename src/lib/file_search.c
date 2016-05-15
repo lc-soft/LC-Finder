@@ -67,7 +67,9 @@ static struct DB_Module {
 	int sql_buf_len;
 } self;
 
-static const char *sql_init = "\
+#define STATIC_STR static const char*
+
+STATIC_STR sql_init = "\
 PRAGMA foreign_keys=ON;\
 CREATE TABLE IF NOT EXISTS dir (\
 	visible INTEGER DEFAULT 1,\
@@ -99,32 +101,32 @@ CREATE TABLE IF NOT EXISTS file_tag_relation (\
 	FOREIGN KEY (fid) REFERENCES file(id) ON DELETE CASCADE,\
 	FOREIGN KEY (tid) REFERENCES tag(id) ON DELETE CASCADE\
 );";
-static const char *sql_get_dir_list = "\
+STATIC_STR sql_get_dir_list = "\
 SELECT id, path FROM dir ORDER BY PATH ASC;";
-static const char *sql_get_tag_list = "\
+STATIC_STR sql_get_tag_list = "\
 SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
 WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;\
 ";
-static const char *sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
-static const char *sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
-static const char *sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
-static const char *sql_del_dir = "DELETE FROM dir WHERE id = ?;";
-static const char *sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
-static const char *sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
-static const char *sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
-static const char *sql_file_add_tag = "\
+STATIC_STR sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
+STATIC_STR sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
+STATIC_STR sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
+STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
+STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
+STATIC_STR sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
+STATIC_STR sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
+STATIC_STR sql_file_add_tag = "\
 REPLACE INTO file_tag_relation(fid, did, tid) VALUES(%d, %d, %d);";
-static const char *sql_file_remove_tag = "\
+STATIC_STR sql_file_remove_tag = "\
 DELETE FROM file_tag_relation WHERE fid = %d AND tid = %d;";
-static const char *sql_add_file = "\
+STATIC_STR sql_add_file = "\
 INSERT INTO file(did, path, create_time) VALUES(?,  ?, ?);";
-static const char *sql_del_file = "\
+STATIC_STR sql_del_file = "\
 DELETE FROM file WHERE did = ? AND path = ?;";
-static const char *sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
-static const char *sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
-static const char *sql_search_files = "\
+STATIC_STR sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
+STATIC_STR sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
+STATIC_STR sql_search_files = "\
 SELECT f.id, f.did, f.score, f.path, f.create_time FROM file f";
-static const char *sql_count_files = "SELECT COUNT(f.id) FROM file f";
+STATIC_STR sql_count_files = "SELECT COUNT(f.id) FROM file f";
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )

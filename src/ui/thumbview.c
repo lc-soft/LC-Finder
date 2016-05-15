@@ -43,16 +43,17 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 
-#define FOLDER_MAX_WIDTH 388
-#define FOLDER_FIXED_HEIGHT 134
-#define PICTURE_FIXED_HEIGHT 226
+#define THUBVIEW_MIN_WIDTH	400
+#define FOLDER_MAX_WIDTH	388
+#define FOLDER_FIXED_HEIGHT	134
+#define PICTURE_FIXED_HEIGHT	226
 /** 文件夹的右外边距，需要与 CSS 文件定义的样式一致 */
-#define FOLDER_MARGIN_RIGHT 10
-#define FOLDER_CLASS "file-list-item-folder"
-#define PICTURE_CLASS "file-list-item-picture"
-#define DIR_COVER_THUMB "__dir_cover_thumb__"
-#define THUMB_CACHE_SIZE (20*1024*1024)
-#define THUMB_MAX_WIDTH 240
+#define FOLDER_MARGIN_RIGHT	10
+#define FOLDER_CLASS		"file-list-item-folder"
+#define PICTURE_CLASS		"file-list-item-picture"
+#define DIR_COVER_THUMB		"__dir_cover_thumb__"
+#define THUMB_CACHE_SIZE	(20*1024*1024)
+#define THUMB_MAX_WIDTH		240
 
 /** 滚动加载功能的相关数据 */
 typedef struct ScrollLoadingRec_ {
@@ -175,6 +176,7 @@ static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ScrollLoading ctx = e->data;
 	ctx->top = *scroll_pos;
 	ScrollLoading_Update( ctx );
+	DEBUG_MSG("ctx->top: %d\n", ctx->top);
 }
 
 /** 新建一个滚动加载功能实例 */
@@ -240,6 +242,7 @@ static void OnRemoveThumb( void *data )
 {
 	LCUI_Widget w = data;
 	Widget_Lock( w );
+	DEBUG_MSG("remove thumb\n");
 	Graph_Init( &w->computed_style.background.image );
 	w->custom_style->sheet[key_background_image].is_valid = FALSE;
 	Widget_UpdateStyle( w, FALSE );
@@ -280,10 +283,11 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		if( filename[0] == PATH_SEP ) {
 			++filename;
 		}
-		/* 将路径的编码方式由 UTF-8 转换成 ANSI */
 		LCUI_DecodeString( wpath, info->path, PATH_LEN, ENCODING_UTF8 );
 	}
+	/* 将路径的编码方式由 UTF-8 转换成 ANSI */
 	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
+	DEBUG_MSG( "load thumb from: %s\n", filename );
 	if( ThumbDB_Load( db, filename, &tdata ) != 0 ) {
 		LCUI_Graph img;
 		Graph_Init( &img );
@@ -294,13 +298,13 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		if( img.width > THUMB_MAX_WIDTH ) {
 			Graph_Zoom( &img, &tdata.graph, TRUE,
 				    THUMB_MAX_WIDTH, 0 );
+			Graph_Free( &img );
 		} else {
 			tdata.graph = img;
 		}
-		DEBUG_MSG("save thumb, size: (%d,%d), name: %s, db: %p\n", 
-			    tdata.graph.width, tdata.graph.height, filename, db);
+		DEBUG_MSG( "save thumb, size: (%d,%d), name: %s, db: %p\n",
+			   tdata.graph.width, tdata.graph.height, filename, db );
 		ThumbDB_Save( db, filename, &tdata );
-		Graph_Free( &img );
 	}
 	thumb = ThumbCache_Add( view->cache, info->path, &tdata.graph, w );
 	return thumb;
@@ -325,26 +329,27 @@ static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 static void ThumbView_TaskThread( void *arg )
 {
 	ThumbView view = arg;
-	LinkedListNode *node, *prev;
-	LCUIMutex_Lock( &view->mutex );
+	LinkedListNode *node;
 	while( 1 ) {
-		LCUICond_Wait( &view->cond, &view->mutex );
 		view->is_loading = TRUE;
-		LinkedList_ForEach( node, &view->tasks ) {
-			prev = node->prev;
-			LinkedList_Unlink( &view->tasks, node );
-			ThumbView_ExecTask( view, node->data );
-			free( node->data );
-			node->data = NULL;
-			free( node );
-			node = prev;
-			if( !view->is_loading ) {
-				break;
-			}
+		LCUIMutex_Lock( &view->mutex );
+		node = LinkedList_GetNode( &view->tasks, 0 );
+		if( !node ) {
+			view->is_loading = FALSE;
+			LCUICond_Wait( &view->cond, &view->mutex );
+			LCUIMutex_Unlock( &view->mutex );
+			continue;
 		}
-		view->is_loading = FALSE;
+		LinkedList_Unlink( &view->tasks, node );
+		LCUIMutex_Unlock( &view->mutex );
+		ThumbView_ExecTask( view, node->data );
+		free( node->data );
+		node->data = NULL;
+		free( node );
+		if( !view->is_loading ) {
+			break;
+		}
 	}
-	LCUIMutex_Unlock( &view->mutex );
 }
 
 void ThumbView_Lock( LCUI_Widget w )
@@ -405,6 +410,10 @@ static void UpdateThumbRow( ThumbView view )
 	ThumbItemData data;
 	LinkedListNode *node;
 	int overflow_width;
+
+	if( view->layout.max_width <= THUBVIEW_MIN_WIDTH ) {
+		return;
+	}
 	overflow_width = view->layout.x - view->layout.max_width;
 	/**
 	* 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
@@ -551,7 +560,6 @@ static void OnLayoutStep( void *arg1, void *arg2 )
 		view->layout.current = NULL;
 		Widget_UnlockLayout( w );
 		Widget_UpdateLayout( w );
-		Widget_LockLayout( w );
 	}
 }
 
@@ -570,7 +578,6 @@ static void OnDelayLayout( void *arg )
 	ThumbView_UpdateLayoutContext( w );
 	LinkedList_Clear( &view->layout.row, NULL );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
-	Widget_LockLayout( w );
 	OnLayoutStep( arg, NULL );
 }
 
@@ -581,6 +588,7 @@ static void ThumbView_UpdateLayout( LCUI_Widget w )
 	if( view->layout.is_running ) {
 		return;
 	}
+	Widget_LockLayout( w );
 	/* 如果已经有延迟布局任务，则重置该任务的定时 */
 	if( view->layout.is_delaying ) {
 		LCUITimer_Reset( view->layout.timer, 1000 );
@@ -601,6 +609,13 @@ static void OnResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ThumbView_UpdateLayout( w );
 }
 
+/** 在布局完成后 */
+static void OnAfterLayout( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	ThumbView view = w->private_data;
+	ScrollLoading_Update( view->scrollload );
+}
+
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ThumbViewTask task;
@@ -615,7 +630,7 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LinkedList_Append( &data->view->tasks, task );
 	LCUICond_Signal( &data->view->cond );
 	LCUIMutex_Unlock( &data->view->mutex );
-	//_DEBUG_MSG("on scroll load: %s\n", task->info->path);
+	DEBUG_MSG("on scroll load: %s\n", task->info->path);
 }
 
 static void UpdateView( void *arg )
@@ -749,6 +764,7 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
 	LCUIThread_Create( &self->thread, ThumbView_TaskThread, self );
 	Widget_BindEvent( w, "resize", OnResize, NULL, NULL );
+	Widget_BindEvent( w, "afterlayout", OnAfterLayout, NULL, NULL );
 }
 
 static void ThumbView_OnDestroy( LCUI_Widget w )
@@ -757,7 +773,7 @@ static void ThumbView_OnDestroy( LCUI_Widget w )
 	ScrollLoading_Delete( self->scrollload );
 }
 
-void LCUIWidget_AddTThumbView( void )
+void LCUIWidget_AddThumbView( void )
 {
 	LCUI_WidgetClass *wc = LCUIWidget_AddClass( "thumbview" );
 	wc->methods.init = ThumbView_OnInit;

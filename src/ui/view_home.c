@@ -247,8 +247,8 @@ static void HomeView_SyncThread( void *arg )
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
 	vs->is_running = TRUE;
-	LCUIMutex_Lock( &scanner->mutex );
 	while( this_view.viewsync.is_running ) {
+		LCUIMutex_Lock( &scanner->mutex );
 		if( scanner->files.length == 0 ) {
 			LCUICond_Wait( &scanner->cond, &scanner->mutex );
 		}

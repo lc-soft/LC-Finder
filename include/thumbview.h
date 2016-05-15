@@ -53,7 +53,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 /** 追加图片 */
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path );
 
-void LCUIWidget_AddTThumbView( void );
+void LCUIWidget_AddThumbView( void );
 
 
 #endif
