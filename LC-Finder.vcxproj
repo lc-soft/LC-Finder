@@ -59,6 +59,10 @@
     <ClInclude Include="include\thumb_cache.h" />
     <ClInclude Include="include\thumbview.h" />
     <ClInclude Include="include\ui.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LC-Finder.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
