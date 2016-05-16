@@ -84,10 +84,12 @@ typedef struct ThumbViewRec_ {
 	ThumbCache cache;		/**< 缩略图缓存 */
 	LinkedList tasks;		/**< 当前任务队列 */
 	LinkedList files;		/**< 当前视图下的文件列表 */
-	LCUI_Cond cond;			/**< 条件变量 */
+	LCUI_Cond tasks_cond;		/**< 任务队列条件变量 */
+	LCUI_Mutex tasks_mutex;		/**< 任务队列互斥锁 */
 	LCUI_Mutex mutex;		/**< 互斥锁 */
 	LCUI_Thread thread;		/**< 任务处理线程 */
 	LCUI_BOOL is_loading;		/**< 是否处于载入中状态 */
+	LCUI_BOOL is_running;		/**< 是否处于运行状态 */
 	LCUI_BOOL need_update;		/**< 是否需要更新视图内容 */
 	ScrollLoading scrollload;	/**< 滚动加载功能所需的相关数据 */
 	LayoutContextRec layout;	/**< 缩略图布局功能所需的相关数据 */
@@ -207,7 +209,7 @@ static void ScrollLoading_Reset( ScrollLoading ctx )
 	ctx->top_child = NULL;
 }
 
-/** 启用/金庸滚动加载 */
+/** 启用/禁用滚动加载 */
 static void ScrollLoading_Enable( ScrollLoading ctx, LCUI_BOOL enable )
 {
 	ctx->enabled = enable;
@@ -330,25 +332,25 @@ static void ThumbView_TaskThread( void *arg )
 {
 	ThumbView view = arg;
 	LinkedListNode *node;
-	while( 1 ) {
+	while( view->is_running ) {
 		view->is_loading = TRUE;
 		LCUIMutex_Lock( &view->mutex );
+		LCUIMutex_Lock( &view->tasks_mutex );
 		node = LinkedList_GetNode( &view->tasks, 0 );
 		if( !node ) {
 			view->is_loading = FALSE;
-			LCUICond_Wait( &view->cond, &view->mutex );
 			LCUIMutex_Unlock( &view->mutex );
+			LCUICond_Wait( &view->tasks_cond, &view->tasks_mutex );
+			LCUIMutex_Unlock( &view->tasks_mutex );
 			continue;
 		}
 		LinkedList_Unlink( &view->tasks, node );
-		LCUIMutex_Unlock( &view->mutex );
+		LCUIMutex_Unlock( &view->tasks_mutex );
 		ThumbView_ExecTask( view, node->data );
 		free( node->data );
 		node->data = NULL;
 		free( node );
-		if( !view->is_loading ) {
-			break;
-		}
+		LCUIMutex_Unlock( &view->mutex );
 	}
 }
 
@@ -356,12 +358,14 @@ void ThumbView_Lock( LCUI_Widget w )
 {
 	ThumbView view = w->private_data;
 	ScrollLoading_Enable( view->scrollload, FALSE );
+	LCUIMutex_Lock( &view->mutex );
 }
 
 void ThumbView_Unlock( LCUI_Widget w )
 {
 	ThumbView view = w->private_data;
 	ScrollLoading_Enable( view->scrollload, TRUE );
+	LCUIMutex_Unlock( &view->mutex );
 }
 
 static void ThumbView_UpdateLayoutContext( LCUI_Widget w )
@@ -383,7 +387,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	LinkedListNode *node;
 	view = w->private_data;
 	view->is_loading = FALSE;
-	LCUIMutex_Lock( &view->mutex );
+	LCUIMutex_Lock( &view->tasks_mutex );
 	LCUIMutex_Lock( &view->layout.row_mutex );
 	view->layout.x = 0;
 	view->layout.count = 0;
@@ -397,9 +401,9 @@ void ThumbView_Empty( LCUI_Widget w )
 	}
 	LinkedList_Clear( &view->files, NULL );
 	Widget_Empty( w );
-	LCUICond_Signal( &view->cond );
+	LCUICond_Signal( &view->tasks_cond );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
-	LCUIMutex_Unlock( &view->mutex );
+	LCUIMutex_Unlock( &view->tasks_mutex );
 	ScrollLoading_Reset( view->scrollload );
 }
 
@@ -416,9 +420,9 @@ static void UpdateThumbRow( ThumbView view )
 	}
 	overflow_width = view->layout.x - view->layout.max_width;
 	/**
-	* 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
-	* 的比例，分别缩减相应的宽度。
-	*/
+	 * 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
+	 * 的比例，分别缩减相应的宽度。
+	 */
 	if( overflow_width > 0 ) {
 		int i = 0, debug_width = 0, width, thumb_width, rest_width;
 		rest_width = overflow_width;
@@ -431,11 +435,11 @@ static void UpdateThumbRow( ThumbView view )
 			width = overflow_width * thumb_width;
 			width /= view->layout.x;
 			/** 
-			* 以上按比例分配的扣除宽度有误差，通常会少扣除几个像素的
-			* 宽度，这里用 rest_width 变量记录剩余待扣除的宽度，最
-			* 后一个缩略图的宽度直接减去 rest_width，以补全少扣除的
-			* 宽度。
-			*/
+			 * 以上按比例分配的扣除宽度有误差，通常会少扣除几个像素的
+			 * 宽度，这里用 rest_width 变量记录剩余待扣除的宽度，最
+			 * 后一个缩略图的宽度直接减去 rest_width，以补全少扣除的
+			 * 宽度。
+			 */
 			if( node->next ) {
 				rest_width -= width;
 				width = thumb_width - width;
@@ -626,10 +630,10 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	task = NEW( ThumbViewTaskRec, 1 );
 	task->widget = w;
 	task->info = &data->info;
-	LCUIMutex_Lock( &data->view->mutex );
+	LCUIMutex_Lock( &data->view->tasks_mutex );
 	LinkedList_Append( &data->view->tasks, task );
-	LCUICond_Signal( &data->view->cond );
-	LCUIMutex_Unlock( &data->view->mutex );
+	LCUICond_Signal( &data->view->tasks_cond );
+	LCUIMutex_Unlock( &data->view->tasks_mutex );
 	DEBUG_MSG("on scroll load: %s\n", task->info->path);
 }
 
@@ -745,6 +749,7 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->dbs = finder.thumb_dbs;
 	self->need_update = FALSE;
 	self->is_loading = FALSE;
+	self->is_running = TRUE;
 	self->timer = -1;
 	self->layout.x = 0;
 	self->layout.count = 0;
@@ -754,8 +759,9 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->layout.is_running = FALSE;
 	self->layout.is_delaying = FALSE;
 	self->layout.folders_per_row = 1;
-	LCUICond_Init( &self->cond );
+	LCUICond_Init( &self->tasks_cond );
 	LCUIMutex_Init( &self->mutex );
+	LCUIMutex_Init( &self->tasks_mutex );
 	LinkedList_Init( &self->tasks );
 	LinkedList_Init( &self->files );
 	LinkedList_Init( &self->layout.row );
@@ -770,7 +776,12 @@ static void ThumbView_OnInit( LCUI_Widget w )
 static void ThumbView_OnDestroy( LCUI_Widget w )
 {
 	ThumbView self = w->private_data;
+	ThumbView_Lock( w );
+	ThumbView_Empty( w );
 	ScrollLoading_Delete( self->scrollload );
+	self->is_running = FALSE;
+	ThumbView_Unlock( w );
+	LCUIThread_Join( self->thread, NULL );
 }
 
 void LCUIWidget_AddThumbView( void )

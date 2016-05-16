@@ -69,12 +69,12 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 {
 	DialogContextRec ctx;
 	LCUI_Widget dialog_text, box;
-	LCUI_Widget dialog  = LCUIWidget_New( NULL );
+	LCUI_Widget dialog = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_body = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_content = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_header = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
-	LCUI_Widget btn_cancel  = LCUIWidget_New( NULL );
+	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
 	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
 	ctx.loop = LCUI_MainLoop_New();
 	Widget_AddClass( dialog, "dialog" );
