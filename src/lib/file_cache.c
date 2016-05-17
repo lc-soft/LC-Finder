@@ -60,7 +60,51 @@ typedef struct DirStatsRec_ {
 	Dict *deleted_files;	/**< 删除的文件 */
 } DirStatsRec, *DirStats;
 
-static const wchar_t *match_suffixs[] = {L".png", L".bmp", L".jpg", L".jpeg"};
+/** 忽略大小写对比宽字符串 */
+static int wcscasecmp( const wchar_t *str1, const wchar_t *str2 )
+{
+	wchar_t ch1 = 0, ch2 = 0;
+	const wchar_t *p1 = str1, *p2 = str2;
+	while( *p1 && *p2 ) {
+		ch1 = *p1;
+		ch2 = *p2;
+		if( ch1 >= L'a' && ch1 <= L'z' ) {
+			ch1 = ch1 - 32;
+		}
+		if( ch2 >= L'a' && ch2 <= L'z' ) {
+			ch2 = ch2 - 32;
+		}
+		if( ch1 != ch2 ) {
+			break;
+		}
+		++p1;
+		++p2;
+	}
+	return ch1 - ch2;
+}
+
+static LCUI_BOOL IsImageFile( const wchar_t *path )
+{
+	int i;
+	const wchar_t *p, *suffixs[] = {L"png", L"bmp", L"jpg", L"jpeg"};
+
+	for( p = path; *p; ++p );
+	for( --p; p != path; --p ) {
+		if( *p == L'.' ) {
+			break;
+		}
+	}
+	if( *p != L'.' ) {
+		return FALSE;
+	}
+	++p;
+	for( i = 0; i < 4; ++i ) {
+		if( wcscasecmp( p, suffixs[i] ) == 0 ) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 
 static unsigned int Dict_KeyHash( const wchar_t *buf )
 {
@@ -240,7 +284,7 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 	LCUI_Dir dir;
 	LCUI_DirEntry *entry;
 	wchar_t filepath[2048], *name;
-	int i, n, len, dir_len = wcslen( dirpath );
+	int i, len, dir_len = wcslen( dirpath );
 	DirStats ds = GetDirStats( t );
 	wcscpy( filepath, dirpath );
 	if( filepath[dir_len - 1] != PATH_SEP ) {
@@ -248,7 +292,6 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 		filepath[dir_len] = 0;
 	}
 	LCUI_OpenDir( filepath, &dir );
-	n = sizeof( match_suffixs ) / sizeof( *match_suffixs );
 	while( (entry = LCUI_ReadDir( &dir )) && t->state == STATE_STARTED ) {
 		name = LCUI_GetFileName( entry );
 		/* 忽略 . 和 .. 文件夹 */
@@ -266,12 +309,7 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath, FILE *fp )
 		if( !LCUI_FileIsArchive( entry ) ) {
 			continue;
 		}
-		for( i = 0; i < n; ++i ) {
-			if( wcsstr( name, match_suffixs[i] ) ) {
-				break;
-			}
-		}
-		if( i >= n ) {
+		if( !IsImageFile( name ) ) {
 			continue;
 		}
 		/* 若该文件路径存在于之前的缓存中，说明未被删除，否则将之
