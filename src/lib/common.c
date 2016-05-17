@@ -55,7 +55,6 @@ void EncodeSHA1( char *hash_out, const char *str, int len )
 	char elem[4];
 
 	SHA1Init( &ctx );
-	len *= sizeof( wchar_t ) / sizeof( unsigned char );
 	SHA1Update( &ctx, (unsigned char*)str, len );
 	SHA1Final( results, &ctx );
 	hash_out[0] = 0;
