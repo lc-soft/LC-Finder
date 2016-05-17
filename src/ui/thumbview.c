@@ -261,8 +261,8 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 	ThumbDataRec tdata;
 	LCUI_Graph *thumb;
 	const char *filename;
-	char apath[PATH_LEN];
 	wchar_t wpath[PATH_LEN];
+	char apath[PATH_LEN], path[PATH_LEN];
 	dir = LCFinder_GetSourceDir( info->path );
 	if( !dir ) {
 		return NULL;
@@ -273,13 +273,14 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 	}
 	len = strlen( dir->path );
 	if( info->is_dir ) {
-		char path[PATH_LEN];
 		pathjoin( path, info->path, "" );
 		if( GetDirThumbFilePath( path, path ) == 0 ) {
 			return NULL;
 		}
-		filename = DIR_COVER_THUMB;
+		/* 将路径的编码由 UTF-8 解码成 Unicode */
 		LCUI_DecodeString( wpath, path, PATH_LEN, ENCODING_UTF8 );
+		pathjoin( path, path, DIR_COVER_THUMB );
+		filename = path + len;
 	} else {
 		filename = info->path + len;
 		if( filename[0] == PATH_SEP ) {
@@ -287,7 +288,6 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 		}
 		LCUI_DecodeString( wpath, info->path, PATH_LEN, ENCODING_UTF8 );
 	}
-	/* 将路径的编码方式由 UTF-8 转换成 ANSI */
 	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
 	DEBUG_MSG( "load thumb from: %s\n", filename );
 	if( ThumbDB_Load( db, filename, &tdata ) != 0 ) {
@@ -323,8 +323,10 @@ static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 			return;
 		}
 	}
+	Widget_Lock( t->widget );
 	SetStyle( t->widget->custom_style, key_background_image, thumb, image );
 	Widget_UpdateStyle( t->widget, FALSE );
+	Widget_Unlock( t->widget );
 }
 
 /** 缩略图加载任务处理线程 */
@@ -633,8 +635,8 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUIMutex_Lock( &data->view->tasks_mutex );
 	LinkedList_Append( &data->view->tasks, task );
 	LCUICond_Signal( &data->view->tasks_cond );
-	LCUIMutex_Unlock( &data->view->tasks_mutex );
 	DEBUG_MSG("on scroll load: %s\n", task->info->path);
+	LCUIMutex_Unlock( &data->view->tasks_mutex );
 }
 
 static void UpdateView( void *arg )

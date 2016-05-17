@@ -132,7 +132,7 @@ static int FileScanner_ScanDirs( FileScanner scanner, char *path )
 	len = strlen( path );
 	dirpath_len = len;
 	wpath = malloc( sizeof(wchar_t) * (len + 1) );
-	LCUI_DecodeString( wpath, path, len, ENCODING_UTF8 );
+	LCUI_DecodeString( wpath, path, len + 1, ENCODING_UTF8 );
 	LCUI_OpenDirW( wpath, &dir );
 	while( (dir_entry = LCUI_ReadDir( &dir )) && scanner->is_running ) {
 		wchar_t *wname = LCUI_GetFileNameW( dir_entry );
@@ -361,7 +361,8 @@ static void OpenFolder( const char *dirpath )
 		path = malloc( sizeof( char )*(len + 2) );
 		strcpy( path, dirpath );
 		for( i = 0; i < finder.n_dirs; ++i ) {
-			if( finder.dirs[i] && strcmp( finder.dirs[i]->path, path ) == 0 ) {
+			if( finder.dirs[i] && 
+			    strstr( finder.dirs[i]->path, path ) ) {
 				dir = finder.dirs[i];
 				break;
 			}
