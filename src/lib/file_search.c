@@ -151,6 +151,53 @@ static int DB_CacheSQL( const char *sql )
 	return 0;
 }
 
+/** 检测目录的下一级文件列表中是否有指定文件 */
+static int DirHasFile( const char *dirpath, const char *filepath )
+{
+	const char *p1, *p2;
+	for( p1 = dirpath, p2 = filepath; *p1 && *p2; ++p1, ++p2 ) {
+		if( *p1 != *p2 ) {
+			break;
+		}
+	}
+	/* 目录路径必须比文件路径短 */
+	if( *p1 || !*p2 ) {
+		return 0;
+	}
+	if( p1 != dirpath ) {
+		/* 如果目录路径最后一个字符不是路径分隔符 */
+		if( p1[-1] != '\\' && p1[-1] != '/' ) {
+			if( *p2 != '\\' && *p2 != '/' ) {
+				return 0;
+			}
+		}
+	}
+	/* 检测剩余这段文件路径是否包含路径分隔符 */
+	while( *p2++ ) {
+		if( *p2 == '\\' || *p2 == '/' ) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static void sqlite3_hasfile( sqlite3_context *ctx, int argc, sqlite3_value **argv )
+{
+	const char *dirpath, *filepath;
+	if( argc != 2 ) {
+		return;
+	}
+	if( sqlite3_value_type( argv[0] ) != SQLITE_TEXT ) {
+		return;
+	}
+	if( sqlite3_value_type( argv[1] ) != SQLITE_TEXT ) {
+		return;
+	}
+	dirpath = sqlite3_value_text( argv[0] );
+	filepath = sqlite3_value_text( argv[1] );
+	sqlite3_result_int( ctx, DirHasFile( dirpath, filepath ) );
+}
+
 int DB_Init( void )
 {
 	int i, ret;
@@ -166,6 +213,8 @@ int DB_Init( void )
 		printf( "[database] error: %s\n", errmsg );
 		return -2;
 	}
+	sqlite3_create_function( self.db, "hasfile", 2, SQLITE_UTF8, NULL, 
+				 sqlite3_hasfile, NULL, NULL );
 	self.sqls[SQL_ADD_FILE] = sql_add_file;
 	self.sqls[SQL_DEL_FILE] = sql_del_file;
 	self.sqls[SQL_ADD_DIR] = sql_add_dir;
@@ -484,11 +533,10 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 		char *path;
 		i = 2 * strlen( terms->dirpath );
 		path = malloc( i * sizeof( char ) );
-		escape( path, terms->dirpath );
 		strcat( q->sql_terms, buf );
-		strcat( q->sql_terms, " f.path LIKE '" );
-		strcat( q->sql_terms, path );
-		strcat( q->sql_terms, "%' ESCAPE '\\'");
+		strcat( q->sql_terms, " HASFILE('" );
+		strcat( q->sql_terms, terms->dirpath );
+		strcat( q->sql_terms, "', f.path)" );
 	}
 	if( terms->create_time == DESC ) {
 		strcat( q->sql_terms, " ORDER BY f.create_time DESC" );
