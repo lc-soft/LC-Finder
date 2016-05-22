@@ -4,6 +4,8 @@
 /** 初始化用户界面 */
 void UI_Init( void );
 
+void UI_Exit( void );
+
 /** 让用户界面开始工作 */
 int UI_Run( void );
 
@@ -16,14 +18,20 @@ void UI_InitSettingsView( void );
 /** 初始化“文件夹”视图 */
 void UI_InitFoldersView( void );
 
+void UI_ExitFolderView( void );
+
 /** 初始化文件同步时的提示框 */
 void UI_InitFileSyncTip( void );
 
 /** 初始化首页集锦视图 */
 void UI_InitHomeView( void );
 
+void UI_ExitHomeView( void );
+
 /** 初始化图片视图 */
 void UI_InitPictureView( void );
+
+void UI_ExitPictureView( void );
 
 /** 在图片视图中打开一张图片 */
 void UIPictureView_Open( const char *filepath );

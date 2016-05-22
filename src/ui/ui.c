@@ -59,7 +59,7 @@ void UI_Init(void)
 	LCUIWidget_AddThumbView();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 640 );
-	//LCUIDisplay_ShowRectBorder();
+	LCUIDisplay_ShowRectBorder();
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
@@ -77,7 +77,14 @@ void UI_Init(void)
 	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 
-int UI_Run(void)
+int UI_Run( void )
 {
 	return LCUI_Main();
+}
+
+void UI_Exit( void )
+{
+	UI_ExitHomeView();
+	UI_ExitFolderView();
+	UI_ExitPictureView();
 }

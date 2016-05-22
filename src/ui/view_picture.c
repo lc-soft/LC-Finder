@@ -257,6 +257,9 @@ static void PictureLoader( void *arg )
 	LCUIMutex_Lock( &this_view.mutex );
 	while( this_view.is_working ) {
 		LCUICond_Wait( &this_view.cond, &this_view.mutex );
+		if( !this_view.is_working ) {
+			break;
+		}
 		if( !this_view.is_opening && img ) {
 			Widget_Lock( this_view.target );
 			Graph_Free( img );
@@ -428,4 +431,15 @@ void UIPictureView_Open( const char *filepath )
 	Widget_Hide( main_window );
 	this_view.is_opening = TRUE;
 	Widget_BindEvent( btn, "click", OnBtnClick, NULL, NULL );
+}
+
+void UI_ExitPictureView( void )
+{
+	this_view.is_working = FALSE;
+	LCUIMutex_Lock( &this_view.mutex );
+	LCUICond_Signal( &this_view.cond );
+	LCUIMutex_Unlock( &this_view.mutex );
+	LCUIThread_Join( this_view.th_picloader, NULL );
+	LCUIMutex_Destroy( &this_view.mutex );
+	LCUICond_Destroy( &this_view.cond );
 }

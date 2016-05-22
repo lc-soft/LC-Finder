@@ -63,6 +63,7 @@ typedef struct FileScannerRec_ {
 	LCUI_Mutex mutex;
 	LCUI_BOOL is_running;
 	LinkedList files;
+	int count, total;
 } FileScannerRec, *FileScanner;
 
 /** 视图同步功能的相关数据 */
@@ -120,6 +121,8 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
+	scanner->total = total;
+	scanner->count = 0;
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &terms );
@@ -133,6 +136,7 @@ static int FileScanner_ScanAll( FileScanner scanner )
 			LinkedList_Append( &scanner->files, file );
 			LCUICond_Signal( &scanner->cond );
 			LCUIMutex_Unlock( &scanner->mutex );
+			scanner->count += 1;
 		}
 		count -= terms.limit;
 		terms.offset += terms.limit;
@@ -157,6 +161,7 @@ static void FileScanner_Reset( FileScanner scanner )
 	}
 	LCUIMutex_Lock( &scanner->mutex );
 	LinkedList_Clear( &scanner->files, OnDeleteDBFile );
+	LCUICond_Signal( &scanner->cond );
 	LCUIMutex_Unlock( &scanner->mutex );
 }
 
@@ -183,26 +188,28 @@ static void FileScanner_Start( FileScanner scanner )
 	LCUIThread_Create( &scanner->tid, FileScanner_Thread, NULL );
 }
 
+static void FileScanner_Destroy( FileScanner scanner )
+{
+	FileScanner_Reset( scanner );
+	LCUICond_Destroy( &scanner->cond );
+	LCUIMutex_Destroy( &scanner->mutex );
+}
+
 /** 向视图追加文件 */
 static void HomeView_AppendFile( DB_File file )
 {
 	time_t time;
 	struct tm *t;
 	TimeSeparator ts;
-	LCUI_Widget item;
 	wchar_t text[128];
+	LCUI_Widget title, item;
 	ts = &this_view.separator;
 	time = file->create_time;
 	t = localtime( &time );
 	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
 	if( t->tm_year != ts->time.tm_year ||
 	    t->tm_mon != ts->time.tm_mon ) {
-		LCUI_Widget title = LCUIWidget_New( "textview" );
-		/** 如果是第一个时间段，则取消顶部的边距 */
-		if( ts->files == 0 ) {
-			SetStyle( title->custom_style, 
-				  key_margin_top, 0, px );
-		}
+		title = LCUIWidget_New( "textview" );
 		ts->subtitle = LCUIWidget_New( "textview" );
 		Widget_AddClass( ts->subtitle, 
 				 "time-separator-subtitle" );
@@ -247,10 +254,14 @@ static void HomeView_SyncThread( void *arg )
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
 	vs->is_running = TRUE;
-	while( this_view.viewsync.is_running ) {
+	while( vs->is_running ) {
 		LCUIMutex_Lock( &scanner->mutex );
 		if( scanner->files.length == 0 ) {
 			LCUICond_Wait( &scanner->cond, &scanner->mutex );
+			if( !vs->is_running ) {
+				LCUIMutex_Unlock( &scanner->mutex );
+				break;
+			}
 		}
 		LCUIMutex_Lock( &vs->mutex );
 		node = LinkedList_GetNode( &scanner->files, 0 );
@@ -308,9 +319,7 @@ void UI_InitHomeView( void )
 
 void UI_ExitHomeView( void )
 {
-	FileScanner_Reset( &this_view.scanner );
-	if( this_view.viewsync.is_running ) {
-		this_view.viewsync.is_running = FALSE;
-		LCUIThread_Join( this_view.viewsync.tid, NULL );
-	}
+	this_view.viewsync.is_running = FALSE;
+	FileScanner_Destroy( &this_view.scanner );
+	LCUIThread_Join( this_view.viewsync.tid, NULL );
 }

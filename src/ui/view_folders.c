@@ -51,6 +51,7 @@ typedef struct ViewSyncRec_ {
 	LCUI_Thread tid;
 	LCUI_BOOL is_running;
 	LCUI_Mutex mutex;
+	int prev_item_type;
 } ViewSyncRec, *ViewSync;
 
 /** 文件扫描功能的相关数据 */
@@ -249,6 +250,7 @@ static void FileScanner_Reset( FileScanner scanner )
 	}
 	LCUIMutex_Lock( &scanner->mutex );
 	LinkedList_Clear( &scanner->files, OnDeleteFileEntry );
+	LCUICond_Signal( &scanner->cond );
 	LCUIMutex_Unlock( &scanner->mutex );
 }
 
@@ -256,6 +258,7 @@ static void FileScanner_Destroy( FileScanner scanner )
 {
 	FileScanner_Reset( scanner );
 	LCUICond_Destroy( &scanner->cond );
+	LCUIMutex_Destroy( &scanner->mutex );
 }
 
 static void FileScanner_Thread( void *arg )
@@ -292,7 +295,7 @@ static void FileScanner_Start( FileScanner scanner, char *path )
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	FileEntry entry = e->data;
-	DEBUG_MSG( "open file: %s\n", entry->path );
+	DEBUG_MSG( "open file: %s\n", path );
 	if( entry->is_dir ) {
 		OpenFolder( entry->path );
 	} else {
@@ -308,14 +311,18 @@ static void ViewSync_Thread( void *arg )
 	FileEntry entry;
 	FileScanner scanner;
 	LinkedListNode *node;
-	int prev_item_type = -1;
 	scanner = &this_view.scanner;
 	vs = &this_view.viewsync;
+	vs->prev_item_type = -1;
 	vs->is_running = TRUE;
 	while( vs->is_running ) {
 		LCUIMutex_Lock( &scanner->mutex );
 		if( scanner->files.length == 0 ) {
 			LCUICond_Wait( &scanner->cond, &scanner->mutex );
+			if( !vs->is_running ) {
+				LCUIMutex_Unlock( &scanner->mutex );
+				break;
+			}
 		}
 		LCUIMutex_Lock( &vs->mutex );
 		node = LinkedList_GetNode( &scanner->files, 0 );
@@ -328,12 +335,13 @@ static void ViewSync_Thread( void *arg )
 		LinkedList_Unlink( &scanner->files, node );
 		LCUIMutex_Unlock( &scanner->mutex );
 		LinkedList_AppendNode( &this_view.files, node );
-		if( prev_item_type != -1 && prev_item_type != entry->is_dir ) {
+		if( vs->prev_item_type != -1 && 
+		    vs->prev_item_type != entry->is_dir ) {
 			LCUI_Widget separator = LCUIWidget_New(NULL);
 			Widget_AddClass( separator, "divider" );
 			ThumbView_Append( this_view.items, separator );
 		}
-		prev_item_type = entry->is_dir;
+		vs->prev_item_type = entry->is_dir;
 		if( entry->is_dir ) {
 			item = ThumbView_AppendFolder( 
 				this_view.items, entry->path, 
@@ -349,6 +357,7 @@ static void ViewSync_Thread( void *arg )
 		}
 		LCUIMutex_Unlock( &vs->mutex );
 	}
+	LCUIThread_Exit( NULL );
 }
 
 static void OpenFolder( const char *dirpath )
@@ -385,6 +394,7 @@ static void OpenFolder( const char *dirpath )
 	DEBUG_MSG("clear thumb view items\n");
 	ThumbView_Empty( this_view.items );
 	this_view.dir = dir;
+	this_view.viewsync.prev_item_type = -1;
 	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
 	FileScanner_Start( &this_view.scanner, path );
 	ThumbView_Unlock( this_view.items );
@@ -422,8 +432,8 @@ void UI_InitFoldersView( void )
 
 void UI_ExitFolderView( void )
 {
-	FileScanner_Destroy( &this_view.scanner );
 	this_view.viewsync.is_running = FALSE;
+	FileScanner_Destroy( &this_view.scanner );
 	LCUIThread_Join( this_view.viewsync.tid, NULL );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }
