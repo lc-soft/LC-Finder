@@ -268,6 +268,7 @@
 	position: absolute;
 	padding: 10px 25px 0 25px;
 	background-color: #fff;
+	border-bottom: 1px solid #eee;
 }
 .folder-info-box-name {
 	font-size: 18px;
@@ -276,7 +277,7 @@
 	color: #888;
 }
 .show-folder-info-box .view-body {
-	padding-top: 130px;
+	padding-top: 148px;
 }
 .show-folder-info-box .view-content {
 	padding-top: 20px;
@@ -434,6 +435,10 @@ textview {
 	width: 100%;
 	text-align: center;
 	line-height: 30px;
+}
+
+#view-home-content textview:first-child {
+	margin-top: 0;
 }
 
 #picture-viewer-window {
