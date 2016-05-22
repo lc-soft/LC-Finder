@@ -59,6 +59,8 @@
 typedef struct ScrollLoadingRec_ {
 	int top;			/**< 当前可见区域上边界的 Y 轴坐标 */
 	int event_id;			/**< 滚动加载功能的事件ID */
+	int timer;			/**< 定时器，用于实现延迟加载 */
+	LCUI_BOOL is_delaying;		/**< 是否处于延迟状态 */
 	LCUI_BOOL enabled;		/**< 是否启用滚动加载功能 */
 	LCUI_Widget scrolllayer;	/**< 滚动层 */
 	LCUI_Widget top_child;		/**< 当前可见区域第一个子部件 */
@@ -80,7 +82,7 @@ typedef struct LayoutContextRec_ {
 } LayoutContextRec, *LayoutContext;
 
 typedef struct ThumbViewRec_ {
-	Dict *dbs;			/**< 缩略图数据库字典，以目录路径进行索引 */
+	Dict **dbs;			/**< 缩略图数据库字典，以目录路径进行索引 */
 	ThumbCache cache;		/**< 缩略图缓存 */
 	LinkedList tasks;		/**< 当前任务队列 */
 	LinkedList files;		/**< 当前视图下的文件列表 */
@@ -90,10 +92,8 @@ typedef struct ThumbViewRec_ {
 	LCUI_Thread thread;		/**< 任务处理线程 */
 	LCUI_BOOL is_loading;		/**< 是否处于载入中状态 */
 	LCUI_BOOL is_running;		/**< 是否处于运行状态 */
-	LCUI_BOOL need_update;		/**< 是否需要更新视图内容 */
 	ScrollLoading scrollload;	/**< 滚动加载功能所需的相关数据 */
 	LayoutContextRec layout;	/**< 缩略图布局功能所需的相关数据 */
-	int timer;			/**< 定时器，用于延迟更新视图内容 */
 } ThumbViewRec, *ThumbView;
 
 /** 文件信息 */
@@ -117,7 +117,7 @@ typedef struct ThumbItemDataRec_ {
 
 static int scrollload_event = -1;
 
-static int ScrollLoading_Update( ScrollLoading ctx )
+static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 {
 	LCUI_Widget w;
 	LinkedListNode *node;
@@ -172,13 +172,41 @@ static int ScrollLoading_Update( ScrollLoading ctx )
 	return count;
 }
 
-static void OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void ScrollLoading_OnDelayUpdate( void *arg )
+{
+	ScrollLoading ctx = arg;
+	ScrollLoading_OnUpdate( ctx );
+	ctx->is_delaying = FALSE;
+	ctx->timer = -1;
+	DEBUG_MSG("ctx->top: %d\n", ctx->top);
+}
+
+static void ScrollLoading_Update( ScrollLoading ctx )
+{
+	if( ctx->is_delaying && ctx->timer > 0 ) {
+		LCUITimer_Reset( ctx->timer, 500 );
+		return;
+	}
+	ctx->timer = LCUITimer_Set( 500, ScrollLoading_OnDelayUpdate, 
+				    ctx, FALSE );
+	ctx->is_delaying = TRUE;
+}
+
+static void ScrollLoading_Update2( ScrollLoading ctx )
+{
+	if( ctx->is_delaying ) {
+		return;
+	}
+	ctx->is_delaying = TRUE;
+	LCUITimer_Set( 200, ScrollLoading_OnDelayUpdate, ctx, FALSE );
+}
+
+static void ScrollLoading_OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	int *scroll_pos = arg;
 	ScrollLoading ctx = e->data;
 	ctx->top = *scroll_pos;
 	ScrollLoading_Update( ctx );
-	DEBUG_MSG("ctx->top: %d\n", ctx->top);
 }
 
 /** 新建一个滚动加载功能实例 */
@@ -186,10 +214,13 @@ static ScrollLoading ScrollLoading_New( LCUI_Widget scrolllayer )
 {
 	ScrollLoading ctx = NEW( ScrollLoadingRec, 1 );
 	ctx->top = 0;
+	ctx->timer = -1;
 	ctx->top_child = NULL;
-	ctx->event_id = scrollload_event;
+	ctx->is_delaying = FALSE;
 	ctx->scrolllayer = scrolllayer;
-	Widget_BindEvent( scrolllayer, "scroll", OnScroll, ctx, NULL );
+	ctx->event_id = scrollload_event;
+	Widget_BindEvent( scrolllayer, "scroll", 
+			  ScrollLoading_OnScroll, ctx, NULL );
 	return ctx;
 }
 
@@ -198,7 +229,8 @@ static void ScrollLoading_Delete( ScrollLoading ctx )
 {
 	ctx->top = 0;
 	ctx->top_child = NULL;
-	Widget_UnbindEvent( ctx->scrolllayer, "scroll", OnScroll );
+	Widget_UnbindEvent( ctx->scrolllayer, "scroll", 
+			    ScrollLoading_OnScroll );
 	free( ctx );
 }
 
@@ -256,6 +288,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 			      LCUI_Widget w )
 {
 	int len;
+	Dict *dbs;
 	DB_Dir dir;
 	ThumbDB db;
 	ThumbDataRec tdata;
@@ -267,7 +300,8 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 	if( !dir ) {
 		return NULL;
 	}
-	db = Dict_FetchValue( view->dbs, dir->path );
+	dbs = *view->dbs;
+	db = Dict_FetchValue( dbs, dir->path );
 	if( !db ) {
 		return NULL;
 	}
@@ -326,6 +360,7 @@ static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 	Widget_Lock( t->widget );
 	SetStyle( t->widget->custom_style, key_background_image, thumb, image );
 	Widget_UpdateStyle( t->widget, FALSE );
+	_DEBUG_MSG( "%s\n", t->info->path );
 	Widget_Unlock( t->widget );
 }
 
@@ -639,18 +674,6 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUIMutex_Unlock( &data->view->tasks_mutex );
 }
 
-static void UpdateView( void *arg )
-{
-	LCUI_Widget w = arg;
-	ThumbView view = w->private_data;
-	if( !view->need_update ) {
-		return;
-	}
-	view->timer = -1;
-	view->need_update = FALSE;
-	ScrollLoading_Update( view->scrollload );
-}
-
 LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath, 
 				    LCUI_BOOL show_path )
 {
@@ -682,8 +705,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_Append( infobar, icon );
 	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
 	Widget_Append( w, item );
-	data->view->need_update = TRUE;
-	LCUITimer_Set( 200, UpdateView, w, FALSE );
+	ScrollLoading_Update2( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
 	AppendFolder( data->view, item );
 	LinkedList_Append( &data->view->files, data->info.path );
@@ -694,17 +716,6 @@ void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 {
 	Widget_Append( w, child );
 	UpdateThumbRow( w->private_data );
-}
-
-static void ThumbView_DelayUpdate( LCUI_Widget w )
-{
-	ThumbView view = w->private_data;
-	if( view->need_update && view->timer > 0 ) {
-		LCUITimer_Reset( view->timer, 200 );
-	} else {
-		view->need_update = TRUE;
-		view->timer = LCUITimer_Set( 200, UpdateView, w, FALSE );
-	}
 }
 
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
@@ -720,7 +731,6 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 	LCUI_DecodeString( wpath, path, len, ENCODING_UTF8 );
 	LCUI_EncodeString( apath, wpath, len, ENCODING_ANSI );
 	if( Graph_GetImageSize( apath, &width, &height ) != 0 ) {
-		_DEBUG_MSG("unsupport image file: %s\n", apath);
 		return NULL;
 	}
 	item = LCUIWidget_New( NULL );
@@ -737,7 +747,7 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
 	Widget_Append( item, cover );
 	Widget_Append( w, item );
-	ThumbView_DelayUpdate( w );
+	ScrollLoading_Update2( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
 	AppendPicture( data->view, item );
 	LinkedList_Append( &data->view->files, data->info.path );
@@ -748,11 +758,9 @@ static void ThumbView_OnInit( LCUI_Widget w )
 {
 	ThumbView self;
 	self = Widget_NewPrivateData( w, ThumbViewRec );
-	self->dbs = finder.thumb_dbs;
-	self->need_update = FALSE;
+	self->dbs = &finder.thumb_dbs;
 	self->is_loading = FALSE;
 	self->is_running = TRUE;
-	self->timer = -1;
 	self->layout.x = 0;
 	self->layout.count = 0;
 	self->layout.max_width = 0;
