@@ -43,6 +43,9 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 
+#define LAYOUT_DELAY		1000
+#define ANIMATION_DELAY		750
+#define ANIMATION_DURATION	500
 #define THUBVIEW_MIN_WIDTH	400
 #define FOLDER_MAX_WIDTH	388
 #define FOLDER_FIXED_HEIGHT	134
@@ -66,17 +69,33 @@ typedef struct ScrollLoadingRec_ {
 	LCUI_Widget top_child;		/**< 当前可见区域第一个子部件 */
 } ScrollLoadingRec, *ScrollLoading;
 
+enum AnimationType {
+	ANI_NONE,
+	ANI_FADEOUT,
+	ANI_FADEIN
+};
+
+/** 动画相关数据 */
+typedef struct AnimationRec_ {
+	int type;
+	int timer;
+	int interval;
+	double opacity;
+	double opacity_delta;
+	LCUI_BOOL is_runing;
+} AnimationRec, *Animation;
+
 /** 缩略图列表布局功能的相关数据 */
 typedef struct LayoutContextRec_ {
-	int x;				/** 当前对象的 X 轴坐标 */
-	int count;			/** 当前处理的总对象数量 */
-	int max_width;			/** 最大宽度 */
-	LCUI_BOOL is_running;		/** 是否正在布局 */
-	LCUI_BOOL is_delaying;		/** 是否处于延迟状态 */
-	LCUI_Widget current;		/** 当前处理的部件 */
-	LinkedList row;			/** 当前行的部件 */
-	LCUI_Mutex row_mutex;		/** 当前行的互斥锁 */
-	int timer;			/** 定时器 */
+	int x;				/**< 当前对象的 X 轴坐标 */
+	int count;			/**< 当前处理的总对象数量 */
+	int max_width;			/**< 最大宽度 */
+	LCUI_BOOL is_running;		/**< 是否正在布局 */
+	LCUI_BOOL is_delaying;		/**< 是否处于延迟状态 */
+	LCUI_Widget current;		/**< 当前处理的部件 */
+	LinkedList row;			/**< 当前行的部件 */
+	LCUI_Mutex row_mutex;		/**< 当前行的互斥锁 */
+	int timer;			/**< 定时器 */
 	int folder_count;		/**< 当前处理的文件夹数量 */
 	int folders_per_row;		/**< 每行有多少个文件夹 */
 } LayoutContextRec, *LayoutContext;
@@ -94,6 +113,7 @@ typedef struct ThumbViewRec_ {
 	LCUI_BOOL is_running;		/**< 是否处于运行状态 */
 	ScrollLoading scrollload;	/**< 滚动加载功能所需的相关数据 */
 	LayoutContextRec layout;	/**< 缩略图布局功能所需的相关数据 */
+	AnimationRec animation;		/**< 动画相关数据，用于实现淡入淡出的动画效果 */
 } ThumbViewRec, *ThumbView;
 
 /** 文件信息 */
@@ -102,8 +122,15 @@ typedef struct ThumbFileInfoRec_ {
 	char *path;		/**< 路径 */
 } ThumbFileInfoRec, *ThumbFileInfo;
 
-/** 缩略图加载任务 */
+/** 任务类型 */
+enum ThumbViewTaskType {
+	TASK_LOAD_THUMB,
+	TASK_LAYOUT
+};
+
+/** 任务 */
 typedef struct ThumbViewTaskRec_ {
+	int type;		/**< 任务类型 */
 	LCUI_Widget widget;	/**< 需加载缩略图的部件 */
 	ThumbFileInfo info;	/**< 缩略图源文件的信息 */
 } ThumbViewTaskRec, *ThumbViewTask;
@@ -184,10 +211,10 @@ static void ScrollLoading_OnDelayUpdate( void *arg )
 static void ScrollLoading_Update( ScrollLoading ctx )
 {
 	if( ctx->is_delaying && ctx->timer > 0 ) {
-		LCUITimer_Reset( ctx->timer, 500 );
+		LCUITimer_Reset( ctx->timer, 200 );
 		return;
 	}
-	ctx->timer = LCUITimer_Set( 500, ScrollLoading_OnDelayUpdate, 
+	ctx->timer = LCUITimer_Set( 200, ScrollLoading_OnDelayUpdate, 
 				    ctx, FALSE );
 	ctx->is_delaying = TRUE;
 }
@@ -201,7 +228,8 @@ static void ScrollLoading_Update2( ScrollLoading ctx )
 	LCUITimer_Set( 200, ScrollLoading_OnDelayUpdate, ctx, FALSE );
 }
 
-static void ScrollLoading_OnScroll( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void ScrollLoading_OnScroll( LCUI_Widget w, LCUI_WidgetEvent e,
+				    void *arg )
 {
 	int *scroll_pos = arg;
 	ScrollLoading ctx = e->data;
@@ -339,17 +367,18 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 			tdata.graph = img;
 		}
 		DEBUG_MSG( "save thumb, size: (%d,%d), name: %s, db: %p\n",
-			   tdata.graph.width, tdata.graph.height, filename, db );
+			   tdata.graph.width, tdata.graph.height, 
+			   filename, db );
 		ThumbDB_Save( db, filename, &tdata );
 	}
 	thumb = ThumbCache_Add( view->cache, info->path, &tdata.graph, w );
 	return thumb;
 }
 
-/** 执行缩略图加载任务 */
-static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
+static void ThumbView_ExecLoadThumb( LCUI_Widget w, ThumbViewTask t )
 {
 	LCUI_Graph *thumb;
+	ThumbView view = w->private_data;
 	thumb = ThumbCache_Get( view->cache, t->info->path );
 	if( !thumb ) {
 		thumb = LoadThumb( view, t->info, t->widget );
@@ -360,35 +389,7 @@ static void ThumbView_ExecTask( ThumbView view, ThumbViewTask t )
 	Widget_Lock( t->widget );
 	SetStyle( t->widget->custom_style, key_background_image, thumb, image );
 	Widget_UpdateStyle( t->widget, FALSE );
-	_DEBUG_MSG( "%s\n", t->info->path );
 	Widget_Unlock( t->widget );
-}
-
-/** 缩略图加载任务处理线程 */
-static void ThumbView_TaskThread( void *arg )
-{
-	ThumbView view = arg;
-	LinkedListNode *node;
-	while( view->is_running ) {
-		view->is_loading = TRUE;
-		LCUIMutex_Lock( &view->mutex );
-		LCUIMutex_Lock( &view->tasks_mutex );
-		node = LinkedList_GetNode( &view->tasks, 0 );
-		if( !node ) {
-			view->is_loading = FALSE;
-			LCUIMutex_Unlock( &view->mutex );
-			LCUICond_Wait( &view->tasks_cond, &view->tasks_mutex );
-			LCUIMutex_Unlock( &view->tasks_mutex );
-			continue;
-		}
-		LinkedList_Unlink( &view->tasks, node );
-		LCUIMutex_Unlock( &view->tasks_mutex );
-		ThumbView_ExecTask( view, node->data );
-		free( node->data );
-		node->data = NULL;
-		free( node );
-		LCUIMutex_Unlock( &view->mutex );
-	}
 }
 
 void ThumbView_Lock( LCUI_Widget w )
@@ -461,7 +462,7 @@ static void UpdateThumbRow( ThumbView view )
 	 * 的比例，分别缩减相应的宽度。
 	 */
 	if( overflow_width > 0 ) {
-		int i = 0, debug_width = 0, width, thumb_width, rest_width;
+		int i = 0, width, thumb_width, rest_width;
 		rest_width = overflow_width;
 		LCUIMutex_Lock( &view->layout.row_mutex );
 		LinkedList_ForEach( node, &view->layout.row ) {
@@ -483,7 +484,6 @@ static void UpdateThumbRow( ThumbView view )
 			} else {
 				width = thumb_width - rest_width;
 			}
-			debug_width += width;
 			SetStyle( w->custom_style, key_width, width, px );
 			Widget_UpdateStyle( w, FALSE );
 		}
@@ -538,7 +538,7 @@ static void AppendFolder( ThumbView view, LCUI_Widget w )
 }
 
 /** 直接执行布局更新操作 */
-static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
+static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 {
 	int count;
 	LCUI_Widget child;
@@ -576,37 +576,47 @@ static int ThumbView_ExecUpdateLayout( LCUI_Widget w, int limit )
 	return count;
 }
 
-/** 分步执行缩略图列表的布局任务 */
-static void OnLayoutStep( void *arg1, void *arg2 )
+/** 在布局完成后 */
+static void OnAfterLayout( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	ThumbView view = w->private_data;
+	ScrollLoading_Update( view->scrollload );
+	Widget_UnbindEvent( w, "afterlayout", OnAfterLayout );
+}
+
+/** 执行缩略图列表的布局任务 */
+static void ThumbView_ExecUpdateLayout( LCUI_Widget w, ThumbViewTask t )
 {
 	int n;
-	LCUI_Widget w = arg1;
 	ThumbView view = w->private_data;
 	if( !view->layout.is_running ) {
 		return;
 	}
-	n = ThumbView_ExecUpdateLayout( w, 16 );
+	n = ThumbView_OnUpdateLayout( w, 16 );
 	/* 如果还有未布局的缩略图则下次再继续 */
 	if( n == 16 ) {
-		LCUI_AppTaskRec task;
-		task.arg[0] = w;
-		task.arg[1] = NULL;
-		task.func = OnLayoutStep;
-		task.destroy_arg[0] = NULL;
-		task.destroy_arg[1] = NULL;
-		LCUI_PostTask( &task );
+		ThumbViewTask task;
+		task = NEW( ThumbViewTaskRec, 1 );
+		task->type = TASK_LAYOUT;
+		LCUIMutex_Lock( &view->tasks_mutex );
+		LinkedList_Append( &view->tasks, task );
+		LCUICond_Signal( &view->tasks_cond );
+		LCUIMutex_Unlock( &view->tasks_mutex );
 	} else {
 		UpdateThumbRow( view );
 		view->layout.is_running = FALSE;
 		view->layout.current = NULL;
 		Widget_UnlockLayout( w );
 		Widget_UpdateLayout( w );
+		Widget_BindEvent( w, "afterlayout", OnAfterLayout, 
+				  NULL, NULL );
 	}
 }
 
 /** 延迟执行缩略图列表的布局操作 */
 static void OnDelayLayout( void *arg )
 {
+	ThumbViewTask task;
 	LCUI_Widget w = arg;
 	ThumbView view = w->private_data;
 	LCUIMutex_Lock( &view->layout.row_mutex );
@@ -619,7 +629,55 @@ static void OnDelayLayout( void *arg )
 	ThumbView_UpdateLayoutContext( w );
 	LinkedList_Clear( &view->layout.row, NULL );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
-	OnLayoutStep( arg, NULL );
+	task = NEW( ThumbViewTaskRec, 1 );
+	task->type = TASK_LAYOUT;
+	LCUIMutex_Lock( &view->tasks_mutex );
+	LinkedList_Append( &view->tasks, task );
+	LCUICond_Signal( &view->tasks_cond );
+	LCUIMutex_Unlock( &view->tasks_mutex );
+}
+
+static void OnSetOpacity( void *arg )
+{
+	LCUI_Widget w = arg;
+	ThumbView view = w->private_data;
+	Animation ani = &view->animation;
+	switch( ani->type ) {
+	case ANI_FADEOUT:
+		ani->opacity -= ani->opacity_delta;
+		if( ani->opacity <= 0.0 ) {
+			ani->opacity = 0.0;
+			ani->type = ANI_FADEIN;
+		}
+		break;
+	case ANI_FADEIN:
+		ani->opacity += ani->opacity_delta;
+		if( ani->opacity >= 1.0 ) {
+			ani->opacity = 1.0;
+			ani->type = ANI_NONE;
+		}
+		break;
+	case ANI_NONE:
+	default:
+		ani->opacity = 1.0;
+		ani->is_runing = FALSE;
+		LCUITimer_Free( ani->timer );
+		ani->timer = -1;
+		break;
+	}
+	SetStyle( w->custom_style, key_opacity, (float)ani->opacity, scale );
+	Widget_UpdateStyle( w, FALSE );
+}
+
+static void OnStartAnimation( void *arg )
+{
+	LCUI_Widget w = arg;
+	ThumbView view = w->private_data;
+	view->animation.type = ANI_FADEOUT;
+	view->animation.is_runing = TRUE;
+	view->animation.timer = LCUITimer_Set( view->animation.interval, 
+					       OnSetOpacity, w, TRUE );
+	
 }
 
 /** 更新缩略图列表的布局 */
@@ -630,13 +688,22 @@ static void ThumbView_UpdateLayout( LCUI_Widget w )
 		return;
 	}
 	Widget_LockLayout( w );
+	view->animation.type = ANI_NONE;
+	if( view->animation.timer > 0 ) {
+		LCUITimer_Reset( view->animation.timer, ANIMATION_DELAY );
+	} else {
+		view->animation.timer = LCUITimer_Set( ANIMATION_DELAY, 
+						       OnStartAnimation, 
+						       w, FALSE );
+	}
 	/* 如果已经有延迟布局任务，则重置该任务的定时 */
 	if( view->layout.is_delaying ) {
-		LCUITimer_Reset( view->layout.timer, 1000 );
+		LCUITimer_Reset( view->layout.timer, LAYOUT_DELAY );
 		return;
 	}
 	view->layout.is_delaying = TRUE;
-	view->layout.timer = LCUITimer_Set( 1000, OnDelayLayout, w, FALSE );
+	view->layout.timer = LCUITimer_Set( LAYOUT_DELAY, 
+					    OnDelayLayout, w, FALSE );
 }
 
 /** 在缩略图列表视图的尺寸有变更时... */
@@ -650,13 +717,6 @@ static void OnResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ThumbView_UpdateLayout( w );
 }
 
-/** 在布局完成后 */
-static void OnAfterLayout( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	ThumbView view = w->private_data;
-	ScrollLoading_Update( view->scrollload );
-}
-
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ThumbViewTask task;
@@ -667,6 +727,7 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	task = NEW( ThumbViewTaskRec, 1 );
 	task->widget = w;
 	task->info = &data->info;
+	task->type = TASK_LOAD_THUMB;
 	LCUIMutex_Lock( &data->view->tasks_mutex );
 	LinkedList_Append( &data->view->tasks, task );
 	LCUICond_Signal( &data->view->tasks_cond );
@@ -754,6 +815,48 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const char *path )
 	return item;
 }
 
+/** 执行缩略图加载任务 */
+static void ThumbView_ExecTask( LCUI_Widget w, ThumbViewTask t )
+{
+	switch( t->type ) {
+	case TASK_LOAD_THUMB:
+		ThumbView_ExecLoadThumb( w, t );
+		break;
+	case TASK_LAYOUT:
+		ThumbView_ExecUpdateLayout( w, t );
+	default:break;
+	}
+}
+
+/** 缩略图加载任务处理线程 */
+static void ThumbView_TaskThread( void *arg )
+{
+	ThumbView view;
+	LCUI_Widget w = arg;
+	LinkedListNode *node;
+	view = w->private_data;
+	while( view->is_running ) {
+		view->is_loading = TRUE;
+		LCUIMutex_Lock( &view->mutex );
+		LCUIMutex_Lock( &view->tasks_mutex );
+		node = LinkedList_GetNode( &view->tasks, 0 );
+		if( !node ) {
+			view->is_loading = FALSE;
+			LCUIMutex_Unlock( &view->mutex );
+			LCUICond_Wait( &view->tasks_cond, &view->tasks_mutex );
+			LCUIMutex_Unlock( &view->tasks_mutex );
+			continue;
+		}
+		LinkedList_Unlink( &view->tasks, node );
+		LCUIMutex_Unlock( &view->tasks_mutex );
+		ThumbView_ExecTask( w, node->data );
+		free( node->data );
+		node->data = NULL;
+		free( node );
+		LCUIMutex_Unlock( &view->mutex );
+	}
+}
+
 static void ThumbView_OnInit( LCUI_Widget w )
 {
 	ThumbView self;
@@ -769,6 +872,12 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->layout.is_running = FALSE;
 	self->layout.is_delaying = FALSE;
 	self->layout.folders_per_row = 1;
+	self->animation.timer = -1;
+	self->animation.type = ANI_NONE;
+	self->animation.interval = 20;
+	self->animation.opacity = 1.0;
+	self->animation.is_runing = FALSE;
+	self->animation.opacity_delta = 1.0 / (ANIMATION_DURATION / 2 / 20);
 	LCUICond_Init( &self->tasks_cond );
 	LCUIMutex_Init( &self->mutex );
 	LCUIMutex_Init( &self->tasks_mutex );
@@ -778,9 +887,8 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	LCUIMutex_Init( &self->layout.row_mutex );
 	self->scrollload = ScrollLoading_New( w );
 	self->cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
-	LCUIThread_Create( &self->thread, ThumbView_TaskThread, self );
 	Widget_BindEvent( w, "resize", OnResize, NULL, NULL );
-	Widget_BindEvent( w, "afterlayout", OnAfterLayout, NULL, NULL );
+	LCUIThread_Create( &self->thread, ThumbView_TaskThread, w );
 }
 
 static void ThumbView_OnDestroy( LCUI_Widget w )
