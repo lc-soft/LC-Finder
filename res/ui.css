@@ -8,6 +8,7 @@
 	height: 100%;
 	background-color: #fff;
 	position: absolute;
+	z-index: 100;
 }
 .sidebar-mini {
 	width: 48px;
@@ -57,9 +58,12 @@
 	font-family: Microsoft YaHei;
 }
 .view {
-	padding: 0 0 0 48px;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
+	position: absolute;
+	padding: 0 0 0 48px;
 	box-sizing: border-box;
 }
 .view .view-navbar {
@@ -310,7 +314,6 @@
 }
 .hide {
 	display: none;
-	visible: false;
 }
 textview {
 	font-size: 14px;
