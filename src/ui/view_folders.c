@@ -51,6 +51,7 @@ typedef struct ViewSyncRec_ {
 	LCUI_Thread tid;
 	LCUI_BOOL is_running;
 	LCUI_Mutex mutex;
+	LCUI_Cond ready;
 	int prev_item_type;
 } ViewSyncRec, *ViewSync;
 
@@ -303,6 +304,11 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+static void OnThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	LCUICond_Signal( &this_view.viewsync.ready );
+}
+
 /** 视图同步线程 */
 static void ViewSync_Thread( void *arg )
 {
@@ -311,8 +317,11 @@ static void ViewSync_Thread( void *arg )
 	FileEntry entry;
 	FileScanner scanner;
 	LinkedListNode *node;
-	scanner = &this_view.scanner;
 	vs = &this_view.viewsync;
+	scanner = &this_view.scanner;
+	LCUIMutex_Lock( &vs->mutex );
+	LCUICond_Wait( &vs->ready, &vs->mutex );
+	LCUIMutex_Unlock( &vs->mutex );
 	vs->prev_item_type = -1;
 	vs->is_running = TRUE;
 	while( vs->is_running ) {
@@ -409,24 +418,27 @@ static void OnSyncDone( LCUI_Event e, void *arg )
 
 void UI_InitFoldersView( void )
 {
-	LCUI_Widget btn, btn_return;
+	LCUI_Widget btn, btn_return, items;
 	LinkedList_Init( &this_view.files );
 	FileScanner_Init( &this_view.scanner );
+	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
+	items = LCUIWidget_GetById( "current-file-list" );
 	btn = LCUIWidget_GetById( "btn-sync-folder-files" );
 	btn_return = LCUIWidget_GetById( "btn-return-root-folder" );
-	this_view.items = LCUIWidget_GetById( "current-file-list" );
-	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
-	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
 	this_view.view = LCUIWidget_GetById( "view-folders");
 	this_view.info = LCUIWidget_GetById( "view-folders-info-box" );
 	this_view.info_name = LCUIWidget_GetById( "view-folders-info-box-name" );
 	this_view.info_path = LCUIWidget_GetById( "view-folders-info-box-path" );
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
+	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
+	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
+	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+	this_view.items = items;
 	OpenFolder( NULL );
 }
 

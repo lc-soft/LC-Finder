@@ -59,7 +59,7 @@ void UI_Init(void)
 	LCUIWidget_AddThumbView();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 640 );
-	LCUIDisplay_ShowRectBorder();
+	//LCUIDisplay_ShowRectBorder();
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );

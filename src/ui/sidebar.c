@@ -56,7 +56,6 @@ static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unuse
 	LCUI_Widget btn, view = e->data;
 	const char *view_id = view->id;
 	Widget_RemoveClass( view, "hide" );
-	Widget_UpdateStyle( view, TRUE );
 	Widget_Show( view );
 	for( i = 0; i < MAX_VIEWS; ++i ) {
 		if( strcmp( view_id, btn_view_ids[i][1] ) == 0 ) {
@@ -64,7 +63,6 @@ static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unuse
 		}
 		btn = LCUIWidget_GetById( btn_view_ids[i][0] );
 		view = LCUIWidget_GetById( btn_view_ids[i][1] );
-		Widget_AddClass( view, "hide" );
 		Widget_RemoveClass( btn, "active" );
 		Widget_Hide( view );
 	}
