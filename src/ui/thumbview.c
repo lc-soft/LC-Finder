@@ -375,6 +375,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, ThumbFileInfo info,
 	return thumb;
 }
 
+/** 执行加载缩略图的任务 */
 static void ThumbView_ExecLoadThumb( LCUI_Widget w, ThumbViewTask t )
 {
 	LCUI_Graph *thumb;
@@ -879,8 +880,8 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->animation.is_runing = FALSE;
 	self->animation.opacity_delta = 1.0 / (ANIMATION_DURATION / 2 / 20);
 	LCUICond_Init( &self->tasks_cond );
-	LCUIMutex_Init( &self->mutex );
 	LCUIMutex_Init( &self->tasks_mutex );
+	LCUIMutex_Init( &self->mutex );
 	LinkedList_Init( &self->tasks );
 	LinkedList_Init( &self->files );
 	LinkedList_Init( &self->layout.row );

@@ -213,10 +213,9 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 static int FileScanner_LoadSourceDirs( FileScanner scanner )
 {
 	char *path;
-	int i, len;
-	FileEntry entry;
+	int i, len, count = 0;
 	for( i = 0; i < finder.n_dirs; ++i ) {
-		entry = NEW( FileEntryRec, 1 );
+		FileEntry entry = NEW( FileEntryRec, 1 );
 		if( !finder.dirs[i] ) {
 			continue;
 		}
@@ -230,8 +229,9 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 		LCUICond_Signal( &scanner->cond );
 		DEBUG_MSG("dir: %s\n", entry->path);
 		LCUIMutex_Unlock( &scanner->mutex );
+		++count;
 	}
-	return i;
+	return count;
 }
 
 /** 初始化文件扫描 */
@@ -320,7 +320,9 @@ static void ViewSync_Thread( void *arg )
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
 	LCUIMutex_Lock( &vs->mutex );
-	LCUICond_Wait( &vs->ready, &vs->mutex );
+	while( this_view.items->state < WSTATE_READY ) {
+		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
+	}
 	LCUIMutex_Unlock( &vs->mutex );
 	vs->prev_item_type = -1;
 	vs->is_running = TRUE;
@@ -411,7 +413,7 @@ static void OpenFolder( const char *dirpath )
 	DEBUG_MSG("done\n");
 }
 
-static void OnSyncDone( LCUI_Event e, void *arg )
+static void OnSyncDone( void *privdata, void *arg )
 {
 	OpenFolder( NULL );
 }
@@ -431,6 +433,7 @@ void UI_InitFoldersView( void )
 	this_view.info_name = LCUIWidget_GetById( "view-folders-info-box-name" );
 	this_view.info_path = LCUIWidget_GetById( "view-folders-info-box-path" );
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-folder" );
+	this_view.items = items;
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
@@ -438,7 +441,6 @@ void UI_InitFoldersView( void )
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
-	this_view.items = items;
 	OpenFolder( NULL );
 }
 

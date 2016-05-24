@@ -69,4 +69,7 @@ Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
 
 void StrDict_Release( Dict *d );
 
+/** 打开浏览器 */
+void wopenbrowser( const wchar_t *url );
+
 #endif

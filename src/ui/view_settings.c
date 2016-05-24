@@ -212,19 +212,19 @@ static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e,
 /** 在“许可协议”按钮被点击时 */
 static void OnBtnLicenseClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	system( "start http://www.gnu.org/licenses/gpl-2.0.html" );
+	wopenbrowser( L"http://www.gnu.org/licenses/gpl-2.0.html" );
 }
 
 /** 在“官方网站”按钮被点击时 */
 static void OnBtnWebSiteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	system( "start https://lc-soft.io/" );
+	wopenbrowser( L"https://lc-soft.io/" );
 }
 
 /** 在“问题反馈”按钮被点击时 */
 static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 {
-	system( "start https://github.com/lc-soft/LC-Finder/issues/new" );
+	wopenbrowser( L"https://github.com/lc-soft/LC-Finder/issues/new" );
 }
 
 void UI_InitSettingsView( void )

@@ -156,9 +156,9 @@ static void FileScanner_Init( FileScanner scanner )
 /** 重置文件扫描 */
 static void FileScanner_Reset( FileScanner scanner )
 {
-	if( this_view.scanner.is_running ) {
-		this_view.scanner.is_running = FALSE;
-		LCUIThread_Join( this_view.scanner.tid, NULL );
+	if( scanner->is_running ) {
+		scanner->is_running = FALSE;
+		LCUIThread_Join( scanner->tid, NULL );
 	}
 	LCUIMutex_Lock( &scanner->mutex );
 	LinkedList_Clear( &scanner->files, OnDeleteDBFile );
@@ -180,6 +180,7 @@ static void FileScanner_Thread( void *arg )
 		Widget_Show( this_view.tip_empty );
 	}
 	this_view.scanner.is_running = FALSE;
+	_DEBUG_MSG("total files: %d\n", count);
 	LCUIThread_Exit( NULL );
 }
 
@@ -255,7 +256,9 @@ static void HomeView_SyncThread( void *arg )
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
 	LCUIMutex_Lock( &vs->mutex );
-	LCUICond_Wait( &vs->ready, &vs->mutex );
+	while( this_view.items->state < WSTATE_READY ) {
+		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
+	}
 	LCUIMutex_Unlock( &vs->mutex );
 	vs->is_running = TRUE;
 	while( vs->is_running ) {
@@ -271,6 +274,7 @@ static void HomeView_SyncThread( void *arg )
 		node = LinkedList_GetNode( &scanner->files, 0 );
 		if( !node ) {
 			LCUIMutex_Unlock( &vs->mutex );
+			LCUIMutex_Unlock( &scanner->mutex );
 			continue;
 		}
 		file = node->data;
@@ -303,7 +307,7 @@ static void OnThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUICond_Signal( &this_view.viewsync.ready );
 }
 
-static void OnSyncDone( LCUI_Event e, void *arg )
+static void OnSyncDone( void *privdata, void *arg )
 {
 	LoadCollectionFiles();
 }
@@ -319,13 +323,13 @@ void UI_InitHomeView( void )
 	this_view.view = LCUIWidget_GetById( "view-home" );
 	items = LCUIWidget_GetById( "home-collection-list" );
 	btn = LCUIWidget_GetById( "btn-sync-collection-files" );
+	this_view.items = items;
 	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-collection" );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );
 	this_view.viewsync.tid = tid;
-	this_view.items = items;
 	LoadCollectionFiles();
 }
 

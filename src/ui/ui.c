@@ -61,10 +61,11 @@ void UI_Init(void)
 	LCUIDisplay_SetSize( 960, 640 );
 	//LCUIDisplay_ShowRectBorder();
 	box = LCUIBuilder_LoadFile( XML_PATH );
-	if( box ) {
-		Widget_Top( box );
-		Widget_Unwrap( box );
+	if( !box ) {
+		return;
 	}
+	Widget_Top( box );
+	Widget_Unwrap( box );
 	root = LCUIWidget_GetRoot();
 	Widget_SetTitleW( root, L"LC-Finder" );
 	Widget_UpdateStyle( root, TRUE );

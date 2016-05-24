@@ -186,7 +186,7 @@ int64_t wgetfilesize( const wchar_t *path )
 	int64_t size;
 	struct stat buf;
 	fd = _wopen( path, _O_RDONLY );
-	if( fstat( fd, &buf ) == 0 ) {
+	if( fd > 0 && fstat( fd, &buf ) == 0 ) {
 		size = buf.st_size;
 	} else {
 		size = 0;
@@ -233,5 +233,12 @@ void wgetcurdir( wchar_t *path, int max_len )
 {
 #ifdef _WIN32
 	GetCurrentDirectoryW( max_len, path );
+#endif
+}
+
+void wopenbrowser( const wchar_t *url )
+{
+#ifdef _WIN32
+	ShellExecuteW( NULL, L"open", url, NULL, NULL, SW_SHOW );
 #endif
 }
