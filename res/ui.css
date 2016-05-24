@@ -377,6 +377,7 @@ textview {
 	position: absolute;
 	top: 0;
 	left: 0;
+	z-index: 1000;
 }
 .dialog-content {
 	width: 100%;
