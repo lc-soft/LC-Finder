@@ -34,10 +34,10 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __THUMBNAIL_DATABASE_H__
-#define __THUMBNAIL_DATABASE_H__
+#ifndef LCFINDER_THUMB_DB_H
+#define LCFINDER_THUMB_DB_H
 
-#ifndef __THUMBNAIL_DATABASE_C__
+#ifndef LCFINDER_THUMB_DB_C
 typedef void* ThumbDB;
 #else
 #include "unqlite.h"

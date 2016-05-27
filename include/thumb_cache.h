@@ -34,10 +34,10 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __THUMBNAIL_CACHE_H__
-#define __THUMBNAIL_CACHE_H__
+#ifndef LCFINDER_THUMB_CACHE_H
+#define LCFINDER_THUMB_CACHE_H
 
-#ifndef __THUMBNAIL_CACHE_C__
+#ifndef LCFINDER_THUMB_CACHE_C
 typedef void* ThumbCache;
 #endif
 

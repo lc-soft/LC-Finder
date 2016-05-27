@@ -34,8 +34,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __FILE_SEARCH_H__
-#define __FILE_SEARCH_H__
+#ifndef LCFINDER_FILE_SEARCH_H
+#define LCFINDER_FILE_SEARCH_H
 
 enum order {
 	NONE,
@@ -74,7 +74,7 @@ typedef struct DB_QueryTermsRec_ {
 	enum order create_time;		/**< 按创建时间排序时使用的排序规则 */
 } DB_QueryTermsRec, *DB_QueryTerms;	/**< 搜索规则定义 */
 
-#ifdef __FILE_SEARCH_C__
+#ifdef LCFINDER_FILE_SEARCH_C
 typedef struct DB_QueryRec_ {
 	char *sql_terms;
 	char *sql_tables;

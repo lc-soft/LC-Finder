@@ -35,8 +35,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __DIALOG_CONFIRM_H__
-#define __DIALOG_CONFIRM_H__
+#ifndef LCFINDER_DIALOG_CONFIRM_H
+#define LCFINDER_DIALOG_CONFIRM_H
 
 LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 			      const wchar_t *text );

@@ -47,13 +47,14 @@
 #define TEXT_SAVED	L"已同步 %d 个文件"
 #define TEXT_FINISHED	L"资源同步完成！"
 
+/** 当前文件同步功能所需的数据 */
 static struct SyncContextRec_ {
-	LCUI_BOOL is_syncing;
-	FileSyncStatusRec status;
-	LCUI_Widget text;
-	LCUI_Widget title;
-	LCUI_Thread thread;
-	int timer;
+	LCUI_BOOL is_syncing;		/**< 是否正在同步 */
+	FileSyncStatusRec status;	/**< 当前状态数据 */
+	LCUI_Widget text;		/**< 提示框中显示的内容 */
+	LCUI_Widget title;		/**< 提示框中显示的标题 */
+	LCUI_Thread thread;		/**< 用于进行文件同步的线程 */
+	int timer;			/**< 用于动态更新提示框内容的定时器 */
 } self;
 
 static void OnUpdateStats( void *arg )
@@ -88,6 +89,7 @@ static void OnHideTip( void *arg )
 	Widget_AddClass( alert, "hide" );
 }
 
+/** 文件同步线程 */
 static void FileSyncThread( void *arg )
 {
 	LCUI_Widget alert = self.text->parent;

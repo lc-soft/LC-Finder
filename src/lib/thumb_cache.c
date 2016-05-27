@@ -34,7 +34,7 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#define __THUMBNAIL_CACHE_C__
+#define LCFINDER_THUMB_CACHE_C
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>

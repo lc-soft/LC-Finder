@@ -304,6 +304,7 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+/** 在缩略图列表准备完毕的时候 */
 static void OnThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUICond_Signal( &this_view.viewsync.ready );
@@ -320,6 +321,7 @@ static void ViewSync_Thread( void *arg )
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
 	LCUIMutex_Lock( &vs->mutex );
+	/* 等待缩略图列表部件准备完毕 */
 	while( this_view.items->state < WSTATE_READY ) {
 		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
 	}

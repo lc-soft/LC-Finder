@@ -35,8 +35,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __LC_FINDER_H__
-#define __LC_FINDER_H__
+#ifndef LCFINDER_H
+#define LCFINDER_H
 
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>

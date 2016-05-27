@@ -34,8 +34,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __THUMBVIEW_H__
-#define __THUMBVIEW_H__
+#ifndef LCFINDER_THUMBVIEW_H
+#define LCFINDER_THUMBVIEW_H
 
 void ThumbView_Lock( LCUI_Widget w );
 

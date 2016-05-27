@@ -34,8 +34,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __FILE_CACHE_H__
-#define __FILE_CACHE_H__
+#ifndef LCFINDER_FILE_CACHE_H
+#define LCFINDER_FILE_CACHE_H
 
 typedef enum {
 	STATE_NONE,

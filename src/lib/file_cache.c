@@ -41,17 +41,10 @@
 #include "common.h"
 #include "file_cache.h"
 
-#ifdef _WIN32
-#define PATH_SEP '\\'
-#else
-#define PATH_SEP '/'
-#endif
-
 #define MAX_PATH_LEN	2048
 #define FILE_HEAD_TAG	"[LC-Finder Files Cache]"
 #define WCSLEN(STR)	(sizeof( STR ) / sizeof( wchar_t ))
 #define GetDirStats(T)	(DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
-
 
 /** 文件夹内的文件变更状态统计 */
 typedef struct DirStatsRec_ {

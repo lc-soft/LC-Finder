@@ -34,8 +34,8 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef LCFINDER_COMMON_H
+#define LCFINDER_COMMON_H
 
 #define PATH_LEN 2048
 
