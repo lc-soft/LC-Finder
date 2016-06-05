@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "sqlite3.h"
-#define __FILE_SEARCH_C__
+#define LCFINDER_FILE_SEARCH_C
 #include "file_search.h"
 
 #define STORAGE_PATH "data/storage.db"

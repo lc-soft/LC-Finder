@@ -34,6 +34,7 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
+#include <math.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,6 +42,7 @@
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
+#include <LCUI/graph.h>
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
@@ -66,15 +68,22 @@ static struct PictureViewer {
 	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
 	int focus_x, focus_y;			/**< 当前焦点位置，相对于按比例缩放后的图片 */
 	int origin_focus_x, origin_focus_y;	/**< 当前焦点位置，相对于原始尺寸的图片 */
-	struct PictureDrag {
+	int offset_x, offset_y;			/**< 浏览区域的位置偏移量，相对于焦点位置 */
+	struct PictureDraging {			/**< 图片拖拽功能的相关数据 */
 		int focus_x, focus_y;		/**< 拖动开始时的图片坐标，相对于按比例缩放后的图片 */
 		int mouse_x, mouse_y;		/**< 拖动开始时的鼠标坐标 */
 		LCUI_BOOL is_running;		/**< 是否正在执行拖动操作 */
 		LCUI_BOOL is_started;		/**< 是否已经拖动过一次 */
 		LCUI_BOOL with_x;		/**< 拖动时是否需要改变图片X坐标 */
 		LCUI_BOOL with_y;		/**< 拖动时是否需要改变图片Y坐标 */
-		int eids[2];			/**< 事件绑定ID */
 	} drag;					/**< 实现图片拖动浏览功能所需的数据 */
+	struct PictureTouchZoom {		/**< 图片触控缩放功能的相关数据 */
+		int point_ids[2];		/**< 两个触点的ID */
+		int distance;			/**< 触点距离 */
+		double scale;			/**< 缩放开始前的缩放比例 */
+		LCUI_BOOL is_running;		/**< 缩放是否正在进行 */
+		int x, y;			/**<  */
+	} zoom;
 } this_view;
 
 /** 更新图片位置 */
@@ -85,7 +94,7 @@ static void UpdatePicturePosition( void )
 	sheet = this_view.target->custom_style->sheet;
 	width = (int)(this_view.img->width * this_view.scale);
 	height = (int)(this_view.img->height * this_view.scale);
-	/** 若缩放后的图片宽度小于图片查看器的宽度 */
+	/* 若缩放后的图片宽度小于图片查看器的宽度 */
 	if( width <= this_view.target->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
@@ -97,21 +106,21 @@ static void UpdatePicturePosition( void )
 	} else {
 		this_view.drag.with_x = TRUE;
 		x = this_view.origin_focus_x;
-		this_view.focus_x = (int)(x * this_view.scale);
-		x = this_view.focus_x - this_view.target->width / 2;
+		this_view.focus_x = (int)(x * this_view.scale + 0.5);
+		x = this_view.focus_x - this_view.offset_x;
 		/* X坐标调整，确保查看器的图片浏览范围不超出图片 */
 		if( x < 0 ) {
 			x = 0;
-			this_view.focus_x = this_view.target->width / 2;
+			this_view.focus_x = this_view.offset_x;
 		}
 		if( x + this_view.target->width > width ) {
 			x = width - this_view.target->width;
-			this_view.focus_x = x + this_view.target->width / 2;
+			this_view.focus_x = x + this_view.offset_x;
 		}
 		SetStyle( this_view.target->custom_style,
 			  key_background_position_x, -x, px );
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
-		x = (int)(this_view.focus_x / this_view.scale);
+		x = (int)(this_view.focus_x / this_view.scale + 0.5);
 		this_view.origin_focus_x = x;
 	}
 	/* 原理同上 */
@@ -126,22 +135,29 @@ static void UpdatePicturePosition( void )
 	} else {
 		this_view.drag.with_y = TRUE;
 		y = this_view.origin_focus_y;
-		this_view.focus_y = (int)(y * this_view.scale);
-		y = this_view.focus_y - this_view.target->height / 2;
+		this_view.focus_y = (int)(y * this_view.scale + 0.5);
+		y = this_view.focus_y - this_view.offset_y;
 		if( y < 0 ) {
 			y = 0;
-			this_view.focus_y = this_view.target->height / 2;
+			this_view.focus_y = this_view.offset_y;
 		}
 		if( y + this_view.target->height > height ) {
-			y = width - this_view.target->height;
-			this_view.focus_y = y + this_view.target->height / 2;
+			y = height - this_view.target->height;
+			this_view.focus_y = y + this_view.offset_y;
 		}
 		SetStyle( this_view.target->custom_style,
 			  key_background_position_y, -y, px );
-		y = (int)(this_view.focus_y / this_view.scale);
+		y = (int)(this_view.focus_y / this_view.scale + 0.5);
 		this_view.origin_focus_y = y;
 	}
 	Widget_UpdateStyle( this_view.target, FALSE );
+}
+
+/** 重置浏览区域的位置偏移量 */
+static void ResetOffsetPosition( void )
+{
+	this_view.offset_x = this_view.target->width / 2;
+	this_view.offset_y = this_view.target->height / 2;
 }
 
 /** 重置当前显示的图片的尺寸 */
@@ -177,11 +193,12 @@ static void ResetPictureSize( void )
 	sheet[key_background_size_width].is_valid = FALSE;
 	sheet[key_background_size_height].is_valid = FALSE;
 	Widget_UpdateStyle( this_view.target, FALSE );
+	ResetOffsetPosition();
 	UpdatePicturePosition();
 }
 
 /** 在返回按钮被点击的时候 */
-static OnBtnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUI_Widget root = LCUIWidget_GetRoot();
 	LCUI_Widget main_window = LCUIWidget_GetById( "main-window" );
@@ -231,18 +248,21 @@ static void SetPictureScale( double scale )
 /** 在”放大“按钮被点击的时候 */
 static void OnBtnZoomInClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	ResetOffsetPosition();
 	SetPictureScale( this_view.scale + 0.5 );
 }
 
 /** 在”缩小“按钮被点击的时候 */
 static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	ResetOffsetPosition();
 	SetPictureScale( this_view.scale - 0.5 );
 }
 
 /** 在”实际大小“按钮被点击的时候 */
 static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	ResetOffsetPosition();
 	SetPictureScale( 1.0 );
 }
 
@@ -299,35 +319,26 @@ static void PictureLoader( void *arg )
 	LCUIThread_Exit( NULL );
 }
 
-/** 当鼠标按钮在图片容器上释放的时候 */
-static void OnMouseUp( LCUI_SysEvent e, void *arg )
+static void DragPicture( int mouse_x, int mouse_y )
 {
-	this_view.drag.is_running = FALSE;
-}
-
-/** 当鼠标在图片容器上移动的时候 */
-static void OnMouseMove( LCUI_SysEvent e, void *arg )
-{
-	LCUI_Pos pos;
 	LCUI_Style sheet;
 	if( !this_view.drag.is_running ) {
 		return;
 	}
-	LCUICursor_GetPos( &pos );
 	sheet = this_view.target->custom_style->sheet;
 	if( this_view.drag.with_x ) {
 		int x, width;
 		width = (int)(this_view.img->width * this_view.scale);
 		this_view.focus_x = this_view.drag.focus_x;
-		this_view.focus_x -= pos.x - this_view.drag.mouse_x;
-		x = this_view.focus_x - this_view.target->width / 2;
+		this_view.focus_x -= mouse_x - this_view.drag.mouse_x;
+		x = this_view.focus_x - this_view.offset_x;
 		if( x < 0 ) {
 			x = 0;
-			this_view.focus_x = this_view.target->width / 2;
+			this_view.focus_x = this_view.offset_x;
 		}
 		if( x + this_view.target->width > width ) {
 			x = width - this_view.target->width;
-			this_view.focus_x = x + this_view.target->width / 2;
+			this_view.focus_x = x + this_view.offset_x;
 		}
 		SetStyle( this_view.target->custom_style,
 			  key_background_position_x, -x, px );
@@ -340,15 +351,15 @@ static void OnMouseMove( LCUI_SysEvent e, void *arg )
 		int y, height;
 		height = (int)(this_view.img->height * this_view.scale);
 		this_view.focus_y = this_view.drag.focus_y;
-		this_view.focus_y -= pos.y - this_view.drag.mouse_y;
-		y = this_view.focus_y - this_view.target->height / 2;
+		this_view.focus_y -= mouse_y - this_view.drag.mouse_y;
+		y = this_view.focus_y - this_view.offset_y;
 		if( y < 0 ) {
 			y = 0;
-			this_view.focus_y = this_view.target->height / 2;
+			this_view.focus_y = this_view.offset_y;
 		}
 		if( y + this_view.target->height > height ) {
 			y = height - this_view.target->height;
-			this_view.focus_y = y + this_view.target->height / 2;
+			this_view.focus_y = y + this_view.offset_y;
 		}
 		SetStyle( this_view.target->custom_style,
 			  key_background_position_y, -y, px );
@@ -360,21 +371,158 @@ static void OnMouseMove( LCUI_SysEvent e, void *arg )
 	Widget_UpdateStyle( this_view.target, FALSE );
 }
 
+/** 当鼠标在图片容器上移动的时候 */
+static void OnPictureMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	DragPicture( e->screen_x, e->screen_y );
+}
+
+/** 当鼠标按钮在图片容器上释放的时候 */
+static void OnPictureMouseUp( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	this_view.drag.is_running = FALSE;
+	Widget_UnbindEvent( w, "mouseup", OnPictureMouseUp );
+	Widget_UnbindEvent( w, "mousemove", OnPictureMouseMove );
+	Widget_ReleaseMouseCapture( w );
+}
+
 /** 当鼠标按钮在图片容器上点住的时候 */
 static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int *eids;
-	LCUI_Pos pos;
-	LCUICursor_GetPos( &pos );
-	eids = this_view.drag.eids;
-	this_view.drag.mouse_x = pos.x;
-	this_view.drag.mouse_y = pos.y;
 	this_view.drag.is_started = TRUE;
 	this_view.drag.is_running = TRUE;
+	this_view.drag.mouse_x = e->screen_x;
+	this_view.drag.mouse_y = e->screen_y;
 	this_view.drag.focus_x = this_view.focus_x;
 	this_view.drag.focus_y = this_view.focus_y;
-	eids[0] = LCUI_BindEvent( LCUI_MOUSEMOVE, OnMouseMove, NULL, NULL );
-	eids[1] = LCUI_BindEvent( LCUI_MOUSEUP, OnMouseUp, NULL, NULL );
+	Widget_BindEvent( w, "mousemove", OnPictureMouseMove, NULL, NULL );
+	Widget_BindEvent( w, "mouseup",  OnPictureMouseUp, NULL, NULL );
+	Widget_SetMouseCapture( w );
+}
+
+static void OnPictureTouchDown( LCUI_TouchPoint point )
+{
+	this_view.drag.is_started = TRUE;
+	this_view.drag.is_running = TRUE;
+	this_view.drag.mouse_x = point->x;
+	this_view.drag.mouse_y = point->y;
+	this_view.drag.focus_x = this_view.focus_x;
+	this_view.drag.focus_y = this_view.focus_y;
+	Widget_SetTouchCapture( this_view.target, point->id );
+}
+
+static void OnPictureTouchUp( LCUI_TouchPoint point )
+{
+	this_view.drag.is_running = FALSE;
+	Widget_ReleaseTouchCapture( this_view.target, -1 );
+}
+
+static void OnPictureTouchMove( LCUI_TouchPoint point )
+{
+	DragPicture( point->x, point->y );
+}
+
+static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	int i, x, y;
+	double distance, scale;
+	LCUI_TouchPoint points[2] = {NULL, NULL};
+	if( e->n_points == 0 ) {
+		return;
+	}
+	if( e->n_points == 1 ) {
+		LCUI_TouchPoint point;
+		point = &e->points[0];
+		switch( point->state ) {
+		case WET_TOUCHDOWN: 
+			OnPictureTouchDown( point );
+			this_view.zoom.point_ids[0] = point->id;
+			break;
+		case WET_TOUCHMOVE:
+			OnPictureTouchMove( point );
+			break;
+		case WET_TOUCHUP: 
+			OnPictureTouchUp( point ); 
+			this_view.zoom.point_ids[0] = -1;
+			break;
+		default: break;
+		}
+		return;
+	}
+	this_view.drag.is_running = FALSE;
+	/* 遍历各个触点，确定两个用于缩放功能的触点 */
+	for( i = 0; i < e->n_points; ++i ) {
+		if( this_view.zoom.point_ids[0] == -1 ) {
+			points[0] = &e->points[i];
+			this_view.zoom.point_ids[0] = points[0]->id;
+			continue;
+		} else if( this_view.zoom.point_ids[0] == e->points[i].id ) {
+			points[0] = &e->points[i];
+			continue;
+		}
+		if( this_view.zoom.point_ids[1] == -1 ) {
+			points[1] = &e->points[i];
+			this_view.zoom.point_ids[1] = points[1]->id;
+		} else if( this_view.zoom.point_ids[1] == e->points[i].id ) {
+			points[1] = &e->points[i];
+		}
+	}
+	/* 计算两触点的距离 */
+	distance = pow( points[0]->x - points[1]->x, 2 );
+	distance += pow( points[0]->y - points[1]->y, 2 );
+	distance = sqrt( distance );
+	if( !this_view.zoom.is_running ) {
+		x = points[0]->x - (points[0]->x - points[1]->x) / 2;
+		y = points[0]->y - (points[0]->y - points[1]->y) / 2;
+		this_view.zoom.distance = (int)distance;
+		this_view.zoom.scale = this_view.scale;
+		this_view.zoom.is_running = TRUE;
+		this_view.zoom.x = x;
+		this_view.zoom.y = y;
+	} else if( points[0]->state == WET_TOUCHMOVE ||
+		   points[1]->state == WET_TOUCHMOVE ) {
+		/* 重新计算焦点位置 */
+		x = this_view.focus_x - this_view.offset_x;
+		y = this_view.focus_y - this_view.offset_y;
+		this_view.offset_x = this_view.zoom.x;
+		this_view.offset_y = this_view.zoom.y;
+		this_view.focus_x = x + this_view.offset_x;
+		this_view.focus_y = y + this_view.offset_y;
+		x = (int)(this_view.focus_x / this_view.scale + 0.5);
+		y = (int)(this_view.focus_y / this_view.scale + 0.5);
+		this_view.origin_focus_x = x;
+		this_view.origin_focus_y = y;
+		scale = this_view.zoom.scale;
+		scale *= distance / this_view.zoom.distance;
+		SetPictureScale( scale );
+	}
+	for( i = 0; i < 2; ++i ) {
+		int j, id;
+		/* 如果当前用于控制缩放的触点已经释放，则找其它触点来代替 */
+		if( points[i]->state != WET_TOUCHUP ) {
+			continue;
+		}
+		this_view.zoom.point_ids[i] = -1;
+		this_view.zoom.is_running = FALSE;
+		id = this_view.zoom.point_ids[i == 0 ? 1 : 0];
+		for( j = 0; j < e->n_points; ++j ) {
+			if( e->points[j].state == WET_TOUCHUP ||
+				e->points[j].id == id ) {
+				continue;
+			}
+			points[i] = &e->points[j];
+			this_view.zoom.point_ids[i] = points[i]->id;
+			i -= 1;
+			break;
+		}
+	}
+	if( this_view.zoom.point_ids[0] == -1 ) {
+		this_view.zoom.point_ids[0] = this_view.zoom.point_ids[1];
+		this_view.zoom.point_ids[1] = -1;
+		this_view.zoom.is_running = FALSE;
+	} else if( this_view.zoom.point_ids[1] == -1 ) {
+		this_view.zoom.is_running = FALSE;
+	}
 }
 
 void UI_InitPictureView( void )
@@ -389,6 +537,9 @@ void UI_InitPictureView( void )
 	this_view.filepath = NULL;
 	this_view.is_working = TRUE;
 	this_view.is_opening = FALSE;
+	this_view.zoom.is_running = FALSE;
+	this_view.zoom.point_ids[0] = -1;
+	this_view.zoom.point_ids[1] = -1;
 	LCUICond_Init( &this_view.cond );
 	LCUIMutex_Init( &this_view.mutex );
 	btn[0] = LCUIWidget_GetById( "btn-picture-reset-size" );
@@ -400,10 +551,12 @@ void UI_InitPictureView( void )
 	Widget_BindEvent( btn[0], "click", OnBtnResetClick, NULL, NULL );
 	Widget_BindEvent( btn[1], "click", OnBtnZoomInClick, NULL, NULL );
 	Widget_BindEvent( btn[2], "click", OnBtnZoomOutClick, NULL, NULL );
-	Widget_BindEvent( this_view.target, "resize", OnPictureResize,
-			  NULL, NULL );
-	Widget_BindEvent( this_view.target, "mousedown", OnPictureMouseDown,
-			  NULL, NULL );
+	Widget_BindEvent( this_view.target, "resize", 
+			  OnPictureResize, NULL, NULL );
+	Widget_BindEvent( this_view.target, "touch", 
+			  OnPictureTouch, NULL, NULL );
+	Widget_BindEvent( this_view.target, "mousedown", 
+			  OnPictureMouseDown, NULL, NULL );
 	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
 	Widget_Hide( this_view.window );
 }
@@ -429,7 +582,7 @@ void UIPictureView_Open( const char *filepath )
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
 	this_view.is_opening = TRUE;
-	Widget_BindEvent( btn, "click", OnBtnClick, NULL, NULL );
+	Widget_BindEvent( btn, "click", OnBtnBackClick, NULL, NULL );
 }
 
 void UI_ExitPictureView( void )

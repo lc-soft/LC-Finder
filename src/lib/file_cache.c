@@ -118,8 +118,14 @@ static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
 
 static void *Dict_KeyDup( void *privdata, const void *key )
 {
-	wchar_t *newkey = malloc( (wcslen( key ) + 1)*sizeof( wchar_t ) );
-	wcscpy( newkey, key );
+	size_t len;
+	wchar_t *newkey;
+	len = wcslen( key ) + 1;
+	newkey = malloc( len * sizeof( wchar_t ) );
+	if( !newkey ) {
+		return NULL;
+	}
+	wcsncpy( newkey, key, len );
 	return newkey;
 }
 
@@ -155,32 +161,34 @@ SyncTask SyncTask_New( const char *data_dir, const char *scan_dir )
 
 SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 {
-	int n, len;
+	SyncTask t;
+	DirStats ds;
 	wchar_t name[44];
+	size_t len, len1, len2;
 	const wchar_t suffix[] = L".tmp";
-	size_t len1 = wcslen( data_dir ) + 1;
-	size_t len2 = wcslen( scan_dir ) + 1;
-	SyncTask t = malloc( sizeof(SyncTaskRec) + sizeof(DirStatsRec) );
-	DirStats ds = GetDirStats( t );
+
+	t = malloc( sizeof( SyncTaskRec ) + sizeof( DirStatsRec ) );
+	ds = GetDirStats( t );
+	len1 = wcslen( data_dir ) + 1;
+	len2 = wcslen( scan_dir ) + 1;
 	ds->deleted_files = Dict_Create( &DictType_Files, NULL );
 	ds->added_files = Dict_Create( &DictType_Files, NULL );
 	ds->files = Dict_Create( &DictType_Files, NULL );
 	t->data_dir = malloc( sizeof( wchar_t ) * len1 );
 	t->scan_dir = malloc( sizeof( wchar_t ) * len2 );
-	wcscpy( t->data_dir, data_dir );
-	wcscpy( t->scan_dir, scan_dir );
+	wcsncpy( t->data_dir, data_dir, len1 );
+	wcsncpy( t->scan_dir, scan_dir, len2 );
 	WEncodeSHA1( name, t->scan_dir, len2 );
-	n = wcslen( t->data_dir );
-	len = n + WCSLEN(name) + WCSLEN( suffix );
+	len = len1 + WCSLEN(name) + WCSLEN( suffix );
 	t->tmpfile = malloc( len * sizeof( wchar_t ) );
 	t->file = malloc( len * sizeof( wchar_t ) );
-	wcscpy( t->tmpfile, t->data_dir );
-	if( t->tmpfile[n - 1] != PATH_SEP ) {
-		t->tmpfile[n++] = PATH_SEP;
-		t->tmpfile[n] = 0;
+	wcsncpy( t->tmpfile, t->data_dir, len1 );
+	if( t->tmpfile[len1 - 1] != PATH_SEP ) {
+		t->tmpfile[len1++] = PATH_SEP;
+		t->tmpfile[len1] = 0;
 	}
-	wsprintf( t->file, L"%s%s", t->tmpfile, name );
-	wsprintf( t->tmpfile, L"%s%s", t->file, suffix );
+	swprintf( t->file, len, L"%s%s", t->tmpfile, name );
+	swprintf( t->tmpfile, len, L"%s%s", t->file, suffix );
 	t->state = STATE_NONE;
 	t->deleted_files = 0;
 	t->total_files = 0;
