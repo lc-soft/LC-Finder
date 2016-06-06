@@ -118,7 +118,7 @@ static void OnStartSyncFiles( void *privdata, void *data )
 void UI_InitFileSyncTip( void )
 {
 	memset( &self, 0, sizeof( self ) );
-	self.text = LCUIWidget_GetById( "file-sync-tip-stats" );
-	self.title = LCUIWidget_GetById( "file-sync-tip-title" );
+	self.text = LCUIWidget_GetById( ID_TXT_FILE_SYNC_STATS );
+	self.title = LCUIWidget_GetById( ID_TXT_FILE_SYNC_TITLE );
 	LCFinder_BindEvent( EVENT_SYNC, OnStartSyncFiles, NULL );
 }

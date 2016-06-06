@@ -40,6 +40,7 @@
 #endif
 #include <stdio.h>
 #include "finder.h"
+#include "ui.h"
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
@@ -56,7 +57,7 @@ static struct SettingsViewData {
 static void OnBtnRemoveClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DB_Dir dir = e->data;
-	LCUI_Widget window = LCUIWidget_GetById( "main-window" );
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	if( !LCUIDialog_Confirm( window, DIALOG_TITLE, DIALOG_TEXT ) ) {
 		return;
 	}
@@ -161,7 +162,7 @@ static void UpdateThumbDBSpaceUsage( void )
 	wchar_t text[128];
 	LCUI_Widget widget;
 	sum_size = LCFinder_GetThumbDBTotalSize();
-	widget = LCUIWidget_GetById( "text-thumb-db-space-usage" );
+	widget = LCUIWidget_GetById( ID_TXT_THUMB_DB_SPACE_USAGE );
 	if( sum_size > 1024*1024*1024 ) {
 		size = sum_size / 1024.0 / 1024.0 / 1024.0;
 		swprintf( text, 128, L"%0.2fGB", size );
@@ -229,21 +230,21 @@ static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 
 void UI_InitSettingsView( void )
 {
-	LCUI_Widget btn = LCUIWidget_GetById( "btn-add-source" );
-	LCUI_Widget dirlist = LCUIWidget_GetById( "current-source-list" );
+	LCUI_Widget btn = LCUIWidget_GetById( ID_BTN_ADD_SOURCE );
+	LCUI_Widget dirlist = LCUIWidget_GetById( ID_VIEW_SOURCE_LIST );
 	Widget_BindEvent( btn, "click", OnSelectDir, NULL, NULL );
 	UI_InitDirList( dirlist );
 	UpdateThumbDBSpaceUsage();
 	this_view.dirlist = dirlist;
-	btn = LCUIWidget_GetById( "sidebar-btn-settings" );
+	btn = LCUIWidget_GetById( ID_BTN_SIDEBAR_SETTINGS );
 	Widget_BindEvent( btn, "click", OnBtnSettingsClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL );
-	btn = LCUIWidget_GetById( "btn-clear-thumb-db" );
+	btn = LCUIWidget_GetById( ID_BTN_CLEAR_THUMB_DB );
 	Widget_BindEvent( btn, "click", OnBtnClearThumbDBClick, NULL, NULL );
-	btn = LCUIWidget_GetById( "btn-open-license" );
+	btn = LCUIWidget_GetById( ID_BTN_OPEN_LICENSE );
 	Widget_BindEvent( btn, "click", OnBtnLicenseClick, NULL, NULL );
-	btn = LCUIWidget_GetById( "btn-open-website" );
+	btn = LCUIWidget_GetById( ID_BTN_OPEN_WEBSITE );
 	Widget_BindEvent( btn, "click", OnBtnWebSiteClick, NULL, NULL );
-	btn = LCUIWidget_GetById( "btn-open-feedback" );
+	btn = LCUIWidget_GetById( ID_BTN_OPEN_FEEDBACK );
 	Widget_BindEvent( btn, "click", OnBtnFeedbackClick, NULL, NULL );
 }

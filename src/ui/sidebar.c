@@ -66,7 +66,7 @@ static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unuse
 		Widget_RemoveClass( btn, "active" );
 		Widget_Hide( view );
 	}
-	sidebar = LCUIWidget_GetById( "main-sidebar" );
+	sidebar = LCUIWidget_GetById( ID_VIEW_MAIN_SIDEBAR );
 	Widget_AddClass( sidebar, "sidebar-mini" );
 	Widget_AddClass( self, "active" );
 }

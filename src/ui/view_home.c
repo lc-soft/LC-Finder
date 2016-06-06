@@ -323,11 +323,11 @@ void UI_InitHomeView( void )
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
-	this_view.view = LCUIWidget_GetById( "view-home" );
-	items = LCUIWidget_GetById( "home-collection-list" );
-	btn = LCUIWidget_GetById( "btn-sync-collection-files" );
+	this_view.view = LCUIWidget_GetById( ID_VIEW_HOME );
+	items = LCUIWidget_GetById( ID_VIEW_HOME_COLLECTIONS );
+	btn = LCUIWidget_GetById( ID_BTN_SYNC_COLLECTIONS );
 	this_view.items = items;
-	this_view.tip_empty = LCUIWidget_GetById( "tip-empty-collection" );
+	this_view.tip_empty = LCUIWidget_GetById( ID_VIEW_HOME_TIP_EMPTY );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
