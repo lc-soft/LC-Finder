@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "finder.h"
+#include "ui.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
@@ -47,8 +48,9 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 
-#define MAX_SCALE 5.0
-#define XML_PATH "res/ui-view-picture.xml"
+#define MAX_SCALE	5.0
+#define MAIN_XML_PATH	"res/ui-view-picture.xml"
+#define INFO_XML_PATH	"res/ui-view-picture-info.xml"
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
@@ -84,6 +86,14 @@ static struct PictureViewer {
 		LCUI_BOOL is_running;		/**< 缩放是否正在进行 */
 		int x, y;			/**<  */
 	} zoom;
+	struct PictureInfo {
+		LCUI_Widget panel;
+		char *filepath;
+		uint64_t size;
+		uint_t width;
+		uint_t height;
+		int time;
+	} info;
 } this_view;
 
 /** 更新图片位置 */
@@ -201,7 +211,7 @@ static void ResetPictureSize( void )
 static OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUI_Widget root = LCUIWidget_GetRoot();
-	LCUI_Widget main_window = LCUIWidget_GetById( "main-window" );
+	LCUI_Widget main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, L"LC-Finder" );
 	ResetPictureSize();
 	Widget_Show( main_window );
@@ -507,7 +517,7 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		id = this_view.zoom.point_ids[i == 0 ? 1 : 0];
 		for( j = 0; j < e->n_points; ++j ) {
 			if( e->points[j].state == WET_TOUCHUP ||
-				e->points[j].id == id ) {
+			    e->points[j].id == id ) {
 				continue;
 			}
 			points[i] = &e->points[j];
@@ -525,10 +535,37 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	Widget_Show( this_view.info.panel );
+}
+
+static void OnBtnHideInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	Widget_Hide( this_view.info.panel );
+}
+
+static void UI_InitPictureInfoView( void )
+{
+	LCUI_Widget box, btn_show, btn_hide;
+	box = LCUIBuilder_LoadFile( INFO_XML_PATH );
+	if( !box ) {
+		return;
+	}
+	Widget_Append( this_view.window, box );
+	Widget_Unwrap( box );
+	btn_show = LCUIWidget_GetById( ID_BTN_SHOW_PICTURE_INFO );
+	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
+	this_view.info.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
+	Widget_BindEvent( btn_show, "click", OnBtnShowInfoClick, NULL, NULL );
+	Widget_BindEvent( btn_hide, "click", OnBtnHideInfoClick, NULL, NULL );
+	Widget_Hide( this_view.info.panel );
+}
+
 void UI_InitPictureView( void )
 {
 	LCUI_Widget box, btn[3];
-	box = LCUIBuilder_LoadFile( XML_PATH );
+	box = LCUIBuilder_LoadFile( MAIN_XML_PATH );
 	if( box ) {
 		Widget_Top( box );
 		Widget_Unwrap( box );
@@ -542,12 +579,12 @@ void UI_InitPictureView( void )
 	this_view.zoom.point_ids[1] = -1;
 	LCUICond_Init( &this_view.cond );
 	LCUIMutex_Init( &this_view.mutex );
-	btn[0] = LCUIWidget_GetById( "btn-picture-reset-size" );
-	btn[1] = LCUIWidget_GetById( "btn-picture-zoom-in" );
-	btn[2] = LCUIWidget_GetById( "btn-picture-zoom-out" );
-	this_view.tip = LCUIWidget_GetById( "picture-loading-tip" );
-	this_view.window = LCUIWidget_GetById( "picture-viewer-window" );
-	this_view.target = LCUIWidget_GetById( "picture-viewer-target" );
+	btn[0] = LCUIWidget_GetById( ID_BTN_PICTURE_RESET_SIZE );
+	btn[1] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_IN );
+	btn[2] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_OUT );
+	this_view.tip = LCUIWidget_GetById( ID_VIEW_PICTURE_LOADING_TIP );
+	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
+	this_view.target = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
 	Widget_BindEvent( btn[0], "click", OnBtnResetClick, NULL, NULL );
 	Widget_BindEvent( btn[1], "click", OnBtnZoomInClick, NULL, NULL );
 	Widget_BindEvent( btn[2], "click", OnBtnZoomOutClick, NULL, NULL );
@@ -559,6 +596,7 @@ void UI_InitPictureView( void )
 			  OnPictureMouseDown, NULL, NULL );
 	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
 	Widget_Hide( this_view.window );
+	UI_InitPictureInfoView();
 }
 
 void UIPictureView_Open( const char *filepath )
@@ -574,8 +612,8 @@ void UIPictureView_Open( const char *filepath )
 	this_view.filepath = calloc( len + 1, sizeof( char ) );
 	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
 	LCUI_EncodeString( this_view.filepath, wpath, len, ENCODING_ANSI );
-	btn = LCUIWidget_GetById( "btn-close-picture-viewer" );
-	main_window = LCUIWidget_GetById( "main-window" );
+	btn = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_VIEWER );
+	main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, wgetfilename( wpath ) );
 	LCUIMutex_Unlock( &this_view.mutex );
 	LCUICond_Signal( &this_view.cond );

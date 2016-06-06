@@ -3,8 +3,13 @@
   <ui>
     <widget id="picture-viewer-window" class="window skin-light-green">
       <widget class="window-navbar">
-        <widget class="window-navbar-btn" id="btn-close-picture-viewer">
+        <widget class="window-navbar-btn" id="btn-hide-picture-viewer">
           <widget type="textview" class="icon mdi mdi-arrow-left"></widget>
+        </widget>
+        <widget class="pull-right">
+          <widget class="window-navbar-btn" id="btn-show-picture-info">
+            <widget type="textview" class="icon mdi mdi-information-outline"></widget>
+          </widget>
         </widget>
       </widget>
       <widget class="window-body">
