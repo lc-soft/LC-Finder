@@ -87,6 +87,12 @@
     <Xml Include="res\ui.xml">
       <Filter>相关资源</Filter>
     </Xml>
+    <Xml Include="res\ui-view-picture.xml">
+      <Filter>相关资源</Filter>
+    </Xml>
+    <Xml Include="res\ui-view-picture-info.xml">
+      <Filter>相关资源</Filter>
+    </Xml>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\file_search.h">

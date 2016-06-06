@@ -44,6 +44,8 @@
     <None Include="res\ui.css" />
   </ItemGroup>
   <ItemGroup>
+    <Xml Include="res\ui-view-picture-info.xml" />
+    <Xml Include="res\ui-view-picture.xml" />
     <Xml Include="res\ui.xml">
       <SubType>Designer</SubType>
     </Xml>
