@@ -94,7 +94,7 @@ static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DB_File f = e->data;
-	UIPictureView_Open( f->path );
+	UI_OpenPictureView( f->path );
 }
 
 static void OnDeleteDBFile( void *arg )

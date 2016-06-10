@@ -157,24 +157,12 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 更新缩略图数据库的空间占用量 */
 static void UpdateThumbDBSpaceUsage( void )
 {
-	double size;
 	int64_t sum_size;
 	wchar_t text[128];
 	LCUI_Widget widget;
 	sum_size = LCFinder_GetThumbDBTotalSize();
 	widget = LCUIWidget_GetById( ID_TXT_THUMB_DB_SPACE_USAGE );
-	if( sum_size > 1024*1024*1024 ) {
-		size = sum_size / 1024.0 / 1024.0 / 1024.0;
-		swprintf( text, 128, L"%0.2fGB", size );
-	} else if( sum_size > 1024*1024 ) {
-		size = sum_size / 1024.0 / 1024.0;
-		swprintf( text, 128, L"%0.2fMB", size );
-	} else if( sum_size > 1024 ) {
-		size = sum_size / 1024.0;
-		swprintf( text, 128, L"%0.2fKB", size );
-	} else {
-		swprintf( text, 128, L"%dB", sum_size );
-	}
+	getsizestr( text, 128, sum_size );
 	TextView_SetTextW( widget, text );
 }
 

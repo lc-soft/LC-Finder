@@ -114,6 +114,18 @@ void UI_InitPictureView( void );
 void UI_ExitPictureView( void );
 
 /** 在图片视图中打开一张图片 */
-void UIPictureView_Open( const char *filepath );
+void UI_OpenPictureView( const char *filepath );
+
+/** 初始化图片信息视图 */
+void UI_InitPictureInfoView( void );
+
+/** 设置图片信息视图 */
+void UI_SetPictureInfoView( const char *filepath );
+
+/** 显示图片信息视图 */
+void UI_ShowPictureInfoView( void );
+
+/** 隐藏图片信息视图 */
+void UI_HidePictureInfoView( void );
 
 #endif

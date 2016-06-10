@@ -49,8 +49,7 @@
 #include <LCUI/gui/widget/textview.h>
 
 #define MAX_SCALE	5.0
-#define MAIN_XML_PATH	"res/ui-view-picture.xml"
-#define INFO_XML_PATH	"res/ui-view-picture-info.xml"
+#define XML_PATH	"res/ui-view-picture.xml"
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
@@ -86,14 +85,6 @@ static struct PictureViewer {
 		LCUI_BOOL is_running;		/**< 缩放是否正在进行 */
 		int x, y;			/**<  */
 	} zoom;
-	struct PictureInfo {
-		LCUI_Widget panel;
-		char *filepath;
-		uint64_t size;
-		uint_t width;
-		uint_t height;
-		int time;
-	} info;
 } this_view;
 
 /** 更新图片位置 */
@@ -537,35 +528,13 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	Widget_Show( this_view.info.panel );
-}
-
-static void OnBtnHideInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	Widget_Hide( this_view.info.panel );
-}
-
-static void UI_InitPictureInfoView( void )
-{
-	LCUI_Widget box, btn_show, btn_hide;
-	box = LCUIBuilder_LoadFile( INFO_XML_PATH );
-	if( !box ) {
-		return;
-	}
-	Widget_Append( this_view.window, box );
-	Widget_Unwrap( box );
-	btn_show = LCUIWidget_GetById( ID_BTN_SHOW_PICTURE_INFO );
-	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
-	this_view.info.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
-	Widget_BindEvent( btn_show, "click", OnBtnShowInfoClick, NULL, NULL );
-	Widget_BindEvent( btn_hide, "click", OnBtnHideInfoClick, NULL, NULL );
-	Widget_Hide( this_view.info.panel );
+	UI_ShowPictureInfoView();
 }
 
 void UI_InitPictureView( void )
 {
-	LCUI_Widget box, btn[3];
-	box = LCUIBuilder_LoadFile( MAIN_XML_PATH );
+	LCUI_Widget box, w, btn_back, btn[3];
+	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
 		Widget_Unwrap( box );
@@ -595,11 +564,15 @@ void UI_InitPictureView( void )
 	Widget_BindEvent( this_view.target, "mousedown", 
 			  OnPictureMouseDown, NULL, NULL );
 	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
+	w = LCUIWidget_GetById( ID_BTN_SHOW_PICTURE_INFO );
+	btn_back = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_VIEWER );
+	Widget_BindEvent( w, "click", OnBtnShowInfoClick, NULL, NULL );
+	Widget_BindEvent( btn_back, "click", OnBtnBackClick, NULL, NULL );
 	Widget_Hide( this_view.window );
 	UI_InitPictureInfoView();
 }
 
-void UIPictureView_Open( const char *filepath )
+void UI_OpenPictureView( const char *filepath )
 {
 	int len;
 	wchar_t *wpath;
@@ -612,7 +585,6 @@ void UIPictureView_Open( const char *filepath )
 	this_view.filepath = calloc( len + 1, sizeof( char ) );
 	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
 	LCUI_EncodeString( this_view.filepath, wpath, len, ENCODING_ANSI );
-	btn = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_VIEWER );
 	main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, wgetfilename( wpath ) );
 	LCUIMutex_Unlock( &this_view.mutex );
@@ -620,7 +592,7 @@ void UIPictureView_Open( const char *filepath )
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
 	this_view.is_opening = TRUE;
-	Widget_BindEvent( btn, "click", OnBtnBackClick, NULL, NULL );
+	UI_SetPictureInfoView( filepath );
 }
 
 void UI_ExitPictureView( void )

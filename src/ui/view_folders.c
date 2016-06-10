@@ -300,7 +300,7 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( entry->is_dir ) {
 		OpenFolder( entry->path );
 	} else {
-		UIPictureView_Open( entry->path );
+		UI_OpenPictureView( entry->path );
 	}
 }
 
