@@ -42,6 +42,7 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include "sha1.h"
@@ -156,6 +157,18 @@ const char *getdirname( const char *path )
 	return p;
 }
 
+const char *getfilename( const char *path )
+{
+	int i;
+	const char *p = path;
+	for( i = 0; path[i]; ++i ) {
+		if( path[i] == PATH_SEP ) {
+			p = path + i + 1;
+		}
+	}
+	return p;
+}
+
 const wchar_t *wgetfilename( const wchar_t *path )
 {
 	int i;
@@ -168,13 +181,42 @@ const wchar_t *wgetfilename( const wchar_t *path )
 	return p;
 }
 
-int wgetfilectime( const wchar_t *path )
+int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
+{
+	int i, pos;
+	const wchar_t *p = inpath;
+	for( i = 0, pos = -1; inpath[i] && i < max_len; ++i ) {
+		outpath[i] = inpath[i];
+		if( outpath[i] == PATH_SEP ) {
+			pos = i;
+		}
+	}
+	if( pos > 0 ) {
+		outpath[pos] = 0;
+		return pos + 1;
+	}
+	return i;
+}
+
+time_t wgetfilectime( const wchar_t *path )
 {
 	struct stat buf;
 	int fd, ctime = 0;
 	fd = _wopen( path, _O_RDONLY );
 	if( fstat( fd, &buf ) == 0 ) {
 		ctime = (int)buf.st_ctime;
+	}
+	_close( fd );
+	return ctime;
+}
+
+time_t wgetfilemtime( const wchar_t *path )
+{
+	struct stat buf;
+	int fd, ctime = 0;
+	fd = _wopen( path, _O_RDONLY );
+	if( fstat( fd, &buf ) == 0 ) {
+		ctime = (int)buf.st_mtime;
 	}
 	_close( fd );
 	return ctime;
@@ -241,4 +283,38 @@ void wopenbrowser( const wchar_t *url )
 #ifdef _WIN32
 	ShellExecuteW( NULL, L"open", url, NULL, NULL, SW_SHOW );
 #endif
+}
+
+int wgettimestr( wchar_t *str, int max_len, time_t time )
+{
+	struct tm *t;
+	wchar_t *days[7] = {
+		L"星期一", L"星期二", L"星期三", L"星期四",
+		L"星期五", L"星期六", L"星期天"
+	};
+	t = localtime( &time );
+	return swprintf( str, max_len, L"%d年%d月%d日，%s %d:%d",
+			 1900 + t->tm_year, t->tm_mon + 1, t->tm_mday,
+			 days[t->tm_wday], t->tm_hour, t->tm_min );
+}
+
+int getsizestr( wchar_t *str, int max_len, int64_t size )
+{
+	int i;
+	double num;
+	int64_t tmp, prev_tmp;
+	wchar_t *units[5] = {L"B", L"KB", L"MB", L"GB", L"TB"};
+
+	if( size < 1024 ) {
+		return swprintf( str, max_len, L"%d%s", (int)size, units[0] );
+	}
+	for( i = 0, tmp = size; i < 5; ++i ) {
+		if( tmp < 1024 ) {
+			break;
+		}
+		prev_tmp = tmp;
+		tmp = tmp / 1024;
+	}
+	num = 1.0 * prev_tmp / 1024.0;
+	return swprintf( str, max_len, L"%0.2f%s", num, units[i] );
 }

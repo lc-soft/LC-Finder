@@ -51,9 +51,13 @@ void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len );
 
 const char *getdirname( const char *path );
 
+const char *getfilename( const char *path );
+
 const wchar_t *wgetfilename( const wchar_t *path );
 
-int wgetfilectime( const wchar_t *path );
+time_t wgetfilectime( const wchar_t *path );
+
+time_t wgetfilemtime( const wchar_t *path );
 
 int64_t wgetfilesize( const wchar_t *path );
 
@@ -71,5 +75,11 @@ void StrDict_Release( Dict *d );
 
 /** 打开浏览器 */
 void wopenbrowser( const wchar_t *url );
+
+int wgettimestr( wchar_t *str, int max_len, time_t time );
+
+int getsizestr( wchar_t *str, int max_len, int64_t size );
+
+int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
 
 #endif
