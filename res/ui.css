@@ -241,11 +241,6 @@
 	display: block;
 	height: 10px;
 }
-.file-list .full-width {
-	margin-left: 0;
-	margin-right: 0;
-	width: 100%;
-}
 .time-separator-title {
 	font-size: 18px;
 	margin: 30px 0 5px 0;
@@ -261,6 +256,11 @@
 .hide-path .info .name {
 	height: 34px;
 	line-height: 34px;
+}
+.full-width {
+	margin-left: 0;
+	margin-right: 0;
+	width: 100%;
 }
 .full-height {
 	height: 100%;
@@ -386,6 +386,9 @@ textview {
 	background-color: #fff;
 	max-width: 450px;
 	margin: 0 auto;
+	box-sizing: border-box;
+}
+textedit.dialog-input {
 	box-sizing: border-box;
 }
 .dialog-content .dialog-header {

@@ -81,7 +81,11 @@
 .skin-light-green .file-list .file-list-item-folder:hover {
 	border-color: #44BB55;
 }
-.file-list .file-list-item-picture .picture-cover:hover {
+.skin-light-green .dialog-input:focus {
+	box-shadow: 0 0 6px rgba(68,187,85,0.4);
+	border-color: #44BB55;
+}
+.skin-light-green .file-list .file-list-item-picture .picture-cover:hover {
 	top: 0;
 	left: 0; 
 	position: absolute;
