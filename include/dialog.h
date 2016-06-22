@@ -1,6 +1,5 @@
 ﻿/* ***************************************************************************
-* dialog_confirm.c -- confirm dialog, used for pop-up dialog to confirm 
-* whether or not to continue operation.
+* dialog.h -- dialog
 *
 * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
 *
@@ -19,7 +18,7 @@
 * ****************************************************************************/
 
 /* ****************************************************************************
-* dialog_confirm.c -- “确认”对话框，用于弹出提示框确认操作是否继续。
+* dialog.h -- 对话框
 *
 * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
 *
@@ -35,10 +34,28 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
-#ifndef LCFINDER_DIALOG_CONFIRM_H
-#define LCFINDER_DIALOG_CONFIRM_H
+#ifndef LCFINDER_DIALOG_H
+#define LCFINDER_DIALOG_H
 
+/** 
+ * 显示“确认”对话框
+ * @param[in] parent 用于容纳对话框的父部件
+ * @param[in] title 对话框标题
+ * @param[in] text 对话框内容
+ * @returns 在用户点击“确认”按钮后返回 TRUE，点击“取消”按钮则返回 FALSE
+ */
 LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 			      const wchar_t *text );
+
+/** 显示“文本输入”对话框
+ * @param[in] parent 用于容纳对话框的父部件
+ * @param[in] title 对话框标题
+ * @param[in] val 文本编辑框内预置的文本
+ * @param[out] newval 文本缓存，用于存放编辑后的文本
+ * @param[in] max_len 文本缓存的最大长度
+ * @return 文本编辑框内的文本文本长度
+ */
+int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
+		      const wchar_t *val, wchar_t *newval, size_t max_len );
 
 #endif

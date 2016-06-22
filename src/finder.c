@@ -203,10 +203,10 @@ static void SyncAddedFile( void *data, const wchar_t *wpath )
 {
 	static char path[PATH_LEN];
 	DirStatusDataPack pack = data;
-	int ctime = wgetfilectime( wpath );
+	time_t ctime = wgetfilectime( wpath );
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
-	DB_AddFile( pack->dir, path, ctime );
+	DB_AddFile( pack->dir, path, (int)ctime );
 	//wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
@@ -323,7 +323,7 @@ static void LCFinder_InitWorkDir( void )
 	wchar_t data_dir[1024];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
-	//_wchdir( L"F:\\LC-Soft\\LC-Finder" );
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 	wgetcurdir( data_dir, 1024 );
 	wprintf(L"data_dir: %s\n", data_dir);
 	wpathjoin( data_dir, data_dir, L"data" );
@@ -439,7 +439,7 @@ static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 
 int main( int argc, char **argv )
 {
-//#define DEBUG
+#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif

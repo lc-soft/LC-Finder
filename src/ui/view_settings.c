@@ -44,7 +44,7 @@
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include "dialog_confirm.h"
+#include "dialog.h"
 
 #define DIALOG_TITLE	L"确定要移除该源文件夹？"
 #define DIALOG_TEXT	L"一旦移除后，该源文件夹内的文件相关信息将一同被移除。"

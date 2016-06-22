@@ -47,8 +47,11 @@
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "dialog.h"
 
-#define XML_PATH	"res/ui-view-picture-info.xml"
+#define DIALOG_TITLE_ADDTAG	L"添加标签"
+#define DIALOG_TITLE_EDITTAG	L"编辑标签"
+#define XML_PATH		"res/ui-view-picture-info.xml"
 
 struct PictureInfoPanel {
 	LCUI_Widget panel;
@@ -70,9 +73,16 @@ static void OnBtnHideClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	Widget_Hide( this_view.panel );
 }
 
+static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	wchar_t text[256];
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
+	LCUIDialog_Input( window, DIALOG_TITLE_ADDTAG, L"测试", text, 255 );
+}
+
 void UI_InitPictureInfoView( void )
 {
-	LCUI_Widget box, parent, btn;
+	LCUI_Widget box, parent, btn_hide, btn_add_tag;
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( !box ) {
 		return;
@@ -81,14 +91,16 @@ void UI_InitPictureInfoView( void )
 	Widget_Unwrap( box );
 	this_view.filepath = NULL;
 	parent = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	btn = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
+	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
+	btn_add_tag = LCUIWidget_GetById( ID_BTN_ADD_PICTURE_TAG );
 	this_view.txt_fsize = LCUIWidget_GetById( ID_TXT_PICTURE_FILE_SIZE );
 	this_view.txt_size = LCUIWidget_GetById( ID_TXT_PICTURE_SIZE );
 	this_view.txt_name = LCUIWidget_GetById( ID_TXT_PICTURE_NAME );
 	this_view.txt_dirpath = LCUIWidget_GetById( ID_TXT_PICTURE_PATH );
 	this_view.txt_time = LCUIWidget_GetById( ID_TXT_PICTURE_TIME );
 	this_view.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
-	Widget_BindEvent( btn, "click", OnBtnHideClick, NULL, NULL );
+	Widget_BindEvent( btn_hide, "click", OnBtnHideClick, NULL, NULL );
+	Widget_BindEvent( btn_add_tag, "click", OnBtnAddTagClick, NULL, NULL );
 	Widget_Append( parent, this_view.panel );
 	Widget_Hide( this_view.panel );
 }

@@ -375,7 +375,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 /** 当鼠标在图片容器上移动的时候 */
 static void OnPictureMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	DragPicture( e->screen_x, e->screen_y );
+	DragPicture( e->motion.x, e->motion.y );
 }
 
 /** 当鼠标按钮在图片容器上释放的时候 */
@@ -392,8 +392,8 @@ static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	this_view.drag.is_started = TRUE;
 	this_view.drag.is_running = TRUE;
-	this_view.drag.mouse_x = e->screen_x;
-	this_view.drag.mouse_y = e->screen_y;
+	this_view.drag.mouse_x = e->motion.x;
+	this_view.drag.mouse_y = e->motion.y;
 	this_view.drag.focus_x = this_view.focus_x;
 	this_view.drag.focus_y = this_view.focus_y;
 	Widget_BindEvent( w, "mousemove", OnPictureMouseMove, NULL, NULL );
@@ -425,26 +425,27 @@ static void OnPictureTouchMove( LCUI_TouchPoint point )
 
 static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int i, x, y;
 	double distance, scale;
+	int i, x, y, *point_ids;
 	LCUI_TouchPoint points[2] = {NULL, NULL};
-	if( e->n_points == 0 ) {
+	if( e->touch.n_points == 0 ) {
 		return;
 	}
-	if( e->n_points == 1 ) {
+	point_ids = this_view.zoom.point_ids;
+	if( e->touch.n_points == 1 ) {
 		LCUI_TouchPoint point;
-		point = &e->points[0];
+		point = &e->touch.points[0];
 		switch( point->state ) {
 		case WET_TOUCHDOWN: 
 			OnPictureTouchDown( point );
-			this_view.zoom.point_ids[0] = point->id;
+			point_ids[0] = point->id;
 			break;
 		case WET_TOUCHMOVE:
 			OnPictureTouchMove( point );
 			break;
 		case WET_TOUCHUP: 
 			OnPictureTouchUp( point ); 
-			this_view.zoom.point_ids[0] = -1;
+			point_ids[0] = -1;
 			break;
 		default: break;
 		}
@@ -452,20 +453,20 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 	this_view.drag.is_running = FALSE;
 	/* 遍历各个触点，确定两个用于缩放功能的触点 */
-	for( i = 0; i < e->n_points; ++i ) {
-		if( this_view.zoom.point_ids[0] == -1 ) {
-			points[0] = &e->points[i];
-			this_view.zoom.point_ids[0] = points[0]->id;
+	for( i = 0; i < e->touch.n_points; ++i ) {
+		if( point_ids[0] == -1 ) {
+			points[0] = &e->touch.points[i];
+			point_ids[0] = points[0]->id;
 			continue;
-		} else if( this_view.zoom.point_ids[0] == e->points[i].id ) {
-			points[0] = &e->points[i];
+		} else if( point_ids[0] == e->touch.points[i].id ) {
+			points[0] = &e->touch.points[i];
 			continue;
 		}
 		if( this_view.zoom.point_ids[1] == -1 ) {
-			points[1] = &e->points[i];
-			this_view.zoom.point_ids[1] = points[1]->id;
-		} else if( this_view.zoom.point_ids[1] == e->points[i].id ) {
-			points[1] = &e->points[i];
+			points[1] = &e->touch.points[i];
+			point_ids[1] = points[1]->id;
+		} else if( point_ids[1] == e->touch.points[i].id ) {
+			points[1] = &e->touch.points[i];
 		}
 	}
 	/* 计算两触点的距离 */
@@ -503,25 +504,25 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		if( points[i]->state != WET_TOUCHUP ) {
 			continue;
 		}
-		this_view.zoom.point_ids[i] = -1;
+		point_ids[i] = -1;
 		this_view.zoom.is_running = FALSE;
-		id = this_view.zoom.point_ids[i == 0 ? 1 : 0];
-		for( j = 0; j < e->n_points; ++j ) {
-			if( e->points[j].state == WET_TOUCHUP ||
-			    e->points[j].id == id ) {
+		id = point_ids[i == 0 ? 1 : 0];
+		for( j = 0; j < e->touch.n_points; ++j ) {
+			if( e->touch.points[j].state == WET_TOUCHUP ||
+			    e->touch.points[j].id == id ) {
 				continue;
 			}
-			points[i] = &e->points[j];
-			this_view.zoom.point_ids[i] = points[i]->id;
+			points[i] = &e->touch.points[j];
+			point_ids[i] = points[i]->id;
 			i -= 1;
 			break;
 		}
 	}
-	if( this_view.zoom.point_ids[0] == -1 ) {
-		this_view.zoom.point_ids[0] = this_view.zoom.point_ids[1];
-		this_view.zoom.point_ids[1] = -1;
+	if( point_ids[0] == -1 ) {
+		point_ids[0] = point_ids[1];
+		point_ids[1] = -1;
 		this_view.zoom.is_running = FALSE;
-	} else if( this_view.zoom.point_ids[1] == -1 ) {
+	} else if( point_ids[1] == -1 ) {
 		this_view.zoom.is_running = FALSE;
 	}
 }
@@ -576,7 +577,7 @@ void UI_OpenPictureView( const char *filepath )
 {
 	int len;
 	wchar_t *wpath;
-	LCUI_Widget main_window, btn, root;
+	LCUI_Widget main_window, root;
 
 	len = strlen( filepath );
 	root = LCUIWidget_GetRoot();
