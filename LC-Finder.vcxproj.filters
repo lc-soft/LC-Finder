@@ -75,6 +75,9 @@
     <ClCompile Include="src\ui\view_picture_info.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\dialog_input.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -125,10 +128,10 @@
     <ClInclude Include="include\thumbview.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\dialog_confirm.h">
+    <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="include\dialog.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

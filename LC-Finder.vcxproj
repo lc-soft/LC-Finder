@@ -28,6 +28,7 @@
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\ui\dialog_confirm.c" />
+    <ClCompile Include="src\ui\dialog_input.c" />
     <ClCompile Include="src\ui\filesync.c" />
     <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\view_folders.c" />
@@ -53,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\common.h" />
-    <ClInclude Include="include\dialog_confirm.h" />
+    <ClInclude Include="include\dialog.h" />
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\finder.h" />
