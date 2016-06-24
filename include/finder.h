@@ -84,8 +84,6 @@ typedef struct FileSyncStatusRec_ {
 
 extern Finder finder;
 
-void LCFinder_Init( void );
-
 /** 绑定事件 */
 int LCFinder_BindEvent( int event_id, EventHandler handler, void *data );
 
@@ -107,6 +105,10 @@ int LCFinder_SyncFiles( FileSyncStatus s );
 DB_Dir LCFinder_GetDir( const char *dirpath );
 
 DB_Dir LCFinder_AddDir( const char *dirpath );
+
+DB_Tag LCFinder_GetTag( const char *tagname );
+
+DB_Tag LCFinder_AddTag( const char *tagname );
 
 void LCFinder_DeleteDir( DB_Dir dir );
 

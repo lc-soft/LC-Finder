@@ -82,4 +82,7 @@ int getsizestr( wchar_t *str, int max_len, int64_t size );
 
 int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
 
+/** 统计一个字符串中的指定字符的数量 */
+int wgetcharcount( const wchar_t *wstr, const wchar_t *chars );
+
 #endif

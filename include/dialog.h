@@ -50,12 +50,17 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 /** 显示“文本输入”对话框
  * @param[in] parent 用于容纳对话框的父部件
  * @param[in] title 对话框标题
+ * @param[in] placeholder 文本编辑框的占位符
  * @param[in] val 文本编辑框内预置的文本
  * @param[out] newval 文本缓存，用于存放编辑后的文本
  * @param[in] max_len 文本缓存的最大长度
+ * @param[in] checker 验证函数，用于验证输入的文本是否符合要求，如果符合则返回
+ * TRUE，否则返回 FALSE，置为 NULL 时将不验证文本。
  * @return 文本编辑框内的文本文本长度
  */
 int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
-		      const wchar_t *val, wchar_t *newval, size_t max_len );
+		      const wchar_t *placeholder, const wchar_t *val,
+		      wchar_t *newval, size_t max_len,
+		      LCUI_BOOL( *checker )(const wchar_t*) );
 
 #endif

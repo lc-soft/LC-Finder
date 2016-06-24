@@ -318,3 +318,16 @@ int getsizestr( wchar_t *str, int max_len, int64_t size )
 	num = 1.0 * prev_tmp / 1024.0;
 	return swprintf( str, max_len, L"%0.2f%s", num, units[i] );
 }
+
+int wgetcharcount( const wchar_t *wstr, const wchar_t *chars )
+{
+	int i, j, count;
+	for( count = i = 0; wstr[i]; ++i ) {
+		for( j = 0; chars[j]; ++j ) {
+			if( wstr[i] == chars[j] ) {
+				++count;
+			}
+		}
+	}
+	return count;
+}

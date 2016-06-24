@@ -50,16 +50,52 @@ typedef struct DialogContextRec_ {
 	size_t len;
 	size_t max_len;
 	wchar_t *text;
+	const wchar_t *old_text;
+	LCUI_BOOL (*checker)(const wchar_t*);
 	LCUI_Widget input;
+	LCUI_Widget btn;
 	LCUI_MainLoop loop;
 } DialogContextRec, *DialogContext;
 
-static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnInputChange( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DialogContext ctx = e->data;
 	ctx->len = TextEdit_GetTextW( ctx->input, 0, ctx->max_len, ctx->text );
+	if( ctx->len > 0 ) {
+		if( ctx->checker && !ctx->checker(ctx->text) ) {
+			Widget_AddClass( w, "has-error" );
+			Widget_SetDisabled( ctx->btn, TRUE );
+		} else {
+			Widget_RemoveClass( w, "has-error" );
+			Widget_SetDisabled( ctx->btn, FALSE );
+		}
+	} else {
+		Widget_SetDisabled( ctx->btn, TRUE );
+	}
+}
+
+static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	int len;
+	DB_Tag tag;
+	char *tagname;
+	DialogContext ctx = e->data;
+	if( w->disabled ) {
+		return;
+	}
+	ctx->len = TextEdit_GetTextW( ctx->input, 0, ctx->max_len, ctx->text );
 	if( ctx->len == 0 ) {
 		return;
+	}
+	len = LCUI_EncodeString( NULL, ctx->text, 0, ENCODING_UTF8 );
+	tagname = NEW( char, len + 1 );
+	LCUI_EncodeString( tagname, ctx->text, 0, ENCODING_UTF8 );
+	tag = LCFinder_GetTag( tagname );
+	if( !tag ) {
+		tag = LCFinder_AddTag( tagname );
+	}
+	if( tag ) {
+		tag->count += 1;
 	}
 	LCUI_MainLoop_Quit( ctx->loop );
 }
@@ -71,7 +107,9 @@ static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 }
 
 int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title, 
-		      const wchar_t *val, wchar_t *newval, size_t max_len )
+		      const wchar_t *placeholder, const wchar_t *val, 
+		      wchar_t *newval, size_t max_len, 
+		      LCUI_BOOL (*checker)(const wchar_t*) )
 {
 	DialogContextRec ctx;
 	LCUI_Widget dialog_text, box;
@@ -82,8 +120,11 @@ int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
 	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
 	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
+	ctx.btn = btn_ok;
 	ctx.text = newval;
+	ctx.old_text = val;
 	ctx.max_len = max_len;
+	ctx.checker = checker;
 	ctx.loop = LCUI_MainLoop_New();
 	ctx.input = LCUIWidget_New( "textedit" );
 	Widget_AddClass( dialog, "dialog" );
@@ -94,6 +135,7 @@ int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
 	Widget_AddClass( ctx.input, "dialog-input full-width" );
 	dialog_text = LCUIWidget_New( "textview" );
 	TextEdit_SetTextW( ctx.input, val );
+	TextEdit_SetPlaceHolderW( ctx.input, placeholder );
 	TextView_SetTextW( dialog_text, title );
 	Widget_Append( dialog_header, dialog_text );
 	Widget_Append( dialog_body, ctx.input );
@@ -118,8 +160,10 @@ int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
 	Widget_Append( dialog_content, dialog_footer );
 	Widget_Append( dialog, dialog_content );
 	Widget_Append( parent, dialog );
+	Widget_SetDisabled( btn_ok, TRUE );
 	Widget_BindEvent( btn_ok, "click", OnBtnOkClick, &ctx, NULL );
 	Widget_BindEvent( btn_cancel, "click", OnBtnCancelClick, &ctx, NULL );
+	Widget_BindEvent( ctx.input, "change", OnInputChange, &ctx, NULL );
 	LCUI_MainLoop_Run( ctx.loop );
 	Widget_Destroy( dialog );
 	return ctx.len;

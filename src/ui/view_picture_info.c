@@ -49,9 +49,10 @@
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
 
-#define DIALOG_TITLE_ADDTAG	L"添加标签"
-#define DIALOG_TITLE_EDITTAG	L"编辑标签"
-#define XML_PATH		"res/ui-view-picture-info.xml"
+#define DIALOG_TITLE_ADDTAG		L"添加标签"
+#define DIALOG_TITLE_EDITTAG		L"编辑标签"
+#define DIALOG_INPUT_PLACEHOLDER	L"请输入标签名称"
+#define XML_PATH			"res/ui-view-picture-info.xml"
 
 struct PictureInfoPanel {
 	LCUI_Widget panel;
@@ -68,6 +69,14 @@ struct PictureInfoPanel {
 	time_t mtime;
 } this_view;
 
+static LCUI_BOOL CheckTagName( const wchar_t *tagname )
+{
+	if( wgetcharcount( tagname, L" ,;\n\r\t" ) > 0 ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static void OnBtnHideClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	Widget_Hide( this_view.panel );
@@ -77,7 +86,8 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	wchar_t text[256];
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	LCUIDialog_Input( window, DIALOG_TITLE_ADDTAG, L"测试", text, 255 );
+	LCUIDialog_Input( window, DIALOG_TITLE_ADDTAG, DIALOG_INPUT_PLACEHOLDER,
+			  NULL, text, 255, CheckTagName );
 }
 
 void UI_InitPictureInfoView( void )

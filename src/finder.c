@@ -344,6 +344,36 @@ static void LCFinder_InitWorkDir( void )
 	_wsetlocale(LC_ALL, L"chs");
 }
 
+DB_Tag LCFinder_GetTag( const char *tagname )
+{
+	int i;
+	for( i = 0; i < finder.n_tags; ++i ) {
+		if( strcmp( finder.tags[i]->name, tagname ) == 0 ) {
+			return finder.tags[i];
+		}
+	}
+	return NULL;
+}
+
+DB_Tag LCFinder_AddTag( const char *tagname )
+{
+	DB_Tag *tags;
+	DB_Tag tag = DB_AddTag( tagname );
+	if( !tag ) {
+		return NULL;
+	}
+	finder.n_tags += 1;
+	tags = realloc( finder.tags, sizeof( DB_Tag )*(finder.n_tags + 1) );
+	if( !tags ) {
+		finder.n_tags -= 1;
+		return NULL;
+	}
+	tags[finder.n_tags - 1] = tag;
+	tags[finder.n_tags] = NULL;
+	finder.tags = tags;
+	return tag;
+}
+
 /** 初始化文件数据库 */
 static void LCFInder_InitFileDB( void )
 {
