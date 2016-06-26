@@ -47,6 +47,7 @@
 #define BTN_CANCEL_TEXT	L"取消"
 
 typedef struct DialogContextRec_ {
+	int result;
 	size_t len;
 	size_t max_len;
 	wchar_t *text;
@@ -76,9 +77,6 @@ static void OnInputChange( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int len;
-	DB_Tag tag;
-	char *tagname;
 	DialogContext ctx = e->data;
 	if( w->disabled ) {
 		return;
@@ -87,22 +85,14 @@ static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( ctx->len == 0 ) {
 		return;
 	}
-	len = LCUI_EncodeString( NULL, ctx->text, 0, ENCODING_UTF8 );
-	tagname = NEW( char, len + 1 );
-	LCUI_EncodeString( tagname, ctx->text, 0, ENCODING_UTF8 );
-	tag = LCFinder_GetTag( tagname );
-	if( !tag ) {
-		tag = LCFinder_AddTag( tagname );
-	}
-	if( tag ) {
-		tag->count += 1;
-	}
+	ctx->result = 0;
 	LCUI_MainLoop_Quit( ctx->loop );
 }
 
 static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DialogContext ctx = e->data;
+	ctx->result = -1;
 	LCUI_MainLoop_Quit( ctx->loop );
 }
 
@@ -166,5 +156,5 @@ int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
 	Widget_BindEvent( ctx.input, "change", OnInputChange, &ctx, NULL );
 	LCUI_MainLoop_Run( ctx.loop );
 	Widget_Destroy( dialog );
-	return ctx.len;
+	return ctx.result;
 }

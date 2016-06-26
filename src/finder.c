@@ -216,7 +216,7 @@ static void SyncDeletedFile( void *data, const wchar_t *wpath )
 	DirStatusDataPack pack = data;
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
-	DB_DeleteFile( pack->dir, path );
+	DB_DeleteFile( path );
 	//wprintf(L"sync: delete file: %s\n", wpath);
 }
 
@@ -372,6 +372,27 @@ DB_Tag LCFinder_AddTag( const char *tagname )
 	tags[finder.n_tags] = NULL;
 	finder.tags = tags;
 	return tag;
+}
+
+int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags )
+{
+	int i, j, count, n;
+	DB_Tag *tags, *newtags;
+	n = DBFile_GetTags( file, &tags );
+	newtags = malloc( sizeof( DB_Tag ) * (n + 1) );
+	for( count = 0, i = 0; i < n; ++i ) {
+		for( j = 0; j < finder.n_tags; ++j ) {
+			if( tags[i]->id == finder.tags[j]->id ) {
+				newtags[count] = finder.tags[j];
+				++count;
+				break;
+			}
+		}
+		free( tags[i] );
+	}
+	*outtags = newtags;
+	free( tags );
+	return count;
 }
 
 /** 初始化文件数据库 */
