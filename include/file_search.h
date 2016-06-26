@@ -104,7 +104,10 @@ DB_Tag DB_AddTag( const char *tagname );
 void DB_AddFile( DB_Dir dir, const char *filepath, int create_time );
 
 /** 删除一个文件记录 */
-void DB_DeleteFile( DB_Dir dir, const char *filepath );
+void DB_DeleteFile( const char *filepath );
+
+/** 获取一个文件记录 */
+DB_File DB_GetFile( const char *filepath );
 
 /** 获取全部标签记录 */
 int DB_GetTags( DB_Tag **outlist );
@@ -113,10 +116,13 @@ int DB_GetTags( DB_Tag **outlist );
 void DBTag_Remove( DB_Tag tag );
 
 /** 为文件移除一个标签 */
-void DBFile_RemoveTag( DB_File file, DB_Tag tag );
+int DBFile_RemoveTag( DB_File file, DB_Tag tag );
 
 /** 为文件添加一个标签 */
-void DBFile_AddTag( DB_File file, DB_Tag tag );
+int DBFile_AddTag( DB_File file, DB_Tag tag );
+
+/** 获取文件拥有的标签列表 */
+int DBFile_GetTags( DB_File file, DB_Tag **outtags );
 
 /** 为文件评分 */
 void DBFile_SetScore( DB_File file, int score );

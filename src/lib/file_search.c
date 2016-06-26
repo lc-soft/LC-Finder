@@ -34,6 +34,7 @@
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,9 +52,14 @@
 enum SQLCodeList {
 	SQL_ADD_FILE,
 	SQL_DEL_FILE,
+	SQL_GET_FILE,
+	SQL_GET_FILE_TAGS,
+	SQL_ADD_FILE_TAG,
+	SQL_DEL_FILE_TAG,
 	SQL_GET_DIR_TOTAL,
 	SQL_GET_DIR_LIST,
 	SQL_ADD_TAG,
+	SQL_GET_TAG,
 	SQL_ADD_DIR,
 	SQL_DEL_DIR,
 	SQL_TOTAL
@@ -112,18 +118,23 @@ STATIC_STR sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
 STATIC_STR sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
 STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
-STATIC_STR sql_remove_tag = "DELETE FROM tag WHERE id = %d;";
+STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
 STATIC_STR sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
 STATIC_STR sql_file_add_tag = "\
-REPLACE INTO file_tag_relation(fid, did, tid) VALUES(%d, %d, %d);";
-STATIC_STR sql_file_remove_tag = "\
-DELETE FROM file_tag_relation WHERE fid = %d AND tid = %d;";
+REPLACE INTO file_tag_relation(fid, tid) VALUES(?, ?);";
+STATIC_STR sql_file_del_tag = "\
+DELETE FROM file_tag_relation WHERE fid = ? AND tid = ?;";
 STATIC_STR sql_add_file = "\
 INSERT INTO file(did, path, create_time) VALUES(?,  ?, ?);";
-STATIC_STR sql_del_file = "\
-DELETE FROM file WHERE did = ? AND path = ?;";
-STATIC_STR sql_get_tag_id = "SELECT id FROM tag WHERE name = \"%s\";";
+STATIC_STR sql_del_file = "DELETE FROM file WHERE path = ?;";
+STATIC_STR sql_get_tag = "SELECT id FROM tag WHERE name = ?;";
 STATIC_STR sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
+STATIC_STR sql_get_file = "\
+SELECT f.id, f.did, f.score, f.path, f.create_time FROM file f \
+WHERE f.path = ?;";
+STATIC_STR sql_get_file_tags = "\
+SELECT t.id, t.name, count(*) FROM tag t, file_tag_relation ftr \
+WHERE t.id = ftr.tid and ftr.fid = ? GROUP BY t.id ORDER BY count(*) ASC;";
 STATIC_STR sql_search_files = "\
 SELECT f.id, f.did, f.score, f.path, f.create_time FROM file f";
 STATIC_STR sql_count_files = "SELECT COUNT(f.id) FROM file f";
@@ -217,9 +228,14 @@ int DB_Init( void )
 				 sqlite3_hasfile, NULL, NULL );
 	self.sqls[SQL_ADD_FILE] = sql_add_file;
 	self.sqls[SQL_DEL_FILE] = sql_del_file;
+	self.sqls[SQL_GET_FILE] = sql_get_file;
 	self.sqls[SQL_ADD_DIR] = sql_add_dir;
 	self.sqls[SQL_DEL_DIR] = sql_del_dir;
 	self.sqls[SQL_ADD_TAG] = sql_add_tag;
+	self.sqls[SQL_GET_TAG] = sql_get_tag;
+	self.sqls[SQL_ADD_FILE_TAG] = sql_file_add_tag;
+	self.sqls[SQL_DEL_FILE_TAG] = sql_file_del_tag;
+	self.sqls[SQL_GET_FILE_TAGS] = sql_get_file_tags;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
 	self.sqls[SQL_GET_DIR_TOTAL] = sql_get_dir_total;
 	for( i = 0; i < SQL_TOTAL; ++i ) {
@@ -321,15 +337,17 @@ DB_Tag DB_AddTag( const char *tagname )
 	int ret;
 	DB_Tag tag;
 	sqlite3_stmt *stmt;
-	char *errmsg, sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_add_tag, tagname );
-	ret = sqlite3_exec( self.db, sql, NULL, NULL, &errmsg );
-	if( ret != SQLITE_OK ) {
-		printf( "[database] error: %s\n", errmsg );
+	stmt = self.stmts[SQL_ADD_TAG];
+	sqlite3_reset( stmt );
+	sqlite3_bind_text( stmt, 1, tagname, strlen( tagname ), NULL );
+	ret = sqlite3_step( stmt );
+	if( ret != SQLITE_DONE ) {
+		printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
 		return NULL;
 	}
-	sprintf( sql, sql_get_tag_id, tagname );
-	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
+	stmt = self.stmts[SQL_GET_TAG];
+	sqlite3_reset( stmt );
+	sqlite3_bind_text( stmt, 1, tagname, strlen( tagname ), NULL );
 	ret = sqlite3_step( stmt );
 	if( ret != SQLITE_ROW ) {
 		return NULL;
@@ -338,28 +356,53 @@ DB_Tag DB_AddTag( const char *tagname )
 	tag->id = sqlite3_column_int( stmt, 0 );
 	tag->name = strdup( tagname );
 	tag->count = 0;
-	sqlite3_finalize( stmt );
 	return tag;
 }
 
 void DB_AddFile( DB_Dir dir, const char *filepath, int create_time )
 {
-	int ret;
 	sqlite3_stmt *stmt = self.stmts[SQL_ADD_FILE];
-	sqlite3_reset( stmt );
-	ret = sqlite3_bind_int( stmt, 1, dir->id );
-	ret = sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
-	ret = sqlite3_bind_int( stmt, 3, create_time );
-	ret = sqlite3_step( stmt );
-}
-
-void DB_DeleteFile( DB_Dir dir, const char *filepath )
-{
-	sqlite3_stmt *stmt = self.stmts[SQL_DEL_FILE];
 	sqlite3_reset( stmt );
 	sqlite3_bind_int( stmt, 1, dir->id );
 	sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
+	sqlite3_bind_int( stmt, 3, create_time );
 	sqlite3_step( stmt );
+}
+
+void DB_DeleteFile( const char *filepath )
+{
+	sqlite3_stmt *stmt = self.stmts[SQL_DEL_FILE];
+	sqlite3_reset( stmt );
+	sqlite3_bind_text( stmt, 1, filepath, strlen( filepath ), NULL );
+	sqlite3_step( stmt );
+}
+
+static DB_File DB_LoadFile( sqlite3_stmt *stmt )
+{
+	int len;
+	DB_File file;
+	const char *path;
+	if( sqlite3_step( stmt ) != SQLITE_ROW ) {
+		return NULL;
+	}
+	file = malloc( sizeof( DB_FileRec ) );
+	file->id = sqlite3_column_int( stmt, 0 );
+	file->did = sqlite3_column_int( stmt, 1 );
+	file->score = sqlite3_column_int( stmt, 2 );
+	path = sqlite3_column_text( stmt, 3 );
+	file->create_time = sqlite3_column_int( stmt, 4 );
+	len = strlen( path ) + 1;
+	file->path = malloc( len *sizeof( char ) );
+	strncpy( file->path, path, len );
+	return file;
+}
+
+DB_File DB_GetFile( const char *filepath )
+{
+	sqlite3_stmt *stmt = self.stmts[SQL_GET_FILE];
+	sqlite3_reset( stmt );
+	sqlite3_bind_text( stmt, 1, filepath, strlen( filepath ), NULL );
+	return DB_LoadFile( stmt );
 }
 
 int DB_GetTags( DB_Tag **outlist )
@@ -407,22 +450,71 @@ int DB_GetTags( DB_Tag **outlist )
 void DBTag_Remove( DB_Tag tag )
 {
 	char sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_remove_tag, tag->id );
+	sprintf( sql, sql_del_tag, tag->id );
 	DB_CacheSQL( sql );
 }
 
-void DBFile_RemoveTag( DB_File file, DB_Tag tag )
+int DBFile_RemoveTag( DB_File file, DB_Tag tag )
 {
-	char sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_file_remove_tag, file->id, tag->id );
-	DB_CacheSQL( sql );
+	int ret;
+	sqlite3_stmt *stmt = self.stmts[SQL_DEL_FILE_TAG];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, file->id );
+	sqlite3_bind_int( stmt, 2, tag->id );
+	ret = sqlite3_step( stmt );
+	if( ret == SQLITE_DONE ) {
+		return 0;
+	}
+	printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
+	return -1;
 }
 
-void DBFile_AddTag( DB_File file, DB_Tag tag )
+int DBFile_AddTag( DB_File file, DB_Tag tag )
 {
-	char sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_file_add_tag, file->id, file->did, tag->id );
-	DB_CacheSQL( sql );
+	int ret;
+	sqlite3_stmt *stmt = self.stmts[SQL_ADD_FILE_TAG];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, file->id );
+	sqlite3_bind_int( stmt, 2, tag->id );
+	ret = sqlite3_step( stmt );
+	if( ret == SQLITE_DONE ) {
+		return 0;
+	}
+	printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
+	return -1;
+}
+
+int DBFile_GetTags( DB_File file, DB_Tag **outtags )
+{
+	const char *name;
+	int len, total = 0;
+	sqlite3_stmt *stmt;
+	DB_Tag tag, *tags = NULL, *newtags;
+	stmt = self.stmts[SQL_GET_FILE_TAGS];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, file->id );
+	while( sqlite3_step( stmt ) == SQLITE_ROW ) {
+		++total;
+		newtags = realloc( tags, (total + 1) * sizeof( DB_Tag ) );
+		if( !newtags ) {
+			free( tags );
+			return -ENOMEM;
+		}
+		tags = newtags;
+		tag = malloc( sizeof( DB_TagRec ) );
+		tag->id = sqlite3_column_int( stmt, 0 );
+		name = sqlite3_column_text( stmt, 1 );
+		len = strlen( name ) + 1;
+		tag->name = malloc( len * sizeof( char ) );
+		strncpy( tag->name, name, len );
+		tag->count = sqlite3_column_int( stmt, 2 );
+		tags[total - 1] = tag;
+	}
+	if( total > 0 ) {
+		tags[total] = NULL;
+	}
+	*outtags = tags;
+	return total;
 }
 
 void DBFile_SetScore( DB_File file, int score )
@@ -474,22 +566,7 @@ static int escape( char *buf, const char *str )
 
 DB_File DBQuery_FetchFile( DB_Query query )
 {
-	int ret;
-	DB_File file;
-	const char *path;
-	ret = sqlite3_step( query->stmt );
-	if( ret != SQLITE_ROW ) {
-		return NULL;
-	}
-	file = malloc( sizeof( DB_FileRec ) );
-	file->id = sqlite3_column_int( query->stmt, 0 );
-	file->did = sqlite3_column_int( query->stmt, 1 );
-	file->score = sqlite3_column_int( query->stmt, 2 );
-	path = sqlite3_column_text( query->stmt, 3 );
-	file->create_time = sqlite3_column_int( query->stmt, 4 );
-	file->path = malloc( (strlen( path ) + 1)*sizeof( char ) );
-	strcpy( file->path, path );
-	return file;
+	return DB_LoadFile( query->stmt );
 }
 
 DB_Query DB_NewQuery( const DB_QueryTerms terms )
