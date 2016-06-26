@@ -438,10 +438,24 @@ textedit.dialog-input {
 .dialog-content .dialog-btn:active {
 	background-color: #aaa;
 }
+.dialog-content .dialog-btn:disabled {
+	background-color: #eaeaea;
+	border: 2px solid #eaeaea;
+}
+.dialog-content .dialog-btn:disabled textview {
+	color: #bbb;
+}
 .dialog-content .dialog-btn textview {
 	width: 100%;
 	text-align: center;
 	line-height: 30px;
+}
+.dialog-content textedit.has-error,
+.dialog-content textedit.has-error:focus,
+.dialog-content textedit.has-error:hover,
+.dialog-content textedit.has-error:active {
+	border-color: #a94442;
+	box-shadow: 0 0 6px rgba(169,68,66,0.4);
 }
 
 #view-home-content textview:first-child {
@@ -572,4 +586,35 @@ textedit.dialog-input {
 	padding: 0;
 	text-align: center;
 	line-height: 18px;
+}
+
+.tag-list {
+
+}
+.tag-list-item {
+	border: 1px solid #eee;
+	display: inline-block;
+	margin: 4px 4px 0 0;
+}
+.tag-list-item:hover {
+	border-color: #ccc;
+}
+.tag-list-item textview {
+	display: inline-block;	
+	padding: 5 10px;
+	line-height: 24px;
+	color: #666;
+}
+.tag-list-item .btn-delete {
+	color: #ddd;
+	pointer-events: auto;
+	display: inline-block;
+}
+.tag-list-item .btn-delete:hover {
+	color: #f00;
+	background-color: rgba(255,0,0,0.1);
+}
+.tag-list-item .btn-delete:active {
+	color: #fff;
+	background-color: #f00;
 }
