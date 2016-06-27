@@ -596,25 +596,25 @@ textedit.dialog-input {
 	display: inline-block;
 	margin: 4px 4px 0 0;
 }
-.tag-list-item:hover {
-	border-color: #ccc;
-}
 .tag-list-item textview {
 	display: inline-block;	
-	padding: 5 10px;
-	line-height: 24px;
+	padding: 4 8px;
 	color: #666;
+	line-height: 24px;
+	font-size: 13px;
+}
+.tag-list-item textview:first-child {
+	padding-right: 0;
 }
 .tag-list-item .btn-delete {
 	color: #ddd;
 	pointer-events: auto;
 	display: inline-block;
+	font-size: 14px;
 }
 .tag-list-item .btn-delete:hover {
-	color: #f00;
-	background-color: rgba(255,0,0,0.1);
+	color: #aaa;
 }
 .tag-list-item .btn-delete:active {
-	color: #fff;
-	background-color: #f00;
+	color: #888;
 }

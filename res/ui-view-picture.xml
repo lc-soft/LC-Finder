@@ -15,11 +15,11 @@
       <widget class="window-body">
         <widget id="picture-viewer-target" class="picture-container"></widget>
         <widget class="picture-option-group">
-          <widget class="picture-option-btn">
-            <widget id="btn-picture-reset-size" class="icon mdi mdi-fullscreen" type="textview"></widget>
+          <widget id="btn-picture-reset-size" class="picture-option-btn">
+            <widget class="icon mdi mdi-fullscreen" type="textview"></widget>
           </widget>
-          <widget class="picture-option-btn">
-            <widget id="btn-picture-zoom-out" class="icon mdi mdi-minus" type="textview"></widget>
+          <widget id="btn-picture-zoom-out" class="picture-option-btn">
+            <widget class="icon mdi mdi-minus" type="textview"></widget>
           </widget>
           <widget id="btn-picture-zoom-in" class="picture-option-btn">
             <widget class="icon mdi mdi-plus" type="textview"></widget>
