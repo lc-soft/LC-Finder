@@ -361,8 +361,8 @@ static void ViewSync_Thread( void *arg )
 				this_view.dir == NULL );
 			DEBUG_MSG("append folder: %s\n", entry->path);
 		} else {
-			item = ThumbView_AppendPicture( 
-				this_view.items, entry->path );
+			item = ThumbView_AppendPicture( this_view.items, 
+							entry->file );
 		}
 		if( item ) {
 			Widget_BindEvent( item, "click", OnItemClick, 

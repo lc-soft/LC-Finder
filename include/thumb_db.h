@@ -45,8 +45,10 @@ typedef unqlite* ThumbDB;
 #endif
 
 typedef struct ThumbDatakRec_ {
-	unsigned int modify_time;
-	LCUI_Graph graph;
+	uint_t modify_time;		/**< 修改时间 */
+	int origin_width;		/**< 原始宽度 */
+	int origin_height;		/**< 原始高度 */
+	LCUI_Graph graph;		/**< 缩略图数据 */
 } ThumbDataRec, *ThumbData;
 
 /** 新建一个缩略图数据库实例 */

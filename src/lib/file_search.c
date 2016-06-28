@@ -56,6 +56,8 @@ enum SQLCodeList {
 	SQL_GET_FILE_TAGS,
 	SQL_ADD_FILE_TAG,
 	SQL_DEL_FILE_TAG,
+	SQL_SET_FILE_SIZE,
+	SQL_SET_FILE_SCORE,
 	SQL_GET_DIR_TOTAL,
 	SQL_GET_DIR_LIST,
 	SQL_ADD_TAG,
@@ -87,6 +89,8 @@ CREATE TABLE IF NOT EXISTS file (\
 	did INTEGER NOT NULL, \
 	path TEXT NOT NULL,\
 	score INTEGER DEFAULT 0,\
+	width INTEGER DEFAULT 0,\
+	height INTEGER DEFAULT 0,\
 	create_time INTEGER NOT NULL,\
 	FOREIGN KEY(did) REFERENCES dir(id) ON DELETE CASCADE\
 );\
@@ -119,7 +123,9 @@ STATIC_STR sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
 STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
-STATIC_STR sql_file_set_score = "UPDATE file SET score = %d WHERE id = %d;";
+STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
+STATIC_STR sql_file_set_size = "\
+UPDATE file SET width = ?, height = ? WHERE id = ?;";
 STATIC_STR sql_file_add_tag = "\
 REPLACE INTO file_tag_relation(fid, tid) VALUES(?, ?);";
 STATIC_STR sql_file_del_tag = "\
@@ -130,13 +136,13 @@ STATIC_STR sql_del_file = "DELETE FROM file WHERE path = ?;";
 STATIC_STR sql_get_tag = "SELECT id FROM tag WHERE name = ?;";
 STATIC_STR sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 STATIC_STR sql_get_file = "\
-SELECT f.id, f.did, f.score, f.path, f.create_time FROM file f \
-WHERE f.path = ?;";
+SELECT f.id, f.did, f.score, f.path, f.width, f.height, f.create_time \
+FROM file f WHERE f.path = ?;";
 STATIC_STR sql_get_file_tags = "\
 SELECT t.id, t.name, count(*) FROM tag t, file_tag_relation ftr \
 WHERE t.id = ftr.tid and ftr.fid = ? GROUP BY t.id ORDER BY count(*) ASC;";
 STATIC_STR sql_search_files = "\
-SELECT f.id, f.did, f.score, f.path, f.create_time FROM file f";
+SELECT f.id, f.did, f.score, f.path, f.width, f.height, f.create_time FROM file f";
 STATIC_STR sql_count_files = "SELECT COUNT(f.id) FROM file f";
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
@@ -235,6 +241,7 @@ int DB_Init( void )
 	self.sqls[SQL_GET_TAG] = sql_get_tag;
 	self.sqls[SQL_ADD_FILE_TAG] = sql_file_add_tag;
 	self.sqls[SQL_DEL_FILE_TAG] = sql_file_del_tag;
+	self.sqls[SQL_SET_FILE_SIZE] = sql_file_set_size;
 	self.sqls[SQL_GET_FILE_TAGS] = sql_get_file_tags;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
 	self.sqls[SQL_GET_DIR_TOTAL] = sql_get_dir_total;
@@ -377,6 +384,21 @@ void DB_DeleteFile( const char *filepath )
 	sqlite3_step( stmt );
 }
 
+DB_File DBFile_Dup( DB_File file )
+{
+	DB_File f = malloc( sizeof(DB_FileRec) );
+	*f = *file;
+	f->path = strdup( file->path );
+	return f;
+}
+
+void DBFile_Release( DB_File file )
+{
+	free( file->path );
+	file->path = NULL;
+	free( file );
+}
+
 static DB_File DB_LoadFile( sqlite3_stmt *stmt )
 {
 	int len;
@@ -390,7 +412,9 @@ static DB_File DB_LoadFile( sqlite3_stmt *stmt )
 	file->did = sqlite3_column_int( stmt, 1 );
 	file->score = sqlite3_column_int( stmt, 2 );
 	path = sqlite3_column_text( stmt, 3 );
-	file->create_time = sqlite3_column_int( stmt, 4 );
+	file->width = sqlite3_column_int( stmt, 4 );
+	file->height = sqlite3_column_int( stmt, 5 );
+	file->create_time = sqlite3_column_int( stmt, 6 );
 	len = strlen( path ) + 1;
 	file->path = malloc( len *sizeof( char ) );
 	strncpy( file->path, path, len );
@@ -517,11 +541,37 @@ int DBFile_GetTags( DB_File file, DB_Tag **outtags )
 	return total;
 }
 
-void DBFile_SetScore( DB_File file, int score )
+int DBFile_SetScore( DB_File file, int score )
 {
-	char sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_file_set_score, score, file->id );
-	DB_CacheSQL( sql );
+	int ret;
+	sqlite3_stmt *stmt = self.stmts[SQL_SET_FILE_SCORE];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, score );
+	sqlite3_bind_int( stmt, 2, file->id );
+	ret = sqlite3_step( stmt );
+	if( ret == SQLITE_DONE ) {
+		return 0;
+	}
+	printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
+	return -1;
+}
+
+int DBFile_SetSize( DB_File file, int width, int height )
+{
+	int ret;
+	sqlite3_stmt *stmt = self.stmts[SQL_SET_FILE_SIZE];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, width );
+	sqlite3_bind_int( stmt, 2, height );
+	sqlite3_bind_int( stmt, 3, file->id );
+	ret = sqlite3_step( stmt );
+	if( ret == SQLITE_DONE ) {
+		file->width = width;
+		file->height = height;
+		return 0;
+	}
+	printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
+	return -1;
 }
 
 int DBQuery_GetTotalFiles( DB_Query query )

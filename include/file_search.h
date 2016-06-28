@@ -59,6 +59,8 @@ typedef struct DB_FileRec_ {
 	int did;			/**< 文件夹标识号 */
 	int score;			/**< 文件评分 */
 	char *path;			/**< 文件路径 */
+	int width;			/**< 宽度 */
+	int height;			/**< 高度 */
 	unsigned int create_time;	/**< 创建时间 */
 } DB_FileRec, *DB_File;
 
@@ -125,7 +127,16 @@ int DBFile_AddTag( DB_File file, DB_Tag tag );
 int DBFile_GetTags( DB_File file, DB_Tag **outtags );
 
 /** 为文件评分 */
-void DBFile_SetScore( DB_File file, int score );
+int DBFile_SetScore( DB_File file, int score );
+
+/** 为文件设置尺寸 */
+int DBFile_SetSize( DB_File file, int width, int height );
+
+/** 复制文件信息 */
+DB_File DBFile_Dup( DB_File file );
+
+/** 释放文件信息 */
+void DBFile_Release( DB_File file );
 
 /** 获取符合查询条件的文件总数 */
 int DBQuery_GetTotalFiles( DB_Query query );

@@ -99,9 +99,7 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnDeleteDBFile( void *arg )
 {
-	DB_File f = arg;
-	free( f->path );
-	free( f );
+	DBFile_Release( arg );
 }
 
 /** 扫描全部文件 */
@@ -225,7 +223,7 @@ static void HomeView_AppendFile( DB_File file )
 		ts->files = 0;
 		ts->time = *t;
 	}
-	item = ThumbView_AppendPicture( this_view.items, file->path );
+	item = ThumbView_AppendPicture( this_view.items, file );
 	if( item ) {
 		ts->files += 1;
 		Widget_BindEvent( item, "click", OnItemClick,

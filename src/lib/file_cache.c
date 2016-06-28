@@ -164,7 +164,7 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	SyncTask t;
 	DirStats ds;
 	wchar_t name[44];
-	size_t len, len1, len2;
+	size_t max_len, len1, len2;
 	const wchar_t suffix[] = L".tmp";
 
 	t = malloc( sizeof( SyncTaskRec ) + sizeof( DirStatsRec ) );
@@ -179,16 +179,12 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	wcsncpy( t->data_dir, data_dir, len1 );
 	wcsncpy( t->scan_dir, scan_dir, len2 );
 	WEncodeSHA1( name, t->scan_dir, len2 );
-	len = len1 + WCSLEN(name) + WCSLEN( suffix );
-	t->tmpfile = malloc( len * sizeof( wchar_t ) );
-	t->file = malloc( len * sizeof( wchar_t ) );
+	max_len = len1 + WCSLEN( name ) + WCSLEN( suffix ) + 1;
+	t->tmpfile = malloc( max_len * sizeof( wchar_t ) );
+	t->file = malloc( max_len * sizeof( wchar_t ) );
 	wcsncpy( t->tmpfile, t->data_dir, len1 );
-	if( t->tmpfile[len1 - 1] != PATH_SEP ) {
-		t->tmpfile[len1++] = PATH_SEP;
-		t->tmpfile[len1] = 0;
-	}
-	swprintf( t->file, len, L"%s%s", t->tmpfile, name );
-	swprintf( t->tmpfile, len, L"%s%s", t->file, suffix );
+	wpathjoin( t->file, data_dir, name );
+	swprintf( t->tmpfile, max_len, L"%s%s", t->file, suffix );
 	t->state = STATE_NONE;
 	t->deleted_files = 0;
 	t->total_files = 0;

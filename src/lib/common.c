@@ -212,14 +212,15 @@ time_t wgetfilectime( const wchar_t *path )
 
 time_t wgetfilemtime( const wchar_t *path )
 {
+	int fd;
 	struct stat buf;
-	int fd, ctime = 0;
+	time_t mtime = 0;
 	fd = _wopen( path, _O_RDONLY );
 	if( fstat( fd, &buf ) == 0 ) {
-		ctime = (int)buf.st_mtime;
+		mtime = (int)buf.st_mtime;
 	}
 	_close( fd );
-	return ctime;
+	return mtime;
 }
 
 int64_t wgetfilesize( const wchar_t *path )
