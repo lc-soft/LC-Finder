@@ -75,7 +75,10 @@
     <ClCompile Include="src\ui\view_picture_info.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\dialog_input.c">
+    <ClCompile Include="src\ui\view_search.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\dialog_prompt.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>

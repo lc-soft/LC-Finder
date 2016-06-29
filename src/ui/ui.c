@@ -35,15 +35,13 @@
 * ****************************************************************************/
 
 #include <stdlib.h>
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
+#include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
 #include <LCUI/gui/builder.h>
 #include "ui.h"
 #include "thumbview.h"
-#include "finder.h"
 
 #define XML_PATH "res/ui.xml"
 
@@ -75,6 +73,7 @@ void UI_Init(void)
 	UI_InitFoldersView();
 	UI_InitFileSyncTip();
 	UI_InitPictureView();
+	UI_InitSearchView();
 	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 

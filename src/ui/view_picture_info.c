@@ -155,7 +155,7 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	int i, len, ret;
 	wchar_t text[256];
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	ret = LCUIDialog_Input( window, DIALOG_TITLE_ADDTAG, 
+	ret = LCUIDialog_Prompt( window, DIALOG_TITLE_ADDTAG, 
 				DIALOG_INPUT_PLACEHOLDER, NULL, 
 				text, 255, CheckTagName );
 	if( ret != 0 ) {
@@ -179,6 +179,7 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		tag->count += 1;
 	}
 	DBFile_AddTag( this_view.file, tag );
+	LCFinder_TriggerEvent( EVENT_TAG_UPDATE, tag );
 	PictureInfo_AppendTag( tag );
 	free( tagname );
 }

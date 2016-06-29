@@ -44,11 +44,7 @@
 
 #define THUMB_MAX_SIZE 8553600
 
-#define HEAD_SIGN 123456789
-#define TAIL_SIGN 987654321
-
 typedef struct ThumbDataBlockRec_ {
-	int32_t head_sign;
 	size_t width;
 	size_t height;
 	size_t origin_width;
@@ -56,7 +52,6 @@ typedef struct ThumbDataBlockRec_ {
 	size_t mem_size;
 	int color_type;
 	unsigned int modify_time;
-	int32_t tail_sign;
 } ThumbDataBlockRec, *ThumbDataBlock;
 
 ThumbDB ThumbDB_Open( const char *filepath )
@@ -95,9 +90,6 @@ int ThumbDB_Load( ThumbDB db, const char *filepath, ThumbData data )
 	if( rc != UNQLITE_OK ) {
 		return -1;
 	}
-	if( block->head_sign != HEAD_SIGN || block->tail_sign != TAIL_SIGN ) {
-		return -1;
-	}
 	Graph_Init( &data->graph );
 	data->graph.color_type = block->color_type;
 	Graph_Create( &data->graph, block->width, block->height );
@@ -119,8 +111,6 @@ int ThumbDB_Save( ThumbDB db, const char *filepath, ThumbData data )
 	}
 	block = malloc( size );
 	buff = (uchar_t*)block + head_size;
-	block->head_sign = HEAD_SIGN;
-	block->tail_sign = TAIL_SIGN;
 	block->width = data->graph.width;
 	block->height = data->graph.height;
 	block->mem_size = data->graph.mem_size;

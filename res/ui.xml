@@ -66,10 +66,18 @@
           <widget type="textview" class="view-navbar-title">搜索</widget>
         </widget>
         <widget class="view-body">
-          <widget class="view-content-wrapper">
-            <widget class="view-content">
-              <widget type="textview">暂无该功能。</widget>
+          <widget class="search-panel">
+            <widget class="search-input-group">
+              <widget id="input-search" type="textedit" class="search-input" data-placeholder="根据标签搜索图片"></widget>
+              <widget type="button" class="btn btn-primary">搜索</widget>
             </widget>
+          </widget>
+          <widget class="view-content-wrapper">
+            <widget id="view-search-content" class="view-content full-height">
+              <widget id="tip-empty-tags" type="textview" class="hide">未找到标签记录。</widget>
+              <widget id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></widget>
+            </widget>
+            <widget type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
           </widget>
         </widget>
       </widget>
@@ -140,7 +148,7 @@
               </widget>
               <widget type="textview" class="title">关于此应用</widget>
               <widget class="item-group">
-                <widget type="textview" class="text">LC-Finder 0.1.0 Alpha 2</widget>
+                <widget type="textview" class="text">LC-Finder 0.1.0 Alpha 3</widget>
                 <widget type="textview" class="text">© 2016 LC's Software，保留所有权利。</widget>
                 <widget class="btn-group">
                   <widget id="btn-open-license" class="btn btn-link">

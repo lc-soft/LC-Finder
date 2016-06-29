@@ -63,6 +63,7 @@
 #define ID_VIEW_FOLDER_INFO_NAME	"view-folders-info-box-name"
 #define ID_VIEW_FOLDER_INFO_PATH	"view-folders-info-box-path"
 #define ID_VIEW_SOURCE_LIST		"current-source-list"
+#define ID_VIEW_SEARCH_TAGS		"view-search-tags"
 #define ID_BTN_SYNC_COLLECTIONS		"btn-sync-collection-files"
 #define ID_BTN_RETURN_ROOT_FOLDER	"btn-return-root-folder"
 #define ID_BTN_SYNC_FOLDER_FILES	"btn-sync-folder-files"
@@ -76,10 +77,12 @@
 #define ID_BTN_PICTURE_ZOOM_OUT		"btn-picture-zoom-out"
 #define ID_BTN_ADD_SOURCE		"btn-add-source"
 #define ID_BTN_SIDEBAR_SETTINGS		"sidebar-btn-settings"
+#define ID_BTN_SIDEBAR_SEEARCH		"sidebar-btn-search"
 #define ID_BTN_CLEAR_THUMB_DB		"btn-clear-thumb-db"
 #define ID_BTN_OPEN_LICENSE		"btn-open-license"
 #define ID_BTN_OPEN_WEBSITE		"btn-open-website"
 #define ID_BTN_OPEN_FEEDBACK		"btn-open-feedback"
+#define ID_INPUT_SEARCH			"input-search"
 
 /** 初始化用户界面 */
 void UI_Init( void );
@@ -127,5 +130,9 @@ void UI_ShowPictureInfoView( void );
 
 /** 隐藏图片信息视图 */
 void UI_HidePictureInfoView( void );
+
+void UI_UpdateSerarchView( void );
+
+void UI_InitSearchView( void );
 
 #endif

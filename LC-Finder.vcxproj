@@ -28,13 +28,14 @@
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\ui\dialog_confirm.c" />
-    <ClCompile Include="src\ui\dialog_input.c" />
+    <ClCompile Include="src\ui\dialog_prompt.c" />
     <ClCompile Include="src\ui\filesync.c" />
     <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_home.c" />
     <ClCompile Include="src\ui\view_picture.c" />
     <ClCompile Include="src\ui\view_picture_info.c" />
+    <ClCompile Include="src\ui\view_search.c" />
     <ClCompile Include="src\ui\view_settings.c" />
     <ClCompile Include="src\ui\sidebar.c" />
     <ClCompile Include="src\ui\ui.c" />

@@ -371,6 +371,7 @@ DB_Tag LCFinder_AddTag( const char *tagname )
 	tags[finder.n_tags - 1] = tag;
 	tags[finder.n_tags] = NULL;
 	finder.tags = tags;
+	LCFinder_TriggerEvent( EVENT_TAG_ADD, tag );
 	return tag;
 }
 

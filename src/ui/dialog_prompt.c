@@ -96,10 +96,10 @@ static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUI_MainLoop_Quit( ctx->loop );
 }
 
-int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title, 
-		      const wchar_t *placeholder, const wchar_t *val, 
-		      wchar_t *newval, size_t max_len, 
-		      LCUI_BOOL (*checker)(const wchar_t*) )
+int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
+		       const wchar_t *placeholder, const wchar_t *val,
+		       wchar_t *newval, size_t max_len,
+		       LCUI_BOOL( *checker )(const wchar_t*) )
 {
 	DialogContextRec ctx;
 	LCUI_Widget dialog_text, box;
@@ -130,7 +130,7 @@ int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
 	Widget_Append( dialog_header, dialog_text );
 	Widget_Append( dialog_body, ctx.input );
 	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview" );
+	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
 	TextView_SetTextW( dialog_text, BTN_OK_TEXT );
@@ -138,7 +138,7 @@ int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
 	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview" );
+	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
 	TextView_SetTextW( dialog_text, BTN_CANCEL_TEXT );

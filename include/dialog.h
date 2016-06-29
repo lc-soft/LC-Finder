@@ -56,11 +56,11 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
  * @param[in] max_len 文本缓存的最大长度
  * @param[in] checker 验证函数，用于验证输入的文本是否符合要求，如果符合则返回
  * TRUE，否则返回 FALSE，置为 NULL 时将不验证文本。
- * @return 文本编辑框内的文本文本长度
+ * @returns 点击“确认”按钮时返回 TRUE，点击“取消”按钮时返回 FALSE。
  */
-int LCUIDialog_Input( LCUI_Widget parent, const wchar_t* title,
-		      const wchar_t *placeholder, const wchar_t *val,
-		      wchar_t *newval, size_t max_len,
-		      LCUI_BOOL( *checker )(const wchar_t*) );
+int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
+		       const wchar_t *placeholder, const wchar_t *val,
+		       wchar_t *newval, size_t max_len,
+		       LCUI_BOOL( *checker )(const wchar_t*) );
 
 #endif
