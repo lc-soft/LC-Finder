@@ -53,6 +53,14 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 /** 追加图片 */
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file );
 
+/** 为缩略图列表项绑定文件 */
+void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file );
+
+/** 为缩略图列表项设置相关操作函数 */
+void ThumbViewItem_SetFunction( LCUI_Widget item,
+				void( *setthumb )(LCUI_Widget, LCUI_Graph*),
+				void( *unsetthumb )(LCUI_Widget) );
+
 void LCUIWidget_AddThumbView( void );
 
 

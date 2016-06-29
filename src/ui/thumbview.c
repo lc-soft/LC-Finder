@@ -44,6 +44,7 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 
+#define THUMB_TASK_MAX		50
 #define SCROLLLOADING_DELAY	500
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
@@ -130,10 +131,12 @@ typedef struct ThumbViewRec_ {
 
 /** 缩略图列表项的数据 */
 typedef struct ThumbViewItemRec_ {
-	LCUI_BOOL is_dir;	/**< 是否为目录 */
-	char *path;		/**< 路径 */
-	ThumbView view;		/**< 所属缩略图列表视图部件 */
-	DB_File file;		/**< 文件信息 */
+	char *path;					/**< 路径 */
+	DB_File file;					/**< 文件信息 */
+	ThumbView view;					/**< 所属缩略图列表视图 */
+	LCUI_BOOL is_dir;				/**< 是否为目录 */
+	void (*unsetthumb)(LCUI_Widget);		/**< 取消缩略图 */
+	void (*setthumb)(LCUI_Widget, LCUI_Graph*);	/**< 设置缩略图 */
 } ThumbViewItemRec, *ThumbViewItem;
 
 static int scrollload_event = -1;
@@ -227,16 +230,6 @@ static void ScrollLoading_Update( ScrollLoading ctx )
 	ctx->is_delaying = TRUE;
 }
 
-static void ScrollLoading_Update2( ScrollLoading ctx )
-{
-	if( ctx->is_delaying ) {
-		return;
-	}
-	ctx->is_delaying = TRUE;
-	LCUITimer_Set( SCROLLLOADING_DELAY, 
-		       ScrollLoading_OnDelayUpdate, ctx, FALSE );
-}
-
 static void ScrollLoading_OnScroll( LCUI_Widget w, LCUI_WidgetEvent e,
 				    void *arg )
 {
@@ -252,6 +245,7 @@ static ScrollLoading ScrollLoading_New( LCUI_Widget scrolllayer )
 	ScrollLoading ctx = NEW( ScrollLoadingRec, 1 );
 	ctx->top = 0;
 	ctx->timer = -1;
+	ctx->enabled = TRUE;
 	ctx->top_child = NULL;
 	ctx->need_update = FALSE;
 	ctx->is_delaying = FALSE;
@@ -309,16 +303,49 @@ static int GetDirThumbFilePath( char *filepath, char *dirpath )
 	return total;
 }
 
+static void ThumbViewItem_SetThumb( LCUI_Widget item, LCUI_Graph *thumb )
+{
+	Widget_Lock( item );
+	SetStyle( item->custom_style, key_background_image, thumb, image );
+	Widget_UpdateStyle( item, FALSE );
+	Widget_Unlock( item );
+}
+
+static void ThumbViewItem_UnsetThumb( LCUI_Widget item )
+{
+	Widget_Lock( item );
+	DEBUG_MSG("remove thumb\n");
+	Graph_Init( &item->computed_style.background.image );
+	item->custom_style->sheet[key_background_image].is_valid = FALSE;
+	Widget_UpdateStyle( item, FALSE );
+	Widget_Unlock( item );
+}
+
+void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file )
+{
+	ThumbViewItem data = item->private_data;
+	data->is_dir = FALSE;
+	data->file = file;
+	data->path = data->file->path;
+}
+
+void ThumbViewItem_SetFunction( LCUI_Widget item, 
+				void( *setthumb )(LCUI_Widget, LCUI_Graph*),
+				void( *unsetthumb )(LCUI_Widget) )
+{
+	ThumbViewItem data = item->private_data;
+	data->setthumb = setthumb;
+	data->unsetthumb = unsetthumb;
+}
+
 /** 当移除缩略图的时候 */
 static void OnRemoveThumb( void *data )
 {
 	LCUI_Widget w = data;
-	Widget_Lock( w );
-	DEBUG_MSG("remove thumb\n");
-	Graph_Init( &w->computed_style.background.image );
-	w->custom_style->sheet[key_background_image].is_valid = FALSE;
-	Widget_UpdateStyle( w, FALSE );
-	Widget_Unlock( w );
+	ThumbViewItem item = w->private_data;
+	if( item->unsetthumb ) {
+		item->unsetthumb( w );
+	}
 }
 
 /** 载入缩略图 */
@@ -406,6 +433,7 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 	LCUI_Graph *thumb;
 	ThumbView view = w->private_data;
 	ThumbViewItem data = target->private_data;
+	return;
 	thumb = ThumbCache_Get( view->cache, data->path );
 	if( !thumb ) {
 		thumb = LoadThumb( view, target );
@@ -413,10 +441,9 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 			return;
 		}
 	}
-	Widget_Lock( target );
-	SetStyle( target->custom_style, key_background_image, thumb, image );
-	Widget_UpdateStyle( target, FALSE );
-	Widget_Unlock( target );
+	if( data->setthumb ) {
+		data->setthumb( target, thumb );
+	}
 }
 
 void ThumbView_Lock( LCUI_Widget w )
@@ -740,7 +767,6 @@ static void OnResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ThumbView_UpdateLayout( w );
 }
 
-#define THUMB_TASK_MAX 50
 
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
@@ -788,6 +814,8 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	strncpy( data->path, filepath, len );
 	data->view = w->private_data;
 	data->is_dir = TRUE;
+	data->setthumb = ThumbViewItem_SetThumb;
+	data->unsetthumb = ThumbViewItem_UnsetThumb;
 	Widget_AddClass( item, FOLDER_CLASS );
 	if( !show_path ) {
 		Widget_AddClass( item, "hide-path" );
@@ -802,19 +830,12 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_Append( infobar, name );
 	Widget_Append( infobar, path );
 	Widget_Append( infobar, icon );
-	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
 	Widget_Append( w, item );
-	ScrollLoading_Update2( data->view->scrollload );
+	ScrollLoading_Update( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
 	AppendFolder( data->view, item );
 	LinkedList_Append( &data->view->files, data->path );
 	return item;
-}
-
-void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
-{
-	Widget_Append( w, child );
-	UpdateThumbRow( w->private_data );
 }
 
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file )
@@ -828,16 +849,29 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file )
 	data->view = w->private_data;
 	data->file = DBFile_Dup( file );
 	data->path = data->file->path;
+	data->setthumb = ThumbViewItem_SetThumb;
+	data->unsetthumb = ThumbViewItem_UnsetThumb;
 	Widget_AddClass( item, PICTURE_CLASS );
 	Widget_AddClass( cover, "picture-cover" );
-	Widget_BindEvent( item, "scrollload", OnScrollLoad, NULL, NULL );
 	Widget_Append( item, cover );
 	Widget_Append( w, item );
-	ScrollLoading_Update2( data->view->scrollload );
+	ScrollLoading_Update( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
 	AppendPicture( data->view, item );
 	LinkedList_Append( &data->view->files, data->path );
 	return item;
+}
+
+void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
+{
+	Widget_Append( w, child );
+	if( child->type && strcmp( child->type, "thumbviewitem" ) == 0 ) {
+		ThumbView view = w->private_data;
+		ThumbViewItem item = child->private_data;
+		item->view = view;
+		ScrollLoading_Update( view->scrollload );
+	}
+	UpdateThumbRow( w->private_data );
 }
 
 static int OnCompareTaskTarget( void *data, const void *keydata )
@@ -917,9 +951,12 @@ static void ThumbViewItem_OnInit( LCUI_Widget w )
 	ThumbViewItem self;
 	self = Widget_NewPrivateData( w, ThumbViewItemRec );
 	self->file = NULL;
+	self->setthumb = NULL;
+	self->unsetthumb = NULL;
 	self->is_dir = FALSE;
 	self->path = NULL;
 	self->view = NULL;
+	Widget_BindEvent( w, "scrollload", OnScrollLoad, NULL, NULL );
 }
 
 static void ThumbViewItem_OnDestroy( LCUI_Widget w )
