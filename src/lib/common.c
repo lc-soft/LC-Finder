@@ -216,10 +216,12 @@ time_t wgetfilemtime( const wchar_t *path )
 	struct stat buf;
 	time_t mtime = 0;
 	fd = _wopen( path, _O_RDONLY );
-	if( fstat( fd, &buf ) == 0 ) {
-		mtime = (int)buf.st_mtime;
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			mtime = (int)buf.st_mtime;
+		}
+		_close( fd );
 	}
-	_close( fd );
 	return mtime;
 }
 
@@ -229,12 +231,14 @@ int64_t wgetfilesize( const wchar_t *path )
 	int64_t size;
 	struct stat buf;
 	fd = _wopen( path, _O_RDONLY );
-	if( fd > 0 && fstat( fd, &buf ) == 0 ) {
-		size = buf.st_size;
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			size = buf.st_size;
+		}
+		_close( fd );
 	} else {
 		size = 0;
 	}
-	_close( fd );
 	return size;
 }
 

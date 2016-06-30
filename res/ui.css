@@ -622,13 +622,14 @@ textedit.dialog-input {
 	width: 100%;
 }
 .tag-thumb-list-item {
-	min-width: 160px;
+	min-width: 100px;
 	min-height: 140px;
 	display: inline-block;
 	margin: 0 10px 10px 0;
 	background-color: #f0f0f0;
 	background-size: cover;
 	border: 1px solid #eee;
+	box-sizing: border-box;
 }
 .tag-thumb-list-item-info {
 	position: absolute;
@@ -649,7 +650,7 @@ textedit.dialog-input {
 	height: 100%;
 	box-sizing: border-box;
 	border: 1px solid #ccc;
-	background-color: rgba(255,255,255,0.8);
+	background-color: rgba(255,255,255,0.4);
 }
 .tag-thumb-list-item-checkbox {
 	display: none;
@@ -671,6 +672,7 @@ thumbviewitem.selected .tag-thumb-list-item-checkbox {
 }
 thumbviewitem.selected .tag-thumb-list-item-cover {
 	display: block;
+	background-color: rgba(255,255,255,0.8);
 }
 .tag-thumb-list-item-info textview {
 	color: #fff;
