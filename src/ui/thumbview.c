@@ -127,6 +127,7 @@ typedef struct ThumbViewRec_ {
 	ScrollLoading scrollload;	/**< 滚动加载功能所需的相关数据 */
 	LayoutContextRec layout;	/**< 缩略图布局功能所需的相关数据 */
 	AnimationRec animation;		/**< 动画相关数据，用于实现淡入淡出的动画效果 */
+	void (*onlayout)(LCUI_Widget);	/**< 回调函数，当布局开始时调用 */
 } ThumbViewRec, *ThumbView;
 
 /** 缩略图列表项的数据 */
@@ -137,6 +138,7 @@ typedef struct ThumbViewItemRec_ {
 	LCUI_BOOL is_dir;				/**< 是否为目录 */
 	void (*unsetthumb)(LCUI_Widget);		/**< 取消缩略图 */
 	void (*setthumb)(LCUI_Widget, LCUI_Graph*);	/**< 设置缩略图 */
+	void(*updatesize)(LCUI_Widget);			/**< 更新自身尺寸 */
 } ThumbViewItemRec, *ThumbViewItem;
 
 static int scrollload_event = -1;
@@ -329,13 +331,15 @@ void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file )
 	data->path = data->file->path;
 }
 
-void ThumbViewItem_SetFunction( LCUI_Widget item, 
+void ThumbViewItem_SetFunction( LCUI_Widget item,
 				void( *setthumb )(LCUI_Widget, LCUI_Graph*),
-				void( *unsetthumb )(LCUI_Widget) )
+				void( *unsetthumb )(LCUI_Widget),
+				void( *updatesize )(LCUI_Widget) )
 {
 	ThumbViewItem data = item->private_data;
 	data->setthumb = setthumb;
 	data->unsetthumb = unsetthumb;
+	data->updatesize = updatesize;
 }
 
 /** 当移除缩略图的时候 */
@@ -433,7 +437,6 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 	LCUI_Graph *thumb;
 	ThumbView view = w->private_data;
 	ThumbViewItem data = target->private_data;
-	return;
 	thumb = ThumbCache_Get( view->cache, data->path );
 	if( !thumb ) {
 		thumb = LoadThumb( view, target );
@@ -551,13 +554,13 @@ static void UpdateThumbRow( ThumbView view )
 	view->layout.x = 0;
 }
 
-/* 追加图片，并处理布局 */
-static void AppendPicture( ThumbView view, LCUI_Widget item )
+/* 根据当前布局更新图片尺寸 */
+static void UpdatePictureSize( LCUI_Widget item )
 {
 	int width, w, h;
-	ThumbViewItem data;
+	ThumbViewItem data = item->private_data;
+	ThumbView view = data->view;
 	data = item->private_data;
-	view->layout.current = item;
 	w = data->file->width > 0 ? data->file->width : 226;
 	h = data->file->height > 0 ? data->file->height : 226;
 	width = PICTURE_FIXED_HEIGHT * w / h;
@@ -570,31 +573,32 @@ static void AppendPicture( ThumbView view, LCUI_Widget item )
 	}
 }
 
-/** 追加文件夹，并处理布局 */
-static void AppendFolder( ThumbView view, LCUI_Widget w )
+/* 根据当前布局更新文件夹尺寸 */
+static void UpdateFolderSize( LCUI_Widget item )
 {
 	int width, n;
+	ThumbViewItem data = item->private_data;
+	ThumbView view = data->view;
 	++view->layout.folder_count;
 	UpdateThumbRow( view );
-	view->layout.current = w;
 	if( view->layout.max_width < 480 ) {
-		w->custom_style->sheet[key_width].is_valid = FALSE;
-		Widget_AddClass( w, "full-width" );
+		item->custom_style->sheet[key_width].is_valid = FALSE;
+		Widget_AddClass( item, "full-width" );
 		return;
 	} else {
-		Widget_RemoveClass( w, "full-width" );
+		Widget_RemoveClass( item, "full-width" );
 	}
 	n = view->layout.folders_per_row;
 	width = view->layout.max_width;
 	width = (width - FOLDER_MARGIN_RIGHT*(n - 1)) / n;
 	/* 设置每行最后一个文件夹的右边距为 0px */
 	if( view->layout.folder_count % n == 0 ) {
-		SetStyle( w->custom_style, key_margin_right, 0, px );
+		SetStyle( item->custom_style, key_margin_right, 0, px );
 	} else {
-		w->custom_style->sheet[key_margin_right].is_valid = FALSE;
+		item->custom_style->sheet[key_margin_right].is_valid = FALSE;
 	}
-	SetStyle( w->custom_style, key_width, width, px );
-	Widget_UpdateStyle( w, FALSE );
+	SetStyle( item->custom_style, key_width, width, px );
+	Widget_UpdateStyle( item, FALSE );
 }
 
 /** 直接执行布局更新操作 */
@@ -610,18 +614,19 @@ static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 		node = LinkedList_GetNode( &w->children, 0 );
 	}
 	for( count = 0; node && --limit >= 0; node = node->next ) {
+		ThumbViewItem item;
 		child = node->data;
+		item = child->private_data;
 		view->layout.count += 1;
-		if( !child->computed_style.visible ) {
+		if( !child->computed_style.visible || !child->type ||
+		    strcmp(child->type, "thumbviewitem") != 0  ) {
 			++limit;
 			continue;
 		}
-		if( Widget_HasClass( child, PICTURE_CLASS ) ) {
+		if( item->updatesize ) {
 			++count;
-			AppendPicture( view, child );
-		} else if( Widget_HasClass( child, FOLDER_CLASS ) ) {
-			++count;
-			AppendFolder( view, child );
+			view->layout.current = child;
+			item->updatesize( child );
 		} else {
 			UpdateThumbRow( view );
 			++limit;
@@ -683,6 +688,9 @@ static void OnDelayLayout( void *arg )
 	ThumbView_UpdateLayoutContext( w );
 	LinkedList_Clear( &view->layout.row, NULL );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
+	if( view->onlayout ) {
+		view->onlayout( w );
+	}
 	view->tasks[TASK_LAYOUT] = TRUE;
 	LCUICond_Signal( &view->tasks_cond );
 }
@@ -730,8 +738,7 @@ static void OnStartAnimation( void *arg )
 	
 }
 
-/** 更新缩略图列表的布局 */
-static void ThumbView_UpdateLayout( LCUI_Widget w )
+void ThumbView_UpdateLayout( LCUI_Widget w )
 {
 	ThumbView view = w->private_data;
 	if( view->layout.is_running ) {
@@ -766,7 +773,6 @@ static void OnResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 	ThumbView_UpdateLayout( w );
 }
-
 
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
@@ -816,6 +822,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	data->is_dir = TRUE;
 	data->setthumb = ThumbViewItem_SetThumb;
 	data->unsetthumb = ThumbViewItem_UnsetThumb;
+	data->updatesize = UpdateFolderSize;
 	Widget_AddClass( item, FOLDER_CLASS );
 	if( !show_path ) {
 		Widget_AddClass( item, "hide-path" );
@@ -833,7 +840,8 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_Append( w, item );
 	ScrollLoading_Update( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
-	AppendFolder( data->view, item );
+	data->view->layout.current = w;
+	UpdateFolderSize( item );
 	LinkedList_Append( &data->view->files, data->path );
 	return item;
 }
@@ -851,13 +859,15 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file )
 	data->path = data->file->path;
 	data->setthumb = ThumbViewItem_SetThumb;
 	data->unsetthumb = ThumbViewItem_UnsetThumb;
+	data->updatesize = UpdatePictureSize;
 	Widget_AddClass( item, PICTURE_CLASS );
 	Widget_AddClass( cover, "picture-cover" );
 	Widget_Append( item, cover );
 	Widget_Append( w, item );
 	ScrollLoading_Update( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
-	AppendPicture( data->view, item );
+	data->view->layout.current = w;
+	UpdatePictureSize( item );
 	LinkedList_Append( &data->view->files, data->path );
 	return item;
 }
@@ -869,9 +879,13 @@ void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 		ThumbView view = w->private_data;
 		ThumbViewItem item = child->private_data;
 		item->view = view;
+		if( item->updatesize ) {
+			item->updatesize( child );
+		}
 		ScrollLoading_Update( view->scrollload );
+	} else {
+		UpdateThumbRow( w->private_data );
 	}
-	UpdateThumbRow( w->private_data );
 }
 
 static int OnCompareTaskTarget( void *data, const void *keydata )
@@ -951,11 +965,12 @@ static void ThumbViewItem_OnInit( LCUI_Widget w )
 	ThumbViewItem self;
 	self = Widget_NewPrivateData( w, ThumbViewItemRec );
 	self->file = NULL;
-	self->setthumb = NULL;
-	self->unsetthumb = NULL;
 	self->is_dir = FALSE;
 	self->path = NULL;
 	self->view = NULL;
+	self->setthumb = NULL;
+	self->unsetthumb = NULL;
+	self->updatesize = NULL;
 	Widget_BindEvent( w, "scrollload", OnScrollLoad, NULL, NULL );
 }
 
@@ -963,6 +978,8 @@ static void ThumbViewItem_OnDestroy( LCUI_Widget w )
 {
 	ThumbViewItem self;
 	self = w->private_data;
+	self->unsetthumb( w );
+	ThumbCache_Delete( self->view->cache, self->path );
 	if( self->is_dir ) {
 		if( self->path ) {
 			free( self->path );
@@ -973,6 +990,14 @@ static void ThumbViewItem_OnDestroy( LCUI_Widget w )
 	self->file = NULL;
 	self->view = NULL;
 	self->path = NULL;
+	self->unsetthumb = NULL;
+	self->setthumb = NULL;
+}
+
+void ThumbView_OnLayout( LCUI_Widget w, void (*func)(LCUI_Widget) )
+{
+	ThumbView view = w->private_data;
+	view->onlayout = func;
 }
 
 static void ThumbView_OnInit( LCUI_Widget w )
@@ -982,6 +1007,7 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->dbs = &finder.thumb_dbs;
 	self->is_loading = FALSE;
 	self->is_running = TRUE;
+	self->onlayout = NULL;
 	self->layout.x = 0;
 	self->layout.count = 0;
 	self->layout.max_width = 0;
