@@ -79,7 +79,6 @@ ThumbDB ThumbDB_Open( const char *filepath )
 
 void ThumbDB_Close( ThumbDB tdb )
 {
-	printf("close thumb db: %p\n", tdb->db);
 	unqlite_close( tdb->db );
 	LCUIMutex_Destroy( &tdb->mutex );
 	free( tdb );

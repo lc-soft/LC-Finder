@@ -56,14 +56,15 @@
 #define ID_VIEW_FILE_LIST		"current-file-list"
 #define ID_VIEW_HOME			"view-home"
 #define ID_VIEW_HOME_COLLECTIONS	"home-collection-list"
-#define ID_VIEW_HOME_TIP_EMPTY		"tip-empty-collection"
 #define ID_VIEW_FOLDERS			"view-folders"
-#define ID_VIEW_FOLDERS_TIP_EMPTY	"tip-empty-folder"
 #define ID_VIEW_FOLDER_INFO		"view-folders-info-box"
 #define ID_VIEW_FOLDER_INFO_NAME	"view-folders-info-box-name"
 #define ID_VIEW_FOLDER_INFO_PATH	"view-folders-info-box-path"
 #define ID_VIEW_SOURCE_LIST		"current-source-list"
 #define ID_VIEW_SEARCH_TAGS		"view-search-tags"
+#define ID_VIEW_SEARCH_RESULT		"view-search-result"
+#define ID_VIEW_SEARCH_FILES		"view-search-files"
+#define ID_BTN_SEARCH_FILES		"btn-search-files"
 #define ID_BTN_SYNC_COLLECTIONS		"btn-sync-collection-files"
 #define ID_BTN_RETURN_ROOT_FOLDER	"btn-return-root-folder"
 #define ID_BTN_SYNC_FOLDER_FILES	"btn-sync-folder-files"
@@ -82,6 +83,11 @@
 #define ID_BTN_OPEN_LICENSE		"btn-open-license"
 #define ID_BTN_OPEN_WEBSITE		"btn-open-website"
 #define ID_BTN_OPEN_FEEDBACK		"btn-open-feedback"
+#define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
+#define ID_TIP_HOME_EMPTY		"tip-empty-collection"
+#define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
+#define ID_TIP_SEARCH_TAGS_EMPTY	"tip-search-tags-empty"
+#define ID_TIP_SEARCH_FILES_EMPTY	"tip-search-no-result"
 #define ID_INPUT_SEARCH			"input-search"
 
 /** 初始化用户界面 */
@@ -131,7 +137,7 @@ void UI_ShowPictureInfoView( void );
 /** 隐藏图片信息视图 */
 void UI_HidePictureInfoView( void );
 
-void UI_UpdateSerarchView( void );
+void UI_UpdateSearchView( void );
 
 void UI_InitSearchView( void );
 

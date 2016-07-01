@@ -434,7 +434,7 @@ void UI_InitFoldersView( void )
 	this_view.info = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO );
 	this_view.info_name = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO_NAME );
 	this_view.info_path = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO_PATH );
-	this_view.tip_empty = LCUIWidget_GetById( ID_VIEW_FOLDERS_TIP_EMPTY );
+	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_FOLDERS_EMPTY );
 	this_view.items = items;
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );

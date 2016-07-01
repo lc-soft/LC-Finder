@@ -301,7 +301,6 @@ static void LoadCollectionFiles( void )
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }
 
-
 /* 在缩略图列表部件准备完毕的时候 */
 static void OnThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
@@ -325,7 +324,7 @@ void UI_InitHomeView( void )
 	items = LCUIWidget_GetById( ID_VIEW_HOME_COLLECTIONS );
 	btn = LCUIWidget_GetById( ID_BTN_SYNC_COLLECTIONS );
 	this_view.items = items;
-	this_view.tip_empty = LCUIWidget_GetById( ID_VIEW_HOME_TIP_EMPTY );
+	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_HOME_EMPTY );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
