@@ -39,9 +39,8 @@
 
 #ifndef LCFINDER_THUMB_DB_C
 typedef void* ThumbDB;
-#else
-#include "unqlite.h"
-typedef unqlite* ThumbDB;
+#else:
+typedef struct ThumbDBRec_ *ThumbDB;
 #endif
 
 typedef struct ThumbDatakRec_ {
@@ -55,12 +54,12 @@ typedef struct ThumbDatakRec_ {
 ThumbDB ThumbDB_Open( const char *filepath );
 
 /** 销毁缩略图数据库实例 */
-void ThumbDB_Close( ThumbDB db );
+void ThumbDB_Close( ThumbDB tdb );
 
 /** 从数据库中载入指定文件路径的缩略图数据 */
-int ThumbDB_Load( ThumbDB db, const char *filepath, ThumbData data );
+int ThumbDB_Load( ThumbDB tdb, const char *filepath, ThumbData data );
 
 /** 将缩略图数据保存至缓存中 */
-int ThumbDB_Save( ThumbDB db, const char *filepath, ThumbData data );
+int ThumbDB_Save( ThumbDB tdb, const char *filepath, ThumbData data );
 
 #endif
