@@ -618,19 +618,18 @@ static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 		child = node->data;
 		item = child->private_data;
 		view->layout.count += 1;
-		if( !child->computed_style.visible || !child->type ||
-		    strcmp(child->type, "thumbviewitem") != 0  ) {
+		if( !child->computed_style.visible ) {
 			++limit;
 			continue;
 		}
-		if( item->updatesize ) {
+		if( child->type && !strcmp(child->type, "thumbviewitem") ) {
 			++count;
 			view->layout.current = child;
 			item->updatesize( child );
-		} else {
-			UpdateThumbRow( view );
-			++limit;
+			continue;
 		}
+		UpdateThumbRow( view );
+		++limit;
 	}
 	if( view->layout.current ) {
 		node = Widget_GetNode( view->layout.current );
@@ -874,9 +873,9 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file )
 
 void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 {
+	ThumbView view = w->private_data;
 	Widget_Append( w, child );
 	if( child->type && strcmp( child->type, "thumbviewitem" ) == 0 ) {
-		ThumbView view = w->private_data;
 		ThumbViewItem item = child->private_data;
 		item->view = view;
 		if( item->updatesize ) {
@@ -884,7 +883,7 @@ void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 		}
 		ScrollLoading_Update( view->scrollload );
 	} else {
-		UpdateThumbRow( w->private_data );
+		UpdateThumbRow( view );
 	}
 }
 
