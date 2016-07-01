@@ -646,7 +646,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 		strcat( q->sql_tables, ", file_tag_relation ftr" );
 		strcat( q->sql_terms, buf );
 		strcat( q->sql_terms, " ftr.tid IN (" );
-		for( i = 0; i < terms->n_dirs; ++i ) {
+		for( i = 0; i < terms->n_tags; ++i ) {
 			sprintf( buf, "%d", terms->tags[i]->id );
 			if( i > 0 ) {
 				strcat( q->sql_terms, ", " );

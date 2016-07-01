@@ -46,16 +46,43 @@
 #define TAG_MAX_WIDTH		180
 #define TAG_MARGIN_RIGHT	10
 
+ /** 文件扫描功能的相关数据 */
+typedef struct FileScannerRec_ {
+	LCUI_Thread tid;
+	LCUI_Cond cond;
+	LCUI_Mutex mutex;
+	LCUI_BOOL is_running;
+	LinkedList files;
+	DB_Tag *tags;
+	int n_tags;
+	int count, total;
+} FileScannerRec, *FileScanner;
+
+/** 视图同步功能的相关数据 */
+typedef struct ViewSyncRec_ {
+	LCUI_Thread tid;
+	LCUI_BOOL is_running;
+	LCUI_Mutex mutex;
+	LCUI_Cond ready;
+} ViewSyncRec, *ViewSync;
+
 static struct SearchView {
 	LCUI_Widget input;
 	LCUI_Widget view_tags;
-	LinkedList tags;
+	LCUI_Widget view_result;
+	LCUI_Widget view_files;
+	LCUI_Widget tip_empty_tags;
+	LCUI_Widget tip_empty_files;
 	LCUI_BOOL need_update;
 	struct {
 		int count;
 		int tags_per_row;
 		int max_width;
 	} layout;
+	LinkedList tags;
+	LinkedList files;
+	ViewSyncRec viewsync;
+	FileScannerRec scanner;
 } this_view;
 
 typedef struct TagItemRec_ {
@@ -63,14 +90,169 @@ typedef struct TagItemRec_ {
 	DB_Tag tag;
 } TagItemRec, *TagItem;
 
+static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	DB_File f = e->data;
+	UI_OpenPictureView( f->path );
+}
+
+static void OnDeleteDBFile( void *arg )
+{
+	DBFile_Release( arg );
+}
+
+/** 扫描全部文件 */
+static int FileScanner_ScanAll( FileScanner scanner )
+{
+	DB_File file;
+	DB_Query query;
+	int i, total, count;
+	DB_QueryTermsRec terms;
+	terms.dirpath = NULL;
+	terms.n_dirs = 0;
+	terms.dirs = NULL;
+	terms.limit = 100;
+	terms.offset = 0;
+	terms.score = NONE;
+	terms.tags = scanner->tags;
+	terms.n_tags = scanner->n_tags;
+	terms.create_time = DESC;
+	query = DB_NewQuery( &terms );
+	count = total = DBQuery_GetTotalFiles( query );
+	scanner->total = total;
+	scanner->count = 0;
+	while( scanner->is_running && count > 0 ) {
+		DB_DeleteQuery( query );
+		query = DB_NewQuery( &terms );
+		i = count < terms.limit ? count : terms.limit;
+		for( ; scanner->is_running && i > 0; --i ) {
+			file = DBQuery_FetchFile( query );
+			if( !file ) {
+				break;
+			}
+			LCUIMutex_Lock( &scanner->mutex );
+			LinkedList_Append( &scanner->files, file );
+			LCUICond_Signal( &scanner->cond );
+			LCUIMutex_Unlock( &scanner->mutex );
+			scanner->count += 1;
+		}
+		count -= terms.limit;
+		terms.offset += terms.limit;
+	}
+	return total;
+}
+
+/** 初始化文件扫描 */
+static void FileScanner_Init( FileScanner scanner )
+{
+	LCUICond_Init( &scanner->cond );
+	LCUIMutex_Init( &scanner->mutex );
+	LinkedList_Init( &scanner->files );
+	this_view.scanner.tags = NULL;
+	this_view.scanner.n_tags = 0;
+}
+
+/** 重置文件扫描 */
+static void FileScanner_Reset( FileScanner scanner )
+{
+	if( scanner->is_running ) {
+		scanner->is_running = FALSE;
+		LCUIThread_Join( scanner->tid, NULL );
+	}
+	LCUIMutex_Lock( &scanner->mutex );
+	LinkedList_Clear( &scanner->files, OnDeleteDBFile );
+	LCUICond_Signal( &scanner->cond );
+	LCUIMutex_Unlock( &scanner->mutex );
+}
+
+/** 文件扫描线程 */
+static void FileScanner_Thread( void *arg )
+{
+	int count;
+	this_view.scanner.is_running = TRUE;
+	count = FileScanner_ScanAll( &this_view.scanner );
+	if( count > 0 ) {
+		Widget_AddClass( this_view.tip_empty_files, "hide" );
+		Widget_Hide( this_view.tip_empty_files );
+	} else {
+		Widget_RemoveClass( this_view.tip_empty_files, "hide" );
+		Widget_Show( this_view.tip_empty_files );
+	}
+	this_view.scanner.is_running = FALSE;
+	LCUIThread_Exit( NULL );
+}
+
+/** 开始扫描 */
+static void FileScanner_Start( FileScanner scanner )
+{
+	LCUIThread_Create( &scanner->tid, FileScanner_Thread, NULL );
+}
+
+static void FileScanner_Destroy( FileScanner scanner )
+{
+	FileScanner_Reset( scanner );
+	LCUICond_Destroy( &scanner->cond );
+	LCUIMutex_Destroy( &scanner->mutex );
+}
+
+/** 视图同步线程 */
+static void ViewSyncThread( void *arg )
+{
+	ViewSync vs;
+	LCUI_Widget item;
+	FileScanner scanner;
+	vs = &this_view.viewsync;
+	scanner = &this_view.scanner;
+	LCUIMutex_Lock( &vs->mutex );
+	/* 等待缩略图列表部件准备完毕 */
+	while( this_view.view_files->state < WSTATE_READY ) {
+		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
+	}
+	LCUIMutex_Unlock( &vs->mutex );
+	vs->is_running = TRUE;
+	while( vs->is_running ) {
+		DB_File file;
+		LinkedListNode *node;
+		LCUIMutex_Lock( &scanner->mutex );
+		if( scanner->files.length == 0 ) {
+			LCUICond_Wait( &scanner->cond, &scanner->mutex );
+			if( !vs->is_running ) {
+				LCUIMutex_Unlock( &scanner->mutex );
+				break;
+			}
+		}
+		LCUIMutex_Lock( &vs->mutex );
+		node = LinkedList_GetNode( &scanner->files, 0 );
+		if( !node ) {
+			LCUIMutex_Unlock( &vs->mutex );
+			LCUIMutex_Unlock( &scanner->mutex );
+			continue;
+		}
+		file = node->data;
+		LinkedList_Unlink( &scanner->files, node );
+		LCUIMutex_Unlock( &scanner->mutex );
+		LinkedList_AppendNode( &this_view.files, node );
+		item = ThumbView_AppendPicture( this_view.view_files, file );
+		if( item ) {
+			Widget_BindEvent( item, "click", 
+					  OnItemClick, file, NULL );
+		}
+		LCUIMutex_Unlock( &vs->mutex );
+	}
+	LCUIThread_Exit( NULL );
+}
+
 static void OnTagViewStartLayout( LCUI_Widget w )
 {
+	double tmp;
 	int max_width, n;
 	this_view.layout.count = 0;
 	this_view.layout.tags_per_row = 2;
 	max_width = w->box.content.width;
-	n = max_width / TAG_MAX_WIDTH;
-	if( max_width % TAG_MAX_WIDTH > 0 ) {
+	n = max_width + TAG_MARGIN_RIGHT;
+	tmp = 1.0 * n / (TAG_MAX_WIDTH + TAG_MARGIN_RIGHT);
+	n /= TAG_MAX_WIDTH + TAG_MARGIN_RIGHT;
+	if( tmp > 1.0 * n ) {
 		n = n + 1;
 	}
 	this_view.layout.max_width = max_width;
@@ -83,8 +265,7 @@ static void AddTagToSearch( LCUI_Widget w )
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512];
-	LinkedList_ForEach( node, &this_view.tags )
-	{
+	LinkedList_ForEach( node, &this_view.tags ) {
 		TagItem item = node->data;
 		if( item->widget == w ) {
 			tag = item->tag;
@@ -117,8 +298,7 @@ static void DeleteTagFromSearch( LCUI_Widget w )
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512], *p, *pend;
-	LinkedList_ForEach( node, &this_view.tags )
-	{
+	LinkedList_ForEach( node, &this_view.tags ) {
 		TagItem item = node->data;
 		if( item->widget == w ) {
 			tag = item->tag;
@@ -183,7 +363,7 @@ static void UpdateTagSize( LCUI_Widget w )
 {
 	int width, n;
 	++this_view.layout.count;
-	if( this_view.layout.max_width < 400 ) {
+	if( this_view.layout.max_width < TAG_MAX_WIDTH ) {
 		return;
 	}
 	n = this_view.layout.tags_per_row;
@@ -260,16 +440,96 @@ static void OnTagUpdate( LCUI_Event e, void *arg )
 static void OnBtnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	if( this_view.need_update ) {
-		UI_UpdateSerarchView();
+		UI_UpdateSearchView();
 	}
 }
 
-static void OnInputChange( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void StartSearchFiles( LinkedList *tags )
 {
-
+	int n_tags = 0;
+	DB_Tag *newtags;
+	LinkedListNode *node;
+	newtags = malloc( sizeof( DB_Tag ) * (tags->length + 1) );
+	if( !newtags ) {
+		return;
+	}
+	LinkedList_ForEach( node, tags ) {
+		int i;
+		for( i = 0; i < finder.n_tags; ++i ) {
+			DB_Tag tag = finder.tags[i];
+			if( strcmp( tag->name, node->data ) == 0 ) {
+				newtags[n_tags++] = tag;
+			}
+		}
+	}
+	newtags[n_tags] = NULL;
+	FileScanner_Reset( &this_view.scanner );
+	if( this_view.scanner.tags ) {
+		free( this_view.scanner.tags );
+	}
+	this_view.scanner.tags = newtags;
+	this_view.scanner.n_tags = n_tags;
+	LCUIMutex_Lock( &this_view.viewsync.mutex );
+	ThumbView_Lock( this_view.view_files );
+	ThumbView_Empty( this_view.view_files );
+	LinkedList_ClearData( &this_view.files, OnDeleteDBFile );
+	FileScanner_Start( &this_view.scanner );
+	ThumbView_Unlock( this_view.view_files );
+	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }
 
-void UI_UpdateSerarchView( void )
+static void OnBtnSearchClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	int i, j, len;
+	LinkedList tags;
+	LCUI_BOOL saving;
+	wchar_t wstr[512] = {0};
+	char *str, buf[512], *tagname;
+
+	len = TextEdit_GetTextW( this_view.input, 0, 511, wstr );
+	if( len == 0 ) {
+		return;
+	}
+	len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
+	str = malloc( sizeof(char) * len );
+	if( !str ) {
+		return;
+	}
+	len = LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
+	LinkedList_Init( &tags );
+	for( saving = FALSE, i = 0, j = 0; i <= len; ++i ) {
+		if( str[i] != ' ' && str[i] != 0 ) {
+			saving = TRUE;
+			buf[j++] = str[i];
+			continue;
+		}
+		if( saving ) {
+			buf[j++] = 0;
+			tagname = malloc( sizeof( char )*j );
+			strcpy( tagname, buf );
+			LinkedList_Append( &tags, tagname );
+			j = 0;
+		}
+		saving = FALSE;
+	}
+	if( tags.length == 0 ) {
+		return;
+	}
+	Widget_RemoveClass( this_view.view_result, "hide" );
+	Widget_Show( this_view.view_result );
+	StartSearchFiles( &tags );
+	LinkedList_Clear( &tags, free );
+}
+
+static void OnBtnHideReusltClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	Widget_Hide( this_view.view_result );
+	ThumbView_Lock( this_view.view_files );
+	ThumbView_Empty( this_view.view_files );
+	ThumbView_Unlock( this_view.view_files );
+}
+
+void UI_UpdateSearchView( void )
 {
 	int i;
 	this_view.layout.count = 0;
@@ -287,17 +547,34 @@ void UI_UpdateSerarchView( void )
 
 void UI_InitSearchView( void )
 {
-	LCUI_Widget btn, input;
+	LCUI_Widget tip1 = LCUIWidget_GetById( ID_TIP_SEARCH_TAGS_EMPTY );
+	LCUI_Widget tip2 = LCUIWidget_GetById( ID_TIP_SEARCH_FILES_EMPTY );
+	LCUI_Widget btn = LCUIWidget_GetById( ID_BTN_SIDEBAR_SEEARCH );
+	LCUI_Widget btn_search = LCUIWidget_GetById( ID_BTN_SEARCH_FILES );
+	LCUI_Widget btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_SEARCH_RESULT );
+	LCUI_Widget input = LCUIWidget_GetById( ID_INPUT_SEARCH );
 	LinkedList_Init( &this_view.tags );
-	this_view.layout.count = 0;
+	FileScanner_Init( &this_view.scanner );
+	LCUICond_Init( &this_view.viewsync.ready );
+	LCUIMutex_Init( &this_view.viewsync.mutex );
 	this_view.layout.tags_per_row = 2;
-	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_SEARCH_TAGS );
-	btn = LCUIWidget_GetById( ID_BTN_SIDEBAR_SEEARCH );
-	input = LCUIWidget_GetById( ID_INPUT_SEARCH );
+	this_view.layout.count = 0;
 	this_view.input = input;
+	this_view.tip_empty_tags = tip1;
+	this_view.tip_empty_files = tip2;
+	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_SEARCH_TAGS );
+	this_view.view_result = LCUIWidget_GetById( ID_VIEW_SEARCH_RESULT );
+	this_view.view_files = LCUIWidget_GetById( ID_VIEW_SEARCH_FILES );
 	Widget_BindEvent( btn, "click", OnBtnClick, NULL, NULL );
-	Widget_BindEvent( input, "change", OnInputChange, NULL, NULL );
+	Widget_BindEvent( btn_search, "click", OnBtnSearchClick, NULL, NULL );
+	Widget_BindEvent( btn_hide, "click", OnBtnHideReusltClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_TAG_UPDATE, OnTagUpdate, NULL );
 	ThumbView_OnLayout( this_view.view_tags, OnTagViewStartLayout );
-	UI_UpdateSerarchView();
+	LCUIThread_Create( &this_view.viewsync.tid, ViewSyncThread, NULL );
+	UI_UpdateSearchView();
+}
+
+void UI_ExitSearchView( void )
+{
+
 }
