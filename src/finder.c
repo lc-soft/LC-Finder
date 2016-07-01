@@ -430,18 +430,7 @@ static void LCFinder_InitThumbDB( void )
 static void LCFinder_ExitThumbDB( void )
 {
 	int i;
-	ThumbDB db;
-	DictEntry *entry;
-	DictIterator *iter;
 	printf("[thumbdb] exit ..\n");
-	iter = Dict_GetIterator( finder.thumb_dbs );
-	entry = Dict_Next( iter );
-	while( entry ) {
-		db = DictEntry_GetVal( entry );
-		ThumbDB_Close( db );
-		entry = Dict_Next( iter );
-	}
-	Dict_ReleaseIterator( iter );
 	Dict_Release( finder.thumb_dbs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		free( finder.thumb_paths[i] );
