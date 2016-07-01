@@ -69,15 +69,32 @@
           <widget class="search-panel">
             <widget class="search-input-group">
               <widget id="input-search" type="textedit" class="search-input" data-placeholder="根据标签搜索图片"></widget>
-              <widget type="button" class="btn btn-primary">搜索</widget>
+              <widget id="btn-search-files" type="button" class="btn btn-primary">搜索</widget>
             </widget>
           </widget>
           <widget class="view-content-wrapper">
             <widget id="view-search-content" class="view-content full-height">
-              <widget id="tip-empty-tags" type="textview" class="hide">未找到标签记录。</widget>
+              <widget id="tip-search-tags-empty" type="textview" class="hide">未找到标签记录。</widget>
               <widget id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
+          </widget>
+        </widget>
+        <widget id="view-search-result" class="subview hide">
+          <widget class="view-navbar">
+            <widget class="view-navbar-btn" id="btn-hide-search-result">
+              <widget type="textview" class="icon mdi mdi-arrow-left"></widget>
+            </widget>
+            <widget type="textview" class="view-navbar-title">搜索结果</widget>
+          </widget>
+          <widget class="view-body">
+            <widget class="view-content-wrapper">
+              <widget id="view-search-result-content" class="view-content full-height">
+                <widget id="tip-search-no-result" type="textview" class="hide">未找符合条件的图片。</widget>
+                <widget id="view-search-files" type="thumbview" class="scrolllayer file-list"></widget>
+              </widget>
+              <widget type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
+            </widget>
           </widget>
         </widget>
       </widget>
