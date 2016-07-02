@@ -67,6 +67,16 @@ enum SQLCodeList {
 	SQL_TOTAL
 };
 
+typedef struct DB_QueryRec_ {
+	char sql_tables[128];
+	char sql_terms[1024];
+	char sql_orderby[128];
+	char sql_groupby[128];
+	char sql_having[128];
+	char sql_limit[128];
+	sqlite3_stmt *stmt;
+} DB_QueryRec;
+
 static struct DB_Module {
 	sqlite3 *db;
 	const char *sqls[SQL_TOTAL];
@@ -141,9 +151,9 @@ FROM file f WHERE f.path = ?;";
 STATIC_STR sql_get_file_tags = "\
 SELECT t.id, t.name, count(*) FROM tag t, file_tag_relation ftr \
 WHERE t.id = ftr.tid and ftr.fid = ? GROUP BY t.id ORDER BY count(*) ASC;";
-STATIC_STR sql_search_files = "\
-SELECT f.id, f.did, f.score, f.path, f.width, f.height, f.create_time FROM file f";
-STATIC_STR sql_count_files = "SELECT COUNT(f.id) FROM file f";
+STATIC_STR sql_search_files = "SELECT f.id, f.did, f.score, f.path, \
+f.width, f.height, f.create_time FROM file f ";
+STATIC_STR sql_count_files = "SELECT COUNT(*) FROM ";
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )
@@ -242,6 +252,7 @@ int DB_Init( void )
 	self.sqls[SQL_ADD_FILE_TAG] = sql_file_add_tag;
 	self.sqls[SQL_DEL_FILE_TAG] = sql_file_del_tag;
 	self.sqls[SQL_SET_FILE_SIZE] = sql_file_set_size;
+	self.sqls[SQL_SET_FILE_SCORE] = sql_file_set_score;
 	self.sqls[SQL_GET_FILE_TAGS] = sql_get_file_tags;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
 	self.sqls[SQL_GET_DIR_TOTAL] = sql_get_dir_total;
@@ -582,9 +593,9 @@ int DBQuery_GetTotalFiles( DB_Query query )
 	if( !query ) {
 		return 0;
 	}
-	strcpy( sql, sql_count_files );
-	strcat( sql, query->sql_tables );
-	strcat( sql, query->sql_terms );
+	sprintf( sql, "%s (SELECT * FROM file f %s %s%s%s)", 
+		 sql_count_files, query->sql_tables, query->sql_terms, 
+		 query->sql_groupby, query->sql_having );
 	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
 	if( sqlite3_step( stmt ) == SQLITE_ROW ) {
 		total = sqlite3_column_int( stmt, 0 );
@@ -622,86 +633,104 @@ DB_File DBQuery_FetchFile( DB_Query query )
 DB_Query DB_NewQuery( const DB_QueryTerms terms )
 {
 	int i;
-	char buf[256] = " WHERE", sql[SQL_BUF_SIZE];
-	DB_Query q = malloc( sizeof(DB_QueryRec) );
-	q->sql_terms = malloc( sizeof( char )*SQL_BUF_SIZE );
-	q->sql_tables = malloc( sizeof( char )*SQL_BUF_SIZE );
-	q->sql_terms[0] = 0;
-	q->sql_tables[0] = 0;
+	char sql[SQL_BUF_SIZE];
+	char buf_terms[256] = " WHERE ";
+	char buf_having[256] = "HAVING ";
+	char buf_orderby[256] = "ORDER BY ";
+	char buf_groupby[256] = "GROUP BY ";
+	DB_Query q = calloc( 1, sizeof(DB_QueryRec) );
 	if( terms->n_dirs > 0 && terms->dirs ) {
-		strcpy( q->sql_terms, buf );
+		strcpy( q->sql_terms, buf_terms );
 		strcat( q->sql_tables, ", dir d" );
-		strcat( q->sql_terms, " f.did = d.did" );
-		strcat( q->sql_terms, " AND f.did IN (" );
+		strcat( q->sql_terms, "f.did = d.did " );
+		strcat( q->sql_terms, "AND f.did IN (" );
 		for( i = 0; i < terms->n_dirs; ++i ) {
-			sprintf( buf, "%d", terms->dirs[i]->id );
+			sprintf( buf_terms, "%d", terms->dirs[i]->id );
 			if( i > 0 ) {
 				strcat( q->sql_terms, ", " );
 			}
-			strcat( q->sql_terms, buf );
+			strcat( q->sql_terms, buf_terms );
 		}
-		strcpy( buf, " AND" );
+		strcat( q->sql_terms, ") " );
+		strcpy( buf_terms, " AND" );
 	}
 	if( terms->n_tags > 0 && terms->tags ) {
-		strcat( q->sql_tables, ", file_tag_relation ftr" );
-		strcat( q->sql_terms, buf );
-		strcat( q->sql_terms, " ftr.tid IN (" );
-		for( i = 0; i < terms->n_tags; ++i ) {
-			sprintf( buf, "%d", terms->tags[i]->id );
-			if( i > 0 ) {
-				strcat( q->sql_terms, ", " );
+		strcat( q->sql_terms, buf_terms );
+		if( terms->n_tags == 1 ) {
+			sprintf( buf_terms, "ftr.tid = %d ", 
+				 terms->tags[0]->id );
+			strcat( q->sql_terms, buf_terms );
+		} else {
+			strcat( q->sql_terms, "ftr.tid IN (" );
+			for( i = 0; i < terms->n_tags; ++i ) {
+				sprintf( buf_terms, "%d", 
+					 terms->tags[i]->id );
+				if( i > 0 ) {
+					strcat( q->sql_terms, ", " );
+				}
+				strcat( q->sql_terms, buf_terms );
 			}
-			strcat( q->sql_terms, buf );
+			strcat( q->sql_terms, ") " );
+			strcpy( q->sql_having, buf_having );
+			sprintf( buf_having, "COUNT(ftr.tid) = %d ", 
+				 terms->n_tags );
+			strcat( q->sql_having, buf_having );
 		}
-		strcat( q->sql_terms, ") AND ftr.fid = f.id" );
-		strcpy( buf, " AND" );
+		strcat( q->sql_tables, ", file_tag_relation ftr " );
+		strcat( q->sql_terms, "AND ftr.fid = f.id " );
+		strcpy( buf_terms, "AND " );
+		strcpy( q->sql_groupby, buf_groupby );
+		strcat( q->sql_groupby, "ftr.fid " );
+		strcpy( buf_having, "AND " );
+		strcpy( buf_groupby, ", " );
 	}
 	if( terms->dirpath ) {
 		char *path;
 		i = 2 * strlen( terms->dirpath );
 		path = malloc( i * sizeof( char ) );
-		strcat( q->sql_terms, buf );
-		strcat( q->sql_terms, " HASFILE('" );
+		strcat( q->sql_terms, buf_terms );
+		strcat( q->sql_terms, "HASFILE('" );
 		strcat( q->sql_terms, terms->dirpath );
-		strcat( q->sql_terms, "', f.path)" );
+		strcat( q->sql_terms, "', f.path) " );
 	}
 	if( terms->create_time == DESC ) {
-		strcat( q->sql_terms, " ORDER BY f.create_time DESC" );
+		strcat( q->sql_orderby, buf_orderby );
+		strcat( q->sql_orderby, "f.create_time DESC " );
+		strcpy( buf_orderby, ", " );
 	} else if( terms->create_time == ASC ) {
-		strcat( q->sql_terms, " ORDER BY f.create_time ASC" );
+		strcat( q->sql_orderby, buf_orderby );
+		strcat( q->sql_orderby, "f.create_time ASC " );
+		strcpy( buf_orderby, ", " );
 	}
 	if( terms->score != NONE ) {
-		if( terms->create_time != NONE ) {
-			strcat( q->sql_terms, ", " );
-		} else {
-			strcat( q->sql_terms, " ORDER BY " );
-		}
+		strcat( q->sql_orderby, buf_orderby );
 		if( terms->score == DESC ) {
-			strcat( q->sql_terms, "f.score DESC" );
+			strcat( q->sql_orderby, "f.score DESC " );
 		} else {
-			strcat( q->sql_terms, "f.score ASC" );
+			strcat( q->sql_orderby, "f.score ASC " );
 		}
+		strcpy( buf_orderby, ", " );
 	}
-	sprintf( buf, " LIMIT %d OFFSET %d", terms->limit, terms->offset );
+	sprintf( q->sql_limit, " LIMIT %d OFFSET %d", 
+		 terms->limit, terms->offset );
 	strcpy( sql, sql_search_files );
 	strcat( sql, q->sql_tables );
-	strcat( q->sql_terms, buf );
 	strcat( sql, q->sql_terms );
+	strcat( sql, q->sql_groupby );
+	strcat( sql, q->sql_having );
+	strcat( sql, q->sql_orderby );
+	strcat( sql, q->sql_limit );
 	//printf("sql: %s\n", sql);
 	i = sqlite3_prepare_v2( self.db, sql, -1, &q->stmt, NULL );
 	if( i == SQLITE_OK ) {
 		return q;
 	}
-	free( q->sql_terms );
-	free( q );
 	return NULL;
 }
 
 void DB_DeleteQuery( DB_Query query )
 {
-	free( query->sql_terms );
 	sqlite3_finalize( query->stmt );
-	query->sql_terms = NULL;
 	query->stmt = NULL;
 	free( query );
 }

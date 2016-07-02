@@ -77,12 +77,7 @@ typedef struct DB_QueryTermsRec_ {
 } DB_QueryTermsRec, *DB_QueryTerms;	/**< 搜索规则定义 */
 
 #ifdef LCFINDER_FILE_SEARCH_C
-typedef struct DB_QueryRec_ {
-	char *sql_terms;
-	char *sql_tables;
-	char *sql_options;
-	sqlite3_stmt *stmt;
-} DB_QueryRec, *DB_Query;
+typedef struct DB_QueryRec_ *DB_Query;
 #else
 typedef void* DB_Query;
 #endif
