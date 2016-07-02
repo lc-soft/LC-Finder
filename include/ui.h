@@ -51,6 +51,7 @@
 #define ID_TXT_THUMB_DB_SPACE_USAGE	"text-thumb-db-space-usage"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
+#define ID_VIEW_PCITURE_RATING		"picture-info-rating"
 #define ID_VIEW_PICTURE_LOADING_TIP	"picture-loading-tip"
 #define ID_VIEW_MAIN_SIDEBAR		"main-sidebar"
 #define ID_VIEW_FILE_LIST		"current-file-list"

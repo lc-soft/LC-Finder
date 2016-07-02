@@ -10,40 +10,46 @@
           </widget>
         </widget>
       </widget>
-      <widget id="picture-info-content-wrapper" class="panel-body">
-        <widget id="picture-info-content" class="panel-content">
-          <widget class="info-item">
-            <widget type="textview" class="info-item-name">文件名</widget>
-            <widget id="picture-info-name" type="textview" class="info-item-value">testtesttest.jpg</widget>
-          </widget>
-          <widget class="info-item">
-            <widget type="textview" class="info-item-name">日期</widget>
-            <widget id="picture-info-time" type="textview" class="info-item-value"></widget>
-          </widget>
-          <widget class="info-item">
-            <widget type="textview" class="info-item-name">大小</widget>
-            <widget id="picture-info-file-size" type="textview" class="info-item-value"></widget>
-          </widget>
-          <widget class="info-item">
-            <widget type="textview" class="info-item-name">尺寸</widget>
-            <widget id="picture-info-size" type="textview" class="info-item-value"></widget>
-          </widget>
-          <widget class="info-item">
-            <widget type="textview" class="info-item-name">文件夹路径</widget>
-            <widget id="picture-info-path" type="textview" class="info-item-value"></widget>
-            <widget id="btn-open-picture-dir" class="btn btn-link">
-              <widget type="textview">打开文件夹</widget>
+      <widget class="panel-body">
+        <widget id="picture-info-content-wrapper" class="panel-content-wrapper">
+          <widget id="picture-info-content" class="panel-content scrolllayer">
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">文件名</widget>
+              <widget id="picture-info-name" type="textview" class="info-item-value"></widget>
+            </widget>
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">日期</widget>
+              <widget id="picture-info-time" type="textview" class="info-item-value"></widget>
+            </widget>
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">大小</widget>
+              <widget id="picture-info-file-size" type="textview" class="info-item-value"></widget>
+            </widget>
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">尺寸</widget>
+              <widget id="picture-info-size" type="textview" class="info-item-value"></widget>
+            </widget>
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">文件夹路径</widget>
+              <widget id="picture-info-path" type="textview" class="info-item-value"></widget>
+              <widget id="btn-open-picture-dir" class="btn btn-link">
+                <widget type="textview">打开文件夹</widget>
+              </widget>
+            </widget>
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">评分</widget>
+              <widget id="picture-info-rating" type="starrating"></widget>
+            </widget>
+            <widget class="info-item">
+              <widget type="textview" class="info-item-name">标签</widget>
+              <widget id="picture-info-tags" class="tag-list"></widget>
+              <widget id="btn-add-picture-tag" class="btn btn-link">
+                <widget type="textview">添加标签</widget>
+              </widget>
             </widget>
           </widget>
-          <widget class="info-item">
-            <widget type="textview" class="info-item-name">标签</widget>
-            <widget id="picture-info-tags" class="tag-list"></widget>
-            <widget id="btn-add-picture-tag" class="btn btn-link">
-              <widget type="textview">添加标签</widget>
-            </widget>
-          </widget>
+          <widget type="scrollbar" data-parent="picture-info-content-wrapper" data-layer="picture-info-content"/>
         </widget>
-        <widget type="scrollbar" data-parent="picture-info-content-wrapper" data-layer="picture-info-content"/>
       </widget>
     </widget>
   </ui>

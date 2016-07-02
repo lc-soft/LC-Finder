@@ -48,6 +48,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
+#include "starrating.h"
 
 #define DIALOG_TITLE_ADDTAG		L"添加标签"
 #define DIALOG_TITLE_EDITTAG		L"编辑标签"
@@ -63,6 +64,7 @@ struct PictureInfoPanel {
 	LCUI_Widget txt_fsize;
 	LCUI_Widget txt_dirpath;
 	LCUI_Widget view_tags;
+	LCUI_Widget rating;
 	wchar_t *filepath;
 	uint64_t size;
 	uint_t width;
@@ -143,6 +145,12 @@ static void PictureInfo_AppendTag( DB_Tag tag )
 	Widget_BindEvent( btn_del, "click", OnBtnDeleteTagClick, pack, free );
 }
 
+static void OnSetRating( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	int rating = StarRating_GetRating( w );
+	DBFile_SetScore( this_view.file, rating );
+}
+
 static void OnBtnHideClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	Widget_Hide( this_view.panel );
@@ -207,6 +215,8 @@ void UI_InitPictureInfoView( void )
 	this_view.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
 	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_PICTURE_TAGS );
 	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
+	this_view.rating = LCUIWidget_GetById(ID_VIEW_PCITURE_RATING );
+	Widget_BindEvent( this_view.rating, "click", OnSetRating, NULL, NULL );
 	Widget_BindEvent( btn_hide, "click", OnBtnHideClick, NULL, NULL );
 	Widget_BindEvent( btn_add_tag, "click", OnBtnAddTagClick, NULL, NULL );
 	Widget_Append( parent, this_view.panel );
@@ -252,9 +262,12 @@ void UI_SetPictureInfoView( const char *filepath )
 	/* 当没有文件记录时，说明该文件并不是源文件夹内的文件，暂时禁用部分操作 */
 	if( !this_view.file ) {
 		Widget_Hide( this_view.view_tags->parent );
+		Widget_Hide( this_view.rating->parent );
 		return;
 	}
 	Widget_Show( this_view.view_tags->parent );
+	Widget_Show( this_view.rating->parent );
+	StarRating_SetRating( this_view.rating, this_view.file->score );
 	n = LCFinder_GetFileTags( this_view.file, &tags );
 	for( i = 0; i < n; ++i ) {
 		PictureInfo_AppendTag( tags[i] );
