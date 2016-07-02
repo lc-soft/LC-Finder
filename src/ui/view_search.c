@@ -71,6 +71,7 @@ static struct SearchView {
 	LCUI_Widget view_tags;
 	LCUI_Widget view_result;
 	LCUI_Widget view_files;
+	LCUI_Widget btn_search;
 	LCUI_Widget tip_empty_tags;
 	LCUI_Widget tip_empty_files;
 	LCUI_BOOL need_update;
@@ -534,6 +535,17 @@ void UI_UpdateSearchView( void )
 	int i;
 	this_view.layout.count = 0;
 	ThumbView_Empty( this_view.view_tags );
+	if( finder.n_tags > 0 ) {
+		Widget_Hide( this_view.tip_empty_tags );
+		Widget_AddClass( this_view.tip_empty_tags, "hide" );
+		Widget_SetDisabled( this_view.btn_search, FALSE );
+		Widget_SetDisabled( this_view.input, FALSE );
+	} else {
+		Widget_Show( this_view.tip_empty_tags );
+		Widget_RemoveClass( this_view.tip_empty_tags, "hide" );
+		Widget_SetDisabled( this_view.btn_search, TRUE );
+		Widget_SetDisabled( this_view.input, TRUE );
+	}
 	LinkedList_Clear( &this_view.tags, free );
 	for( i = 0; i < finder.n_tags; ++i ) {
 		TagItem item = NEW( TagItemRec, 1 );
@@ -562,6 +574,7 @@ void UI_InitSearchView( void )
 	this_view.input = input;
 	this_view.tip_empty_tags = tip1;
 	this_view.tip_empty_files = tip2;
+	this_view.btn_search = btn_search;
 	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_SEARCH_TAGS );
 	this_view.view_result = LCUIWidget_GetById( ID_VIEW_SEARCH_RESULT );
 	this_view.view_files = LCUIWidget_GetById( ID_VIEW_SEARCH_FILES );

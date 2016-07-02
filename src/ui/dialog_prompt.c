@@ -154,6 +154,7 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	Widget_BindEvent( btn_ok, "click", OnBtnOkClick, &ctx, NULL );
 	Widget_BindEvent( btn_cancel, "click", OnBtnCancelClick, &ctx, NULL );
 	Widget_BindEvent( ctx.input, "change", OnInputChange, &ctx, NULL );
+	LCUIWidget_SetFocus( ctx.input );
 	LCUI_MainLoop_Run( ctx.loop );
 	Widget_Destroy( dialog );
 	return ctx.result;

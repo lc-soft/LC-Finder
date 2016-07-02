@@ -100,3 +100,6 @@
 	box-shadow: 0 0 6px rgba(68,187,85,0.4);
 	border-color: #44BB55;
 }
+.skin-light-green starrating .mdi-star {
+	color: #44A340;
+}
