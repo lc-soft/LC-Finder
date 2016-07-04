@@ -201,12 +201,14 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 time_t wgetfilectime( const wchar_t *path )
 {
 	struct stat buf;
-	int fd, ctime = 0;
-	fd = _wopen( path, _O_RDONLY );
-	if( fstat( fd, &buf ) == 0 ) {
-		ctime = (int)buf.st_ctime;
+	time_t ctime = 0;
+	int fd = _wopen( path, _O_RDONLY );
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			ctime = (int)buf.st_ctime;
+		}
+		_close( fd );
 	}
-	_close( fd );
 	return ctime;
 }
 

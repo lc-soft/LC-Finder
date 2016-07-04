@@ -98,6 +98,7 @@ static void OnBtnDeleteTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( !LCUIDialog_Confirm( this_view.window, L"提示", text ) ) {
 		return;
 	}
+	LCFinder_TriggerEvent( EVENT_TAG_UPDATE, pack->tag );
 	DBFile_RemoveTag( this_view.file, pack->tag );
 	Widget_Destroy( pack->widget );
 	pack->tag->count -= 1;

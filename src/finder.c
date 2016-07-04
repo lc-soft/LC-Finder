@@ -165,7 +165,6 @@ void LCFinder_DeleteDir( DB_Dir dir )
 {
 	int i, len;
 	SyncTask t;
-	ThumbDB db;
 	wchar_t *wpath;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		if( dir == finder.dirs[i] ) {
@@ -187,12 +186,8 @@ void LCFinder_DeleteDir( DB_Dir dir )
 	/* 准备清除缩略图数据库 */
 	wpath = finder.thumb_paths[i];
 	finder.thumb_paths[i] = NULL;
-	db = Dict_FetchValue( finder.thumb_dbs, dir->path );
-	if( db ) {
-		Dict_Delete( finder.thumb_dbs, dir->path );
-		ThumbDB_Close( db );
-		_wremove( wpath );
-	}
+	Dict_Delete( finder.thumb_dbs, dir->path );
+	_wremove( wpath );
 	/* 删除数据库中的源文件夹记录 */
 	DB_DeleteDir( dir );
 	free( dir->path );
@@ -323,9 +318,8 @@ static void LCFinder_InitWorkDir( void )
 	wchar_t data_dir[1024];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
-	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
+	//_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 	wgetcurdir( data_dir, 1024 );
-	wprintf(L"data_dir: %s\n", data_dir);
 	wpathjoin( data_dir, data_dir, L"data" );
 	len = wcslen( data_dir );
 	if( data_dir[len - 1] != PATH_SEP ) {
@@ -418,6 +412,9 @@ static void LCFinder_InitThumbDB( void )
 	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
 	finder.thumb_paths = malloc( sizeof( wchar_t* )*finder.n_dirs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
+		if( !finder.dirs[i] ) {
+			continue;
+		}
 		printf("source dir: %s\n", finder.dirs[i]->path);
 		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
 		wprintf(L"thumbdb file: %s\n", path);
@@ -480,7 +477,7 @@ static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 
 int main( int argc, char **argv )
 {
-#define DEBUG
+//#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif

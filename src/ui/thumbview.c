@@ -49,7 +49,7 @@
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
 #define ANIMATION_DURATION	500
-#define THUBVIEW_MIN_WIDTH	400
+#define THUBVIEW_MIN_WIDTH	300
 #define FOLDER_MAX_WIDTH	388
 #define FOLDER_FIXED_HEIGHT	134
 #define PICTURE_FIXED_HEIGHT	226
@@ -58,7 +58,7 @@
 #define FOLDER_CLASS		"file-list-item-folder"
 #define PICTURE_CLASS		"file-list-item-picture"
 #define DIR_COVER_THUMB		"__dir_cover_thumb__"
-#define THUMB_CACHE_SIZE	(20*1024*1024)
+#define THUMB_CACHE_SIZE	(32*1024*1024)
 #define THUMB_MAX_WIDTH		240
 
 /** 滚动加载功能的相关数据 */
@@ -581,7 +581,7 @@ static void UpdateFolderSize( LCUI_Widget item )
 	ThumbView view = data->view;
 	++view->layout.folder_count;
 	UpdateThumbRow( view );
-	if( view->layout.max_width < 480 ) {
+	if( view->layout.max_width < THUBVIEW_MIN_WIDTH ) {
 		item->custom_style->sheet[key_width].is_valid = FALSE;
 		Widget_AddClass( item, "full-width" );
 		return;
