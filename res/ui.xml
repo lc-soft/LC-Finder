@@ -54,7 +54,7 @@
         <widget class="view-body">
           <widget id="view-home-content-wrapper" class="view-content-wrapper">
             <widget id="view-home-content" class="view-content full-height">
-              <widget id="tip-empty-collection" type="textview" class="hide">未找到可读取的图片或文件夹。</widget>
+              <widget id="tip-empty-collection" type="textview" class="hide">未找到可读取的图片。</widget>
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>

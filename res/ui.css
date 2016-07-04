@@ -275,7 +275,6 @@
 	position: absolute;
 	padding: 10px 25px 0 25px;
 	background-color: #fff;
-	border-bottom: 1px solid #eee;
 }
 .folder-info-box-name {
 	font-size: 18px;
@@ -285,9 +284,6 @@
 }
 .show-folder-info-box .view-body {
 	padding-top: 148px;
-}
-.show-folder-info-box .view-content {
-	padding-top: 20px;
 }
 .show-folder-info-box .folder-info-box {
 	display: block;
@@ -723,7 +719,7 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 .search-panel .search-input-group {
 	width: 100%;
 	box-sizing: border-box;
-	padding: 10px 77px 10px 10px;
+	padding: 10px 87px 10px 10px;
 }
 .search-panel .search-input-group .search-input {
 	width: 100%;
@@ -732,7 +728,7 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 }
 .search-panel .search-input-group .btn {
 	position: absolute;
-	right: 0;
+	right: 10px;
 	top: 10px;
 	height: 40px;
 	box-sizing: border-box;
