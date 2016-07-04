@@ -243,13 +243,11 @@ static void ViewSyncThread( void *arg )
 	LCUIThread_Exit( NULL );
 }
 
-static void OnTagViewStartLayout( LCUI_Widget w )
+static void UpdateLayoutContext( void )
 {
 	double tmp;
 	int max_width, n;
-	this_view.layout.count = 0;
-	this_view.layout.tags_per_row = 2;
-	max_width = w->box.content.width;
+	max_width = this_view.view_tags->box.content.width;
 	n = max_width + TAG_MARGIN_RIGHT;
 	tmp = 1.0 * n / (TAG_MAX_WIDTH + TAG_MARGIN_RIGHT);
 	n /= TAG_MAX_WIDTH + TAG_MARGIN_RIGHT;
@@ -258,6 +256,13 @@ static void OnTagViewStartLayout( LCUI_Widget w )
 	}
 	this_view.layout.max_width = max_width;
 	this_view.layout.tags_per_row = n;
+}
+
+static void OnTagViewStartLayout( LCUI_Widget w )
+{
+	this_view.layout.count = 0;
+	this_view.layout.tags_per_row = 2;
+	UpdateLayoutContext();
 }
 
 static void AddTagToSearch( LCUI_Widget w )
@@ -364,6 +369,9 @@ static void UpdateTagSize( LCUI_Widget w )
 {
 	int width, n;
 	++this_view.layout.count;
+	if( this_view.layout.count == 1 ) {
+		UpdateLayoutContext();
+	}
 	if( this_view.layout.max_width < TAG_MAX_WIDTH ) {
 		return;
 	}
@@ -524,6 +532,9 @@ static void OnBtnSearchClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnHideReusltClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	if( this_view.need_update ) {
+		UI_UpdateSearchView();
+	}
 	Widget_Hide( this_view.view_result );
 	ThumbView_Lock( this_view.view_files );
 	ThumbView_Empty( this_view.view_files );
@@ -532,27 +543,33 @@ static void OnBtnHideReusltClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 void UI_UpdateSearchView( void )
 {
-	int i;
+	int i, count;
 	this_view.layout.count = 0;
 	ThumbView_Empty( this_view.view_tags );
-	if( finder.n_tags > 0 ) {
+	LinkedList_Clear( &this_view.tags, free );
+	for( i = 0, count = 0; i < finder.n_tags; ++i ) {
+		TagItem item;
+		if( finder.tags[i]->count <= 0 ) {
+			continue;
+		}
+		item = NEW( TagItemRec, 1 );
+		item->tag = finder.tags[i];
+		item->widget = CreateTagWidget( finder.tags[i] );
+		ThumbView_Append( this_view.view_tags, item->widget );
+		LinkedList_Append( &this_view.tags, item );
+		++count;
+	}
+	if( count > 0 ) {
 		Widget_Hide( this_view.tip_empty_tags );
 		Widget_AddClass( this_view.tip_empty_tags, "hide" );
 		Widget_SetDisabled( this_view.btn_search, FALSE );
 		Widget_SetDisabled( this_view.input, FALSE );
 	} else {
+		TextEdit_ClearText( this_view.input );
 		Widget_Show( this_view.tip_empty_tags );
 		Widget_RemoveClass( this_view.tip_empty_tags, "hide" );
 		Widget_SetDisabled( this_view.btn_search, TRUE );
 		Widget_SetDisabled( this_view.input, TRUE );
-	}
-	LinkedList_Clear( &this_view.tags, free );
-	for( i = 0; i < finder.n_tags; ++i ) {
-		TagItem item = NEW( TagItemRec, 1 );
-		item->tag = finder.tags[i];
-		item->widget = CreateTagWidget( finder.tags[i] );
-		ThumbView_Append( this_view.view_tags, item->widget );
-		LinkedList_Append( &this_view.tags, item );
 	}
 	this_view.need_update = FALSE;
 }
