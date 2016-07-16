@@ -108,6 +108,8 @@ int ThumbDB_Load( ThumbDB tdb, const char *filepath, ThumbData data )
 	Graph_Create( &data->graph, block->width, block->height );
 	memcpy( data->graph.bytes, bytes, block->mem_size );
 	data->modify_time = block->modify_time;
+	data->origin_width = block->origin_width;
+	data->origin_height = block->origin_height;
 	free( block );
 	return 0;
 }
