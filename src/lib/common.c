@@ -292,6 +292,15 @@ void wopenbrowser( const wchar_t *url )
 #endif
 }
 
+void wopenfilemanger( const wchar_t *filepath )
+{
+#ifdef _WIN32
+	wchar_t args[4096];
+	swprintf( args, 4095, L"/select,\"%s\"", filepath );
+	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
+#endif
+}
+
 int wgettimestr( wchar_t *str, int max_len, time_t time )
 {
 	struct tm *t;

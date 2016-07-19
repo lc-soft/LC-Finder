@@ -85,6 +85,7 @@
 #define ID_BTN_OPEN_WEBSITE		"btn-open-website"
 #define ID_BTN_OPEN_FEEDBACK		"btn-open-feedback"
 #define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
+#define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
 #define ID_TIP_HOME_EMPTY		"tip-empty-collection"
 #define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
 #define ID_TIP_SEARCH_TAGS_EMPTY	"tip-search-tags-empty"

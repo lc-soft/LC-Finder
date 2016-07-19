@@ -157,6 +157,11 @@ static void OnBtnHideClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	Widget_Hide( this_view.panel );
 }
 
+static void OnBtnOpenDirClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	wopenfilemanger( this_view.filepath );
+}
+
 static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DB_Tag tag;
@@ -195,7 +200,7 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 void UI_InitPictureInfoView( void )
 {
-	LCUI_Widget box, parent, btn_hide, btn_add_tag;
+	LCUI_Widget box, parent, btn_hide, btn_add_tag, btn_open;
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( !box ) {
 		return;
@@ -207,6 +212,7 @@ void UI_InitPictureInfoView( void )
 	this_view.filepath = NULL;
 	parent = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
+	btn_open = LCUIWidget_GetById( ID_BTN_OPEN_PICTURE_DIR );
 	btn_add_tag = LCUIWidget_GetById( ID_BTN_ADD_PICTURE_TAG );
 	this_view.txt_fsize = LCUIWidget_GetById( ID_TXT_PICTURE_FILE_SIZE );
 	this_view.txt_size = LCUIWidget_GetById( ID_TXT_PICTURE_SIZE );
@@ -216,10 +222,11 @@ void UI_InitPictureInfoView( void )
 	this_view.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
 	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_PICTURE_TAGS );
 	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	this_view.rating = LCUIWidget_GetById(ID_VIEW_PCITURE_RATING );
+	this_view.rating = LCUIWidget_GetById( ID_VIEW_PCITURE_RATING );
 	Widget_BindEvent( this_view.rating, "click", OnSetRating, NULL, NULL );
 	Widget_BindEvent( btn_hide, "click", OnBtnHideClick, NULL, NULL );
 	Widget_BindEvent( btn_add_tag, "click", OnBtnAddTagClick, NULL, NULL );
+	Widget_BindEvent( btn_open, "click", OnBtnOpenDirClick, NULL, NULL );
 	Widget_Append( parent, this_view.panel );
 	Widget_Hide( this_view.panel );
 }

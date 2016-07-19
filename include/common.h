@@ -76,6 +76,8 @@ void StrDict_Release( Dict *d );
 /** 打开浏览器 */
 void wopenbrowser( const wchar_t *url );
 
+void wopenfilemanger( const wchar_t *filepath );
+
 int wgettimestr( wchar_t *str, int max_len, time_t time );
 
 int getsizestr( wchar_t *str, int max_len, int64_t size );
