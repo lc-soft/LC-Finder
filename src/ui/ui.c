@@ -43,12 +43,15 @@
 #include "ui.h"
 #include "thumbview.h"
 #include "starrating.h"
+#include "progressbar.h"
 
 #define XML_PATH "res/ui.xml"
 
 static void onTimer( void *arg )
 {
-	Widget_PrintTree( NULL );
+	LCUI_Widget w = LCUIWidget_GetById( "sidebar-btn-search" );
+	LCUI_PrintStyleSheet( w->style );
+	//Widget_PrintTree( NULL );
 }
 
 void UI_Init(void)
@@ -57,6 +60,7 @@ void UI_Init(void)
 	LCUI_Init();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddStarRating();
+	LCUIWidget_AddProgressBar();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 640 );
 	//LCUIDisplay_ShowRectBorder();

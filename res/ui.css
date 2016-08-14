@@ -467,6 +467,20 @@ textedit.dialog-input {
 	box-shadow: 0 0 6px rgba(169,68,66,0.4);
 }
 
+.view-content-wrapper progress {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 4px;
+	position: absolute;
+	background-color: #ccc;
+}
+.view-content-wrapper progressbar {
+	width: 100%;
+	height: 100%;
+	background-color: #ccc;
+}
+
 #view-home-content textview:first-child {
 	margin-top: 0;
 }

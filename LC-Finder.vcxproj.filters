@@ -84,6 +84,9 @@
     <ClCompile Include="src\ui\starrating.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\progressbar.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -141,6 +144,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\starrating.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\progressbar.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

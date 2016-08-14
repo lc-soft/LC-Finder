@@ -44,10 +44,15 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
+#include "progressbar.h"
 
 #define TEXT_TIME_TITLE		L"%d年%d月"
 #define TEXT_TIME_SUBTITLE	L"%d月%d日 %d张照片"
 #define TEXT_TIME_SUBTITLE2	L"%d月%d日 - %d月%d日 %d张照片"
+
+/* 延时隐藏进度条 */
+#define HideProgressBar() LCUITimer_Set( 1000, (FuncPtr)Widget_Hide, \
+					 this_view.progressbar, FALSE )
 
 /** 时间分割线功能的数据 */
 typedef struct TimeSeparatorRec_ {
@@ -80,6 +85,7 @@ static struct HomeCollectionViewData {
 	LCUI_Widget items;
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
+	LCUI_Widget progressbar;
 	LinkedList files;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
@@ -122,6 +128,10 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	count = total = DBQuery_GetTotalFiles( query );
 	scanner->total = total;
 	scanner->count = 0;
+	ProgressBar_SetValue( this_view.progressbar, 0 );
+	ProgressBar_SetMaxValue( this_view.progressbar, count );
+	Widget_Show( this_view.progressbar );
+	_DEBUG_MSG("total: %d\n", count);
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &terms );
@@ -262,6 +272,9 @@ static void HomeView_SyncThread( void *arg )
 	vs->is_running = TRUE;
 	while( vs->is_running ) {
 		LCUIMutex_Lock( &scanner->mutex );
+		if( this_view.files.length >= this_view.scanner.total ) {
+			HideProgressBar();
+		}
 		if( scanner->files.length == 0 ) {
 			LCUICond_Wait( &scanner->cond, &scanner->mutex );
 			if( !vs->is_running ) {
@@ -282,6 +295,8 @@ static void HomeView_SyncThread( void *arg )
 		LinkedList_AppendNode( &this_view.files, node );
 		HomeView_AppendFile( file );
 		LCUIMutex_Unlock( &vs->mutex );
+		ProgressBar_SetValue( this_view.progressbar, 
+				      this_view.files.length );
 	}
 	LCUIMutex_Unlock( &scanner->mutex );
 }
@@ -323,8 +338,9 @@ void UI_InitHomeView( void )
 	this_view.view = LCUIWidget_GetById( ID_VIEW_HOME );
 	items = LCUIWidget_GetById( ID_VIEW_HOME_COLLECTIONS );
 	btn = LCUIWidget_GetById( ID_BTN_SYNC_COLLECTIONS );
-	this_view.items = items;
+	this_view.progressbar = LCUIWidget_GetById( ID_VIEW_HOME_PROGRESS );
 	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_HOME_EMPTY );
+	this_view.items = items;
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );

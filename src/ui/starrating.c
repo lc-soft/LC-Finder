@@ -39,7 +39,6 @@
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include "ui.h"
 
 static const char *starrating_css = ToString(
 
@@ -158,5 +157,5 @@ void LCUIWidget_AddStarRating( void )
 	LCUI_WidgetClass *wc = LCUIWidget_AddClass( "starrating" );
 	wc->methods.init = OnInit;
 	wc->methods.destroy = OnDestroy;
-	LCUICSS_LoadString( starrating_css );
+	LCUICSS_LoadString( starrating_css, NULL );
 }

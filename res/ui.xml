@@ -53,6 +53,7 @@
         </widget>
         <widget class="view-body">
           <widget id="view-home-content-wrapper" class="view-content-wrapper">
+            <widget id="view-home-progress" type="progress"></widget>
             <widget id="view-home-content" class="view-content full-height">
               <widget id="tip-empty-collection" type="textview" class="hide">未找到可读取的图片。</widget>
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
@@ -165,7 +166,7 @@
               </widget>
               <widget type="textview" class="title">关于此应用</widget>
               <widget class="item-group">
-                <widget type="textview" class="text">LC-Finder 0.1.0 Alpha 3</widget>
+                <widget type="textview" class="text">LC-Finder 0.1.0 Alpha 4</widget>
                 <widget type="textview" class="text">© 2016 LC's Software，保留所有权利。</widget>
                 <widget class="btn-group">
                   <widget id="btn-open-license" class="btn btn-link">

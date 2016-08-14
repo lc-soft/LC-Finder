@@ -65,6 +65,7 @@
 #define ID_VIEW_SEARCH_TAGS		"view-search-tags"
 #define ID_VIEW_SEARCH_RESULT		"view-search-result"
 #define ID_VIEW_SEARCH_FILES		"view-search-files"
+#define ID_VIEW_HOME_PROGRESS		"view-home-progress"
 #define ID_BTN_SEARCH_FILES		"btn-search-files"
 #define ID_BTN_SYNC_COLLECTIONS		"btn-sync-collection-files"
 #define ID_BTN_RETURN_ROOT_FOLDER	"btn-return-root-folder"
