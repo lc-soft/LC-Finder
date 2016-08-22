@@ -2,15 +2,33 @@
 
 [![Join the chat at https://gitter.im/lc-soft/LC-Finder](https://badges.gitter.im/lc-soft/LC-Finder.svg)](https://gitter.im/lc-soft/LC-Finder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-简单的资源检索与管理工具。
+一个简单的图片资源检索与管理工具，源代码使用 C 语言编写，基于 [GNU通用公共许可协议](http://www.gnu.org/licenses/gpl-2.0.html) 
+发布。
 
-## 主要功能（待实现）
-- 标签，可以根据文件特征添加相应标签，方便搜索。
-- 标签分组，多个相同类别的标签可以放到一个标签组里，方便管理。
-- 搜索，支持根据关键字和标签来搜索包含标签或关键字的文件，搜索出来的文件可以按评分、创建时间排序。
-- 文件隐藏，标签和文件夹可以设置为隐藏，普通模式下不会显示出隐藏文件夹内的文件和带有隐藏标签的文件。
+## 特性
+- 缩略图预览
+- 文件夹浏览
+- 标签搜索
+- 支持触控
 
-## 当前效果图
-[![](https://blog.lc-soft.io/static/images/devlog/2016-04-25-22-10-34.png "效果图")](https://blog.lc-soft.io/static/images/devlog/2016-04-25-22-10-34.png)
-[![](https://blog.lc-soft.io/static/images/devlog/2016-04-25-22-11-41.png "效果图")](https://blog.lc-soft.io/static/images/devlog/2016-04-25-22-11-41.png)
-[![](https://blog.lc-soft.io/static/images/devlog/2016-04-25-22-09-53.png "效果图")](https://blog.lc-soft.io/static/images/devlog/2016-04-25-22-09-53.png)
+## 构建
+
+暂时只提供 Windows 系统环境下的构建方法：使用 VisualStudio 打开 `LC-Finder.sln` 文件，然后编译生成。
+
+### 依赖项
+
+以下依赖项都是必需的。
+
+ * [LCUI](https://lcui.lc-soft.io) — 作者写的一个图形界面引擎，为本程序提供图形界面支持。
+ * [sqlite3](https://www.sqlite.org/) — 轻量级的关系型数据库引擎，为文件信息索引与搜索功能提供支持。
+ * [unqlite](https://www.unqlite.org/) — 嵌入式的非关系型数据引擎，为缩略图缓存功能提供支持。
+ 
+通常 Github 上的 Releases 页面中会提供包含这些依赖库及头文件的压缩包，因此你不用再手动去编译这些依赖库。
+
+## 截图
+
+由于图片占用的页面面积太大，所以放在文档末尾了。
+
+[![](https://cloud.githubusercontent.com/assets/1730073/16550438/0dc2374c-41dd-11e6-85be-b7103df79a7b.png "效果图")](https://cloud.githubusercontent.com/assets/1730073/16550438/0dc2374c-41dd-11e6-85be-b7103df79a7b.png)
+[![](https://cloud.githubusercontent.com/assets/1730073/16550610/2d4350e0-41df-11e6-980c-061a0ea160b5.png "效果图")](https://cloud.githubusercontent.com/assets/1730073/16550610/2d4350e0-41df-11e6-980c-061a0ea160b5.png)
+[![](https://cloud.githubusercontent.com/assets/1730073/15278979/e7943edc-1b51-11e6-87ab-7fc673b978b2.png "效果图")](https://cloud.githubusercontent.com/assets/1730073/15278979/e7943edc-1b51-11e6-87ab-7fc673b978b2.png)
