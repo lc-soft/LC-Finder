@@ -60,6 +60,7 @@ static struct PictureViewer {
 	LCUI_Widget window;			/**< 图片查看器窗口 */
 	LCUI_Widget target;			/**< 用于显示目标图片的部件 */
 	LCUI_Widget tip;			/**< 图片载入提示框 */
+	LCUI_Widget btn_reset;			/**< 按钮，重置图片尺寸 */
 	LCUI_Widget btn_prev;			/**< “上一张”按钮 */
 	LCUI_Widget btn_next;			/**< “下一张”按钮 */
 	LCUI_BOOL is_loading;			/**< 是否正在载入图片 */
@@ -128,6 +129,18 @@ static void OpenNextPicture( void )
 	iter->next( iter );
 	UpdateSwitchButtons();
 	UI_OpenPictureView( iter->filepath );
+}
+
+static void UpdateResetSizeButton( void )
+{
+	LCUI_Widget txt = LinkedList_Get( &this_view.btn_reset->children, 0 );
+	if( this_view.scale == 1.0 ) {
+		Widget_RemoveClass( txt, "mdi-fullscreen" );
+		Widget_AddClass( txt, "mdi-fullscreen-exit" );
+	} else {
+		Widget_RemoveClass( txt, "mdi-fullscreen-exit" );
+		Widget_AddClass( txt, "mdi-fullscreen" );
+	}
 }
 
 /** 更新图片位置 */
@@ -239,6 +252,7 @@ static void ResetPictureSize( void )
 	Widget_UpdateStyle( this_view.target, FALSE );
 	ResetOffsetPosition();
 	UpdatePicturePosition();
+	UpdateResetSizeButton();
 }
 
 /** 在返回按钮被点击的时候 */
@@ -280,6 +294,7 @@ static void SetPictureScale( double scale )
 	Widget_UpdateStyle( this_view.target, FALSE );
 	this_view.scale = scale;
 	UpdatePicturePosition();
+	UpdateResetSizeButton();
 }
 
 /** 在”放大“按钮被点击的时候 */
@@ -317,8 +332,14 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 在”实际大小“按钮被点击的时候 */
 static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	double scale;
+	if( this_view.scale == 1.0 ) {
+		scale = this_view.min_scale;
+	} else {
+		scale = 1.0;
+	}
 	ResetOffsetPosition();
-	SetPictureScale( 1.0 );
+	SetPictureScale( scale );
 }
 
 /** 图片加载器 */
@@ -609,6 +630,7 @@ void UI_InitPictureView( void )
 	btn[1] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_IN );
 	btn[2] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_OUT );
 	btn[3] = LCUIWidget_GetById( ID_BTN_DELETE_PICTURE );
+	this_view.btn_reset = btn[0];
 	this_view.tip = LCUIWidget_GetById( ID_VIEW_PICTURE_LOADING_TIP );
 	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	this_view.target = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
