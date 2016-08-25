@@ -106,3 +106,50 @@
 .skin-light-green .view-content-wrapper progressbar {
 	background-color: #44A340;
 }
+#picture-viewer-window.skin-light-green {
+	background-color: #222;
+}
+#picture-viewer-window.skin-light-green .window-navbar {
+	background-color: rgba(0,0,0,0.2);
+}
+#picture-viewer-window.skin-light-green .zoom-btn-group {
+	background-color: rgba(0,0,0,0.8);
+	border-color: transparent;
+	padding: 2px;
+}
+#picture-viewer-window.skin-light-green .icon-btn .icon {
+	color: #fff;
+	background-color: transparent;
+}
+#picture-viewer-window.skin-light-green .icon-btn:hover {
+	background-color: rgba(255,255,255,0.3);
+}
+#picture-viewer-window.skin-light-green .icon-btn:active {
+	background-color: rgba(255,255,255,0.5);
+}
+
+#picture-info-panel.skin-light-green {
+	background-color: #323232;	
+}
+#picture-info-panel.skin-light-green textview {
+	color: #fff;
+}
+#picture-info-panel.skin-light-green .btn-link textview {
+	color: #44BB55;
+}
+#picture-info-panel.skin-light-green .btn-link:hover textview {
+	color: #2E7D39;
+}
+#picture-info-panel.skin-light-green .info-item .info-item-name {
+	color: #888;
+}
+.skin-light-green.panel .panel-header {
+	box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
+.skin-light-green. #picture-loading-tip textview {
+	color: #fff;
+}
+.skin-light-green. #picture-loading-tip {
+	background-color: rgba(0,0,0,0.8);
+	box-shadow: 0 0 8px rgba(0,0,0,0.8);
+}

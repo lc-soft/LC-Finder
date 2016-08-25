@@ -5,8 +5,8 @@
       <widget class="panel-header">
         <widget type="textview" class="panel-header-title">文件信息</widget>
         <widget class="pull-right">
-          <widget id="btn-hide-picture-info" class="btn btn-link">
-            <widget type="textview">关闭</widget>
+          <widget id="btn-hide-picture-info" class="icon-btn">
+            <widget type="textview" class="icon mdi mdi-close"></widget>
           </widget>
         </widget>
       </widget>

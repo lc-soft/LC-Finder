@@ -3,27 +3,36 @@
   <ui>
     <widget id="picture-viewer-window" class="window skin-light-green">
       <widget class="window-navbar">
-        <widget class="window-navbar-btn" id="btn-hide-picture-viewer">
+        <widget class="icon-btn window-navbar-btn" id="btn-hide-picture-viewer">
           <widget type="textview" class="icon mdi mdi-arrow-left"></widget>
         </widget>
         <widget class="pull-right">
-          <widget class="window-navbar-btn" id="btn-show-picture-info">
-            <widget type="textview" class="icon mdi mdi-information-outline"></widget>
+          <widget class="icon-btn window-navbar-btn" id="btn-show-picture-info">
+            <widget type="textview" class="icon mdi mdi-information"></widget>
+          </widget>
+          <widget class="icon-btn window-navbar-btn" id="btn-delete-picture">
+            <widget type="textview" class="icon mdi mdi-delete"></widget>
           </widget>
         </widget>
       </widget>
       <widget class="window-body">
         <widget id="picture-viewer-target" class="picture-container"></widget>
-        <widget class="picture-option-group">
-          <widget id="btn-picture-reset-size" class="picture-option-btn">
+        <widget id="debug-widget" class="zoom-btn-group">
+          <widget id="btn-picture-reset-size" class="icon-btn picture-option-btn">
             <widget class="icon mdi mdi-fullscreen" type="textview"></widget>
           </widget>
-          <widget id="btn-picture-zoom-out" class="picture-option-btn">
+          <widget id="btn-picture-zoom-out" class="icon-btn picture-option-btn">
             <widget class="icon mdi mdi-minus" type="textview"></widget>
           </widget>
-          <widget id="btn-picture-zoom-in" class="picture-option-btn">
+          <widget id="btn-picture-zoom-in" class="icon-btn picture-option-btn">
             <widget class="icon mdi mdi-plus" type="textview"></widget>
           </widget>
+        </widget>
+        <widget id="btn-picture-prev" class="icon-btn picture-switch-btn prev">
+          <widget class="icon mdi mdi-chevron-left" type="textview"></widget>
+        </widget>
+        <widget id="btn-picture-next" class="icon-btn picture-switch-btn next">
+          <widget class="icon mdi mdi-chevron-right" type="textview"></widget>
         </widget>
         <widget id="picture-loading-tip">
           <widget type="textview">图片载入中...</widget>

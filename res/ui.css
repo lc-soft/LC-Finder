@@ -273,8 +273,11 @@
 	width: 100%;
 	display: none;
 	position: absolute;
-	padding: 10px 25px 0 25px;
+	padding: 10px 25px 10px 25px;
 	background-color: #fff;
+}
+.folder-info-box .btn-link {
+	maring-top: 0;
 }
 .folder-info-box-name {
 	font-size: 18px;
@@ -283,7 +286,7 @@
 	color: #888;
 }
 .show-folder-info-box .view-body {
-	padding-top: 148px;
+	padding-top: 140px;
 }
 .show-folder-info-box .folder-info-box {
 	display: block;
@@ -341,13 +344,12 @@ textview {
 	color: #7B7B7B;
 }
 .btn-link {
-	padding-left: 0;
-	padding-right: 0;
+	padding: 0;
 	margin-right: 20px;
 }
 .btn-link textview {
 	color: #007acc;
-	padding: 4px 0;
+	padding: 0;
 }
 .btn-link:hover textview {
 	color: #23527c;
@@ -495,15 +497,27 @@ textedit.dialog-input {
 	top: 0px;
 	left: 0px;
 	width: 100%;
-	height: 48px;
+	height: 56px;
+	padding: 8px 12px 0 12px;
 	position: absolute;
+	box-sizing: border-box;
 	background-color: rgba(255,255,255,0.6);
 }
-#picture-viewer-window .picture-option-group {
-	position: absolute;
-	right: 10px;
+#picture-viewer-window .window-navbar .pull-right {
+	top: 8px;
+	right: 12px;
+}
+#picture-viewer-window .zoom-btn-group {
+	width: 120px;
+	height: 40px;
+	margin: 0 auto;
 	bottom: 10px;
+	position: absolute;
 	border: 1px solid #eee;
+}
+#picture-viewer-window .icon-btn:first-child,
+#picture-viewer-window .zoom-btn-group .icon-btn {
+	margin: 0;
 }
 #picture-viewer-window .window-body,
 #picture-viewer-window .picture-container {
@@ -514,48 +528,49 @@ textedit.dialog-input {
 	background-position: center;
 	background-size: auto;
 }
-#picture-viewer-window .picture-option-btn {
-	display: inline-block;
-	background-color: rgba(255,255,255,0.6);
-}
-#picture-viewer-window .picture-option-btn .icon {
-	color: #444;
-	width: 42px;
-	height: 32px;
-	font-size: 20px;
-	line-height: 32px;
-	text-align: center;
-}
-#picture-viewer-window .picture-option-btn:hover {
-	background-color: #fff;
-}
-#picture-viewer-window .picture-option-btn:active {
-	background-color: #f0f0f0;
-}
 #picture-viewer-window .contain-mode {
 	background-size: contain;
 	background-position: center;
 }
-#picture-viewer-window .window-navbar-btn .icon {
+#picture-viewer-window .icon-btn .icon {
 	color: #444;
-	width: 48px;
-	height: 48px;
+	width: 24px;
+	height: 24px;
 	font-size: 24px;
-	line-height: 48px;
+	line-height: 24px;
+	padding-top: 2px;
 	text-align: center;
+	position: relative;
+	box-sizing: border-box;
 }
-#picture-viewer-window .window-navbar-btn:hover {
+#picture-viewer-window .icon-btn:hover {
 	background-color: #fff;
 }
-#picture-viewer-window .window-navbar-btn:active {
+#picture-viewer-window .icon-btn:active {
 	background-color: #f0f0f0;
 }
-#picture-viewer-window .window-navbar-btn {
+#picture-viewer-window .icon-btn {
 	display: inline-block;
+	padding: 8px;
+	margin-left: 8px;
+}
+#picture-viewer-window .picture-switch-btn {
+	margin: 0;
+	position: absolute;
+	vertical-align: middle;
+	background-color: rgba(0,0,0,0.5);
+}
+#picture-viewer-window .picture-switch-btn.prev {
+	left: 10px;
+}
+#picture-viewer-window .picture-switch-btn.next {
+	right: 10px;
 }
 #picture-loading-tip {
+	width: 100%;
+	max-width: 120px;
 	margin: 0 auto;
-	padding: 6px 15px;
+	padding: 15px 25px;
 	position: absolute;
 	vertical-align: middle;
 	background-color: rgba(255,255,255,0.8);
@@ -563,17 +578,16 @@ textedit.dialog-input {
 #picture-loading-tip textview {
 	color: #333;
 	font-size: 14px;
-	line-height: 48px;
 }
 
 #picture-info-panel {
-	width: 320px;
-	background-color: #fff;
-	position: absolute;
-	z-index: 10;
-	height: 100%;
 	top: 0;
 	left: 0;
+	width: 320px;
+	z-index: 10;
+	height: 100%;
+	position: absolute;
+	background-color: #fff;
 	box-shadow: 0 0 8px rgba(0,0,0,0.5);
 }
 #picture-info-panel .info-item {
@@ -589,12 +603,13 @@ textedit.dialog-input {
 	top: 0;
 	left: 0;
 	width: 100%;
-	height: 48px;
+	height: 56px;
+	padding: 8px 12px 0 12px;
 	position: absolute;
-	border-bottom: 1px solid #eee;
+	box-sizing: border-box;
 }
 .panel .panel-body {
-	padding-top: 48px;
+	padding-top: 56px;
 	height: 100%;
 	width: 100%;
 	box-sizing: border-box;
@@ -608,24 +623,14 @@ textedit.dialog-input {
 	width: 100%;
 	height: 100%;
 }
+.panel .panel-header .pull-right {
+	top: 8px;
+	right: 12px;
+}
 .panel .panel-header .panel-header-title {
 	font-size: 16px;
 	line-height: 48px;
-	padding: 0 0 0 20px;
 }
-.panel .panel-header .btn {
-	height: 48px;
-	padding: 15px;
-}
-.panel .panel-header .btn:last-child {
-	margin-right: 5px;
-}
-.panel .panel-header .btn textview {
-	padding: 0;
-	text-align: center;
-	line-height: 18px;
-}
-
 .tag-list {
 
 }
