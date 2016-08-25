@@ -97,10 +97,72 @@ static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
 }
 
+static void FileIterator_Destroy( FileIterator iter )
+{
+	iter->privdata = NULL;
+	iter->filepath = NULL;
+	iter->next = NULL;
+	iter->prev = NULL;
+	free( iter );
+}
+
+static void FileIterator_Update( FileIterator iter )
+{
+	DB_File file;
+	LinkedListNode *node;
+	node = iter->privdata;
+	file = node->data;
+	iter->filepath = file->path;
+	iter->length = this_view.files.length;
+}
+
+static void FileIterator_Next( FileIterator iter )
+{
+	LinkedListNode *node = iter->privdata;
+	if( node->next ) {
+		iter->index += 1;
+		iter->privdata = node->next;
+		FileIterator_Update( iter );
+	}
+}
+
+static void FileIterator_Prev( FileIterator iter )
+{
+	LinkedListNode *node = iter->privdata;
+	if( node->prev && node != this_view.files.head.next ) {
+		iter->index -= 1;
+		iter->privdata = node->prev;
+		FileIterator_Update( iter );
+	}
+}
+
+static FileIterator FileIterator_Create( LinkedListNode *node )
+{
+	FileIterator iter = NEW( FileIteratorRec, 1 );
+	iter->index = 0;
+	iter->privdata = node;
+	iter->next = FileIterator_Next;
+	iter->prev = FileIterator_Prev;
+	iter->destroy = FileIterator_Destroy;
+	while( node != this_view.files.head.next ) {
+		node = node->prev;
+		iter->index += 1;
+	}
+	FileIterator_Update( iter );
+	return iter;
+}
+
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	DB_File f = e->data;
+	DB_File f;
+	FileIterator iter;
+	LinkedListNode *node;
+
+	node = e->data;
+	f = node->data;
+	iter = FileIterator_Create( node );
 	UI_OpenPictureView( f->path );
+	UI_SetPictureView( iter );
 }
 
 static void OnDeleteDBFile( void *arg )
@@ -206,13 +268,16 @@ static void FileScanner_Destroy( FileScanner scanner )
 }
 
 /** 向视图追加文件 */
-static void HomeView_AppendFile( DB_File file )
+static void HomeView_AppendFile( LinkedListNode *node )
 {
 	time_t time;
 	struct tm *t;
-	TimeSeparator ts;
+	DB_File file;
 	wchar_t text[128];
+	TimeSeparator ts;
 	LCUI_Widget title, item;
+
+	file = node->data;
 	ts = &this_view.separator;
 	time = file->create_time;
 	t = localtime( &time );
@@ -237,7 +302,7 @@ static void HomeView_AppendFile( DB_File file )
 	if( item ) {
 		ts->files += 1;
 		Widget_BindEvent( item, "click", OnItemClick,
-				  file, NULL );
+				  node, NULL );
 	}
 	/** 如果时间跨度不超过一天 */
 	if( t->tm_year == ts->time.tm_year && 
@@ -293,7 +358,7 @@ static void HomeView_SyncThread( void *arg )
 		LinkedList_Unlink( &scanner->files, node );
 		LCUIMutex_Unlock( &scanner->mutex );
 		LinkedList_AppendNode( &this_view.files, node );
-		HomeView_AppendFile( file );
+		HomeView_AppendFile( node );
 		LCUIMutex_Unlock( &vs->mutex );
 		ProgressBar_SetValue( this_view.progressbar, 
 				      this_view.files.length );

@@ -47,9 +47,11 @@
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "dialog.h"
 
 #define MAX_SCALE	5.0
 #define XML_PATH	"res/ui-view-picture.xml"
+#define TEXT_DELETE	L"删除此文件？"
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
@@ -58,6 +60,8 @@ static struct PictureViewer {
 	LCUI_Widget window;			/**< 图片查看器窗口 */
 	LCUI_Widget target;			/**< 用于显示目标图片的部件 */
 	LCUI_Widget tip;			/**< 图片载入提示框 */
+	LCUI_Widget btn_prev;			/**< “上一张”按钮 */
+	LCUI_Widget btn_next;			/**< “下一张”按钮 */
 	LCUI_BOOL is_loading;			/**< 是否正在载入图片 */
 	LCUI_BOOL is_working;			/**< 当前视图是否在工作 */
 	LCUI_BOOL is_opening;			/**< 当前视图是否为打开状态 */
@@ -67,6 +71,7 @@ static struct PictureViewer {
 	LCUI_Cond cond;				/**< 条件变量 */
 	LCUI_Mutex mutex;			/**< 互斥锁 */
 	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
+	FileIterator iterator;			/**< 图片文件列表迭代器 */
 	int focus_x, focus_y;			/**< 当前焦点位置，相对于按比例缩放后的图片 */
 	int origin_focus_x, origin_focus_y;	/**< 当前焦点位置，相对于原始尺寸的图片 */
 	int offset_x, offset_y;			/**< 浏览区域的位置偏移量，相对于焦点位置 */
@@ -83,9 +88,47 @@ static struct PictureViewer {
 		int distance;			/**< 触点距离 */
 		double scale;			/**< 缩放开始前的缩放比例 */
 		LCUI_BOOL is_running;		/**< 缩放是否正在进行 */
-		int x, y;			/**<  */
+		int x, y;			/**< 缩放开始前的触点位置 */
 	} zoom;
 } this_view;
+
+/** 更新图片切换按钮的状态 */
+static void UpdateSwitchButtons( void )
+{
+	FileIterator iter = this_view.iterator;
+	Widget_Hide( this_view.btn_prev );
+	Widget_Hide( this_view.btn_next );
+	if( iter ) {
+		if( iter->index > 0 ) {
+			Widget_Show( this_view.btn_prev );
+		}
+		if( iter->length >= 1 && iter->index < iter->length - 1 ) {
+			Widget_Show( this_view.btn_next );
+		}
+	}
+}
+
+static void OpenPrevPicture( void )
+{
+	FileIterator iter = this_view.iterator;
+	if( !iter || iter->index == 0 ) {
+		return;
+	}
+	iter->prev( iter );
+	UpdateSwitchButtons();
+	UI_OpenPictureView( iter->filepath );
+}
+
+static void OpenNextPicture( void )
+{
+	FileIterator iter = this_view.iterator;
+	if( !iter || iter->index >= iter->length - 1 ) {
+		return;
+	}
+	iter->next( iter );
+	UpdateSwitchButtons();
+	UI_OpenPictureView( iter->filepath );
+}
 
 /** 更新图片位置 */
 static void UpdatePicturePosition( void )
@@ -201,14 +244,7 @@ static void ResetPictureSize( void )
 /** 在返回按钮被点击的时候 */
 static OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	LCUI_Widget root = LCUIWidget_GetRoot();
-	LCUI_Widget main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	Widget_SetTitleW( root, L"LC-Finder" );
-	ResetPictureSize();
-	Widget_Show( main_window );
-	Widget_Hide( this_view.window );
-	this_view.is_opening = FALSE;
-	LCUICond_Signal( &this_view.cond );
+	UI_ClosePictureView();
 }
 
 /** 在图片视图尺寸发生变化的时候 */
@@ -258,6 +294,24 @@ static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ResetOffsetPosition();
 	SetPictureScale( this_view.scale - 0.5 );
+}
+
+static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	OpenPrevPicture();
+}
+static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	OpenNextPicture();
+}
+static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	if( !LCUIDialog_Confirm( this_view.window, TEXT_DELETE, NULL ) ) {
+		return;
+	}
+	DB_DeleteFile( this_view.filepath );
+	LCFinder_TriggerEvent( EVENT_FILE_DEL, this_view.filepath );
+	UI_ClosePictureView();
 }
 
 /** 在”实际大小“按钮被点击的时候 */
@@ -534,7 +588,7 @@ static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 void UI_InitPictureView( void )
 {
-	LCUI_Widget box, w, btn_back, btn[3];
+	LCUI_Widget box, w, btn_back, btn[4];
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
@@ -549,15 +603,23 @@ void UI_InitPictureView( void )
 	this_view.zoom.point_ids[1] = -1;
 	LCUICond_Init( &this_view.cond );
 	LCUIMutex_Init( &this_view.mutex );
+	this_view.btn_prev = LCUIWidget_GetById( ID_BTN_PCITURE_PREV );
+	this_view.btn_next = LCUIWidget_GetById( ID_BTN_PCITURE_NEXT );
 	btn[0] = LCUIWidget_GetById( ID_BTN_PICTURE_RESET_SIZE );
 	btn[1] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_IN );
 	btn[2] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_OUT );
+	btn[3] = LCUIWidget_GetById( ID_BTN_DELETE_PICTURE );
 	this_view.tip = LCUIWidget_GetById( ID_VIEW_PICTURE_LOADING_TIP );
 	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	this_view.target = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
 	Widget_BindEvent( btn[0], "click", OnBtnResetClick, NULL, NULL );
 	Widget_BindEvent( btn[1], "click", OnBtnZoomInClick, NULL, NULL );
 	Widget_BindEvent( btn[2], "click", OnBtnZoomOutClick, NULL, NULL );
+	Widget_BindEvent( btn[3], "click", OnBtnDeleteClick, NULL, NULL );
+	Widget_BindEvent( this_view.btn_prev, "click", 
+			  OnBtnPrevClick, NULL, NULL );
+	Widget_BindEvent( this_view.btn_next, "click", 
+			  OnBtnNextClick, NULL, NULL );
 	Widget_BindEvent( this_view.target, "resize", 
 			  OnPictureResize, NULL, NULL );
 	Widget_BindEvent( this_view.target, "touch", 
@@ -571,6 +633,7 @@ void UI_InitPictureView( void )
 	Widget_BindEvent( btn_back, "click", OnBtnBackClick, NULL, NULL );
 	Widget_Hide( this_view.window );
 	UI_InitPictureInfoView();
+	UpdateSwitchButtons();
 }
 
 void UI_OpenPictureView( const char *filepath )
@@ -579,6 +642,7 @@ void UI_OpenPictureView( const char *filepath )
 	wchar_t *wpath;
 	LCUI_Widget main_window, root;
 
+	_DEBUG_MSG("open: %s\n", filepath);
 	len = strlen( filepath );
 	root = LCUIWidget_GetRoot();
 	LCUIMutex_Lock( &this_view.mutex );
@@ -594,6 +658,31 @@ void UI_OpenPictureView( const char *filepath )
 	Widget_Hide( main_window );
 	this_view.is_opening = TRUE;
 	UI_SetPictureInfoView( filepath );
+}
+
+void UI_SetPictureView( FileIterator iter )
+{
+	if( this_view.iterator ) {
+		this_view.iterator->destroy( this_view.iterator );
+		this_view.iterator = NULL;
+	}
+	if( iter ) {
+		this_view.iterator = iter;
+	}
+	UpdateSwitchButtons();
+}
+
+void UI_ClosePictureView( void )
+{
+	LCUI_Widget root = LCUIWidget_GetRoot();
+	LCUI_Widget main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	Widget_SetTitleW( root, L"LC-Finder" );
+	ResetPictureSize();
+	Widget_Show( main_window );
+	Widget_Hide( this_view.window );
+	this_view.is_opening = FALSE;
+	LCUICond_Signal( &this_view.cond );
+	UI_SetPictureView( NULL );
 }
 
 void UI_ExitPictureView( void )

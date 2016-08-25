@@ -74,10 +74,13 @@
 #define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
 #define ID_BTN_HIDE_PICTURE_INFO	"btn-hide-picture-info"
 #define ID_BTN_SHOW_PICTURE_INFO	"btn-show-picture-info"
+#define ID_BTN_DELETE_PICTURE		"btn-delete-picture"
 #define ID_BTN_HIDE_PICTURE_VIEWER	"btn-hide-picture-viewer"
 #define ID_BTN_PICTURE_RESET_SIZE	"btn-picture-reset-size"
 #define ID_BTN_PICTURE_ZOOM_IN		"btn-picture-zoom-in"
 #define ID_BTN_PICTURE_ZOOM_OUT		"btn-picture-zoom-out"
+#define ID_BTN_PCITURE_PREV		"btn-picture-prev"
+#define ID_BTN_PCITURE_NEXT		"btn-picture-next"
 #define ID_BTN_ADD_SOURCE		"btn-add-source"
 #define ID_BTN_SIDEBAR_SETTINGS		"sidebar-btn-settings"
 #define ID_BTN_SIDEBAR_SEEARCH		"sidebar-btn-search"
@@ -92,6 +95,18 @@
 #define ID_TIP_SEARCH_TAGS_EMPTY	"tip-search-tags-empty"
 #define ID_TIP_SEARCH_FILES_EMPTY	"tip-search-no-result"
 #define ID_INPUT_SEARCH			"input-search"
+
+/** 文件迭代器 */
+typedef struct FileIteratorRec_* FileIterator;
+typedef struct FileIteratorRec_ {
+	unsigned int index;		/**< 当前索引位置 */
+	unsigned int length;		/**< 文件列表总长度 */
+	void *privdata;			/**< 私有数据 */
+	char *filepath;			/**< 文件路径 */
+	void (*next)(FileIterator);	/**< 切换至下一个文件 */
+	void (*prev)(FileIterator);	/**< 切换至上一个文件 */
+	void (*destroy)(FileIterator);	/**< 销毁文件迭代器 */
+} FileIteratorRec;
 
 /** 初始化用户界面 */
 void UI_Init( void );
@@ -123,10 +138,20 @@ void UI_ExitHomeView( void );
 /** 初始化图片视图 */
 void UI_InitPictureView( void );
 
+/** 退出图片视图并销毁相关资源 */
 void UI_ExitPictureView( void );
 
 /** 在图片视图中打开一张图片 */
 void UI_OpenPictureView( const char *filepath );
+
+/**
+ * 为图片视图设置相关数据
+ * @param[in] iter 文件迭代器，用于图片的上一张/下一张的切换功能
+ */
+void UI_SetPictureView( FileIterator iter );
+
+/** 关闭图片视图 */
+void UI_ClosePictureView( void );
 
 /** 初始化图片信息视图 */
 void UI_InitPictureInfoView( void );

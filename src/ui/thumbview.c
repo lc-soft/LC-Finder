@@ -1029,7 +1029,7 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	LinkedList_Init( &self->thumb_tasks );
 	LinkedList_Init( &self->layout.row );
 	RBTree_Init( &self->task_targets );
-	RBTree_OnJudge( &self->task_targets, OnCompareTaskTarget );
+	RBTree_OnCompare( &self->task_targets, OnCompareTaskTarget );
 	LCUIMutex_Init( &self->layout.row_mutex );
 	self->scrollload = ScrollLoading_New( w );
 	self->cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );

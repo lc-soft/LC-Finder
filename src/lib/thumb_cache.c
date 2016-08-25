@@ -33,7 +33,6 @@
 * 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在 LICENSE 文件中，如果
 * 没有，请查看：<http://www.gnu.org/licenses/>.
 * ****************************************************************************/
-
 #define LCFINDER_THUMB_CACHE_C
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
@@ -105,7 +104,7 @@ LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
 	LinkedListNode *node, *prev_node;
 	size = cache->size + thumb->mem_size;
 	if( size > cache->max_size ) {
-		LinkedList_ForEach( node, &cache->thumbs ) {
+		for( LinkedList_Each( node, &cache->thumbs ) ) {
 			tdn = node->data;
 			size = cache->size + thumb->mem_size;
 			if( size < cache->max_size ) {
