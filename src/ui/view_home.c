@@ -46,13 +46,23 @@
 #include "thumbview.h"
 #include "progressbar.h"
 
+#define TEXT_TITLE		L"集锦"
 #define TEXT_TIME_TITLE		L"%d年%d月"
 #define TEXT_TIME_SUBTITLE	L"%d月%d日 %d张照片"
 #define TEXT_TIME_SUBTITLE2	L"%d月%d日 - %d月%d日 %d张照片"
+#define TEXT_NO_SELECTED_ITEMS	L"未选择任何项目"
+#define TEXT_SELECTED_ITEMS	L"已选择 %d 项"
 
 /* 延时隐藏进度条 */
 #define HideProgressBar() LCUITimer_Set( 1000, (FuncPtr)Widget_Hide, \
 					 this_view.progressbar, FALSE )
+
+typedef struct FileIndexRec_ {
+	DB_File file;
+	LCUI_Widget item;
+	LCUI_Widget checkbox;
+	LinkedListNode node;
+} FileIndexRec, *FileIndex;
 
 /** 时间分割线功能的数据 */
 typedef struct TimeSeparatorRec_ {
@@ -80,22 +90,21 @@ typedef struct ViewSyncRec_ {
 } ViewSyncRec, *ViewSync;
 
 /** 主页集锦视图的相关数据 */
-static struct HomeCollectionViewData {
+static struct HomeCollectionView {
 	LCUI_Widget view;
 	LCUI_Widget items;
+	LCUI_Widget title;
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_Widget progressbar;
+	LCUI_BOOL selection_mode;
 	LinkedList files;
+	Dict *file_indexes;
+	LinkedList selected_files;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	TimeSeparatorRec separator;
 } this_view;
-
-static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
-}
 
 static void FileIterator_Destroy( FileIterator iter )
 {
@@ -108,39 +117,38 @@ static void FileIterator_Destroy( FileIterator iter )
 
 static void FileIterator_Update( FileIterator iter )
 {
-	DB_File file;
-	LinkedListNode *node;
-	node = iter->privdata;
-	file = node->data;
-	iter->filepath = file->path;
+	FileIndex fidx;
+	fidx = iter->privdata;
+	iter->filepath = fidx->file->path;
 	iter->length = this_view.files.length;
 }
 
 static void FileIterator_Next( FileIterator iter )
 {
-	LinkedListNode *node = iter->privdata;
-	if( node->next ) {
+	FileIndex fidx = iter->privdata;
+	if( fidx->node.next ) {
 		iter->index += 1;
-		iter->privdata = node->next;
+		iter->privdata = fidx->node.next;
 		FileIterator_Update( iter );
 	}
 }
 
 static void FileIterator_Prev( FileIterator iter )
 {
-	LinkedListNode *node = iter->privdata;
-	if( node->prev && node != this_view.files.head.next ) {
+	FileIndex fidx = iter->privdata;
+	if( fidx->node.prev && &fidx->node != this_view.files.head.next ) {
 		iter->index -= 1;
-		iter->privdata = node->prev;
+		iter->privdata = fidx->node.prev;
 		FileIterator_Update( iter );
 	}
 }
 
-static FileIterator FileIterator_Create( LinkedListNode *node )
+static FileIterator FileIterator_Create( FileIndex fidx )
 {
 	FileIterator iter = NEW( FileIteratorRec, 1 );
+	LinkedListNode *node = &fidx->node;
 	iter->index = 0;
-	iter->privdata = node;
+	iter->privdata = fidx;
 	iter->next = FileIterator_Next;
 	iter->prev = FileIterator_Prev;
 	iter->destroy = FileIterator_Destroy;
@@ -152,17 +160,104 @@ static FileIterator FileIterator_Create( LinkedListNode *node )
 	return iter;
 }
 
+static void EnableSelectionMode( void )
+{
+	this_view.selection_mode = TRUE;
+	TextView_SetTextW( this_view.title, TEXT_NO_SELECTED_ITEMS );
+	Widget_AddClass( this_view.view, "selection-mode" );
+}
+
+static void DisableSelectionMode( void )
+{
+	Widget_RemoveClass( this_view.view, "selection-mode" );
+	TextView_SetTextW( this_view.title, TEXT_TITLE );
+	this_view.selection_mode = FALSE;
+}
+
+static void UpdateTitle( void )
+{
+	wchar_t str[256];
+	if( this_view.selected_files.length>0 ) {
+		swprintf( str, 255, TEXT_SELECTED_ITEMS, 
+			  this_view.selected_files.length );
+		TextView_SetTextW( this_view.title, str );
+	} else {
+		TextView_SetTextW( this_view.title, TEXT_NO_SELECTED_ITEMS );
+	}
+}
+
+static void SelectItem( FileIndex fidx )
+{
+	if( !this_view.selection_mode ) {
+		EnableSelectionMode();
+	}
+	Widget_AddClass( fidx->item, "selected" );
+	Widget_AddClass( fidx->checkbox, "mdi-check" );
+	LinkedList_Append( &this_view.selected_files, fidx );
+	UpdateTitle();
+}
+
+static void UnselectItem( FileIndex fidx )
+{
+	LinkedList *list;
+	LinkedListNode *node;
+	list = &this_view.selected_files;
+	for( LinkedList_Each(node, list) ) {
+		if( node->data == fidx ) {
+			LinkedList_DeleteNode( list, node );
+			Widget_RemoveClass( fidx->item, "selected" );
+			Widget_RemoveClass( fidx->checkbox, "mdi-check" );
+			break;
+		}
+	}
+	UpdateTitle();
+}
+
+static void UnselectAllItems( void )
+{
+	LinkedList *list;
+	LinkedListNode *node;
+	list = &this_view.selected_files;
+	for( LinkedList_Each(node, list) ) {
+		FileIndex fidx = node->data;
+		Widget_RemoveClass( fidx->item, "selected" );
+		Widget_RemoveClass( fidx->checkbox, "mdi-check" );
+	}
+	LinkedList_Clear( list, NULL );
+	UpdateTitle();
+}
+
+static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
+}
+
+static void OnBtnSelectionClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	EnableSelectionMode();
+}
+
+static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	UnselectAllItems();
+	DisableSelectionMode();
+}
+
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	DB_File f;
 	FileIterator iter;
-	LinkedListNode *node;
-
-	node = e->data;
-	f = node->data;
-	iter = FileIterator_Create( node );
-	UI_OpenPictureView( f->path );
-	UI_SetPictureView( iter );
+	FileIndex fidx = e->data;
+	if( e->target == fidx->checkbox || this_view.selection_mode ) {
+		if( Widget_HasClass( fidx->item, "selected" ) ) {
+			UnselectItem( fidx );
+		} else {
+			SelectItem( fidx );
+		}
+	} else {
+		iter = FileIterator_Create( fidx );
+		UI_OpenPictureView( fidx->file->path );
+		UI_SetPictureView( iter );
+	}
 }
 
 static void OnDeleteDBFile( void *arg )
@@ -268,16 +363,15 @@ static void FileScanner_Destroy( FileScanner scanner )
 }
 
 /** 向视图追加文件 */
-static void HomeView_AppendFile( LinkedListNode *node )
+static void HomeView_AppendFile( DB_File file )
 {
 	time_t time;
 	struct tm *t;
-	DB_File file;
+	FileIndex fidx;
 	wchar_t text[128];
 	TimeSeparator ts;
 	LCUI_Widget title, item;
 
-	file = node->data;
 	ts = &this_view.separator;
 	time = file->create_time;
 	t = localtime( &time );
@@ -298,12 +392,19 @@ static void HomeView_AppendFile( LinkedListNode *node )
 		ts->files = 0;
 		ts->time = *t;
 	}
+	fidx = NEW( FileIndexRec, 1 );
 	item = ThumbView_AppendPicture( this_view.items, file );
 	if( item ) {
 		ts->files += 1;
 		Widget_BindEvent( item, "click", OnItemClick,
-				  node, NULL );
+				  fidx, NULL );
 	}
+	fidx->item = item;
+	fidx->file = file;
+	fidx->node.data = fidx;
+	fidx->checkbox = LCUIWidget_New( "textview" );
+	Widget_AddClass( fidx->checkbox, "checkbox mdi" );
+	ThumbViewItem_AppendToCover( item, fidx->checkbox );
 	/** 如果时间跨度不超过一天 */
 	if( t->tm_year == ts->time.tm_year && 
 	    t->tm_mon == ts->time.tm_mon &&
@@ -317,13 +418,14 @@ static void HomeView_AppendFile( LinkedListNode *node )
 			  ts->files );
 	}
 	TextView_SetTextW( ts->subtitle, text );
+	Dict_Add( this_view.file_indexes, fidx->file->path, fidx );
+	LinkedList_AppendNode( &this_view.files, &fidx->node );
 }
 
 /** 视图同步线程 */
 static void HomeView_SyncThread( void *arg )
 {
 	ViewSync vs;
-	DB_File file;
 	FileScanner scanner;
 	LinkedListNode *node;
 	vs = &this_view.viewsync;
@@ -354,16 +456,24 @@ static void HomeView_SyncThread( void *arg )
 			LCUIMutex_Unlock( &scanner->mutex );
 			continue;
 		}
-		file = node->data;
 		LinkedList_Unlink( &scanner->files, node );
 		LCUIMutex_Unlock( &scanner->mutex );
-		LinkedList_AppendNode( &this_view.files, node );
-		HomeView_AppendFile( node );
+		HomeView_AppendFile( node->data );
 		LCUIMutex_Unlock( &vs->mutex );
+		free( node );
 		ProgressBar_SetValue( this_view.progressbar, 
 				      this_view.files.length );
 	}
 	LCUIMutex_Unlock( &scanner->mutex );
+}
+
+static void FileIndex_Delete( FileIndex fidx )
+{
+	Dict_Delete( this_view.file_indexes, fidx->file->path );
+	DBFile_Release( fidx->file );
+	fidx->checkbox = NULL;
+	fidx->file = NULL;
+	fidx->item = NULL;
 }
 
 /** 载入集锦中的文件列表 */
@@ -375,7 +485,7 @@ static void LoadCollectionFiles( void )
 	memset( &this_view.separator.time, 0, sizeof(TimeSeparatorRec) );
 	ThumbView_Lock( this_view.items );
 	ThumbView_Empty( this_view.items );
-	LinkedList_ClearData( &this_view.files, OnDeleteDBFile );
+	LinkedList_ClearData( &this_view.files, (FuncPtr)FileIndex_Delete );
 	FileScanner_Start( &this_view.scanner );
 	ThumbView_Unlock( this_view.items );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
@@ -395,19 +505,25 @@ static void OnSyncDone( void *privdata, void *arg )
 void UI_InitHomeView( void )
 {
 	LCUI_Thread tid;
-	LCUI_Widget btn, items;
+	LCUI_Widget btn[3], items;
 	LinkedList_Init( &this_view.files );
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
+	this_view.file_indexes = StrDict_Create( NULL, NULL );
 	this_view.view = LCUIWidget_GetById( ID_VIEW_HOME );
+	this_view.title = LCUIWidget_GetById( ID_TXT_VIEW_HOME_TITLE );
 	items = LCUIWidget_GetById( ID_VIEW_HOME_COLLECTIONS );
-	btn = LCUIWidget_GetById( ID_BTN_SYNC_COLLECTIONS );
+	btn[0] = LCUIWidget_GetById( ID_BTN_SYNC_HOME_FILES );
+	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_HOME_FILES );
+	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_HOME_SELECT );
 	this_view.progressbar = LCUIWidget_GetById( ID_VIEW_HOME_PROGRESS );
 	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_HOME_EMPTY );
 	this_view.items = items;
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
-	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
+	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
+	Widget_BindEvent( btn[1], "click", OnBtnSelectionClick, NULL, NULL );
+	Widget_BindEvent( btn[2], "click", OnBtnCancelClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );
 	this_view.viewsync.tid = tid;

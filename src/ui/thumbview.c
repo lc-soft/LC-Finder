@@ -135,6 +135,7 @@ typedef struct ThumbViewItemRec_ {
 	char *path;					/**< 路径 */
 	DB_File file;					/**< 文件信息 */
 	ThumbView view;					/**< 所属缩略图列表视图 */
+	LCUI_Widget cover;				/**< 遮罩层部件 */
 	LCUI_BOOL is_dir;				/**< 是否为目录 */
 	void (*unsetthumb)(LCUI_Widget);		/**< 取消缩略图 */
 	void (*setthumb)(LCUI_Widget, LCUI_Graph*);	/**< 设置缩略图 */
@@ -329,6 +330,14 @@ void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file )
 	data->is_dir = FALSE;
 	data->file = file;
 	data->path = data->file->path;
+}
+
+void ThumbViewItem_AppendToCover(LCUI_Widget item, LCUI_Widget child )
+{
+	ThumbViewItem data = item->private_data;
+	if( !data->is_dir ) {
+		Widget_Append( data->cover, child );
+	}
 }
 
 void ThumbViewItem_SetFunction( LCUI_Widget item,
@@ -849,19 +858,19 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file )
 {
 	ThumbViewItem data;
 	LCUI_Widget item, cover;
-	cover = LCUIWidget_New( NULL );
 	item = LCUIWidget_New( "thumbviewitem" );
 	data = item->private_data;
 	data->is_dir = FALSE;
 	data->view = w->private_data;
 	data->file = DBFile_Dup( file );
 	data->path = data->file->path;
+	data->cover = LCUIWidget_New( NULL );
 	data->setthumb = ThumbViewItem_SetThumb;
 	data->unsetthumb = ThumbViewItem_UnsetThumb;
 	data->updatesize = UpdatePictureSize;
 	Widget_AddClass( item, PICTURE_CLASS );
-	Widget_AddClass( cover, "picture-cover" );
-	Widget_Append( item, cover );
+	Widget_AddClass( data->cover, "picture-cover" );
+	Widget_Append( item, data->cover );
 	Widget_Append( w, item );
 	ScrollLoading_Update( data->view->scrollload );
 	ThumbView_UpdateLayoutContext( w );
