@@ -128,7 +128,7 @@ static void FileIterator_Next( FileIterator iter )
 	FileIndex fidx = iter->privdata;
 	if( fidx->node.next ) {
 		iter->index += 1;
-		iter->privdata = fidx->node.next;
+		iter->privdata = fidx->node.next->data;
 		FileIterator_Update( iter );
 	}
 }
@@ -138,7 +138,7 @@ static void FileIterator_Prev( FileIterator iter )
 	FileIndex fidx = iter->privdata;
 	if( fidx->node.prev && &fidx->node != this_view.files.head.next ) {
 		iter->index -= 1;
-		iter->privdata = fidx->node.prev;
+		iter->privdata = fidx->node.prev->data;
 		FileIterator_Update( iter );
 	}
 }
