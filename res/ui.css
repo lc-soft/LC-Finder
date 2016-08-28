@@ -106,18 +106,26 @@
 	height: 32px;
 	margin: 0 0 10px 0;
 }
-.view-navbar .view-navbar-btn {
-	height: 48px;
-	width: 48px;
-	text-align: center;
+.view-navbar .divider {
+	width: 1px;
 	display: inline-block;
-	padding: 2px 0 0 0;
+	background-color: #aaa;
+	height: 100%;
+	margin: 0 12px;
+}
+.view-navbar .view-navbar-btn {
+	display: inline-block;
+	padding: 14px 12px 12px 10px;
+}
+.view-navbar .view-navbar-btn textview {
+	font-size: 16px;
+	height: 48px;
 }
 .view-navbar .view-navbar-btn .icon {
+	width: 24px;
+	height: 24px;
 	font-size: 24px;
-	line-height: 48px;
-	height: 48px;
-	width: 48px;
+	line-height: 24px;
 	text-align: center;
 }
 .view-navbar .view-navbar-title {
@@ -227,17 +235,43 @@
 	left: 0; 
 	width: 100%;
 	height: 100%;
+	display: block;
 	position: absolute;
 	box-sizing: border-box;
 	border: 2px solid rgba(0,0,0,0);
 }
-.file-list .file-list-item-picture .picture-cover:hover {
-	top: 0;
-	left: 0; 
+.file-list .file-list-item-picture .checkbox {
+	top: 10px;
+	right: 10px;
+	color: #aaa;
+	width: 24px;
+	height: 24px;
+	display: none;
+	line-height: 24px;
+	font-size: 20px;
 	position: absolute;
-	width: 100%;
-	height: 100%;
-	border: 2px solid #ddd;
+	border: 2px solid #aaa;
+	box-sizing: border-box;
+	background-color: rgba(255,255,255,0.8);
+}
+.file-list .file-list-item-picture .checkbox:hover {
+	border-color: #888;
+	background-color: rgba(255,255,255,0.9);
+}
+.file-list .file-list-item-picture .checkbox:active {
+	border-color: #888;
+	background-color: #fff;
+}
+.file-list .file-list-item-picture.selected .picture-cover {
+	border-color: #ddd;
+	background-color: rgba(255,255,255,0.5);
+}
+.file-list .file-list-item-picture:hover .picture-cover {
+	border-color: #ddd;
+}
+.file-list .file-list-item-picture.selected .checkbox,
+.file-list .file-list-item-picture:hover .checkbox {
+	display: block;
 }
 .file-list .divider {
 	width: 100%;
@@ -728,12 +762,12 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 	top: 5px;
 }
 .search-panel {
-	padding: 0 15px;
-	width: 100%;
-	box-sizing: border-box;
-	position: absolute;
-	top: 50px;
 	left: 0;
+	top: 50px;
+	width: 100%;
+	padding: 0 15px;
+	position: absolute;
+	box-sizing: border-box;
 }
 .search-panel .search-input-group {
 	width: 100%;
@@ -774,4 +808,20 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 }
 .subview .view-navbar {
 	left: 0;
+}
+
+.on-selection-mode {
+	display: none;
+}
+.on-normal-mode {
+	display: block;
+}
+.selection-mode .on-selection-mode {
+	display: block;
+}
+.selection-mode .on-normal-mode {
+	display: none;
+}
+.selection-mode .file-list .file-list-item-picture .checkbox {
+	display: block;
 }

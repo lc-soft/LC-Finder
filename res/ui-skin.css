@@ -1,33 +1,3 @@
-
-.skin-light-black .sidebar {
-	background-color: #f9fafc;
-	border: 1px solid #d2d6de;
-}
-.skin-light-black .sidebar sidebar-toggle .icon,
-.skin-light-black .sidebar .sidebar-item .icon,
-.skin-light-black .sidebar .sidebar-item .text {
-	color: #000;
-}
-.skin-light-black .sidebar .sidebar-item:hover, 
-.skin-light-black .sidebar sidebar-toggle:hover {
-	background-color: #f4f4f5;
-}
-.skin-light-black .sidebar .sidebar-item:active,
-.skin-light-black .sidebar sidebar-toggle:active {
-	background-color: #f4f4f5;
-}
-.skin-light-black .view {
-	background-color: #F5F5F5;
-}
-.skin-light-black .view-navbar {
-	background-color: #616161;
-}
-.skin-light-black .view-navbar textview {
-	color: #fff;
-}
-.skin-light-black .view-navbar .view-navbar-btn:hover {
-	background-color: #424242;
-}
 .skin-light-green .sidebar {
 	background-color: #F0F1F2;
 	border: 1px solid #DDDEDF;
@@ -67,6 +37,12 @@
 .skin-light-green .view-navbar textview {
 	color: #fff;
 }
+.skin-light-green .view-navbar .divider {
+	background-color: #373D3E;
+}
+.skin-light-green .selection-mode textview.view-navbar-title {
+	color: #ddd;
+}
 .skin-light-green .view-navbar .view-navbar-btn:hover {
 	background-color: #4C5556;
 }
@@ -79,16 +55,14 @@
 .skin-light-green .btn-link:hover textview {
 	color: #2E7D39;
 }
-.skin-light-green .file-list .file-list-item-folder:hover {
+.skin-light-green .file-list .file-list-item-picture.selected .checkbox {
+	color: #44BB55;
 	border-color: #44BB55;
+	background-color: #fff;
 }
-.skin-light-green .file-list .file-list-item-picture .picture-cover:hover {
-	top: 0;
-	left: 0; 
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	border: 2px solid #44BB55;
+.skin-light-green .file-list .file-list-item-picture.selected .picture-cover,
+.skin-light-green .file-list .file-list-item-picture:hover .picture-cover {
+	border-color: #44BB55;
 }
 .skin-light-green .tag-thumb-list-item-checkbox {
 	color: #44BB55;
@@ -146,10 +120,10 @@
 .skin-light-green.panel .panel-header {
 	box-shadow: 0 0 4px rgba(0,0,0,0.4);
 }
-.skin-light-green. #picture-loading-tip textview {
+.skin-light-green #picture-loading-tip textview {
 	color: #fff;
 }
-.skin-light-green. #picture-loading-tip {
+.skin-light-green #picture-loading-tip {
 	background-color: rgba(0,0,0,0.8);
 	box-shadow: 0 0 8px rgba(0,0,0,0.8);
 }

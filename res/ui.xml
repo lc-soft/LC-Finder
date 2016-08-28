@@ -29,10 +29,6 @@
           <widget type="textview" class="icon mdi mdi-image-multiple"></widget>
           <widget type="textview" class="text">集锦</widget>
         </widget>
-        <widget id="sidebar-btn-albums" class="sidebar-item">
-          <widget type="textview" class="icon mdi mdi-image-album"></widget>
-          <widget type="textview" class="text">相册</widget>
-        </widget>
         <widget id="sidebar-btn-folders" class="sidebar-item">
           <widget type="textview" class="icon mdi mdi-folder-multiple-outline"></widget>
           <widget type="textview" class="text">文件夹</widget>
@@ -44,9 +40,24 @@
       </widget>
       <widget id="view-home" class="view">
         <widget class="view-navbar">
-          <widget type="textview" class="view-navbar-title">集锦</widget>
-          <widget class="pull-right">
-            <widget id="btn-sync-collection-files" class="view-navbar-btn">
+          <widget id="view-home-title" type="textview" class="view-navbar-title">集锦</widget>
+          <widget class="pull-right on-selection-mode">
+            <widget id="btn-cancel-home-select" class="view-navbar-btn">
+              <widget type="textview">取消</widget>
+            </widget>
+            <widget class="divider"></widget>
+            <widget id="btn-add-home-file-tags" class="view-navbar-btn">
+              <widget type="textview" class="icon mdi mdi-tag-multiple"></widget>
+            </widget>
+            <widget id="btn-delete-home-files" class="view-navbar-btn">
+              <widget type="textview" class="icon mdi mdi-delete"></widget>
+            </widget>
+          </widget>
+          <widget class="pull-right on-normal-mode">
+            <widget id="btn-select-home-files" class="view-navbar-btn">
+              <widget type="textview" class="icon mdi mdi-checkbox-multiple-marked-outline"></widget>
+            </widget>
+            <widget id="btn-sync-home-files" class="view-navbar-btn">
               <widget type="textview" class="icon mdi mdi-sync"></widget>
             </widget>
           </widget>
@@ -99,22 +110,13 @@
           </widget>
         </widget>
       </widget>
-      <widget id="view-albums" class="view hide">
-        <widget class="view-navbar">
-          <widget type="textview" class="view-navbar-title">相册</widget>
-        </widget>
-        <widget class="view-body">
-          <widget class="view-content-wrapper">
-            <widget class="view-content">
-              <widget type="textview">暂无该功能。</widget>
-            </widget>
-          </widget>
-        </widget>
-      </widget>
       <widget id="view-folders" class="view hide">
         <widget class="view-navbar">
           <widget type="textview" class="view-navbar-title">文件夹</widget>
           <widget class="pull-right">
+            <widget id="btn-check-folder-files" class="view-navbar-btn">
+              <widget type="textview" class="icon mdi mdi-checkbox-multiple-marked-outline"></widget>
+            </widget>
             <widget id="btn-sync-folder-files" class="view-navbar-btn">
               <widget type="textview" class="icon mdi mdi-sync"></widget>
             </widget>
