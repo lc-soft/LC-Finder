@@ -39,13 +39,12 @@
 #include <LCUI/gui/widget.h>
 #include "ui.h"
 
-#define MAX_VIEWS 5
+#define MAX_VIEWS 4
 
 static const char *btn_view_ids[MAX_VIEWS][2] = {
 	{"sidebar-btn-folders", "view-folders"},
 	{"sidebar-btn-home", "view-home"},
 	{"sidebar-btn-settings", "view-settings"},
-	{"sidebar-btn-albums", "view-albums"},
 	{"sidebar-btn-search", "view-search"}
 };
 
