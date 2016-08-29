@@ -49,6 +49,16 @@
 .skin-light-green .view-navbar .view-navbar-btn:active {
 	background-color: #616C6D;
 }
+.skin-light-green .view-navbar .view-navbar-btn:disabled,
+.skin-light-green .view-navbar .view-navbar-btn:disabled:hover,
+.skin-light-green .view-navbar .view-navbar-btn:disabled:active {
+	background-color: transparent;
+}
+.skin-light-green .view-navbar .view-navbar-btn:disabled textview,
+.skin-light-green .view-navbar .view-navbar-btn:disabled:hover textview,
+.skin-light-green .view-navbar .view-navbar-btn:disabled:active textview {
+	color: #727e80;
+}
 .skin-light-green .btn-link textview {
 	color: #44BB55;
 }
@@ -56,9 +66,9 @@
 	color: #2E7D39;
 }
 .skin-light-green .file-list .file-list-item-picture.selected .checkbox {
-	color: #44BB55;
+	color: #fff;
 	border-color: #44BB55;
-	background-color: #fff;
+	background-color: #44BB55;
 }
 .skin-light-green .file-list .file-list-item-picture.selected .picture-cover,
 .skin-light-green .file-list .file-list-item-picture:hover .picture-cover {

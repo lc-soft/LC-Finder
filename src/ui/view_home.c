@@ -160,30 +160,38 @@ static FileIterator FileIterator_Create( FileIndex fidx )
 	return iter;
 }
 
+static void UpdateSelectionModeUI( void )
+{
+	wchar_t str[256];
+	LCUI_Widget btn_del, btn_add_tags;
+	btn_del = LCUIWidget_GetById( ID_BTN_DELETE_HOME_FILES );
+	btn_add_tags = LCUIWidget_GetById( ID_BTN_ADD_HOME_FILE_TAGS );
+	if( this_view.selected_files.length > 0 ) {
+		Widget_SetDisabled( btn_del, FALSE );
+		Widget_SetDisabled( btn_add_tags, FALSE );
+		swprintf( str, 255, TEXT_SELECTED_ITEMS,
+			  this_view.selected_files.length );
+		TextView_SetTextW( this_view.title, str );
+	} else {
+		Widget_SetDisabled( btn_del, TRUE );
+		Widget_SetDisabled( btn_add_tags, TRUE );
+		TextView_SetTextW( this_view.title, TEXT_NO_SELECTED_ITEMS );
+	}
+}
+
 static void EnableSelectionMode( void )
 {
+	UpdateSelectionModeUI();
 	this_view.selection_mode = TRUE;
-	TextView_SetTextW( this_view.title, TEXT_NO_SELECTED_ITEMS );
 	Widget_AddClass( this_view.view, "selection-mode" );
 }
 
 static void DisableSelectionMode( void )
 {
+	UpdateSelectionModeUI();
 	Widget_RemoveClass( this_view.view, "selection-mode" );
 	TextView_SetTextW( this_view.title, TEXT_TITLE );
 	this_view.selection_mode = FALSE;
-}
-
-static void UpdateTitle( void )
-{
-	wchar_t str[256];
-	if( this_view.selected_files.length>0 ) {
-		swprintf( str, 255, TEXT_SELECTED_ITEMS, 
-			  this_view.selected_files.length );
-		TextView_SetTextW( this_view.title, str );
-	} else {
-		TextView_SetTextW( this_view.title, TEXT_NO_SELECTED_ITEMS );
-	}
 }
 
 static void SelectItem( FileIndex fidx )
@@ -194,7 +202,7 @@ static void SelectItem( FileIndex fidx )
 	Widget_AddClass( fidx->item, "selected" );
 	Widget_AddClass( fidx->checkbox, "mdi-check" );
 	LinkedList_Append( &this_view.selected_files, fidx );
-	UpdateTitle();
+	UpdateSelectionModeUI();
 }
 
 static void UnselectItem( FileIndex fidx )
@@ -210,7 +218,7 @@ static void UnselectItem( FileIndex fidx )
 			break;
 		}
 	}
-	UpdateTitle();
+	UpdateSelectionModeUI();
 }
 
 static void UnselectAllItems( void )
@@ -224,7 +232,7 @@ static void UnselectAllItems( void )
 		Widget_RemoveClass( fidx->checkbox, "mdi-check" );
 	}
 	LinkedList_Clear( list, NULL );
-	UpdateTitle();
+	UpdateSelectionModeUI();
 }
 
 static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
