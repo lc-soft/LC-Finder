@@ -45,13 +45,19 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 #include "progressbar.h"
+#include "dialog.h"
 
-#define TEXT_TITLE		L"集锦"
-#define TEXT_TIME_TITLE		L"%d年%d月"
-#define TEXT_TIME_SUBTITLE	L"%d月%d日 %d张照片"
-#define TEXT_TIME_SUBTITLE2	L"%d月%d日 - %d月%d日 %d张照片"
-#define TEXT_NO_SELECTED_ITEMS	L"未选择任何项目"
-#define TEXT_SELECTED_ITEMS	L"已选择 %d 项"
+#define TEXT_TITLE			L"集锦"
+#define TEXT_TIME_TITLE			L"%d年%d月"
+#define TEXT_TIME_SUBTITLE		L"%d月%d日 %d张照片"
+#define TEXT_TIME_SUBTITLE2		L"%d月%d日 - %d月%d日 %d张照片"
+#define TEXT_NO_SELECTED_ITEMS		L"未选择任何项目"
+#define TEXT_SELECTED_ITEMS		L"已选择 %d 项"
+#define DIALOG_TITLE_DELETE		L"提示"
+#define DIALOG_TEXT_DELETE		L"确定要删除选中的 %d 项文件？"
+#define DIALOG_TITLE_ADD_TAG		L"为选中的文件添加标签"
+#define DIALOG_PLACEHOLDER_ADD_TAG	L"标签名称，多个标签用空格隔开"
+#define MAX_TAG_LEN			256
 
 /* 延时隐藏进度条 */
 #define HideProgressBar() LCUITimer_Set( 1000, (FuncPtr)Widget_Hide, \
@@ -165,7 +171,7 @@ static void UpdateSelectionModeUI( void )
 	wchar_t str[256];
 	LCUI_Widget btn_del, btn_add_tags;
 	btn_del = LCUIWidget_GetById( ID_BTN_DELETE_HOME_FILES );
-	btn_add_tags = LCUIWidget_GetById( ID_BTN_ADD_HOME_FILE_TAGS );
+	btn_add_tags = LCUIWidget_GetById( ID_BTN_TAG_HOME_FILES );
 	if( this_view.selected_files.length > 0 ) {
 		Widget_SetDisabled( btn_del, FALSE );
 		Widget_SetDisabled( btn_add_tags, FALSE );
@@ -238,6 +244,39 @@ static void UnselectAllItems( void )
 static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
+}
+
+static LCUI_BOOL CheckTagName( const wchar_t *tagname )
+{
+	if( wgetcharcount( tagname, L",;\n\r\t" ) > 0 ) {
+		return FALSE;
+	}
+	if( wcslen( tagname ) >= MAX_TAG_LEN ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	wchar_t text[MAX_TAG_LEN];
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_TAG,
+				    DIALOG_PLACEHOLDER_ADD_TAG, NULL,
+				    text, MAX_TAG_LEN - 1, CheckTagName ) ) {
+		return;
+	}
+
+}
+
+static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	wchar_t text[512];
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	swprintf( text, 511, DIALOG_TEXT_DELETE, this_view.selected_files.length );
+	if( !LCUIDialog_Confirm(window, DIALOG_TITLE_DELETE, text) ) {
+		return;
+	}
 }
 
 static void OnBtnSelectionClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -513,7 +552,7 @@ static void OnSyncDone( void *privdata, void *arg )
 void UI_InitHomeView( void )
 {
 	LCUI_Thread tid;
-	LCUI_Widget btn[3], items;
+	LCUI_Widget btn[5], items;
 	LinkedList_Init( &this_view.files );
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
@@ -525,6 +564,8 @@ void UI_InitHomeView( void )
 	btn[0] = LCUIWidget_GetById( ID_BTN_SYNC_HOME_FILES );
 	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_HOME_FILES );
 	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_HOME_SELECT );
+	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_HOME_FILES );
+	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_HOME_FILES );
 	this_view.progressbar = LCUIWidget_GetById( ID_VIEW_HOME_PROGRESS );
 	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_HOME_EMPTY );
 	this_view.items = items;
@@ -532,6 +573,8 @@ void UI_InitHomeView( void )
 	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
 	Widget_BindEvent( btn[1], "click", OnBtnSelectionClick, NULL, NULL );
 	Widget_BindEvent( btn[2], "click", OnBtnCancelClick, NULL, NULL );
+	Widget_BindEvent( btn[3], "click", OnBtnTagClick, NULL, NULL );
+	Widget_BindEvent( btn[4], "click", OnBtnDeleteClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );
 	this_view.viewsync.tid = tid;

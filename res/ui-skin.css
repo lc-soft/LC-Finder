@@ -70,6 +70,7 @@
 	border-color: #44BB55;
 	background-color: #44BB55;
 }
+.skin-light-green .file-list .file-list-item-folder:hover,
 .skin-light-green .file-list .file-list-item-picture.selected .picture-cover,
 .skin-light-green .file-list .file-list-item-picture:hover .picture-cover {
 	border-color: #44BB55;

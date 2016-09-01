@@ -119,11 +119,10 @@
 }
 .view-navbar .view-navbar-btn textview {
 	font-size: 16px;
-	height: 48px;
+	height: 24px;
 }
 .view-navbar .view-navbar-btn .icon {
 	width: 24px;
-	height: 24px;
 	font-size: 24px;
 	line-height: 24px;
 	text-align: center;

@@ -157,5 +157,5 @@ void LCUIWidget_AddStarRating( void )
 	LCUI_WidgetClass *wc = LCUIWidget_AddClass( "starrating" );
 	wc->methods.init = OnInit;
 	wc->methods.destroy = OnDestroy;
-	LCUICSS_LoadString( starrating_css, NULL );
+	LCUI_LoadCSSString( starrating_css, NULL );
 }

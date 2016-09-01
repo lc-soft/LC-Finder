@@ -17,7 +17,7 @@
       </widget>
       <widget class="window-body">
         <widget id="picture-viewer-target" class="picture-container"></widget>
-        <widget id="debug-widget" class="zoom-btn-group">
+        <widget class="zoom-btn-group">
           <widget id="btn-picture-zoom-out" class="icon-btn picture-option-btn">
             <widget class="icon mdi mdi-minus" type="textview"></widget>
           </widget>

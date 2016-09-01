@@ -69,7 +69,7 @@
 #define ID_VIEW_HOME_PROGRESS		"view-home-progress"
 #define ID_BTN_SEARCH_FILES		"btn-search-files"
 #define ID_BTN_SYNC_HOME_FILES		"btn-sync-home-files"
-#define ID_BTN_ADD_HOME_FILE_TAGS	"btn-add-home-file-tags"
+#define ID_BTN_TAG_HOME_FILES		"btn-tag-home-files"
 #define ID_BTN_DELETE_HOME_FILES	"btn-delete-home-files"
 #define ID_BTN_SELECT_HOME_FILES	"btn-select-home-files"
 #define ID_BTN_CANCEL_HOME_SELECT	"btn-cancel-home-select"

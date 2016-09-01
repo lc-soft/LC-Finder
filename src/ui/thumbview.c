@@ -856,8 +856,8 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 
 LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file )
 {
+	LCUI_Widget item;
 	ThumbViewItem data;
-	LCUI_Widget item, cover;
 	item = LCUIWidget_New( "thumbviewitem" );
 	data = item->private_data;
 	data->is_dir = FALSE;

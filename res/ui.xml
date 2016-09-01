@@ -46,7 +46,7 @@
               <widget type="textview">取消</widget>
             </widget>
             <widget class="divider"></widget>
-            <widget id="btn-add-home-file-tags" class="view-navbar-btn">
+            <widget id="btn-tag-home-files" class="view-navbar-btn">
               <widget type="textview" class="icon mdi mdi-tag-multiple"></widget>
             </widget>
             <widget id="btn-delete-home-files" class="view-navbar-btn">
