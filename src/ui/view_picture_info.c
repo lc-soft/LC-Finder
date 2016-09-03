@@ -188,30 +188,21 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	buf = NEW( char, len );
 	LCUI_EncodeString( buf, text, len, ENCODING_UTF8 );
 	strsplit( buf, " ", &tagnames );
-	for( i=0; tagnames[i]; ++i ) {
+	for( i = 0; tagnames[i]; ++i ) {
 		if( strlen( tagnames[i] ) == 0 ) {
 			continue;
 		}
-		tag = LCFinder_GetTag( tagnames[i] );
+		tag = LCFinder_AddTagForFile( this_view.file, tagnames[i] );
 		if( tag ) {
 			for( j = 0; j < this_view.n_tags; ++j ) {
 				if( this_view.tags[j]->id == tag->id ) {
-					free( tagnames[j] );
 					break;
 				}
 			}
-			if( j < this_view.n_tags ) {
-				continue;
+			if( j >= this_view.n_tags ) {
+				PictureInfo_AppendTag( tag );
 			}
-		} else {
-			tag = LCFinder_AddTag( tagnames[i] );
 		}
-		if( tag ) {
-			tag->count += 1;
-		}
-		DBFile_AddTag( this_view.file, tag );
-		LCFinder_TriggerEvent( EVENT_TAG_UPDATE, tag );
-		PictureInfo_AppendTag( tag );
 	}
 	freestrs( tagnames );
 	free( buf );

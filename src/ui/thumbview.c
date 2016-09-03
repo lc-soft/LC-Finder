@@ -746,7 +746,7 @@ static void OnStartAnimation( void *arg )
 	
 }
 
-void ThumbView_UpdateLayout( LCUI_Widget w )
+void ThumbView_UpdateLayout( LCUI_Widget w, LCUI_Widget start_child )
 {
 	ThumbView view = w->private_data;
 	if( view->layout.is_running ) {
@@ -779,7 +779,7 @@ static void OnResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( w->box.content.width == view->layout.max_width ) {
 		return;
 	}
-	ThumbView_UpdateLayout( w );
+	ThumbView_UpdateLayout( w, NULL );
 }
 
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

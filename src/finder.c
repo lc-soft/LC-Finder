@@ -194,6 +194,15 @@ void LCFinder_DeleteDir( DB_Dir dir )
 	free( dir );
 }
 
+int LCFinder_DeleteFile( const char *filepath )
+{
+	DB_DeleteFile( filepath );
+	movefiletotrash( filepath );
+	// 删除缓存中的文件记录
+	// ...
+	return 0;
+}
+
 static void SyncAddedFile( void *data, const wchar_t *wpath )
 {
 	static char path[PATH_LEN];
@@ -318,7 +327,7 @@ static void LCFinder_InitWorkDir( void )
 	wchar_t data_dir[1024];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
-	_wchdir( L"F:\\LC-Soft\\LC-Finder" );
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 	wgetcurdir( data_dir, 1024 );
 	wpathjoin( data_dir, data_dir, L"data" );
 	len = wcslen( data_dir );
@@ -366,6 +375,20 @@ DB_Tag LCFinder_AddTag( const char *tagname )
 	tags[finder.n_tags] = NULL;
 	finder.tags = tags;
 	LCFinder_TriggerEvent( EVENT_TAG_ADD, tag );
+	return tag;
+}
+
+DB_Tag LCFinder_AddTagForFile( DB_File file, const char *tagname )
+{
+	DB_Tag tag = LCFinder_GetTag( tagname );
+	if( !tag ) {
+		tag = LCFinder_AddTag( tagname );
+	}
+	if( tag ) {
+		tag->count += 1;
+		DBFile_AddTag( file, tag );
+		LCFinder_TriggerEvent( EVENT_TAG_UPDATE, tag );
+	}
 	return tag;
 }
 

@@ -54,6 +54,7 @@ enum LCFinderEventType {
 	EVENT_SYNC_DONE,
 	EVENT_TAG_ADD,
 	EVENT_TAG_UPDATE,
+	EVENT_FILE_DEL,
 	EVENT_THUMBDB_DEL_DONE
 };
 
@@ -112,9 +113,13 @@ DB_Tag LCFinder_GetTag( const char *tagname );
 
 DB_Tag LCFinder_AddTag( const char *tagname );
 
+DB_Tag LCFinder_AddTagForFile( DB_File file, const char *tagname );
+
 /** 获取文件的标签列表 */
 int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags );
 
 void LCFinder_DeleteDir( DB_Dir dir );
+
+int LCFinder_DeleteFile( const char *filepath );
 
 #endif

@@ -45,6 +45,7 @@
 #include <time.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include <LCUI/font/charset.h>
 #include "sha1.h"
 #include "common.h"
 
@@ -346,4 +347,57 @@ int wgetcharcount( const wchar_t *wstr, const wchar_t *chars )
 		}
 	}
 	return count;
+}
+
+int wcscasecmp( const wchar_t *str1, const wchar_t *str2 )
+{
+	wchar_t ch1 = 0, ch2 = 0;
+	const wchar_t *p1 = str1, *p2 = str2;
+	while( *p1 && *p2 ) {
+		ch1 = *p1;
+		ch2 = *p2;
+		if( ch1 >= L'a' && ch1 <= L'z' ) {
+			ch1 = ch1 - 32;
+		}
+		if( ch2 >= L'a' && ch2 <= L'z' ) {
+			ch2 = ch2 - 32;
+		}
+		if( ch1 != ch2 ) {
+			break;
+		}
+		++p1;
+		++p2;
+	}
+	return ch1 - ch2;
+}
+
+int wmovefiletotrash( const wchar_t *wfilepath )
+{
+#ifdef _WIN32
+	int ret;
+	SHFILEOPSTRUCT sctFileOp = {0};
+	size_t len = wcslen( wfilepath ) + 2;
+	wchar_t *path = malloc( sizeof( wchar_t ) * len );
+	wcsncpy( path, wfilepath, len );
+	path[len - 1] = 0;
+	sctFileOp.pTo = NULL;
+	sctFileOp.pFrom = path;
+	sctFileOp.wFunc = FO_DELETE;
+	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+	ret = SHFileOperationW( &sctFileOp );
+	free( path );
+	return ret;
+#else
+	return -1;
+#endif
+}
+
+int movefiletotrash( const char *filepath )
+{
+	int ret, len = strlen( filepath ) + 1;
+	wchar_t *wfilepath = malloc( sizeof( wchar_t ) * len );
+	LCUI_DecodeString( wfilepath, filepath, len, ENCODING_UTF8 );
+	ret = wmovefiletotrash( wfilepath );
+	free( wfilepath );
+	return ret;
 }

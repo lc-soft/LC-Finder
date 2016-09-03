@@ -43,14 +43,20 @@
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include <LCUI/gui/widget/button.h>
 #include "thumbview.h"
 #include "progressbar.h"
 #include "dialog.h"
 
+#define TEXT_CANCEL			L"取消"
+#define TEXT_DELETING			L"删除中..."
+#define TEXT_TAG_ADDING			L"添加标签中..."
 #define TEXT_TITLE			L"集锦"
 #define TEXT_TIME_TITLE			L"%d年%d月"
 #define TEXT_TIME_SUBTITLE		L"%d月%d日 %d张照片"
 #define TEXT_TIME_SUBTITLE2		L"%d月%d日 - %d月%d日 %d张照片"
+#define TEXT_DELETION_PROGRESS		L"已删除 %d 个文件，共 %d 个文件"
+#define TEXT_TAG_ADDTION_PROGRESS	L"已处理 %d 个文件，共 %d 个文件"
 #define TEXT_NO_SELECTED_ITEMS		L"未选择任何项目"
 #define TEXT_SELECTED_ITEMS		L"已选择 %d 项"
 #define DIALOG_TITLE_DELETE		L"提示"
@@ -69,6 +75,14 @@ typedef struct FileIndexRec_ {
 	LCUI_Widget checkbox;
 	LinkedListNode node;
 } FileIndexRec, *FileIndex;
+
+/** 对话框数据包 */
+typedef struct DialogDataPackRec_ {
+	LCUI_BOOL active;
+	LCUI_Thread thread;
+	const char **tagnames;
+	LCUI_ProgressDialog dialog;
+} DialogDataPackRec, *DialogDataPack;
 
 /** 时间分割线功能的数据 */
 typedef struct TimeSeparatorRec_ {
@@ -166,6 +180,15 @@ static FileIterator FileIterator_Create( FileIndex fidx )
 	return iter;
 }
 
+static void FileIndex_Delete( FileIndex fidx )
+{
+	Dict_Delete( this_view.file_indexes, fidx->file->path );
+	DBFile_Release( fidx->file );
+	fidx->checkbox = NULL;
+	fidx->file = NULL;
+	fidx->item = NULL;
+}
+
 static void UpdateSelectionModeUI( void )
 {
 	wchar_t str[256];
@@ -257,8 +280,94 @@ static LCUI_BOOL CheckTagName( const wchar_t *tagname )
 	return TRUE;
 }
 
+static void FileDeletionThread( void *arg )
+{
+	int i, n;
+	FileIndex fidx;
+	wchar_t text[256];
+	LinkedListNode *node;
+	LinkedList deleted_files;
+	LCUI_Widget cursor = NULL;
+	DialogDataPack pack = arg;
+	LinkedList_Init( &deleted_files );
+	n = this_view.selected_files.length;
+	ProgressBar_SetMaxValue( pack->dialog->progress, n );
+	for( i = 0; pack->active && i < n; ++i ) {
+		node = LinkedList_GetNode( &this_view.selected_files, 0 );
+		LinkedList_Unlink( &this_view.selected_files, node );
+		LinkedList_AppendNode( &deleted_files, node );
+		fidx = node->data;
+		LCFinder_DeleteFile( fidx->file->path );
+		/* 找到排列在最前面的部件，缩略图列表视图的重新布局需要用到 */
+		if( !cursor || cursor->index > fidx->item->index ) {
+			cursor = fidx->item;
+		}
+		swprintf( text, 255, TEXT_DELETION_PROGRESS, i, n );
+		TextView_SetTextW( pack->dialog->content, text );
+		ProgressBar_SetValue( pack->dialog->progress, i );
+	}
+	if( cursor->index == 0 ) {
+		cursor = NULL;
+	} else {
+		node = Widget_GetNode( cursor );
+		cursor = node->prev->data;
+	}
+	Widget_SetDisabled( pack->dialog->btn_cancel, TRUE );
+	for( LinkedList_Each( node, &deleted_files ) ) {
+		fidx = node->data;
+		Widget_Destroy( fidx->item );
+		LinkedList_Unlink( &this_view.files, &fidx->node );
+		FileIndex_Delete( fidx );
+	}
+	/** 以 cursor 为基点，对它后面的部件重新布局 */
+	ThumbView_UpdateLayout( this_view.items, cursor );
+	CloseProgressDialog( pack->dialog );
+	UnselectAllItems();
+	DisableSelectionMode();
+	LCUIThread_Exit( NULL );
+}
+
+static void FileTagAddtionThread( void *arg )
+{
+	int i, j, n;
+	FileIndex fidx;
+	wchar_t text[256];
+	LinkedListNode *node;
+	DialogDataPack pack = arg;
+	n = this_view.selected_files.length;
+	ProgressBar_SetMaxValue( pack->dialog->progress, n );
+	node = LinkedList_GetNode( &this_view.selected_files, 0 );
+	for( i = 0; pack->active && i < n; ++i ) {
+		fidx = node->data;
+		for( j = 0; pack->tagnames[j]; ++j ) {
+			const char *tagname = pack->tagnames[j];
+			LCFinder_AddTagForFile( fidx->file, tagname );
+		}
+		swprintf( text, 255, TEXT_TAG_ADDTION_PROGRESS, i, n );
+		TextView_SetTextW( pack->dialog->content, text );
+		ProgressBar_SetValue( pack->dialog->progress, i );
+		node = node->next;
+	}
+	Widget_SetDisabled( pack->dialog->btn_cancel, TRUE );
+	CloseProgressDialog( pack->dialog );
+	UnselectAllItems();
+	DisableSelectionMode();
+	LCUIThread_Exit( NULL );
+}
+
+static void OnCancelProcessing( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	DialogDataPack pack = e->data;
+	pack->active = FALSE;
+	Widget_SetDisabled( w, TRUE );
+	LCUIThread_Join( pack->thread, NULL );
+}
+
 static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	int len;
+	char *buf, **tagnames;
+	DialogDataPackRec pack;
 	wchar_t text[MAX_TAG_LEN];
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_TAG,
@@ -266,17 +375,40 @@ static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 				    text, MAX_TAG_LEN - 1, CheckTagName ) ) {
 		return;
 	}
-
+	len = LCUI_EncodeString( NULL, text, 0, ENCODING_UTF8 ) + 1;
+	buf = NEW( char, len );
+	LCUI_EncodeString( buf, text, len, ENCODING_UTF8 );
+	strsplit( buf, " ", &tagnames );
+	pack.active = TRUE;
+	pack.tagnames = tagnames;
+	pack.dialog = NewProgressDialog();
+	Button_SetTextW( pack.dialog->btn_cancel, TEXT_CANCEL );
+	TextView_SetTextW( pack.dialog->title, TEXT_TAG_ADDING );
+	Widget_BindEvent( pack.dialog->btn_cancel, "click", 
+			  OnCancelProcessing, &pack, NULL );
+	LCUIThread_Create( &pack.thread, FileTagAddtionThread, &pack );
+	OpenProgressDialog( pack.dialog, window );
+	freestrs( tagnames );
+	free( buf );
 }
 
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	wchar_t text[512];
+	DialogDataPackRec pack;
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	swprintf( text, 511, DIALOG_TEXT_DELETE, this_view.selected_files.length );
 	if( !LCUIDialog_Confirm(window, DIALOG_TITLE_DELETE, text) ) {
 		return;
 	}
+	pack.active = TRUE;
+	pack.dialog = NewProgressDialog();
+	Button_SetTextW( pack.dialog->btn_cancel, TEXT_CANCEL );
+	TextView_SetTextW( pack.dialog->title, TEXT_DELETING );
+	Widget_BindEvent( pack.dialog->btn_cancel, "click", 
+			  OnCancelProcessing, &pack, NULL );
+	LCUIThread_Create( &pack.thread, FileDeletionThread, &pack );
+	OpenProgressDialog( pack.dialog, window );
 }
 
 static void OnBtnSelectionClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -512,15 +644,6 @@ static void HomeView_SyncThread( void *arg )
 				      this_view.files.length );
 	}
 	LCUIMutex_Unlock( &scanner->mutex );
-}
-
-static void FileIndex_Delete( FileIndex fidx )
-{
-	Dict_Delete( this_view.file_indexes, fidx->file->path );
-	DBFile_Release( fidx->file );
-	fidx->checkbox = NULL;
-	fidx->file = NULL;
-	fidx->item = NULL;
 }
 
 /** 载入集锦中的文件列表 */

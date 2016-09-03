@@ -87,4 +87,12 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
 /** 统计一个字符串中的指定字符的数量 */
 int wgetcharcount( const wchar_t *wstr, const wchar_t *chars );
 
+/** 忽略大小写对比宽字符串 */
+int wcscasecmp( const wchar_t *str1, const wchar_t *str2 );
+
+/** 移动文件至回收站 */
+int wmovefiletotrash( const wchar_t *wfilepath );
+
+int movefiletotrash( const char *filepath );
+
 #endif

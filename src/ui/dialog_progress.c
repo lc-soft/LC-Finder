@@ -1,6 +1,6 @@
 ﻿/* ***************************************************************************
- * dialog_confirm.c -- confirm dialog, used for pop-up dialog to confirm 
- * whether or not to continue operation.
+ * dialog_progress.c -- progress dialog, used for pop-up dialog to show
+ * current operation progress.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -19,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * dialog_confirm.c -- “确认”对话框，用于弹出提示框确认操作是否继续。
+ * dialog_progress.c -- “进度”对话框，用于弹出提示框提示当前的操作进度。
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -35,83 +35,59 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <LCUI_Build.h>
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include "ui.h"
 #include "finder.h"
 #include <LCUI/timer.h>
+#include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
-#include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
 
-#define BTN_OK_TEXT	L"确定"
-#define BTN_CANCEL_TEXT	L"取消"
-
-typedef struct DialogContextRec_ {
-	LCUI_BOOL result;
-	LCUI_MainLoop loop;
-} DialogContextRec, *DialogContext;
-
-static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+LCUI_ProgressDialog NewProgressDialog( void )
 {
-	DialogContext ctx = e->data;
-	ctx->result = TRUE;
-	LCUI_MainLoop_Quit( ctx->loop );
-}
-
-static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	DialogContext ctx = e->data;
-	ctx->result = FALSE;
-	LCUI_MainLoop_Quit( ctx->loop );
-}
-
-LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title, 
-			      const wchar_t *text )
-{
-	DialogContextRec ctx;
-	LCUI_Widget dialog_text, box;
-	LCUI_Widget dialog = LCUIWidget_New( NULL );
+	LCUI_ProgressDialog dialog;
+	LCUI_Widget box = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_body = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_content = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_header = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
-	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
-	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
-	ctx.loop = LCUI_MainLoop_New();
-	Widget_AddClass( dialog, "dialog" );
+	dialog = NEW(LCUI_ProgressDialogRec, 1);
+	dialog->title = LCUIWidget_New( "textview" );
+	dialog->content = LCUIWidget_New( "textview" );
+	dialog->progress = LCUIWidget_New( "progress" );
+	dialog->btn_cancel = LCUIWidget_New( "button" );
+	dialog->container = LCUIWidget_New( NULL );
+	dialog->loop = LCUI_MainLoop_New();
+	Widget_AddClass( box, "dialog-btn-group one-button" );
+	Widget_AddClass( dialog->container, "dialog" );
 	Widget_AddClass( dialog_body, "dialog-body" );
 	Widget_AddClass( dialog_content, "dialog-content" );
 	Widget_AddClass( dialog_header, "dialog-header" );
 	Widget_AddClass( dialog_footer, "dialog-footer" );
-	dialog_text = LCUIWidget_New( "textview" );
-	TextView_SetTextW( dialog_text, title );
-	Widget_Append( dialog_header, dialog_text );
-	dialog_text = LCUIWidget_New( "textview" );
-	TextView_SetTextW( dialog_text, text );
-	Widget_Append( dialog_body, dialog_text );
-	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview" );
-	Widget_AddClass( box, "dialog-btn-group" );
-	Widget_AddClass( btn_ok, "dialog-btn" );
-	TextView_SetTextW( dialog_text, BTN_OK_TEXT );
-	Widget_Append( btn_ok, dialog_text );
-	Widget_Append( box, btn_ok );
-	Widget_Append( dialog_footer, box );
-	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview" );
-	Widget_AddClass( box, "dialog-btn-group" );
-	Widget_AddClass( btn_cancel, "dialog-btn" );
-	TextView_SetTextW( dialog_text, BTN_CANCEL_TEXT );
-	Widget_Append( btn_cancel, dialog_text );
-	Widget_Append( box, btn_cancel );
+	Widget_AddClass( dialog->btn_cancel, "dialog-btn" );
+	Widget_Append( box, dialog->btn_cancel );
+	Widget_Append( dialog_header, dialog->title );
+	Widget_Append( dialog_body, dialog->content );
+	Widget_Append( dialog_body, dialog->progress );
 	Widget_Append( dialog_footer, box );
 	Widget_Append( dialog_content, dialog_header );
 	Widget_Append( dialog_content, dialog_body );
 	Widget_Append( dialog_content, dialog_footer );
-	Widget_Append( dialog, dialog_content );
-	Widget_Append( parent, dialog );
-	Widget_BindEvent( btn_ok, "click", OnBtnOkClick, &ctx, NULL );
-	Widget_BindEvent( btn_cancel, "click", OnBtnCancelClick, &ctx, NULL );
-	LCUI_MainLoop_Run( ctx.loop );
-	Widget_Destroy( dialog );
-	return ctx.result;
+	Widget_Append( dialog->container, dialog_content );
+	return dialog;
+}
+
+void OpenProgressDialog( LCUI_ProgressDialog dialog, LCUI_Widget parent )
+{
+	Widget_Append( parent, dialog->container );
+	LCUI_MainLoop_Run( dialog->loop );
+	Widget_Destroy( dialog->container );
+	free( dialog );
+}
+
+void CloseProgressDialog( LCUI_ProgressDialog dialog )
+{
+	LCUI_MainLoop_Quit( dialog->loop );
 }

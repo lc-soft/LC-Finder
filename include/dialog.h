@@ -37,6 +37,15 @@
 #ifndef LCFINDER_DIALOG_H
 #define LCFINDER_DIALOG_H
 
+typedef struct LCUI_ProgressDialogRec_ {
+	LCUI_Widget title;
+	LCUI_Widget content;
+	LCUI_Widget progress;
+	LCUI_Widget btn_cancel;
+	LCUI_Widget container;
+	LCUI_MainLoop loop;
+} LCUI_ProgressDialogRec, *LCUI_ProgressDialog;
+
 /** 
  * 显示“确认”对话框
  * @param[in] parent 用于容纳对话框的父部件
@@ -62,5 +71,19 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 		       const wchar_t *placeholder, const wchar_t *val,
 		       wchar_t *newval, size_t max_len,
 		       LCUI_BOOL( *checker )(const wchar_t*) );
+
+/** 新建一个“进度”对话框，返回值为该对话框的数据 */
+LCUI_ProgressDialog NewProgressDialog( void );
+
+/**
+ * 打开并显示“进度”对话框
+ * @param[in] dialog 对话框数据
+ * @param[in] parent 父级部件，指定该对话框将放在哪个容器中显示
+ * @note 在该函数执行完后，会自动销毁对话框数据
+ */
+void OpenProgressDialog( LCUI_ProgressDialog dialog, LCUI_Widget parent );
+
+/** 关闭”进度“对话框 */
+void CloseProgressDialog( LCUI_ProgressDialog dialog );
 
 #endif

@@ -56,7 +56,7 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file );
 void ThumbViewItem_AppendToCover( LCUI_Widget item, LCUI_Widget child );
 
 /** 更新缩略图列表的布局 */
-void ThumbView_UpdateLayout( LCUI_Widget w );
+void ThumbView_UpdateLayout( LCUI_Widget w, LCUI_Widget start_child );
 
 /** 绑定回调函数，在布局开始时调用 */
 void ThumbView_OnLayout( LCUI_Widget w, void( *func )(LCUI_Widget) );
