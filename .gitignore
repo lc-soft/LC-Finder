@@ -244,7 +244,8 @@ ModelManifest.xml
 # Debug files
 *.dSYM/
 
-res/*.db
+*.db
+*.opendb
+data
 include/sqlite3.h
 include/unqlite.h
-data
