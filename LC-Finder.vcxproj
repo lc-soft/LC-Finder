@@ -26,6 +26,7 @@
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
+    <ClCompile Include="src\ui\browser.c" />
     <ClCompile Include="src\ui\dialog_confirm.c" />
     <ClCompile Include="src\ui\dialog_progress.c" />
     <ClCompile Include="src\ui\dialog_prompt.c" />
@@ -56,6 +57,7 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\browser.h" />
     <ClInclude Include="include\common.h" />
     <ClInclude Include="include\dialog.h" />
     <ClInclude Include="include\file_cache.h" />

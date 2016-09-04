@@ -87,6 +87,9 @@
     <ClCompile Include="src\ui\dialog_progress.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\browser.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -147,6 +150,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\progressbar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\browser.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
