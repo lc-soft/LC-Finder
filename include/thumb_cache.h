@@ -1,38 +1,38 @@
-/* ***************************************************************************
-* thumb_cache.h -- thumbnail data cache
-*
-* Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
-*
-* This file is part of the LC-Finder project, and may only be used, modified,
-* and distributed under the terms of the GPLv2.
-*
-* By continuing to use, modify, or distribute this file you indicate that you
-* have read the license and understand and accept it fully.
-*
-* The LC-Finder project is distributed in the hope that it will be useful, but
-* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-* or FITNESS FOR A PARTICULAR PURPOSE. See the GPL v2 for more details.
-*
-* You should have received a copy of the GPLv2 along with this file. It is
-* usually in the LICENSE.TXT file, If not, see <http://www.gnu.org/licenses/>.
-* ****************************************************************************/
+ï»¿/* ***************************************************************************
+ * thumb_cache.h -- thumbnail data cache
+ *
+ * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ *
+ * This file is part of the LC-Finder project, and may only be used, modified,
+ * and distributed under the terms of the GPLv2.
+ *
+ * By continuing to use, modify, or distribute this file you indicate that you
+ * have read the license and understand and accept it fully.
+ *
+ * The LC-Finder project is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GPL v2 for more details.
+ *
+ * You should have received a copy of the GPLv2 along with this file. It is
+ * usually in the LICENSE.TXT file, If not, see <http://www.gnu.org/licenses/>.
+ * ****************************************************************************/
 
 /* ****************************************************************************
-* thumb_cache.h -- ËõÂÔÍ¼Êı¾İ»º´æ
-*
-* °æÈ¨ËùÓĞ (C) 2016 ¹éÊôÓÚ Áõ³¬ <lc-soft@live.cn>
-*
-* Õâ¸öÎÄ¼şÊÇ LC-Finder ÏîÄ¿µÄÒ»²¿·Ö£¬²¢ÇÒÖ»¿ÉÒÔ¸ù¾İGPLv2Ğí¿ÉĞ­ÒéÀ´Ê¹ÓÃ¡¢¸ü¸ÄºÍ
-* ·¢²¼¡£
-*
-* ¼ÌĞøÊ¹ÓÃ¡¢ĞŞ¸Ä»ò·¢²¼±¾ÎÄ¼ş£¬±íÃ÷ÄúÒÑ¾­ÔÄ¶Á²¢ÍêÈ«Àí½âºÍ½ÓÊÜÕâ¸öĞí¿ÉĞ­Òé¡£
-*
-* LC-Finder ÏîÄ¿ÊÇ»ùÓÚÊ¹ÓÃÄ¿µÄ¶ø¼ÓÒÔÉ¢²¼µÄ£¬µ«²»¸ºÈÎºÎµ£±£ÔğÈÎ£¬ÉõÖÁÃ»ÓĞÊÊÏú
-* ĞÔ»òÌØ¶¨ÓÃÍ¾µÄÒşº¬µ£±££¬ÏêÇéÇë²ÎÕÕGPLv2Ğí¿ÉĞ­Òé¡£
-*
-* ÄúÓ¦ÒÑÊÕµ½¸½ËæÓÚ±¾ÎÄ¼şµÄGPLv2Ğí¿ÉĞ­ÒéµÄ¸±±¾£¬ËüÍ¨³£ÔÚ LICENSE ÎÄ¼şÖĞ£¬Èç¹û
-* Ã»ÓĞ£¬Çë²é¿´£º<http://www.gnu.org/licenses/>.
-* ****************************************************************************/
+ * thumb_cache.h -- ç¼©ç•¥å›¾æ•°æ®ç¼“å­˜
+ *
+ * ç‰ˆæƒæ‰€æœ‰ (C) 2016 å½’å±äº åˆ˜è¶… <lc-soft@live.cn>
+ *
+ * è¿™ä¸ªæ–‡ä»¶æ˜¯ LC-Finder é¡¹ç›®çš„ä¸€éƒ¨åˆ†ï¼Œå¹¶ä¸”åªå¯ä»¥æ ¹æ®GPLv2è®¸å¯åè®®æ¥ä½¿ç”¨ã€æ›´æ”¹å’Œ
+ * å‘å¸ƒã€‚
+ *
+ * ç»§ç»­ä½¿ç”¨ã€ä¿®æ”¹æˆ–å‘å¸ƒæœ¬æ–‡ä»¶ï¼Œè¡¨æ˜æ‚¨å·²ç»é˜…è¯»å¹¶å®Œå…¨ç†è§£å’Œæ¥å—è¿™ä¸ªè®¸å¯åè®®ã€‚
+ *
+ * LC-Finder é¡¹ç›®æ˜¯åŸºäºä½¿ç”¨ç›®çš„è€ŒåŠ ä»¥æ•£å¸ƒçš„ï¼Œä½†ä¸è´Ÿä»»ä½•æ‹…ä¿è´£ä»»ï¼Œç”šè‡³æ²¡æœ‰é€‚é”€
+ * æ€§æˆ–ç‰¹å®šç”¨é€”çš„éšå«æ‹…ä¿ï¼Œè¯¦æƒ…è¯·å‚ç…§GPLv2è®¸å¯åè®®ã€‚
+ *
+ * æ‚¨åº”å·²æ”¶åˆ°é™„éšäºæœ¬æ–‡ä»¶çš„GPLv2è®¸å¯åè®®çš„å‰¯æœ¬ï¼Œå®ƒé€šå¸¸åœ¨ LICENSE æ–‡ä»¶ä¸­ï¼Œå¦‚æœ
+ * æ²¡æœ‰ï¼Œè¯·æŸ¥çœ‹ï¼š<http://www.gnu.org/licenses/>.
+ * ****************************************************************************/
 
 #ifndef LCFINDER_THUMB_CACHE_H
 #define LCFINDER_THUMB_CACHE_H
