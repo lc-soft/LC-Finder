@@ -42,7 +42,9 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
 #include "thumbview.h"
+#include "browser.h"
 
+#define TEXT_TITLE		L"搜索结果"
 #define TAG_MAX_WIDTH		180
 #define TAG_MARGIN_RIGHT	10
 
@@ -81,21 +83,15 @@ static struct SearchView {
 		int max_width;
 	} layout;
 	LinkedList tags;
-	LinkedList files;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
+	FileBrowserRec browser;
 } this_view;
 
 typedef struct TagItemRec_ {
 	LCUI_Widget widget;
 	DB_Tag tag;
 } TagItemRec, *TagItem;
-
-static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	DB_File f = e->data;
-	UI_OpenPictureView( f->path );
-}
 
 static void OnDeleteDBFile( void *arg )
 {
@@ -200,7 +196,6 @@ static void FileScanner_Destroy( FileScanner scanner )
 static void ViewSyncThread( void *arg )
 {
 	ViewSync vs;
-	LCUI_Widget item;
 	FileScanner scanner;
 	vs = &this_view.viewsync;
 	scanner = &this_view.scanner;
@@ -232,13 +227,9 @@ static void ViewSyncThread( void *arg )
 		file = node->data;
 		LinkedList_Unlink( &scanner->files, node );
 		LCUIMutex_Unlock( &scanner->mutex );
-		LinkedList_AppendNode( &this_view.files, node );
-		item = ThumbView_AppendPicture( this_view.view_files, file );
-		if( item ) {
-			Widget_BindEvent( item, "click", 
-					  OnItemClick, file, NULL );
-		}
+		FileBrowser_AppendPicture( &this_view.browser, node->data );
 		LCUIMutex_Unlock( &vs->mutex );
+		free( node );
 	}
 	LCUIThread_Exit( NULL );
 }
@@ -479,11 +470,8 @@ static void StartSearchFiles( LinkedList *tags )
 	this_view.scanner.tags = newtags;
 	this_view.scanner.n_tags = n_tags;
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
-	ThumbView_Lock( this_view.view_files );
-	ThumbView_Empty( this_view.view_files );
-	LinkedList_ClearData( &this_view.files, OnDeleteDBFile );
+	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner );
-	ThumbView_Unlock( this_view.view_files );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }
 
@@ -576,12 +564,18 @@ void UI_UpdateSearchView( void )
 
 void UI_InitSearchView( void )
 {
+	LCUI_Widget btn[6], title;
 	LCUI_Widget tip1 = LCUIWidget_GetById( ID_TIP_SEARCH_TAGS_EMPTY );
 	LCUI_Widget tip2 = LCUIWidget_GetById( ID_TIP_SEARCH_FILES_EMPTY );
-	LCUI_Widget btn = LCUIWidget_GetById( ID_BTN_SIDEBAR_SEEARCH );
 	LCUI_Widget btn_search = LCUIWidget_GetById( ID_BTN_SEARCH_FILES );
 	LCUI_Widget btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_SEARCH_RESULT );
 	LCUI_Widget input = LCUIWidget_GetById( ID_INPUT_SEARCH );
+	title = LCUIWidget_GetById( ID_TXT_VIEW_SEARCH_RESULT_TITLE );
+	btn[0] = LCUIWidget_GetById( ID_BTN_SIDEBAR_SEEARCH );
+	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_SEARCH_FILES );
+	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_SEARCH_SELECT );
+	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_SEARCH_FILES );
+	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_SEARCH_FILES );
 	LinkedList_Init( &this_view.tags );
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
@@ -595,11 +589,20 @@ void UI_InitSearchView( void )
 	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_SEARCH_TAGS );
 	this_view.view_result = LCUIWidget_GetById( ID_VIEW_SEARCH_RESULT );
 	this_view.view_files = LCUIWidget_GetById( ID_VIEW_SEARCH_FILES );
-	Widget_BindEvent( btn, "click", OnBtnClick, NULL, NULL );
+	this_view.browser.title = TEXT_TITLE;
+	this_view.browser.btn_select = btn[1];
+	this_view.browser.btn_cancel = btn[2];
+	this_view.browser.btn_tag = btn[3];
+	this_view.browser.btn_delete = btn[4];
+	this_view.browser.txt_title = title;
+	this_view.browser.items = this_view.view_files;
+	this_view.browser.view = this_view.view_result;
+	Widget_BindEvent( btn[0], "click", OnBtnClick, NULL, NULL );
 	Widget_BindEvent( btn_search, "click", OnBtnSearchClick, NULL, NULL );
 	Widget_BindEvent( btn_hide, "click", OnBtnHideReusltClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_TAG_UPDATE, OnTagUpdate, NULL );
 	ThumbView_OnLayout( this_view.view_tags, OnTagViewStartLayout );
+	FileBrowser_Create( &this_view.browser );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSyncThread, NULL );
 	UI_UpdateSearchView();
 }

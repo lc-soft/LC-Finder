@@ -54,6 +54,8 @@ typedef struct FileBrowserRec_ {
 	LCUI_BOOL is_selection_mode;
 } FileBrowserRec, *FileBrowser;
 
+void FileBrowser_Empty( FileBrowser browser );
+
 void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget );
 
 void FileBrowser_AppendPicture( FileBrowser browser, DB_File file );

@@ -302,6 +302,7 @@ static void LoadCollectionFiles( void )
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
 	this_view.separator.files = 0;
 	memset( &this_view.separator.time, 0, sizeof(TimeSeparatorRec) );
+	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }
