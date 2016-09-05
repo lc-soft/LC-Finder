@@ -86,7 +86,6 @@ typedef struct ViewSyncRec_ {
 static struct HomeCollectionView {
 	LCUI_Widget view;
 	LCUI_Widget items;
-	LCUI_Widget title;
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_Widget progressbar;
@@ -301,7 +300,8 @@ static void LoadCollectionFiles( void )
 	FileScanner_Reset( &this_view.scanner );
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
 	this_view.separator.files = 0;
-	memset( &this_view.separator.time, 0, sizeof(TimeSeparatorRec) );
+	this_view.separator.subtitle = NULL;
+	memset( &this_view.separator.time, 0, sizeof(struct tm) );
 	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
@@ -321,12 +321,12 @@ static void OnSyncDone( void *privdata, void *arg )
 void UI_InitHomeView( void )
 {
 	LCUI_Thread tid;
-	LCUI_Widget btn[5], items;
+	LCUI_Widget btn[5], items, title;
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
 	this_view.view = LCUIWidget_GetById( ID_VIEW_HOME );
-	this_view.title = LCUIWidget_GetById( ID_TXT_VIEW_HOME_TITLE );
+	title = LCUIWidget_GetById( ID_TXT_VIEW_HOME_TITLE );
 	items = LCUIWidget_GetById( ID_VIEW_HOME_COLLECTIONS );
 	btn[0] = LCUIWidget_GetById( ID_BTN_SYNC_HOME_FILES );
 	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_HOME_FILES );
@@ -341,7 +341,7 @@ void UI_InitHomeView( void )
 	this_view.browser.btn_cancel = btn[2];
 	this_view.browser.btn_tag = btn[3];
 	this_view.browser.btn_delete = btn[4];
-	this_view.browser.txt_title = this_view.title;
+	this_view.browser.txt_title = title;
 	this_view.browser.items = this_view.items;
 	this_view.browser.view = this_view.view;
 	FileBrowser_Create( &this_view.browser );

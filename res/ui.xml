@@ -129,9 +129,21 @@
       </widget>
       <widget id="view-folders" class="view hide">
         <widget class="view-navbar">
-          <widget type="textview" class="view-navbar-title">文件夹</widget>
-          <widget class="pull-right">
-            <widget id="btn-check-folder-files" class="view-navbar-btn">
+          <widget id="view-folders-title" type="textview" class="view-navbar-title">文件夹</widget>
+          <widget class="pull-right on-selection-mode">
+            <widget id="btn-cancel-folder-select" class="view-navbar-btn">
+              <widget type="textview">取消</widget>
+            </widget>
+            <widget class="divider"></widget>
+            <widget id="btn-tag-folder-files" class="view-navbar-btn">
+              <widget type="textview" class="icon mdi mdi-tag-multiple"></widget>
+            </widget>
+            <widget id="btn-delete-folder-files" class="view-navbar-btn">
+              <widget type="textview" class="icon mdi mdi-delete"></widget>
+            </widget>
+          </widget>
+          <widget class="pull-right on-normal-mode">
+            <widget id="btn-select-folder-files" class="view-navbar-btn">
               <widget type="textview" class="icon mdi mdi-checkbox-multiple-marked-outline"></widget>
             </widget>
             <widget id="btn-sync-folder-files" class="view-navbar-btn">

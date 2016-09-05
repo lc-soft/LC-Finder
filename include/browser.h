@@ -49,6 +49,7 @@ typedef struct FileBrowserRec_ {
 	LCUI_Widget btn_tag;
 	LCUI_Widget tip_empty;
 	Dict *file_indexes;
+	LinkedList dirs;
 	LinkedList files;
 	LinkedList selected_files;
 	LCUI_BOOL is_selection_mode;
@@ -58,9 +59,10 @@ void FileBrowser_Empty( FileBrowser browser );
 
 void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget );
 
-void FileBrowser_AppendPicture( FileBrowser browser, DB_File file );
+LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file );
 
-void FileBrowser_AppendFolder( FileBrowser browser );
+LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
+				      LCUI_BOOL show_path );
 
 void FileBrowser_Create( FileBrowser browser );
 

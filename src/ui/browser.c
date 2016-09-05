@@ -64,9 +64,13 @@
 
  /** 文件索引记录 */
 typedef struct FileIndexRec_ {
-	DB_File file;
-	LCUI_Widget item;
+	LCUI_BOOL is_file;
+	union {
+		DB_File file;
+		char *path;
+	};
 	LCUI_Widget checkbox;
+	LCUI_Widget item;
 	LinkedListNode node;
 } FileIndexRec, *FileIndex;
 
@@ -144,9 +148,14 @@ static FileIterator FileIterator_Create( FileBrowser browser, FileIndex fidx )
 
 static void FileIndex_Delete( FileIndex fidx )
 {
-	DBFile_Release( fidx->file );
+	if(  fidx->is_file ) {
+		DBFile_Release( fidx->file );
+		fidx->file = NULL;
+	} else {
+		free( fidx->path );
+		fidx->path = NULL;
+	}
 	fidx->checkbox = NULL;
-	fidx->file = NULL;
 	fidx->item = NULL;
 }
 
@@ -385,6 +394,9 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	FileIterator iter;
 	DataPack data = e->data;
+	if( !data->fidx->is_file ) {
+		return;
+	}
 	if( !data->browser->is_selection_mode &&
 	    e->target != data->fidx->checkbox ) {
 		iter = FileIterator_Create( data->browser, data->fidx );
@@ -399,26 +411,15 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
-#define BindEvent(BTN, EVENT, CALLBACK) \
-	Widget_BindEvent( browser->##BTN, EVENT, CALLBACK, browser, NULL )
-
-void FileBrowser_Create( FileBrowser browser )
-{
-	browser->is_selection_mode = FALSE;
-	BindEvent( btn_tag, "click", OnBtnTagClick );
-	BindEvent( btn_cancel, "click", OnBtnCancelClick );
-	BindEvent( btn_delete, "click", OnBtnDeleteClick );
-	BindEvent( btn_select, "click", OnBtnSelectionClick );
-	LinkedList_Init( &browser->files );
-	LinkedList_Init( &browser->selected_files );
-	browser->file_indexes = StrDict_Create( NULL, NULL );
-}
-
 void FileBrowser_Empty( FileBrowser browser )
 {
+	Widget_Hide( browser->btn_select );
+	FileBrowser_UnselectAllItems( browser );
+	FileBrowser_DisableSelectionMode( browser );
 	ThumbView_Lock( browser->items );
 	ThumbView_Empty( browser->items );
 	Dict_Empty( browser->file_indexes );
+	LinkedList_ClearData( &browser->dirs, (FuncPtr)FileIndex_Delete );
 	LinkedList_ClearData( &browser->files, (FuncPtr)FileIndex_Delete );
 	ThumbView_Unlock( browser->items );
 }
@@ -428,7 +429,7 @@ void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget )
 	ThumbView_Append( browser->items, widget );
 }
 
-void FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
+LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
 {
 	DataPack data;
 	LCUI_Widget item;
@@ -436,6 +437,7 @@ void FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
 	data = NEW( DataPackRec, 1 );
 	data->fidx = NEW( FileIndexRec, 1 );
 	item = ThumbView_AppendPicture( browser->items, file );
+	data->fidx->is_file = TRUE;
 	data->browser = browser;
 	data->fidx->item = item;
 	data->fidx->file = file;
@@ -446,9 +448,47 @@ void FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
 	Dict_Add( browser->file_indexes, data->fidx->file->path, data->fidx );
 	LinkedList_AppendNode( &browser->files, &data->fidx->node );
 	Widget_BindEvent( item, "click", OnItemClick, data, NULL );
+	Widget_Show( browser->btn_select );
+	return item;
 }
 
-void FileBrowser_AppendFolder( FileBrowser browser )
+LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path, 
+				      LCUI_BOOL show_path )
 {
+	size_t len;
+	DataPack data;
+	LCUI_Widget item;
+	len = strlen( path ) + 1;
 
+	data = NEW( DataPackRec, 1 );
+	data->fidx = NEW( FileIndexRec, 1 );
+	item = ThumbView_AppendFolder( browser->items, path, show_path );
+	data->fidx->is_file = FALSE;
+	data->browser = browser;
+	data->fidx->item = item;
+	data->fidx->checkbox = NULL;
+	data->fidx->node.data = data->fidx;
+	data->fidx->path = malloc( sizeof( char )*len );
+	strncpy( data->fidx->path, path, len );
+	Dict_Add( browser->file_indexes, data->fidx->path, data->fidx );
+	LinkedList_AppendNode( &browser->dirs, &data->fidx->node );
+	Widget_BindEvent( item, "click", OnItemClick, data, NULL );
+	return item;
+}
+
+#define BindEvent(BTN, EVENT, CALLBACK) \
+	Widget_BindEvent( browser->##BTN, EVENT, CALLBACK, browser, NULL )
+
+void FileBrowser_Create( FileBrowser browser )
+{
+	browser->is_selection_mode = FALSE;
+	BindEvent( btn_tag, "click", OnBtnTagClick );
+	BindEvent( btn_cancel, "click", OnBtnCancelClick );
+	BindEvent( btn_delete, "click", OnBtnDeleteClick );
+	BindEvent( btn_select, "click", OnBtnSelectionClick );
+	LinkedList_Init( &browser->dirs );
+	LinkedList_Init( &browser->files );
+	LinkedList_Init( &browser->selected_files );
+	browser->file_indexes = StrDict_Create( NULL, NULL );
+	Widget_Hide( browser->btn_select );
 }

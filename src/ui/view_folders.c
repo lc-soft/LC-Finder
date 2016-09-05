@@ -43,8 +43,10 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
+#include "browser.h"
 
-#define THUMB_CACHE_SIZE (20*1024*1024)
+#define TEXT_TITLE		L"文件夹"
+#define THUMB_CACHE_SIZE	(20*1024*1024)
 
 /** 视图同步功能的相关数据 */
 typedef struct ViewSyncRec_ {
@@ -80,7 +82,7 @@ static struct FoldersViewData {
 	LCUI_Widget tip_empty;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
-	LinkedList files;
+	FileBrowserRec browser;
 } this_view;
 
 void OpenFolder( const char *dirpath );
@@ -299,8 +301,6 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	DEBUG_MSG( "open file: %s\n", path );
 	if( entry->is_dir ) {
 		OpenFolder( entry->path );
-	} else {
-		UI_OpenPictureView( entry->path );
 	}
 }
 
@@ -347,27 +347,26 @@ static void ViewSync_Thread( void *arg )
 		entry = node->data;
 		LinkedList_Unlink( &scanner->files, node );
 		LCUIMutex_Unlock( &scanner->mutex );
-		LinkedList_AppendNode( &this_view.files, node );
 		if( vs->prev_item_type != -1 && 
 		    vs->prev_item_type != entry->is_dir ) {
 			LCUI_Widget separator = LCUIWidget_New(NULL);
 			Widget_AddClass( separator, "divider" );
-			ThumbView_Append( this_view.items, separator );
+			FileBrowser_Append( &this_view.browser, separator );
 		}
 		vs->prev_item_type = entry->is_dir;
 		if( entry->is_dir ) {
-			item = ThumbView_AppendFolder( 
-				this_view.items, entry->path, 
-				this_view.dir == NULL );
-			DEBUG_MSG("append folder: %s\n", entry->path);
-		} else {
-			item = ThumbView_AppendPicture( this_view.items, 
-							entry->file );
-		}
-		if( item ) {
-			Widget_BindEvent( item, "click", OnItemClick, 
+			item = FileBrowser_AppendFolder( 
+				&this_view.browser, entry->path, 
+				this_view.dir == NULL
+			);
+			Widget_BindEvent( item, "click", OnItemClick,
 					  entry, NULL );
+		} else {
+			FileBrowser_AppendPicture( &this_view.browser, 
+						   entry->file );
+			free( node->data );
 		}
+		free( node );
 		LCUIMutex_Unlock( &vs->mutex );
 	}
 	LCUIThread_Exit( NULL );
@@ -399,18 +398,12 @@ static void OpenFolder( const char *dirpath )
 	} else {
 		Widget_RemoveClass( this_view.view, "show-folder-info-box" );
 	}
-	DEBUG_MSG("dirpath: %s\n", dirpath);
-	DEBUG_MSG("reset file scanner\n");
 	FileScanner_Reset( &this_view.scanner );
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
-	ThumbView_Lock( this_view.items );
-	DEBUG_MSG("clear thumb view items\n");
-	ThumbView_Empty( this_view.items );
 	this_view.dir = dir;
 	this_view.viewsync.prev_item_type = -1;
-	LinkedList_ClearData( &this_view.files, OnDeleteFileEntry );
+	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner, path );
-	ThumbView_Unlock( this_view.items );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 	DEBUG_MSG("done\n");
 }
@@ -422,13 +415,17 @@ static void OnSyncDone( void *privdata, void *arg )
 
 void UI_InitFoldersView( void )
 {
-	LCUI_Widget btn, btn_return, items;
-	LinkedList_Init( &this_view.files );
+	LCUI_Widget btn[5], btn_return, items, title;
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
 	items = LCUIWidget_GetById( ID_VIEW_FILE_LIST );
-	btn = LCUIWidget_GetById( ID_BTN_SYNC_FOLDER_FILES );
+	title = LCUIWidget_GetById( ID_TXT_VIEW_FOLDERS_TITLE );
+	btn[0] = LCUIWidget_GetById( ID_BTN_SYNC_FOLDER_FILES );
+	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_FOLDER_FILES );
+	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_FOLDER_SELECT );
+	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_FOLDER_FILES );
+	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_FOLDER_FILES );
 	btn_return = LCUIWidget_GetById( ID_BTN_RETURN_ROOT_FOLDER );
 	this_view.view = LCUIWidget_GetById( ID_VIEW_FOLDERS );
 	this_view.info = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO );
@@ -436,13 +433,22 @@ void UI_InitFoldersView( void )
 	this_view.info_path = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO_PATH );
 	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_FOLDERS_EMPTY );
 	this_view.items = items;
-	Widget_BindEvent( btn, "click", OnBtnSyncClick, NULL, NULL );
+	this_view.browser.title = TEXT_TITLE;
+	this_view.browser.btn_select = btn[1];
+	this_view.browser.btn_cancel = btn[2];
+	this_view.browser.btn_tag = btn[3];
+	this_view.browser.btn_delete = btn[4];
+	this_view.browser.txt_title = title;
+	this_view.browser.items = this_view.items;
+	this_view.browser.view = this_view.view;
+	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+	FileBrowser_Create( &this_view.browser );
 	OpenFolder( NULL );
 }
 
