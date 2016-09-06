@@ -109,7 +109,7 @@ static void FileIterator_Next( FileIterator iter )
 	DataPack data = iter->privdata;
 	if( data->fidx->node.next ) {
 		iter->index += 1;
-		iter->privdata = data->fidx->node.next->data;
+		data->fidx = data->fidx->node.next->data;
 		FileIterator_Update( iter );
 	}
 }
@@ -120,7 +120,7 @@ static void FileIterator_Prev( FileIterator iter )
 	if( data->fidx->node.prev && 
 	    &data->fidx->node != data->browser->files.head.next ) {
 		iter->index -= 1;
-		iter->privdata = data->fidx->node.prev->data;
+		data->fidx = data->fidx->node.prev->data;
 		FileIterator_Update( iter );
 	}
 }
