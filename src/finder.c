@@ -194,13 +194,46 @@ void LCFinder_DeleteDir( DB_Dir dir )
 	free( dir );
 }
 
-int LCFinder_DeleteFile( const char *filepath )
+static void OnCloseFileCache( void *privdata, void *data )
 {
-	DB_DeleteFile( filepath );
-	movefiletotrash( filepath );
-	// 删除缓存中的文件记录
-	// ...
-	return 0;
+	SyncTask_CloseCache( data );
+	SyncTask_Delete( data );
+}
+
+int LCFinder_DeleteFiles( const char **files, int nfiles,
+			  int( *onstep )(void*, int, int), void *privdata )
+{
+	int i, len;
+	SyncTask task;
+	Dict *tasks = StrDict_Create( NULL, OnCloseFileCache );
+	for( i = 0; i < nfiles; ++i ) {
+		DB_Dir dir = LCFinder_GetSourceDir( files[i] );
+		if( !dir ) {
+			continue;
+		}
+		task = Dict_FetchValue( tasks, dir->path );
+		if( !task ) {
+			wchar_t *path;
+			len = strlen( dir->path ) + 1;
+			path = malloc( sizeof( wchar_t )* len );
+			LCUI_DecodeString( path, dir->path, len, ENCODING_UTF8 );
+			task = SyncTask_NewW( finder.fileset_dir, path );
+			SyncTask_OpenCacheW( task, NULL );
+			Dict_Add( tasks, dir->path, task );
+			free( path );
+			path = NULL;
+		}
+		if( 0 == SyncTask_DeleteFileW( task, files[i] ) ) {
+			DB_DeleteFile( files[i] );
+			movefiletotrash( files[i] );
+		}
+		if( onstep ) {
+			if( 0 != onstep( privdata, i, nfiles ) ) {
+				break;
+			}
+		}
+	}
+	return i;
 }
 
 static void SyncAddedFile( void *data, const wchar_t *wpath )
@@ -293,7 +326,8 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
 		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
 		SyncTask_Commit( s->task );
-		SyncTask_Delete( &s->task );
+		SyncTask_Delete( s->task );
+		s->task = NULL;
 	}
 	DB_Commit();
 	wprintf(L"\n\nend sync\n");

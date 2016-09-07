@@ -120,6 +120,7 @@ int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags );
 
 void LCFinder_DeleteDir( DB_Dir dir );
 
-int LCFinder_DeleteFile( const char *filepath );
+int LCFinder_DeleteFiles( const char **files, int nfiles,
+			  int( *onstep )(void*, int, int), void *privdata );
 
 #endif

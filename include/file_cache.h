@@ -63,11 +63,20 @@ SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
 /** 新建同步任务 */
 SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir );
 
-/** 清除缓存数据 */
+/** 打开缓存 */
+int SyncTask_OpenCacheW( SyncTask t, const wchar_t *path );
+
+/** 从缓存中删除一个文件记录 */
+int SyncTask_DeleteFileW( SyncTask t, const wchar_t *filepath );
+
+/** 清除缓存 */
 void SyncTask_ClearCache( SyncTask t );
 
+/** 关闭缓存 */
+void SyncTask_CloseCache( SyncTask t );
+
 /** 删除同步任务 */
-void SyncTask_Delete( SyncTask *tptr );
+void SyncTask_Delete( SyncTask t );
 
 /** 遍历每个新增的文件 */
 int SyncTask_InAddedFiles( SyncTask t, FileHanlder func, void *func_data );
@@ -82,6 +91,6 @@ int SyncTask_Start( SyncTask t );
 void SyncTask_Commit( SyncTask t );
 
 /** 终止同步文件列表 */
-void LCFinder_StopSync( SyncTask t );
+void SyncTask_Stop( SyncTask t );
 
 #endif

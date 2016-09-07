@@ -242,11 +242,21 @@ static LCUI_BOOL CheckTagName( const wchar_t *tagname )
 	return TRUE;
 }
 
+static int OnFileDeleted( void *privdata, int i, int n )
+{
+	wchar_t text[256];
+	DialogDataPack pack = privdata;
+	swprintf( text, 255, TEXT_DELETION_PROGRESS, i, n );
+	TextView_SetTextW( pack->dialog->content, text );
+	ProgressBar_SetValue( pack->dialog->progress, i );
+	return  pack->active ? 0 : -1;
+}
+
 static void FileDeletionThread( void *arg )
 {
 	int i, n;
 	FileIndex fidx;
-	wchar_t text[256];
+	char **filepaths;
 	LinkedList *files;
 	LinkedListNode *node;
 	LinkedList deleted_files;
@@ -255,21 +265,21 @@ static void FileDeletionThread( void *arg )
 	LinkedList_Init( &deleted_files );
 	files = &pack->browser->selected_files;
 	n = pack->browser->selected_files.length;
+	filepaths = malloc( sizeof( char* ) * n );
 	ProgressBar_SetMaxValue( pack->dialog->progress, n );
 	for( i = 0; pack->active && i < n; ++i ) {
 		node = LinkedList_GetNode( files, 0 );
 		fidx = node->data;
 		LinkedList_Unlink( files, node );
 		LinkedList_AppendNode( &deleted_files, node );
-		LCFinder_DeleteFile( fidx->file->path );
+		filepaths[i] = fidx->file->path;
 		/* 找到排列在最前面的部件，缩略图列表视图的重新布局需要用到 */
 		if( !cursor || cursor->index > fidx->item->index  ) {
 			cursor = fidx->item;
 		}
-		swprintf( text, 255, TEXT_DELETION_PROGRESS, i, n );
-		TextView_SetTextW( pack->dialog->content, text );
-		ProgressBar_SetValue( pack->dialog->progress, i );
 	}
+	LCFinder_DeleteFiles( filepaths, n, OnFileDeleted, pack );
+	free( filepaths );
 	if( cursor->index == 0 ) {
 		cursor = NULL;
 	} else {
