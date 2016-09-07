@@ -252,20 +252,18 @@ void SyncTask_CloseCache( SyncTask t )
 static int SyncTask_LoadCache( SyncTask t )
 {
 	int rc, count, size;
-	char buf[MAX_PATH_LEN];
+	wchar_t buf[MAX_PATH_LEN];
 	unqlite_kv_cursor *cur;
 	DirStats ds;
 
 	ds = GetDirStats( t );
 	SyncTask_OpenCacheW( t, t->file );
 	rc = unqlite_kv_cursor_init( ds->db, &cur );
-	_DEBUG_MSG("cursor init result: %d\n", rc);
 	if( rc != UNQLITE_OK ) {
 		unqlite_close( ds->db );
 		return 0;
 	}
 	rc = unqlite_kv_cursor_first_entry( cur );
-	_DEBUG_MSG("cursor first entry result: %d\n", rc);
 	if( rc != UNQLITE_OK ) {
 		unqlite_kv_cursor_release( ds->db, cur );
 		unqlite_close( ds->db );
@@ -273,10 +271,11 @@ static int SyncTask_LoadCache( SyncTask t )
 	}
 	count = 0;
 	while( unqlite_kv_cursor_valid_entry( cur ) ) {
+		size = MAX_PATH_LEN;
 		unqlite_kv_cursor_key( cur, buf, &size );
 		unqlite_kv_cursor_next_entry( cur );
+		size /= sizeof( wchar_t );
 		buf[size] = 0;
-		wprintf( L"key: %s, size: %d\n", buf, size );
 		Dict_Add( ds->files, buf, (void*)1 );
 		Dict_Add( ds->deleted_files, buf, (void*)1 );
 		++count;
@@ -336,9 +335,7 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 			++t->added_files;
 		}
 		len = sizeof( wchar_t ) / sizeof( char ) * len;
-		rc = unqlite_kv_store( ds->db, path, len, &len, sizeof( len ) );
-		wprintf( L"key: %s, len: %d\n", path, len );;
-		_DEBUG_MSG("store result: %d\n", rc);
+		rc = unqlite_kv_store( ds->db, path, len, "1", 2 );
 		++t->total_files;
 	}
 	LCUI_CloseDir( &dir );
@@ -372,11 +369,8 @@ int SyncTask_Start( SyncTask t )
 
 void SyncTask_Commit( SyncTask t )
 {
-	int rc;
-	rc = _wremove( t->file );
-	_DEBUG_MSG("delete result: %d\n", rc);
-	rc = _wrename( t->tmpfile, t->file );
-	_DEBUG_MSG("rename result: %d\n", rc);
+	_wremove( t->file );
+	_wrename( t->tmpfile, t->file );
 }
 
 void SyncTask_Stop( SyncTask t )

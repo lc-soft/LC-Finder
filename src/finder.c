@@ -204,6 +204,7 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 			  int( *onstep )(void*, int, int), void *privdata )
 {
 	int i, len;
+	wchar_t *path;
 	SyncTask task;
 	Dict *tasks = StrDict_Create( NULL, OnCloseFileCache );
 	for( i = 0; i < nfiles; ++i ) {
@@ -213,7 +214,6 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 		}
 		task = Dict_FetchValue( tasks, dir->path );
 		if( !task ) {
-			wchar_t *path;
 			len = strlen( dir->path ) + 1;
 			path = malloc( sizeof( wchar_t )* len );
 			LCUI_DecodeString( path, dir->path, len, ENCODING_UTF8 );
@@ -223,7 +223,10 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 			free( path );
 			path = NULL;
 		}
-		if( 0 == SyncTask_DeleteFileW( task, files[i] ) ) {
+		len = strlen( files[i] ) + 1;
+		path = malloc( sizeof( wchar_t )* len );
+		LCUI_DecodeString( path, files[i], len, ENCODING_UTF8 );
+		if( 0 == SyncTask_DeleteFileW( task, path ) ) {
 			DB_DeleteFile( files[i] );
 			movefiletotrash( files[i] );
 		}
