@@ -450,8 +450,19 @@ int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags )
 	return count;
 }
 
+void LCFinder_ReloadTags( void )
+{
+	int i;
+	for( i = 0; i < finder.n_tags; ++i ) {
+		free( finder.tags[i]->name );
+		finder.tags[i]->name = NULL;
+	}
+	free( finder.tags );
+	finder.n_tags = DB_GetTags( &finder.tags );
+}
+
 /** 初始化文件数据库 */
-static void LCFInder_InitFileDB( void )
+static void LCFinder_InitFileDB( void )
 {
 	DB_Init();
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
@@ -542,7 +553,7 @@ int main( int argc, char **argv )
 	InitConsoleWindow();
 #endif
 	LCFinder_InitWorkDir();
-	LCFInder_InitFileDB();
+	LCFinder_InitFileDB();
 	LCFinder_InitThumbDB();
 	finder.trigger = EventTrigger();
 	UI_Init();

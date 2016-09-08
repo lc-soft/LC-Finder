@@ -118,6 +118,9 @@ DB_Tag LCFinder_AddTagForFile( DB_File file, const char *tagname );
 /** 获取文件的标签列表 */
 int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags );
 
+/** 重新载入标签列表 */
+void LCFinder_ReloadTags( void );
+
 void LCFinder_DeleteDir( DB_Dir dir );
 
 int LCFinder_DeleteFiles( const char **files, int nfiles,

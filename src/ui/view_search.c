@@ -532,6 +532,7 @@ static void OnBtnHideReusltClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 void UI_UpdateSearchView( void )
 {
 	int i, count;
+	LCFinder_ReloadTags();
 	this_view.layout.count = 0;
 	ThumbView_Empty( this_view.view_tags );
 	LinkedList_Clear( &this_view.tags, free );
