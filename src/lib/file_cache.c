@@ -345,7 +345,7 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 int SyncTask_DeleteFileW( SyncTask t, const wchar_t *filepath )
 {
 	DirStats ds = GetDirStats( t );
-	size_t size = sizeof( wchar_t )*wcslen( filepath );
+	size_t size = sizeof( wchar_t ) * wcslen( filepath );
 	int rc = unqlite_kv_delete( ds->db, filepath, size );
 	if( rc == UNQLITE_OK ) {
 		return 0;

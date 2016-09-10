@@ -141,9 +141,9 @@ Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
 
 void StrDict_Release( Dict *d )
 {
-	free( d->privdata );
-	d->privdata = NULL;
+	void *privdata = d->privdata;
 	Dict_Release( d );
+	free( privdata );
 }
 
 const char *getdirname( const char *path )

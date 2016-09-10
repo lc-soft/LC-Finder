@@ -236,6 +236,7 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 			}
 		}
 	}
+	StrDict_Release( tasks );
 	return i;
 }
 
