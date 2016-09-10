@@ -61,6 +61,12 @@ void ThumbView_UpdateLayout( LCUI_Widget w, LCUI_Widget start_child );
 /** 绑定回调函数，在布局开始时调用 */
 void ThumbView_OnLayout( LCUI_Widget w, void( *func )(LCUI_Widget) );
 
+/** 启用缩略图滚动加载功能 */
+void ThumbView_EnableScrollLoading( LCUI_Widget w );
+
+/** 禁用缩略图滚动加载功能 */
+void ThumbView_DisableScrollLoading( LCUI_Widget w );
+
 /** 为缩略图列表项绑定文件 */
 void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file );
 

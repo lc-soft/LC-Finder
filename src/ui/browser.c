@@ -267,6 +267,8 @@ static void FileDeletionThread( void *arg )
 	n = pack->browser->selected_files.length;
 	filepaths = malloc( sizeof( char* ) * n );
 	ProgressBar_SetMaxValue( pack->dialog->progress, n );
+	/* 先禁用缩略图滚动加载，避免滚动加载功能访问已删除的部件 */
+	ThumbView_DisableScrollLoading( pack->browser->items );
 	for( i = 0; pack->active && i < n; ++i ) {
 		node = LinkedList_GetNode( files, 0 );
 		fidx = node->data;
@@ -293,6 +295,7 @@ static void FileDeletionThread( void *arg )
 		LinkedList_Unlink( &pack->browser->files, &fidx->node );
 		FileIndex_Delete( fidx );
 	}
+	ThumbView_EnableScrollLoading( pack->browser->items );
 	/** 以 cursor 为基点，对它后面的部件重新布局 */
 	ThumbView_UpdateLayout( pack->browser->items, cursor );
 	FileBrowser_UnselectAllItems( pack->browser );

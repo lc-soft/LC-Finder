@@ -198,7 +198,7 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 		}
 		node = node->next;
 	}
-	LinkedList_ForEach( node, &list ) {
+	for( LinkedList_Each( node, &list ) ) {
 		w = node->data;
 		Widget_TriggerEvent( w, &e, &count );
 	}
@@ -500,7 +500,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	LinkedList_Clear( &view->thumb_tasks, NULL );
 	LinkedList_Clear( &view->layout.row, NULL );
 	ThumbView_UpdateLayoutContext( w );
-	LinkedList_ForEach( node, &view->files ) {
+	for( LinkedList_Each( node, &view->files ) ) {
 		ThumbCache_Delete( view->cache, node->data );
 	}
 	LinkedList_Clear( &view->files, NULL );
@@ -533,7 +533,7 @@ static void UpdateThumbRow( ThumbView view )
 	}
 	rest_width = overflow_width;
 	LCUIMutex_Lock( &view->layout.row_mutex );
-	LinkedList_ForEach( node, &view->layout.row ) {
+	for( LinkedList_Each( node, &view->layout.row ) ) {
 		int w, h;
 		item = node->data;
 		data = item->private_data;
@@ -811,6 +811,20 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUICond_Signal( &data->view->tasks_cond );
 	LCUIMutex_Unlock( &data->view->tasks_mutex );
 	DEBUG_MSG( "on scroll load: %s\n", task->info->path );
+}
+
+void ThumbView_EnableScrollLoading( LCUI_Widget w )
+{
+	ThumbView view = w->private_data;
+	ScrollLoading_Reset( view->scrollload );
+	ScrollLoading_Update( view->scrollload );
+	ScrollLoading_Enable( view->scrollload, TRUE );
+}
+
+void ThumbView_DisableScrollLoading( LCUI_Widget w )
+{
+	ThumbView view = w->private_data;
+	ScrollLoading_Enable( view->scrollload, FALSE );
 }
 
 LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath, 
