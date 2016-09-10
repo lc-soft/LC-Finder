@@ -296,6 +296,7 @@ static int GetDirThumbFilePath( char *filepath, char *dirpath )
 	terms.offset = 0;
 	terms.tags = NULL;
 	terms.dirs = NULL;
+	terms.for_tree = TRUE;
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );
 	total = DBQuery_GetTotalFiles( query );

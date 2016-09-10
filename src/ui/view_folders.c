@@ -184,6 +184,7 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 	terms.score = NONE;
 	terms.tags = NULL;
 	terms.dirs = NULL;
+	terms.for_tree = FALSE;
 	terms.create_time = NONE;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );

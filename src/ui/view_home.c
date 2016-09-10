@@ -120,6 +120,7 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	terms.score = NONE;
 	terms.tags = NULL;
 	terms.dirs = NULL;
+	terms.for_tree = FALSE;
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );

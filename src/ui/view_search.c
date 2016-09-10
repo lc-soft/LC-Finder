@@ -111,6 +111,7 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	terms.limit = 100;
 	terms.offset = 0;
 	terms.score = NONE;
+	terms.for_tree = FALSE;
 	terms.tags = scanner->tags;
 	terms.n_tags = scanner->n_tags;
 	terms.create_time = DESC;
@@ -392,6 +393,7 @@ static DB_File GetFileByTag( DB_Tag tag )
 	terms.limit = 1;
 	terms.offset = 0;
 	terms.dirs = NULL;
+	terms.for_tree = FALSE;
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );
 	file = DBQuery_FetchFile( query );

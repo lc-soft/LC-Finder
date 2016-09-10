@@ -687,9 +687,21 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 		i = 2 * strlen( terms->dirpath );
 		path = malloc( i * sizeof( char ) );
 		strcat( q->sql_terms, buf_terms );
-		strcat( q->sql_terms, "HASFILE('" );
-		strcat( q->sql_terms, terms->dirpath );
-		strcat( q->sql_terms, "', f.path) " );
+		/* 如果是要在当前目录下的整个子级目录树中搜索文件 */
+		if( terms->for_tree ) {
+			char *path;
+			i = 2 * strlen( terms->dirpath );
+			path = malloc( i * sizeof( char ) );
+			escape( path, terms->dirpath );
+			strcat( q->sql_terms, " f.path LIKE '" );
+			strcat( q->sql_terms, path );
+			strcat( q->sql_terms, "%' ESCAPE '\\'" );
+			free( path );
+		} else {
+			strcat( q->sql_terms, "HASFILE('" );
+			strcat( q->sql_terms, terms->dirpath );
+			strcat( q->sql_terms, "', f.path) " );
+		}
 	}
 	if( terms->create_time == DESC ) {
 		strcat( q->sql_orderby, buf_orderby );

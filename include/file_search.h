@@ -71,6 +71,7 @@ typedef struct DB_QueryTermsRec_ {
 	int n_tags;			/**< 标签数量 */
 	int offset;			/**< 从何处开始取数据记录 */
 	int limit;			/**< 数据记录的最大数量 */
+	int for_tree;			/**< 是否搜索子级目录树，值为 0 时只搜索当前目录下的文件 */
 	char *dirpath;			/**< 文件所在的目录路径 */
 	enum order score;		/**< 按评分排序时使用的排序规则 */
 	enum order create_time;		/**< 按创建时间排序时使用的排序规则 */
