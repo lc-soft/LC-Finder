@@ -246,6 +246,8 @@ ModelManifest.xml
 
 *.db
 *.opendb
+.*
 data
 include/sqlite3.h
 include/unqlite.h
+include/config.h
