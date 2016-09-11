@@ -46,23 +46,14 @@
 #include <LCUI/gui/widget/button.h>
 #include "thumbview.h"
 #include "progressbar.h"
+#include "timeseparator.h"
 #include "browser.h"
 
-#define TEXT_TITLE			L"集锦"
-#define TEXT_TIME_TITLE			L"%d年%d月"
-#define TEXT_TIME_SUBTITLE		L"%d月%d日 %d张照片"
-#define TEXT_TIME_SUBTITLE2		L"%d月%d日 - %d月%d日 %d张照片"
+#define TEXT_TITLE L"集锦"
 
 /* 延时隐藏进度条 */
 #define HideProgressBar() LCUITimer_Set( 1000, (FuncPtr)Widget_Hide, \
 					 this_view.progressbar, FALSE )
-
-/** 时间分割线功能的数据 */
-typedef struct TimeSeparatorRec_ {
-	int files;		/**< 当前时间段内的文件总数 */
-	struct tm time;		/**< 当前时间段的起始时间 */
-	LCUI_Widget subtitle;	/**< 子标题 */
-} TimeSeparatorRec, *TimeSeparator;
 
 /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
@@ -91,7 +82,7 @@ static struct HomeCollectionView {
 	LCUI_Widget progressbar;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
-	TimeSeparatorRec separator;
+	LinkedList separators;
 	FileBrowserRec browser;
 } this_view;
 
@@ -208,44 +199,19 @@ static void HomeView_AppendFile( DB_File file )
 {
 	time_t time;
 	struct tm *t;
-	wchar_t text[128];
-	TimeSeparator ts;
-	LCUI_Widget title;
+	LCUI_Widget sep;
 
-	ts = &this_view.separator;
 	time = file->create_time;
 	t = localtime( &time );
+	sep = LinkedList_Get( &this_view.separators, -1 );
 	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
-	if( t->tm_year != ts->time.tm_year ||
-	    t->tm_mon != ts->time.tm_mon ) {
-		title = LCUIWidget_New( "textview" );
-		ts->subtitle = LCUIWidget_New( "textview" );
-		Widget_AddClass( ts->subtitle, 
-				 "time-separator-subtitle" );
-		Widget_AddClass( title, "time-separator-title" );
-		/* 设置时间段的标题 */
-		swprintf( text, 128, TEXT_TIME_TITLE, 
-			  1900 + t->tm_year, t->tm_mon + 1 );
-		TextView_SetTextW( title, text );
-		FileBrowser_Append( &this_view.browser, title );
-		FileBrowser_Append( &this_view.browser, ts->subtitle );
-		ts->files = 0;
-		ts->time = *t;
+	if( !sep || !TimeSeparator_CheckTime(sep, t) ) {
+		sep = LCUIWidget_New( "time-separator" );
+		TimeSeparator_SetTime( sep, t );
+		FileBrowser_Append( &this_view.browser, sep );
+		LinkedList_Append( &this_view.separators, sep );
 	}
-	ts->files += 1;
-	/** 如果时间跨度不超过一天 */
-	if( t->tm_year == ts->time.tm_year && 
-	    t->tm_mon == ts->time.tm_mon &&
-	    t->tm_mday == ts->time.tm_mday ) {
-		swprintf( text, 128, TEXT_TIME_SUBTITLE, 
-			  t->tm_mon + 1, t->tm_mday, ts->files );
-	} else {
-		swprintf( text, 128, TEXT_TIME_SUBTITLE2, 
-			  t->tm_mon + 1, t->tm_mday, 
-			  ts->time.tm_mon + 1, ts->time.tm_mday,
-			  ts->files );
-	}
-	TextView_SetTextW( ts->subtitle, text );
+	TimeSeparator_AddTime( sep, t );
 	FileBrowser_AppendPicture( &this_view.browser, file );
 }
 
@@ -300,9 +266,7 @@ static void LoadCollectionFiles( void )
 {
 	FileScanner_Reset( &this_view.scanner );
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
-	this_view.separator.files = 0;
-	this_view.separator.subtitle = NULL;
-	memset( &this_view.separator.time, 0, sizeof(struct tm) );
+	LinkedList_Clear( &this_view.separators, NULL );
 	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );

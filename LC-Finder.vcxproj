@@ -34,6 +34,7 @@
     <ClCompile Include="src\ui\progressbar.c" />
     <ClCompile Include="src\ui\starrating.c" />
     <ClCompile Include="src\ui\thumbview.c" />
+    <ClCompile Include="src\ui\timeseparator.c" />
     <ClCompile Include="src\ui\view_folders.c" />
     <ClCompile Include="src\ui\view_home.c" />
     <ClCompile Include="src\ui\view_picture.c" />
@@ -69,6 +70,7 @@
     <ClInclude Include="include\thumb_db.h" />
     <ClInclude Include="include\thumb_cache.h" />
     <ClInclude Include="include\thumbview.h" />
+    <ClInclude Include="include\timeseparator.h" />
     <ClInclude Include="include\ui.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

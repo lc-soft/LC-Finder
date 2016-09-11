@@ -1,9 +1,10 @@
 ﻿/* ***************************************************************************
- * ui.c -- ui managment module
+ * timeseparator.h -- time separator, used to separate the file list by time
+ * range.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
- * This file is part of the LC-Finder project, and may only be used, modified,
+ * This file is part of the LC-Finder project, and may only be used, modified, 
  * and distributed under the terms of the GPLv2.
  *
  * By continuing to use, modify, or distribute this file you indicate that you
@@ -18,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * ui.c -- 图形界面管理模块
+ * timeseparator.h -- 时间分割器，用于将文件列表按时间区间分离开来
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -34,66 +35,15 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <stdlib.h>
-#include "finder.h"
-#include <LCUI/timer.h>
-#include <LCUI/display.h>
-#include <LCUI/font/charset.h>
-#include <LCUI/gui/builder.h>
-#include "ui.h"
-#include "thumbview.h"
-#include "starrating.h"
-#include "progressbar.h"
+#ifndef LCFINDER_TIME_SEPARATOR_H
+#define LCFINDER_TIME_SEPARATOR_H
 
-#define XML_PATH "res/ui.xml"
+LCUI_BOOL TimeSeparator_CheckTime( LCUI_Widget w, struct tm *t );
 
-static void onTimer( void *arg )
-{
-	//LCUI_Widget w = LCUIWidget_GetById( "debug-widget" );
-	//LCUI_PrintStyleSheet( w->style );
-	//LCUI_Widget w = LCUIWidget_GetById( "sidebar-btn-search" );
-	//LCUI_PrintStyleSheet( w->style );
-	Widget_PrintTree( NULL );
-}
+void TimeSeparator_SetTime( LCUI_Widget w, const struct tm *t );
 
-void UI_Init(void)
-{
-	LCUI_Widget box, root;
-	LCUI_Init();
-	LCUIWidget_AddThumbView();
-	LCUIWidget_AddStarRating();
-	LCUIWidget_AddProgressBar();
-	LCUIWidget_AddTimeSeparator();
-	LCUIDisplay_SetMode( LCDM_WINDOWED );
-	LCUIDisplay_SetSize( 960, 640 );
-	//LCUIDisplay_ShowRectBorder();
-	box = LCUIBuilder_LoadFile( XML_PATH );
-	if( !box ) {
-		return;
-	}
-	Widget_Top( box );
-	Widget_Unwrap( box );
-	root = LCUIWidget_GetRoot();
-	Widget_SetTitleW( root, L"LC-Finder" );
-	Widget_UpdateStyle( root, TRUE );
-	UI_InitSidebar();
-	UI_InitHomeView();
-	UI_InitSettingsView();
-	UI_InitFoldersView();
-	UI_InitFileSyncTip();
-	UI_InitPictureView();
-	UI_InitSearchView();
-	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
-}
+void TimeSeparator_AddTime( LCUI_Widget w, struct tm *t );
 
-int UI_Run( void )
-{
-	return LCUI_Main();
-}
+void LCUIWidget_AddTimeSeparator( void );
 
-void UI_Exit( void )
-{
-	UI_ExitHomeView();
-	UI_ExitFolderView();
-	UI_ExitPictureView();
-}
+#endif

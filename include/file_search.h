@@ -64,6 +64,7 @@ typedef struct DB_FileRec_ {
 	unsigned int create_time;	/**< 创建时间 */
 } DB_FileRec, *DB_File;
 
+/*< 搜索规则定义 */
 typedef struct DB_QueryTermsRec_ {
 	DB_Dir *dirs;			/**< 源文件夹列表 */
 	DB_Tag *tags;			/**< 标签列表 */
@@ -75,7 +76,7 @@ typedef struct DB_QueryTermsRec_ {
 	char *dirpath;			/**< 文件所在的目录路径 */
 	enum order score;		/**< 按评分排序时使用的排序规则 */
 	enum order create_time;		/**< 按创建时间排序时使用的排序规则 */
-} DB_QueryTermsRec, *DB_QueryTerms;	/**< 搜索规则定义 */
+} DB_QueryTermsRec, *DB_QueryTerms;
 
 #ifdef LCFINDER_FILE_SEARCH_C
 typedef struct DB_QueryRec_ *DB_Query;
