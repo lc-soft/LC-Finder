@@ -39,7 +39,7 @@
 
 #ifndef LCFINDER_THUMB_DB_C
 typedef void* ThumbDB;
-#else:
+#else
 typedef struct ThumbDBRec_ *ThumbDB;
 #endif
 

@@ -34,11 +34,12 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdio.h>
+#include <string.h>
 #ifdef _WIN32
 #include <Windows.h>
 #include <ShlObj.h>
 #endif
-#include <stdio.h>
 #include "finder.h"
 #include "ui.h"
 #include <LCUI/display.h>
@@ -119,6 +120,7 @@ static void UI_InitDirList( LCUI_Widget view )
 
 static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+#ifdef _WIN32
 	int len;
 	HWND hwnd;
 	DB_Dir dir;
@@ -152,6 +154,7 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( dir ) {
 		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 	}
+#endif
 }
 
 /** 更新缩略图数据库的空间占用量 */

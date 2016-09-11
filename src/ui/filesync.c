@@ -67,16 +67,16 @@ static void OnUpdateStats( void *arg )
 		if( self.status.task ) {
 			count += self.status.task->total_files;
 		}
-		wsprintf( wstr, TEXT_SCANING, count );
+		swprintf( wstr, 255, TEXT_SCANING, count );
 		break;
 	case STATE_SAVING:
 		count = self.status.synced_files;
 		total = self.status.added_files + self.status.deleted_files;
-		wsprintf( wstr, TEXT_SAVING, count, total );
+		swprintf( wstr, 255, TEXT_SAVING, count, total );
 		break;
 	case STATE_FINISHED:
 		count = self.status.synced_files;
-		wsprintf( wstr, TEXT_SAVED, count );
+		swprintf( wstr, 255, TEXT_SAVED, count );
 		break;
 	default:return;
 	}

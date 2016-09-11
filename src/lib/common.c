@@ -33,16 +33,17 @@
  * 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在 LICENSE 文件中，如果
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
-#include <wchar.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
@@ -185,7 +186,6 @@ const wchar_t *wgetfilename( const wchar_t *path )
 int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 {
 	int i, pos;
-	const wchar_t *p = inpath;
 	for( i = 0, pos = -1; inpath[i] && i < max_len; ++i ) {
 		outpath[i] = inpath[i];
 		if( outpath[i] == PATH_SEP ) {
@@ -201,6 +201,7 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 
 time_t wgetfilectime( const wchar_t *path )
 {
+#ifdef _WIN32
 	struct stat buf;
 	time_t ctime = 0;
 	int fd = _wopen( path, _O_RDONLY );
@@ -209,12 +210,16 @@ time_t wgetfilectime( const wchar_t *path )
 			ctime = (int)buf.st_ctime;
 		}
 		_close( fd );
-	}
 	return ctime;
+	}
+#else
+	return 0;
+#endif
 }
 
 time_t wgetfilemtime( const wchar_t *path )
 {
+#ifdef _WIN32
 	int fd;
 	struct stat buf;
 	time_t mtime = 0;
@@ -226,10 +231,14 @@ time_t wgetfilemtime( const wchar_t *path )
 		_close( fd );
 	}
 	return mtime;
+#else
+	return 0;
+#endif
 }
 
 int64_t wgetfilesize( const wchar_t *path )
 {
+#ifdef _WIN32
 	int fd;
 	int64_t size;
 	struct stat buf;
@@ -243,6 +252,9 @@ int64_t wgetfilesize( const wchar_t *path )
 		size = 0;
 	}
 	return size;
+#else
+	return 0;
+#endif
 }
 
 int pathjoin( char *path, const char *path1, const char *path2 )

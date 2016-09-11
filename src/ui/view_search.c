@@ -34,6 +34,8 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdlib.h>
+#include <string.h>
 #include "finder.h"
 #include "ui.h"
 #include <LCUI/timer.h>
@@ -208,7 +210,6 @@ static void ViewSyncThread( void *arg )
 	LCUIMutex_Unlock( &vs->mutex );
 	vs->is_running = TRUE;
 	while( vs->is_running ) {
-		DB_File file;
 		LinkedListNode *node;
 		LCUIMutex_Lock( &scanner->mutex );
 		if( scanner->files.length == 0 ) {
@@ -225,7 +226,6 @@ static void ViewSyncThread( void *arg )
 			LCUIMutex_Unlock( &scanner->mutex );
 			continue;
 		}
-		file = node->data;
 		LinkedList_Unlink( &scanner->files, node );
 		LCUIMutex_Unlock( &scanner->mutex );
 		FileBrowser_AppendPicture( &this_view.browser, node->data );

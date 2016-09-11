@@ -34,10 +34,11 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "ui.h"
 #include "finder.h"
-#include <stdio.h>
-#include <string.h>
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
@@ -85,7 +86,7 @@ static struct FoldersViewData {
 	FileBrowserRec browser;
 } this_view;
 
-void OpenFolder( const char *dirpath );
+static void OpenFolder( const char *dirpath );
 
 static void OnAddDir( void *privdata, void *data )
 {

@@ -187,7 +187,9 @@ void LCFinder_DeleteDir( DB_Dir dir )
 	wpath = finder.thumb_paths[i];
 	finder.thumb_paths[i] = NULL;
 	Dict_Delete( finder.thumb_dbs, dir->path );
+#ifdef _WIN32
 	_wremove( wpath );
+#endif
 	/* 删除数据库中的源文件夹记录 */
 	DB_DeleteDir( dir );
 	free( dir->path );
@@ -361,11 +363,13 @@ static void InitConsoleWindow( void )
 /** 初始化工作目录 */
 static void LCFinder_InitWorkDir( void )
 {
-	int len;
+	int len, len1, len2;
 	wchar_t data_dir[1024];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
+#ifdef _WIN32
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
+#endif
 	wgetcurdir( data_dir, 1024 );
 	wpathjoin( data_dir, data_dir, L"data" );
 	len = wcslen( data_dir );
@@ -373,16 +377,21 @@ static void LCFinder_InitWorkDir( void )
 		data_dir[len++] = PATH_SEP;
 		data_dir[len] = 0;
 	}
-	finder.data_dir = NEW( wchar_t, len + 2 );
-	finder.fileset_dir = NEW( wchar_t, len + 2 + wcslen(dirs[0]) );
-	finder.thumbs_dir = NEW( wchar_t, len + 2 +wcslen(dirs[1]) );
-	wsprintf( finder.fileset_dir, L"%s%s", data_dir, dirs[0] );
-	wsprintf( finder.thumbs_dir, L"%s%s", data_dir, dirs[1] );
-	wcscpy( finder.data_dir, data_dir );
+	len += 2;
+	len1 = len + wcslen(dirs[0]);
+	len2 = len + wcslen(dirs[1]);
+	finder.data_dir = NEW( wchar_t, len );
+	finder.fileset_dir = NEW( wchar_t, len1 );
+	finder.thumbs_dir = NEW( wchar_t, len2 );
+	swprintf( finder.fileset_dir, len1, L"%s%s", data_dir, dirs[0] );
+	swprintf( finder.thumbs_dir, len2, L"%s%s", data_dir, dirs[1] );
+	wcsncpy( finder.data_dir, 1023, data_dir );
 	mkdir( finder.data_dir );
 	mkdir( finder.fileset_dir );
 	mkdir( finder.thumbs_dir );
+#ifdef _WIN32
 	_wsetlocale(LC_ALL, L"chs");
+#endif
 }
 
 DB_Tag LCFinder_GetTag( const char *tagname )
@@ -531,7 +540,9 @@ void LCFinder_ClearThumbDB( void )
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		path = finder.thumb_paths[i];
 		finder.thumb_paths[i] = NULL;
+#ifdef _WIN32
 		_wremove( path );
+#endif
 		free( path );
 	}
 	free( finder.thumb_paths );

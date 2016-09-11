@@ -174,8 +174,10 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 
 void SyncTask_ClearCache( SyncTask t )
 {
+#ifdef _WIN32
 	_wremove( t->file );
 	_wremove( t->tmpfile );
+#endif
 }
 
 void SyncTask_Delete( SyncTask t )
@@ -369,8 +371,10 @@ int SyncTask_Start( SyncTask t )
 
 void SyncTask_Commit( SyncTask t )
 {
+#ifdef _WIN32
 	_wremove( t->file );
 	_wrename( t->tmpfile, t->file );
+#endif
 }
 
 void SyncTask_Stop( SyncTask t )
