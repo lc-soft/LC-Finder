@@ -96,6 +96,73 @@ static void OnBtnSyncClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCFinder_TriggerEvent( EVENT_SYNC, NULL );
 }
 
+static void DeleteTimeSeparator( LCUI_Widget sep )
+{
+	LinkedListNode *node;
+	for( LinkedList_Each( node, &this_view.separators ) ) {
+		if( node->data == sep ) {
+			LinkedList_Unlink( &this_view.separators, node );
+			free( node );
+			break;
+		}
+	}
+	Widget_Destroy( sep );
+}
+
+static void OnAfterDeleted( LCUI_Widget first )
+{
+	int count;
+	LCUI_Widget sep = NULL, w = first;
+	while( w ) {
+		if( w->type && strcmp( w->type, "time-separator" ) == 0 ) {
+			sep = w;
+			break;
+		}
+		w = Widget_GetPrev( w );
+	}
+	if( !sep ) {
+		sep = LinkedList_Get( &this_view.separators, 0 );
+	}
+	if( !sep ) {
+		Widget_RemoveClass( this_view.tip_empty, "hide" );
+		Widget_Show( this_view.tip_empty );
+		return;
+	}
+	w = Widget_GetNext( sep );
+	TimeSeparator_Reset( sep );
+	for( count = 0; w; w = Widget_GetNext( w ) ) {
+		if( !w->type ) {
+			continue;
+		}
+		if( strcmp( w->type, "thumbviewitem" ) == 0 ) {
+			time_t time;
+			struct tm *t;
+			DB_File file;
+			file = ThumbViewItem_GetFile( w );
+			time = file->create_time;
+			t = localtime( &time );
+			TimeSeparator_AddTime( sep, t );
+			count += 1;
+		} else if( strcmp( w->type, "time-separator" ) == 0 ) {
+			/* 如果该时间分割器下一个文件都没有 */
+			if( count == 0 ) {
+				DeleteTimeSeparator( sep );
+			}
+			count = 0, sep = w;
+			TimeSeparator_Reset( sep );
+		}
+	}
+	/* 处理最后一个没有文件的时间分割器 */
+	if( sep && count == 0 ) {
+		DeleteTimeSeparator( sep );
+	}
+	/* 如果时间分割器数量为0，则说明当前缩略图列表为空 */
+	if( this_view.separators.length < 1 ) {
+		Widget_RemoveClass( this_view.tip_empty, "hide" );
+		Widget_Show( this_view.tip_empty );
+	}
+}
+
 /** 扫描全部文件 */
 static int FileScanner_ScanAll( FileScanner scanner )
 {
@@ -309,6 +376,7 @@ void UI_InitHomeView( void )
 	this_view.browser.txt_title = title;
 	this_view.browser.items = this_view.items;
 	this_view.browser.view = this_view.view;
+	this_view.browser.after_deleted = OnAfterDeleted;
 	FileBrowser_Create( &this_view.browser );
 	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );

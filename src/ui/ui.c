@@ -43,6 +43,7 @@
 #include "ui.h"
 #include "thumbview.h"
 #include "starrating.h"
+#include "timeseparator.h"
 #include "progressbar.h"
 
 #define XML_PATH "res/ui.xml"

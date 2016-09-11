@@ -70,6 +70,9 @@ void ThumbView_DisableScrollLoading( LCUI_Widget w );
 /** 为缩略图列表项绑定文件 */
 void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file );
 
+/** 获取与缩略图列表项绑定的文件 */
+DB_File ThumbViewItem_GetFile( LCUI_Widget item );
+
 /** 为缩略图列表项设置相关操作函数 */
 void ThumbViewItem_SetFunction( LCUI_Widget item,
 				void( *setthumb )(LCUI_Widget, LCUI_Graph*),

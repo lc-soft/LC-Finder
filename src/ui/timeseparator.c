@@ -112,6 +112,12 @@ void TimeSeparator_AddTime( LCUI_Widget w, struct tm *t )
 	TextView_SetTextW( sep->subtitle, text );
 }
 
+void TimeSeparator_Reset( LCUI_Widget w )
+{
+	TimeSeparator sep = w->private_data;
+	sep->count = 0;
+}
+
 void LCUIWidget_AddTimeSeparator( void )
 {
 	LCUI_WidgetClass *wc = LCUIWidget_AddClass( "time-separator" );

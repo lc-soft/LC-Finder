@@ -53,6 +53,7 @@ typedef struct FileBrowserRec_ {
 	LinkedList files;
 	LinkedList selected_files;
 	LCUI_BOOL is_selection_mode;
+	void( *after_deleted )(LCUI_Widget);
 } FileBrowserRec, *FileBrowser;
 
 void FileBrowser_Empty( FileBrowser browser );

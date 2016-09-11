@@ -301,6 +301,9 @@ static void FileDeletionThread( void *arg )
 	FileBrowser_UnselectAllItems( pack->browser );
 	FileBrowser_DisableSelectionMode( pack->browser );
 	CloseProgressDialog( pack->dialog );
+	if( pack->browser->after_deleted ) {
+		pack->browser->after_deleted( cursor );
+	}
 	LCUIThread_Exit( NULL );
 }
 

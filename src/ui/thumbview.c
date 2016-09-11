@@ -333,6 +333,15 @@ void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file )
 	data->path = data->file->path;
 }
 
+DB_File ThumbViewItem_GetFile( LCUI_Widget item )
+{
+	ThumbViewItem data = item->private_data;
+	if( data->is_dir ) {
+		return NULL;
+	}
+	return data->file;
+}
+
 void ThumbViewItem_AppendToCover(LCUI_Widget item, LCUI_Widget child )
 {
 	ThumbViewItem data = item->private_data;
