@@ -210,8 +210,8 @@ time_t wgetfilectime( const wchar_t *path )
 			ctime = (int)buf.st_ctime;
 		}
 		_close( fd );
-	return ctime;
 	}
+	return ctime;
 #else
 	return 0;
 #endif
