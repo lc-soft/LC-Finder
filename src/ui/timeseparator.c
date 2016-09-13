@@ -64,7 +64,7 @@ static void TimeSeparator_OnInit( LCUI_Widget w )
 	sep->time.tm_year = 0;
 	sep->title = LCUIWidget_New( "textview" );
 	sep->subtitle = LCUIWidget_New( "textview" );
-	Widget_AddClass( sep->title, "time-separator-title" );
+	Widget_AddClass( sep->title, "time-separator-title btn btn-link" );
 	Widget_AddClass( sep->subtitle, "time-separator-subtitle" );
 	Widget_Append( w, sep->title );
 	Widget_Append( w, sep->subtitle );
@@ -116,6 +116,12 @@ void TimeSeparator_Reset( LCUI_Widget w )
 {
 	TimeSeparator sep = w->private_data;
 	sep->count = 0;
+}
+
+LCUI_Widget TimeSeparator_GetTitle( LCUI_Widget w )
+{
+	TimeSeparator sep = w->private_data;
+	return sep->title;
 }
 
 void LCUIWidget_AddTimeSeparator( void )

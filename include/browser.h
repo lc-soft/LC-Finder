@@ -58,6 +58,10 @@ typedef struct FileBrowserRec_ {
 
 void FileBrowser_Empty( FileBrowser browser );
 
+void FileBrowser_SetScroll( FileBrowser browser, int y );
+
+void FileBrowser_SetButtonsDisabled( FileBrowser browser, LCUI_BOOL disabled );
+
 void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget );
 
 LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file );

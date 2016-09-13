@@ -49,7 +49,8 @@
 #include "timeseparator.h"
 #include "browser.h"
 
-#define TEXT_TITLE L"集锦"
+#define TEXT_TITLE		L"集锦"
+#define TEXT_TIME_TITLE		L"%d年%d月"
 
 /* 延时隐藏进度条 */
 #define HideProgressBar() LCUITimer_Set( 1000, (FuncPtr)Widget_Hide, \
@@ -77,6 +78,8 @@ typedef struct ViewSyncRec_ {
 static struct HomeCollectionView {
 	LCUI_Widget view;
 	LCUI_Widget items;
+	LCUI_Widget time_ranges;
+	LCUI_Widget selected_time;
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_Widget progressbar;
@@ -261,22 +264,52 @@ static void FileScanner_Destroy( FileScanner scanner )
 	LCUIMutex_Destroy( &scanner->mutex );
 }
 
+static void OnTimeRangeClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	LCUI_Widget title = e->data;
+	FileBrowser_SetScroll( &this_view.browser, title->box.graph.top );
+	FileBrowser_SetButtonsDisabled( &this_view.browser, FALSE );
+	Widget_Hide( this_view.time_ranges->parent->parent );
+}
+
+static void OnTimeTitleClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	if( this_view.selected_time ) {
+		Widget_RemoveClass( this_view.selected_time, "selected" );
+	}
+	this_view.selected_time = e->data;
+	Widget_AddClass( e->data, "selected" );
+	FileBrowser_SetButtonsDisabled( &this_view.browser, TRUE );
+	Widget_Show( this_view.time_ranges->parent->parent );
+}
+
 /** 向视图追加文件 */
 static void HomeView_AppendFile( DB_File file )
 {
 	time_t time;
 	struct tm *t;
-	LCUI_Widget sep;
+	wchar_t title[128];
+	LCUI_Widget sep, range;
 
 	time = file->create_time;
 	t = localtime( &time );
 	sep = LinkedList_Get( &this_view.separators, -1 );
 	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
 	if( !sep || !TimeSeparator_CheckTime(sep, t) ) {
+		range = LCUIWidget_New( "textview" );
 		sep = LCUIWidget_New( "time-separator" );
+		swprintf( title, 128, TEXT_TIME_TITLE,
+			  1900 + t->tm_year, t->tm_mon + 1 );
 		TimeSeparator_SetTime( sep, t );
+		TextView_SetTextW( range, title );
 		FileBrowser_Append( &this_view.browser, sep );
 		LinkedList_Append( &this_view.separators, sep );
+		Widget_AddClass( range, "time-range btn btn-link" );
+		Widget_Append( this_view.time_ranges, range );
+		Widget_BindEvent( TimeSeparator_GetTitle( sep ), 
+				  "click", OnTimeTitleClick, range, NULL );
+		Widget_BindEvent( range, "click", OnTimeRangeClick,
+				  sep, NULL );
 	}
 	TimeSeparator_AddTime( sep, t );
 	FileBrowser_AppendPicture( &this_view.browser, file );
@@ -334,6 +367,7 @@ static void LoadCollectionFiles( void )
 	FileScanner_Reset( &this_view.scanner );
 	LCUIMutex_Lock( &this_view.viewsync.mutex );
 	LinkedList_Clear( &this_view.separators, NULL );
+	Widget_Empty( this_view.time_ranges );
 	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
@@ -365,8 +399,9 @@ void UI_InitHomeView( void )
 	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_HOME_SELECT );
 	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_HOME_FILES );
 	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_HOME_FILES );
-	this_view.progressbar = LCUIWidget_GetById( ID_VIEW_HOME_PROGRESS );
 	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_HOME_EMPTY );
+	this_view.progressbar = LCUIWidget_GetById( ID_VIEW_HOME_PROGRESS );
+	this_view.time_ranges = LCUIWidget_GetById( ID_VIEW_TIME_RANGE_LIST );
 	this_view.items = items;
 	this_view.browser.title = TEXT_TITLE;
 	this_view.browser.btn_select = btn[1];
@@ -374,10 +409,12 @@ void UI_InitHomeView( void )
 	this_view.browser.btn_tag = btn[3];
 	this_view.browser.btn_delete = btn[4];
 	this_view.browser.txt_title = title;
-	this_view.browser.items = this_view.items;
 	this_view.browser.view = this_view.view;
+	this_view.browser.items = this_view.items;
 	this_view.browser.after_deleted = OnAfterDeleted;
 	FileBrowser_Create( &this_view.browser );
+	Widget_Hide( this_view.time_ranges->parent->parent );
+	Widget_AddClass( this_view.time_ranges, "time-range-list" );
 	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );

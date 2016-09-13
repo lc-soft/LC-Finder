@@ -427,6 +427,28 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+void FileBrowser_SetButtonsDisabled( FileBrowser browser, LCUI_BOOL disabled )
+{
+	Widget_SetDisabled( browser->btn_cancel, disabled );
+	Widget_SetDisabled( browser->btn_delete, disabled );
+	Widget_SetDisabled( browser->btn_select, disabled );
+	Widget_SetDisabled( browser->btn_tag, disabled );
+	if( !disabled ) {
+		if( browser->is_selection_mode ) {
+			FileBrowser_UpdateSelectionUI( browser );
+		} else if( browser->files.length < 1 ) {
+			Widget_SetDisabled( browser->btn_select, TRUE );
+		}
+	}
+}
+
+void FileBrowser_SetScroll( FileBrowser browser, int y )
+{
+	LCUI_WidgetEventRec e = {0};
+	e.type = LCUIWidget_GetEventId( "setscroll" );
+	Widget_TriggerEvent( browser->items, &e, &y );
+}
+
 void FileBrowser_Empty( FileBrowser browser )
 {
 	Widget_Hide( browser->btn_select );

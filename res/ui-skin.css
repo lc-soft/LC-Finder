@@ -59,11 +59,18 @@
 .skin-light-green .view-navbar .view-navbar-btn:disabled:active textview {
 	color: #727e80;
 }
-.skin-light-green .btn-link textview {
+.skin-light-green .btn-link textview,
+.skin-light-green textview.btn-link {
 	color: #44BB55;
 }
-.skin-light-green .btn-link:hover textview {
+.skin-light-green .btn-link:hover textview,
+.skin-light-green textview.btn-link:hover {
 	color: #2E7D39;
+}
+.skin-light-green textview.btn-link.selected,
+.skin-light-green textview.btn-link.selected:active,
+.skin-light-green textview.btn-link.selected:hover {
+	color: #333;
 }
 .skin-light-green .file-list .file-list-item-picture.selected .checkbox {
 	color: #fff;

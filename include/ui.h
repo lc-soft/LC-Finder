@@ -58,6 +58,8 @@
 #define ID_VIEW_PICTURE_LOADING_TIP	"picture-loading-tip"
 #define ID_VIEW_MAIN_SIDEBAR		"main-sidebar"
 #define ID_VIEW_FILE_LIST		"current-file-list"
+#define ID_VIEW_TIME_RANGE_LIST		"time-range-list"
+#define ID_VIEW_TIME_RANGE		"view-time-range"
 #define ID_VIEW_HOME			"view-home"
 #define ID_VIEW_HOME_COLLECTIONS	"home-collection-list"
 #define ID_VIEW_FOLDERS			"view-folders"

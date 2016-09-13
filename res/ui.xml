@@ -70,6 +70,12 @@
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
+            <widget id="view-time-range" class="view-time-range">
+              <widget id="view-time-range-content" class="view-content full-height">
+                <widget id="time-range-list" class="scrolllayer time-range-list"></widget>
+              </widget>
+              <widget type="scrollbar" data-parent="view-time-range-content" data-layer="time-range-list"/>
+            </widget>
           </widget>
         </widget>
       </widget>

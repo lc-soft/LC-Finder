@@ -46,6 +46,8 @@ void TimeSeparator_AddTime( LCUI_Widget w, struct tm *t );
 
 void TimeSeparator_Reset( LCUI_Widget w );
 
+LCUI_Widget TimeSeparator_GetTitle( LCUI_Widget w );
+
 void LCUIWidget_AddTimeSeparator( void );
 
 #endif
