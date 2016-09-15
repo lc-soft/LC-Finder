@@ -443,6 +443,7 @@ void UI_InitFoldersView( void )
 	this_view.browser.txt_title = title;
 	this_view.browser.items = this_view.items;
 	this_view.browser.view = this_view.view;
+	ThumbView_SetCache( this_view.items, finder.thumb_cache );
 	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
 	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
 	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );

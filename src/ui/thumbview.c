@@ -58,7 +58,6 @@
 #define FOLDER_CLASS		"file-list-item-folder"
 #define PICTURE_CLASS		"file-list-item-picture"
 #define DIR_COVER_THUMB		"__dir_cover_thumb__"
-#define THUMB_CACHE_SIZE	(32*1024*1024)
 #define THUMB_MAX_WIDTH		240
 
 /** 滚动加载功能的相关数据 */
@@ -115,6 +114,7 @@ typedef struct LayoutContextRec_ {
 typedef struct ThumbViewRec_ {
 	Dict **dbs;			/**< 缩略图数据库字典，以目录路径进行索引 */
 	ThumbCache cache;		/**< 缩略图缓存 */
+	ThumbLinker linker;		/**< 缩略图链接器 */
 	LinkedList files;		/**< 当前视图下的文件列表 */
 	LinkedList thumb_tasks;		/**< 缩略图加载任务队列 */
 	LCUI_Cond tasks_cond;		/**< 任务队列条件变量 */
@@ -381,12 +381,12 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 	uint_t mtime;
 	int len, ret;
 	ThumbDataRec tdata;
-	ThumbViewItem tidata;
+	ThumbViewItem item;
 	const char *filename;
 	wchar_t wpath[PATH_LEN];
 	char apath[PATH_LEN], path[PATH_LEN];
-	tidata = target->private_data;
-	dir = LCFinder_GetSourceDir( tidata->path );
+	item = target->private_data;
+	dir = LCFinder_GetSourceDir( item->path );
 	if( !dir ) {
 		return NULL;
 	}
@@ -396,8 +396,8 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		return NULL;
 	}
 	len = strlen( dir->path );
-	if( tidata->is_dir ) {
-		pathjoin( path, tidata->path, "" );
+	if( item->is_dir ) {
+		pathjoin( path, item->path, "" );
 		if( GetDirThumbFilePath( path, path ) == 0 ) {
 			return NULL;
 		}
@@ -406,11 +406,11 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		pathjoin( path, path, DIR_COVER_THUMB );
 		filename = path + len;
 	} else {
-		filename = tidata->path + len;
+		filename = item->path + len;
 		if( filename[0] == PATH_SEP ) {
 			++filename;
 		}
-		LCUI_DecodeString( wpath, tidata->path, 
+		LCUI_DecodeString( wpath, item->path, 
 				   PATH_LEN, ENCODING_UTF8 );
 	}
 	mtime = (uint_t)wgetfilemtime( wpath );
@@ -439,16 +439,17 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 			   filename, db );
 		ThumbDB_Save( db, filename, &tdata );
 	}
-	if( !tidata->is_dir ) {
+	if( !item->is_dir ) {
 		if( tdata.origin_width > 0 && tdata.origin_height > 0 &&
-			(tidata->file->width != tdata.origin_width ||
-			  tidata->file->height != tdata.origin_height) ) {
-			DBFile_SetSize( tidata->file, tdata.origin_width,
+			(item->file->width != tdata.origin_width ||
+			  item->file->height != tdata.origin_height) ) {
+			DBFile_SetSize( item->file, tdata.origin_width,
 					tdata.origin_height );
 		}
 	}
-	return ThumbCache_Add( view->cache, tidata->path, 
-			       &tdata.graph, target );
+	ThumbCache_Add( view->cache, item->path, &tdata.graph );
+	return ThumbCache_Link( view->cache, item->path, 
+				view->linker, target );
 }
 
 /** 执行加载缩略图的任务 */
@@ -457,7 +458,8 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 	LCUI_Graph *thumb;
 	ThumbView view = w->private_data;
 	ThumbViewItem data = target->private_data;
-	thumb = ThumbCache_Get( view->cache, data->path );
+	thumb = ThumbCache_Link( view->cache, data->path,
+				 view->linker, target );
 	if( !thumb ) {
 		thumb = LoadThumb( view, target );
 		if( !thumb ) {
@@ -513,7 +515,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	LinkedList_Clear( &view->layout.row, NULL );
 	ThumbView_UpdateLayoutContext( w );
 	for( LinkedList_Each( node, &view->files ) ) {
-		ThumbCache_Delete( view->cache, node->data );
+		ThumbCache_Unlink( view->cache, view->linker, node->data );
 	}
 	LinkedList_Clear( &view->files, NULL );
 	Widget_Empty( w );
@@ -825,7 +827,8 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUI_Widget target;
 	ThumbViewItem data = w->private_data;
 	LinkedList *tasks = &data->view->thumb_tasks;
-	if( !data || w->custom_style->sheet[key_background_image].is_valid ) {
+	if( w->custom_style->sheet[key_background_image].is_valid ||
+	    !data || !data->view->cache ) {
 		return;
 	}
 	LCUIMutex_Lock( &data->view->tasks_mutex );
@@ -948,6 +951,16 @@ void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 	}
 }
 
+void ThumbView_SetCache( LCUI_Widget w, ThumbCache cache )
+{
+	ThumbView view = w->private_data;
+	if( view->cache ) {
+		ThumbCache_DeleteLinker( view->cache, view->linker );
+	}
+	view->linker = ThumbCache_AddLinker( cache, OnRemoveThumb );
+	view->cache = cache;
+}
+
 static int OnCompareTaskTarget( void *data, const void *keydata )
 {
 	if( data < keydata ) {
@@ -993,7 +1006,8 @@ static void ThumbView_ExecTask( LCUI_Widget w, int task )
 static void ThumbView_TaskThread( void *arg )
 {
 	ThumbView view;
-	LCUI_Widget w = arg;
+	LCUI_BOOL shown = TRUE;
+	LCUI_Widget parent, w = arg;
 	view = w->private_data;
 	while( view->is_running ) {
 		int i, count;
@@ -1014,8 +1028,22 @@ static void ThumbView_TaskThread( void *arg )
 		if( count == TASK_TOTAL ) {
 			view->is_loading = FALSE;
 			LCUIMutex_Lock( &view->tasks_mutex );
-			LCUICond_Wait( &view->tasks_cond, &view->tasks_mutex );
+			LCUICond_TimedWait( &view->tasks_cond, 
+					    &view->tasks_mutex, 500 );
 			LCUIMutex_Unlock( &view->tasks_mutex );
+		}
+		/* 检查自己及父级部件是否可见 */
+		for( parent = w; parent; parent->parent ) {
+			if( !parent->computed_style.visible ) {
+				shown = FALSE;
+				break;
+			}
+			parent = parent->parent;
+		}
+		/* 如果当前可见但之前不可见，则刷新当前可见区域内加载的缩略图 */
+		if( !parent && !shown ) {
+			ScrollLoading_Update( view->scrollload );
+			shown = TRUE;
 		}
 	}
 }
@@ -1039,7 +1067,8 @@ static void ThumbViewItem_OnDestroy( LCUI_Widget w )
 	ThumbViewItem self;
 	self = w->private_data;
 	self->unsetthumb( w );
-	ThumbCache_Delete( self->view->cache, self->path );
+	ThumbCache_Unlink( self->view->cache, 
+			   self->view->linker, self->path );
 	if( self->is_dir ) {
 		if( self->path ) {
 			free( self->path );
@@ -1069,6 +1098,8 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->is_running = TRUE;
 	self->onlayout = NULL;
 	self->layout.x = 0;
+	self->cache = NULL;
+	self->linker = NULL;
 	self->layout.count = 0;
 	self->layout.max_width = 0;
 	self->layout.start = NULL;
@@ -1094,7 +1125,6 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	RBTree_OnCompare( &self->task_targets, OnCompareTaskTarget );
 	LCUIMutex_Init( &self->layout.row_mutex );
 	self->scrollload = ScrollLoading_New( w );
-	self->cache = ThumbCache_New( THUMB_CACHE_SIZE, OnRemoveThumb );
 	Widget_BindEvent( w, "resize", OnResize, NULL, NULL );
 	LCUIThread_Create( &self->thread, ThumbView_TaskThread, w );
 }

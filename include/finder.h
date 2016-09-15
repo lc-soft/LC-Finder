@@ -68,6 +68,7 @@ typedef struct Finder_ {
 	wchar_t *fileset_dir;		/**< 文件列表缓存所在文件夹 */
 	wchar_t *thumbs_dir;		/**< 缩略图数据库所在文件夹 */
 	wchar_t **thumb_paths;		/**< 缩略图数据库路径列表 */
+	ThumbCache thumb_cache;		/**< 缩略图数据缓存 */
 	Dict *thumb_dbs;		/**< 缩略图数据库记录，以源文件夹路径作为索引 */
 	LCUI_EventTrigger trigger;	/**< 事件触发器 */
 } Finder;

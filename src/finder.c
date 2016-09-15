@@ -52,6 +52,7 @@
 #include "ui.h"
 #include <LCUI/font/charset.h>
 
+#define THUMB_CACHE_SIZE (64*1024*1024)
 #define EncodeUTF8(STR, WSTR, LEN) LCUI_EncodeString( STR, WSTR, LEN, ENCODING_UTF8 )
 
 Finder finder;
@@ -479,6 +480,11 @@ static void LCFinder_InitFileDB( void )
 	finder.n_tags = DB_GetTags( &finder.tags );
 }
 
+static void LCFinder_InitThumbCache( void )
+{
+	finder.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE );
+}
+
 static void ThumbDBDict_ValDel( void *privdata, void *val )
 {
 	ThumbDB_Close( val );
@@ -567,6 +573,7 @@ int main( int argc, char **argv )
 	LCFinder_InitWorkDir();
 	LCFinder_InitFileDB();
 	LCFinder_InitThumbDB();
+	LCFinder_InitThumbCache();
 	finder.trigger = EventTrigger();
 	UI_Init();
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );

@@ -37,39 +37,102 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
+#include <LCUI/thread.h>
 #include "common.h"
+
+ /** 缩略图连接器记录 */
+typedef struct ThumbLinkerRec_ {
+	LinkedList links;		/**< 缩略图链接记录 */
+	void (*on_remove)(void*);	/**< 回调函数，当缩略图被移出缓存池时被调用 */
+	LinkedListNode node;		/**< 所在链表的结点 */
+} ThumbLinkerRec, *ThumbLinker;
 
 /** 缓存区的数据结构 */
 typedef struct ThumbCacheRec_ {
 	size_t size;			/**< 当前大小 */
 	size_t max_size;		/**< 最大大小 */
-	LinkedList thumbs;		/**< 缩略图缓存列表 */
 	Dict *paths;			/**< 缩略图路径映射表 */
-	void (*on_remove)(void*);	/**< 回调函数，当缩略图被移出缓存池时被调用 */
+	LinkedList thumbs;		/**< 缩略图缓存列表 */
+	LinkedList linkers;		/**< 缩略图链接器列表 */
+	LCUI_Mutex mutex;		/**< 互斥锁 */
 } ThumbCacheRec, *ThumbCache;
 
 #include "thumb_cache.h"
 
+/** 缩略图数据节点 */
 typedef struct ThumbDataNodeRec_ {
 	LCUI_Graph graph;		/**< 缩略图 */
 	char *path;			/**< 路径 */
-	void *privdata;			/**< 私有数据 */
+	LinkedList links;		/**< 链接列表 */
 	LinkedListNode node;		/**< 在列表中的节点 */
+	ThumbCache cache;		/**< 所属的缓存 */
 } ThumbDataNodeRec, *ThumbDataNode;
 
-ThumbCache ThumbCache_New( size_t max_size, void (*on_remove)(void*) )
+/** 缩略图链接记录 */
+typedef struct ThumbLinkRec_ {
+	ThumbLinker linker;		/**< 所属链接器 */
+	void *privdata;			/**< 私有数据 */
+	LinkedListNode node;		/**< 所在链表的结点 */
+	ThumbDataNode tnode;		/**< 所在缩略图数据结点 */
+} ThumbLinkRec, *ThumbLink;
+
+static void OnDirectDeleteThumbLink( void *data )
+{
+	ThumbLink lnk = data;
+	LinkedList_Unlink( &lnk->linker->links, &lnk->node );
+	lnk->linker->on_remove( lnk->privdata );
+	lnk->privdata = NULL;
+	free( lnk );
+}
+
+static void OnDeleteThumbLink( void *data )
+{
+	ThumbLink lnk = data;
+	LinkedList_Unlink( &lnk->tnode->links, &lnk->node );
+	lnk->linker->on_remove( lnk->privdata );
+	if( lnk->tnode->links.length < 1 ) {
+		ThumbCache_Delete( lnk->tnode->cache, lnk->tnode->path );
+	}
+	lnk->privdata = NULL;
+	free( lnk );
+}
+
+ThumbCache ThumbCache_New( size_t max_size )
 {
 	ThumbCache cache = NEW( ThumbCacheRec, 1 );
+	LinkedList_Init( &cache->linkers );
 	LinkedList_Init( &cache->thumbs );
 	cache->max_size = max_size;
-	cache->on_remove = on_remove;
 	cache->paths = StrDict_Create( NULL, NULL );
+	LCUIMutex_Init( &cache->mutex );
 	return cache;
+}
+
+ThumbLinker ThumbCache_AddLinker( ThumbCache cache, void( *on_remove )(void*) )
+{
+	ThumbLinker tlnk = NEW( ThumbLinkerRec, 1 );
+	LinkedList_Init( &tlnk->links );
+	tlnk->on_remove = on_remove;
+	tlnk->node.data = tlnk;
+	LCUIMutex_Lock( &cache->mutex );
+	LinkedList_AppendNode( &cache->linkers, &tlnk->node );
+	LCUIMutex_Unlock( &cache->mutex );
+	return tlnk;
+}
+
+void ThumbCache_DeleteLinker( ThumbCache cache, ThumbLinker linker )
+{
+	LinkedList_Unlink( &cache->linkers, &linker->node );
+	LinkedList_Clear( &linker->links, OnDeleteThumbLink );
+	free( linker );
 }
 
 LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path )
 {
-	ThumbDataNode data = Dict_FetchValue( cache->paths, path );
+	ThumbDataNode data;
+	LCUIMutex_Lock( &cache->mutex );
+	data = Dict_FetchValue( cache->paths, path );
+	LCUIMutex_Unlock( &cache->mutex );
 	if( data ) {
 		return &data->graph;
 	}
@@ -79,16 +142,17 @@ LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path )
 int ThumbCache_Delete( ThumbCache cache, const char *path )
 {
 	ThumbDataNode tdn;
+	LCUIMutex_Lock( &cache->mutex );
 	tdn = Dict_FetchValue( cache->paths, path );
 	if( !tdn ) {
+		LCUIMutex_Unlock( &cache->mutex );
 		return -1;
 	}
 	LinkedList_Unlink( &cache->thumbs, &tdn->node );
-	if( cache->on_remove ) {
-		cache->on_remove( tdn->privdata );
-	}
+	LinkedList_Clear( &tdn->links, OnDirectDeleteThumbLink );
 	cache->size -= tdn->graph.mem_size;
 	Dict_Delete( cache->paths, path );
+	LCUIMutex_Unlock( &cache->mutex );
 	Graph_Free( &tdn->graph );
 	free( tdn->path );
 	free( tdn );
@@ -96,12 +160,13 @@ int ThumbCache_Delete( ThumbCache cache, const char *path )
 }
 
 LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path, 
-			    LCUI_Graph *thumb, void *privdata )
+			    LCUI_Graph *thumb )
 {
 	int len;
 	size_t size;
 	ThumbDataNode tdn;
 	LinkedListNode *node, *prev_node;
+	LCUIMutex_Lock( &cache->mutex );
 	size = cache->size + thumb->mem_size;
 	if( size > cache->max_size ) {
 		for( LinkedList_Each( node, &cache->thumbs ) ) {
@@ -117,18 +182,73 @@ LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
 		}
 		size = cache->size + thumb->mem_size;
 		if( size > cache->max_size ) {
+			LCUIMutex_Unlock( &cache->mutex );
 			return NULL;
 		}
 	}
+	cache->size = size;
 	tdn = NEW( ThumbDataNodeRec, 1 );
 	tdn->graph = *thumb;
+	tdn->cache = cache;
 	tdn->node.data = tdn;
-	tdn->privdata = privdata;
 	len = strlen( path ) + 1;
 	tdn->path = NEW( char, len );
 	strncpy( tdn->path, path, len );
+	LinkedList_Init( &tdn->links );
 	LinkedList_AppendNode( &cache->thumbs, &tdn->node );
 	Dict_Add( cache->paths, tdn->path, tdn );
-	cache->size = size;
+	LCUIMutex_Unlock( &cache->mutex );
 	return &tdn->graph;
+}
+
+LCUI_Graph *ThumbCache_Link( ThumbCache cache, const char *path,
+			     ThumbLinker linker, void *privdata )
+{
+	ThumbLink lnk;
+	ThumbDataNode data;
+	LinkedListNode *node;
+	LCUIMutex_Lock( &cache->mutex );
+	data = Dict_FetchValue( cache->paths, path );
+	if( !data ) {
+		LCUIMutex_Unlock( &cache->mutex );
+		return NULL;
+	}
+	for( LinkedList_Each( node, &data->links ) ) {
+		lnk = node->data;
+		if( lnk->linker == linker ) {
+			lnk->privdata = privdata;
+			break;
+		}
+	}
+	if( !node ) {
+		lnk = NEW( ThumbLinkRec, 1 );
+		lnk->privdata = privdata;
+		lnk->node.data = lnk;
+		lnk->linker = linker;
+		lnk->tnode = data;
+		LinkedList_AppendNode( &data->links, &lnk->node );
+	}
+	LCUIMutex_Unlock( &cache->mutex );
+	return &data->graph;
+}
+
+int ThumbCache_Unlink( ThumbCache cache, ThumbLinker linker, const char *path )
+{
+	ThumbDataNode data;
+	LinkedListNode *node;
+	LCUIMutex_Lock( &cache->mutex );
+	data = Dict_FetchValue( cache->paths, path );
+	if( !data ) {
+		LCUIMutex_Unlock( &cache->mutex );
+		return -1;
+	}
+	for( LinkedList_Each( node, &data->links ) ) {
+		ThumbLink lnk = node->data;
+		if( lnk->linker == linker ) {
+			OnDeleteThumbLink( node->data );
+			break;
+		}
+	}
+	LCUIMutex_Unlock( &cache->mutex );
+	return 0;
 }

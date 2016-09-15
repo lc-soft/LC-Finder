@@ -413,6 +413,7 @@ void UI_InitHomeView( void )
 	this_view.browser.items = this_view.items;
 	this_view.browser.after_deleted = OnAfterDeleted;
 	FileBrowser_Create( &this_view.browser );
+	ThumbView_SetCache( this_view.items, finder.thumb_cache );
 	Widget_Hide( this_view.time_ranges->parent->parent );
 	Widget_AddClass( this_view.time_ranges, "time-range-list" );
 	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );

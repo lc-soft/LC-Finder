@@ -600,6 +600,8 @@ void UI_InitSearchView( void )
 	this_view.browser.txt_title = title;
 	this_view.browser.items = this_view.view_files;
 	this_view.browser.view = this_view.view_result;
+	ThumbView_SetCache( this_view.view_tags, finder.thumb_cache );
+	ThumbView_SetCache( this_view.view_files, finder.thumb_cache );
 	Widget_BindEvent( btn[0], "click", OnBtnClick, NULL, NULL );
 	Widget_BindEvent( btn_search, "click", OnBtnSearchClick, NULL, NULL );
 	Widget_BindEvent( btn_hide, "click", OnBtnHideReusltClick, NULL, NULL );

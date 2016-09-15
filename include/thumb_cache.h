@@ -39,15 +39,34 @@
 
 #ifndef LCFINDER_THUMB_CACHE_C
 typedef void* ThumbCache;
+typedef void* ThumbLinker;
 #endif
 
-ThumbCache ThumbCache_New( size_t max_size, void( *on_remove )(void*) );
+/** 新建一个缩略图缓存 */
+ThumbCache ThumbCache_New( size_t max_size );
 
+/** 添加缩略图链接器 */
+ThumbLinker ThumbCache_AddLinker( ThumbCache cache, void( *on_remove )(void*) );
+
+/** 删除缩略图链接器 */
+void ThumbCache_DeleteLinker( ThumbCache cache, ThumbLinker linker );
+
+/** 直接从缩略图缓存中取缩略图 */
 LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path );
 
+/** 从缩略图缓存中删除缩略图 */
 int ThumbCache_Delete( ThumbCache cache, const char *path );
 
+/** 将缩略图添加至缩略图缓存中 */
 LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
-			    LCUI_Graph *thumb, void *privdata );
+			    LCUI_Graph *thumb );
+
+/** 链接到缩略图，并获取缩略图 */
+LCUI_Graph *ThumbCache_Link( ThumbCache cache, const char *path,
+			     ThumbLinker linker, void *privdata );
+
+
+/** 解除缩略图链接 */
+int ThumbCache_Unlink( ThumbCache cache, ThumbLinker linker, const char *path );
 
 #endif

@@ -282,11 +282,18 @@ static void FileDeletionThread( void *arg )
 	}
 	LCFinder_DeleteFiles( filepaths, n, OnFileDeleted, pack );
 	free( filepaths );
-	if( cursor->index == 0 ) {
-		cursor = NULL;
-	} else {
-		node = Widget_GetNode( cursor );
-		cursor = node->prev->data;
+	while( cursor ) {
+		cursor = Widget_GetPrev( cursor );
+		/**
+		 * 如果当前游标定位在时间分割器（time-separator）上，则继续向前
+		 * 移动，因为在文件删除后，时间分割器可能会被删除，需要避免缩略图
+		 * 列表视图在重新布局时访问到它。
+		 */
+		if( cursor->type &&
+		    strcmp( cursor->type, "time-separator" ) == 0 ) {
+			continue;
+		}
+		break;
 	}
 	Widget_SetDisabled( pack->dialog->btn_cancel, TRUE );
 	for( LinkedList_Each( node, &deleted_files ) ) {
