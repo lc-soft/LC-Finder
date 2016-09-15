@@ -350,7 +350,12 @@ static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	char *buf, **tagnames;
 	DialogDataPackRec pack;
 	wchar_t text[MAX_TAG_LEN];
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	LCUI_Widget window;
+
+	if( w->disabled ) {
+		return;
+	}
+	window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_TAG,
 				    DIALOG_PLACEHOLDER_ADD_TAG, NULL,
 				    text, MAX_TAG_LEN - 1, CheckTagName ) ) {
@@ -379,7 +384,12 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	wchar_t text[512];
 	DialogDataPackRec pack;
 	FileBrowser fb = e->data;
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	LCUI_Widget window;
+
+	if( w->disabled ) {
+		return;
+	}
+	window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	swprintf( text, 511, DIALOG_TEXT_DELETE, fb->selected_files.length );
 	if( !LCUIDialog_Confirm(window, DIALOG_TITLE_DELETE, text) ) {
 		return;
