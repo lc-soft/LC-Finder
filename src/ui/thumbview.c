@@ -103,6 +103,7 @@ typedef struct LayoutContextRec_ {
 	int max_width;			/**< 最大宽度 */
 	LCUI_BOOL is_running;		/**< 是否正在布局 */
 	LCUI_BOOL is_delaying;		/**< 是否处于延迟状态 */
+	LCUI_Widget start;		/**< 起始处的部件 */
 	LCUI_Widget current;		/**< 当前处理的部件 */
 	LinkedList row;			/**< 当前行的部件 */
 	LCUI_Mutex row_mutex;		/**< 当前行的互斥锁 */
@@ -505,6 +506,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	LCUIMutex_Lock( &view->layout.row_mutex );
 	view->layout.x = 0;
 	view->layout.count = 0;
+	view->layout.start = NULL;
 	view->layout.current = NULL;
 	view->layout.folder_count = 0;
 	LinkedList_Clear( &view->thumb_tasks, NULL );
@@ -620,21 +622,49 @@ static void UpdateFolderSize( LCUI_Widget item )
 	Widget_UpdateStyle( item, FALSE );
 }
 
+/** 更新用于布局的游标，以确保能够从正确的位置开始排列部件 */
+static void ThumbView_UpdateLayoutCursor( LCUI_Widget w )
+{
+	LCUI_Widget child, prev;
+	ThumbView view = w->private_data;
+	if( view->layout.current ) {
+		return;
+	}
+	if( !view->layout.start ) {
+		if( w->children.length > 0 ) {
+			view->layout.current = w->children.head.next->data;
+		}
+		return;
+	}
+	child = view->layout.start;
+	prev= Widget_GetPrev( child );
+	while( prev ) {
+		if( prev->computed_style.position == SV_ABSOLUTE ||
+		    prev->computed_style.display == SV_NONE ) {
+			prev = Widget_GetPrev( prev );
+			continue;
+		}
+		if( (child->x == 0 && child->y > prev->y) ||
+		    prev->computed_style.display == SV_BLOCK ) {
+			break;
+		}
+		child = prev;
+		prev = Widget_GetPrev( prev );
+	}
+	view->layout.start = child;
+	view->layout.current = child;
+}
+
 /** 直接执行布局更新操作 */
 static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 {
 	int count;
 	LCUI_Widget child;
-	LinkedListNode *node;
 	ThumbView view = w->private_data;
-	if( view->layout.current ) {
-		node = Widget_GetNode( view->layout.current );
-	} else {
-		node = LinkedList_GetNode( &w->children, 0 );
-	}
-	for( count = 0; node && --limit >= 0; node = node->next ) {
+	ThumbView_UpdateLayoutCursor( w );
+	child = view->layout.current;
+	for( count = 0; child && --limit >= 0; child = Widget_GetNext(child) ) {
 		ThumbViewItem item;
-		child = node->data;
 		item = child->private_data;
 		view->layout.count += 1;
 		if( !child->computed_style.visible ) {
@@ -651,10 +681,7 @@ static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 		++limit;
 	}
 	if( view->layout.current ) {
-		node = Widget_GetNode( view->layout.current );
-		if( node->next ) {
-			view->layout.current = node->next->data;
-		}
+		view->layout.current = Widget_GetNext( view->layout.current );
 	}
 	return count;
 }
@@ -771,6 +798,7 @@ void ThumbView_UpdateLayout( LCUI_Widget w, LCUI_Widget start_child )
 						       OnStartAnimation, 
 						       w, FALSE );
 	}
+	view->layout.start = start_child;
 	/* 如果已经有延迟布局任务，则重置该任务的定时 */
 	if( view->layout.is_delaying ) {
 		LCUITimer_Reset( view->layout.timer, LAYOUT_DELAY );
@@ -1043,6 +1071,7 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	self->layout.x = 0;
 	self->layout.count = 0;
 	self->layout.max_width = 0;
+	self->layout.start = NULL;
 	self->layout.current = NULL;
 	self->layout.folder_count = 0;
 	self->layout.is_running = FALSE;
