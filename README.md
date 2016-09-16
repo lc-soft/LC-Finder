@@ -13,7 +13,22 @@
 
 ## 构建
 
-暂时只提供 Windows 系统环境下的构建方法：使用 VisualStudio 打开 `LC-Finder.sln` 文件，然后编译生成。
+### Windows
+
+使用 VisualStudio 打开 `LC-Finder.sln` 文件，然后在界面顶部的菜单栏中选择 生成 -> 生成解决方案。
+
+在成功生成后，将 bin 目录下 `LC-Finder.exe` 文件复制到根目录并运行它。
+
+### Linux
+
+运行以下命令：
+
+	./autogen.sh
+	./build.sh
+
+`autogen.sh` 脚本会下载在构建 LC-Finder 时所需的工具以及相关依赖项，只需要运行一次即可。
+
+在成功生成后，可以直接输入 `build/lcfinder` 命令行来运行 LC-Finder。
 
 ### 依赖项
 
