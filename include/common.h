@@ -61,11 +61,11 @@ const char *getfilename( const char *path );
 
 const wchar_t *wgetfilename( const wchar_t *path );
 
-time_t wgetfilectime( const wchar_t *path );
+time_t wgetfilectime( const wchar_t *wpath );
 
-time_t wgetfilemtime( const wchar_t *path );
+time_t wgetfilemtime( const wchar_t *wpath );
 
-int64_t wgetfilesize( const wchar_t *path );
+int64_t wgetfilesize( const wchar_t *wpath );
 
 int pathjoin( char *path, const char *path1, const char *path2 );
 

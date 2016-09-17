@@ -385,8 +385,8 @@ static void LCFinder_InitWorkDir( void )
 	finder.fileset_dir = NEW( wchar_t, len1 );
 	finder.thumbs_dir = NEW( wchar_t, len2 );
 	wcsncpy( finder.data_dir, data_dir, len );
-	swprintf( finder.fileset_dir, len1, L"%S%S", data_dir, dirs[0] );
-	swprintf( finder.thumbs_dir, len2, L"%S%S", data_dir, dirs[1] );
+	swprintf( finder.fileset_dir, len1, L"%ls%ls", data_dir, dirs[0] );
+	swprintf( finder.thumbs_dir, len2, L"%ls%ls", data_dir, dirs[1] );
 	mkdir( finder.data_dir );
 	mkdir( finder.fileset_dir );
 	mkdir( finder.thumbs_dir );

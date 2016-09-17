@@ -139,7 +139,7 @@ static int FileScanner_ScanDirs( FileScanner scanner, char *path )
 	wpath = malloc( sizeof(wchar_t) * (len + 1) );
 	LCUI_DecodeString( wpath, path, len + 1, ENCODING_UTF8 );
 	if( LCUI_OpenDirW( wpath, &dir ) != 0 ) {
-		return;
+		return 0;
 	}
 	while( (dir_entry = LCUI_ReadDir( &dir )) && scanner->is_running ) {
 		wchar_t *wname = LCUI_GetFileNameW( dir_entry );

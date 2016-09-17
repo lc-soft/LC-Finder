@@ -203,7 +203,7 @@ time_t wgetfilectime( const wchar_t *wpath )
 	time_t ctime = 0;
 	struct stat buf;
 #ifdef _WIN32
-	fd = _wopen( path, _O_RDONLY );
+	fd = _wopen( wpath, _O_RDONLY );
 	if( fd > 0 ) {
 		if( fstat( fd, &buf ) == 0 ) {
 			ctime = buf.st_ctime;
@@ -230,7 +230,7 @@ time_t wgetfilemtime( const wchar_t *wpath )
 	time_t mtime = 0;
 	struct stat buf;
 #ifdef _WIN32
-	fd = _wopen( path, _O_RDONLY );
+	fd = _wopen( wpath, _O_RDONLY );
 	if( fd > 0 ) {
 		if( fstat( fd, &buf ) == 0 ) {
 			mtime = buf.st_mtime;
@@ -257,7 +257,7 @@ int64_t wgetfilesize( const wchar_t *wpath )
 	int64_t size = 0;
 	struct stat buf;
 #ifdef _WIN32
-	fd = _wopen( path, _O_RDONLY );
+	fd = _wopen( wpath, _O_RDONLY );
 	if( fd > 0 ) {
 		if( fstat( fd, &buf ) == 0 ) {
 			size = buf.st_size;
@@ -315,7 +315,7 @@ int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 void wgetcurdir( wchar_t *wpath, int max_len )
 {
 #ifdef _WIN32
-	GetCurrentDirectoryW( max_len, path );
+	GetCurrentDirectoryW( max_len, wpath );
 #else
 	char *path = malloc( sizeof(char) * (max_len + 1) );
 	getcwd( path, max_len );
@@ -361,7 +361,7 @@ int getsizestr( wchar_t *str, int max_len, int64_t size )
 	wchar_t *units[5] = {L"B", L"KB", L"MB", L"GB", L"TB"};
 
 	if( size < 1024 ) {
-		return swprintf( str, max_len, L"%d%s", (int)size, units[0] );
+		return swprintf( str, max_len, L"%d%ls", (int)size, units[0] );
 	}
 	for( i = 0, tmp = size; i < 5; ++i ) {
 		if( tmp < 1024 ) {
@@ -371,7 +371,7 @@ int getsizestr( wchar_t *str, int max_len, int64_t size )
 		tmp = tmp / 1024;
 	}
 	num = 1.0 * prev_tmp / 1024.0;
-	return swprintf( str, max_len, L"%0.2f%s", num, units[i] );
+	return swprintf( str, max_len, L"%0.2f%ls", num, units[i] );
 }
 
 int wgetcharcount( const wchar_t *wstr, const wchar_t *chars )

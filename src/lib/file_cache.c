@@ -164,7 +164,7 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	t->file = malloc( max_len * sizeof( wchar_t ) );
 	wcsncpy( t->tmpfile, t->data_dir, len1 );
 	wpathjoin( t->file, data_dir, name );
-	swprintf( t->tmpfile, max_len, L"%S%S", t->file, suffix );
+	swprintf( t->tmpfile, max_len, L"%ls%ls", t->file, suffix );
 	t->state = STATE_NONE;
 	t->deleted_files = 0;
 	t->total_files = 0;
