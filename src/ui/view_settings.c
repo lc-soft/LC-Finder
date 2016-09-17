@@ -47,8 +47,14 @@
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
 
-#define DIALOG_TITLE	L"确定要移除该源文件夹？"
-#define DIALOG_TEXT	L"一旦移除后，该源文件夹内的文件相关信息将一同被移除。"
+#define MAX_DIRPATH_LEN			2048
+#define TEXT_DELETING 			L"正在清除..."
+#define TEXT_DELETE			L"清除" 
+#define TEXT_SELECT_DIR			L"选择文件夹"
+#define DIALOG_TITLE_ADD_DIR		L"添加源文件夹"
+#define DIALOG_PLACEHOLDER_ADD_DIR	L"文件夹的位置"
+#define DIALOG_TITLE_DEL_DIR		L"确定要移除该源文件夹？"
+#define DIALOG_TEXT_DEL_DIR		L"一旦移除后，该源文件夹内的文件相关信息将一同被移除。"
 
 static struct SettingsViewData {
 	LCUI_Widget dirlist;
@@ -59,7 +65,8 @@ static void OnBtnRemoveClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DB_Dir dir = e->data;
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( !LCUIDialog_Confirm( window, DIALOG_TITLE, DIALOG_TEXT ) ) {
+	if( !LCUIDialog_Confirm( window, DIALOG_TITLE_DEL_DIR, 
+				 DIALOG_TEXT_DEL_DIR ) ) {
 		return;
 	}
 	LCFinder_DeleteDir( dir );
@@ -118,9 +125,10 @@ static void UI_InitDirList( LCUI_Widget view )
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
 }
 
+#ifdef _WIN32
+
 static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-#ifdef _WIN32
 	int len;
 	HWND hwnd;
 	DB_Dir dir;
@@ -134,7 +142,7 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	memset( &bi, 0, sizeof( bi ) );
 	bi.hwndOwner = hwnd;
 	bi.pidlRoot = NULL;
-	bi.lpszTitle = L"选择文件夹";
+	bi.lpszTitle = TEXT_SELECT_DIR;
 	bi.ulFlags = BIF_NEWDIALOGSTYLE;
 	iids = SHBrowseForFolder( &bi );
 	_DEBUG_MSG( "iids: %p\n", iids );
@@ -154,8 +162,43 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( dir ) {
 		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 	}
-#endif
 }
+
+#else
+
+static LCUI_BOOL CheckDir( const wchar_t *dirpath )
+{
+	if( wgetcharcount( dirpath, L":\"\'\\\n\r\t" ) > 0 ) {
+		return FALSE;
+	}
+	if( wcslen( dirpath ) >= MAX_DIRPATH_LEN ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	DB_Dir dir;
+	char dirpath[MAX_DIRPATH_LEN];
+	wchar_t wdirpath[MAX_DIRPATH_LEN];
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_DIR,
+				    DIALOG_PLACEHOLDER_ADD_DIR, NULL,
+				    wdirpath, MAX_DIRPATH_LEN, CheckDir ) ) {
+		return;
+	}
+	LCUI_EncodeString( dirpath, wdirpath, PATH_LEN, ENCODING_UTF8 );
+	if( LCFinder_GetDir( dirpath ) ) {
+		return;
+	}
+	dir = LCFinder_AddDir( dirpath );
+	if( dir ) {
+		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
+	}
+}
+
+#endif
 
 /** 更新缩略图数据库的空间占用量 */
 static void UpdateThumbDBSpaceUsage( void )
@@ -183,8 +226,12 @@ static void OnThumbDBDelDone( LCUI_Event e, void *arg )
 static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e, 
 				    void *arg )
 {
-	LCUI_Widget text;
 	LinkedListNode *node;
+	LCUI_Widget text = NULL;
+
+	if( w->disabled ) {
+		return;
+	}
 	LinkedList_ForEach( node, &w->children ) {
 		LCUI_Widget child = node->data;
 		if( child->type && strcmp(child->type, "textview") == 0 ) {
@@ -192,13 +239,13 @@ static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e,
 			break;
 		}
 	}
+	Widget_SetDisabled( w, TRUE );
 	Widget_AddClass( w, "disabled" );
-	TextView_SetTextW( text, L"正在清除..." );
-	Widget_UnbindEvent( w, "click", OnBtnClearThumbDBClick );
+	TextView_SetTextW( text, TEXT_DELETING );
 	LCFinder_ClearThumbDB();
+	Widget_SetDisabled( w, FALSE );
 	Widget_RemoveClass( w, "disabled" );
-	TextView_SetTextW( text, L"清除" );
-	Widget_BindEvent( w, "click", OnBtnClearThumbDBClick, NULL, NULL );
+	TextView_SetTextW( text, TEXT_DELETE );
 }
 
 /** 在“许可协议”按钮被点击时 */

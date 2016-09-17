@@ -164,7 +164,7 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	t->file = malloc( max_len * sizeof( wchar_t ) );
 	wcsncpy( t->tmpfile, t->data_dir, len1 );
 	wpathjoin( t->file, data_dir, name );
-	swprintf( t->tmpfile, max_len, L"%s%s", t->file, suffix );
+	swprintf( t->tmpfile, max_len, L"%S%S", t->file, suffix );
 	t->state = STATE_NONE;
 	t->deleted_files = 0;
 	t->total_files = 0;
@@ -304,7 +304,9 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 		path[dir_len++] = PATH_SEP;
 		path[dir_len] = 0;
 	}
-	LCUI_OpenDir( path, &dir );
+	if( LCUI_OpenDir( path, &dir ) != 0 ) {
+		return 0;
+	}
 	while( (entry = LCUI_ReadDir( &dir )) && t->state == STATE_STARTED ) {
 		int rc;
 		name = LCUI_GetFileName( entry );

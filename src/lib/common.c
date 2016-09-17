@@ -40,8 +40,10 @@
 #include <time.h>
 #ifdef _WIN32
 #include <io.h>
-#include <fcntl.h>
+#else
+#include <unistd.h>
 #endif
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <LCUI_Build.h>
@@ -49,6 +51,14 @@
 #include <LCUI/font/charset.h>
 #include "sha1.h"
 #include "common.h"
+
+static char *EncodeUTF8( const wchar_t *wstr )
+{
+	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
+	char *str = malloc( len * sizeof(wchar_t) );
+	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
+	return str;
+}
 
 void EncodeSHA1( char *hash_out, const char *str, int len )
 {
@@ -110,21 +120,9 @@ static void *Dict_KeyDup( void *privdata, const void *key )
 	return newkey;
 }
 
-static void *Dict_ValueDup( void *privdata, const void *val )
-{
-	int *newval = malloc( sizeof( int ) );
-	*newval = *((int*)val);
-	return newval;
-}
-
 static void Dict_KeyDestructor( void *privdata, void *key )
 {
 	free( key );
-}
-
-static void Dict_ValueDestructor( void *privdata, void *val )
-{
-	free( val );
 }
 
 Dict *StrDict_Create( void *(*val_dup)(void*, const void*), 
@@ -199,62 +197,85 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 	return i;
 }
 
-time_t wgetfilectime( const wchar_t *path )
+time_t wgetfilectime( const wchar_t *wpath )
 {
-#ifdef _WIN32
-	struct stat buf;
-	time_t ctime = 0;
-	int fd = _wopen( path, _O_RDONLY );
-	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			ctime = (int)buf.st_ctime;
-		}
-		_close( fd );
-	}
-	return ctime;
-#else
-	return 0;
-#endif
-}
-
-time_t wgetfilemtime( const wchar_t *path )
-{
-#ifdef _WIN32
 	int fd;
+	time_t ctime = 0;
 	struct stat buf;
-	time_t mtime = 0;
+#ifdef _WIN32
 	fd = _wopen( path, _O_RDONLY );
 	if( fd > 0 ) {
 		if( fstat( fd, &buf ) == 0 ) {
-			mtime = (int)buf.st_mtime;
+			ctime = buf.st_ctime;
 		}
 		_close( fd );
 	}
-	return mtime;
 #else
-	return 0;
+	char *path = EncodeUTF8( wpath );
+	fd = open( path, O_RDONLY);
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			ctime = buf.st_ctime;
+		}
+		close( fd );
+	}
+	free( path );
 #endif
+	return ctime;
 }
 
-int64_t wgetfilesize( const wchar_t *path )
+time_t wgetfilemtime( const wchar_t *wpath )
 {
-#ifdef _WIN32
 	int fd;
-	int64_t size;
+	time_t mtime = 0;
 	struct stat buf;
+#ifdef _WIN32
+	fd = _wopen( path, _O_RDONLY );
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			mtime = buf.st_mtime;
+		}
+		_close( fd );
+	}
+#else
+	char *path = EncodeUTF8( wpath );
+	fd = open( path, O_RDONLY);
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			mtime = buf.st_mtime;
+		}
+		close( fd );
+	}
+	free( path );
+#endif
+	return mtime;
+}
+
+int64_t wgetfilesize( const wchar_t *wpath )
+{
+	int fd;
+	int64_t size = 0;
+	struct stat buf;
+#ifdef _WIN32
 	fd = _wopen( path, _O_RDONLY );
 	if( fd > 0 ) {
 		if( fstat( fd, &buf ) == 0 ) {
 			size = buf.st_size;
 		}
 		_close( fd );
-	} else {
-		size = 0;
 	}
-	return size;
 #else
-	return 0;
+	char *path = EncodeUTF8( wpath );
+	fd = open( path, O_RDONLY);
+	if( fd > 0 ) {
+		if( fstat( fd, &buf ) == 0 ) {
+			size = buf.st_size;
+		}
+		close( fd );
+	}
+	free( path );
 #endif
+	return size;
 }
 
 int pathjoin( char *path, const char *path1, const char *path2 )
@@ -291,10 +312,15 @@ int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 	return len;
 }
 
-void wgetcurdir( wchar_t *path, int max_len )
+void wgetcurdir( wchar_t *wpath, int max_len )
 {
 #ifdef _WIN32
 	GetCurrentDirectoryW( max_len, path );
+#else
+	char *path = malloc( sizeof(char) * (max_len + 1) );
+	getcwd( path, max_len );
+	LCUI_DecodeString( wpath, path, max_len, ENCODING_UTF8 );
+	free( path );
 #endif
 }
 
@@ -322,7 +348,7 @@ int wgettimestr( wchar_t *str, int max_len, time_t time )
 		L"星期五", L"星期六", L"星期天"
 	};
 	t = localtime( &time );
-	return swprintf( str, max_len, L"%d年%d月%d日，%s %d:%d",
+	return swprintf( str, max_len, L"%d年%d月%d日，%S %d:%d",
 			 1900 + t->tm_year, t->tm_mon + 1, t->tm_mday,
 			 days[t->tm_wday], t->tm_hour, t->tm_min );
 }

@@ -365,13 +365,13 @@ static void InitConsoleWindow( void )
 static void LCFinder_InitWorkDir( void )
 {
 	int len, len1, len2;
-	wchar_t data_dir[1024];
+	wchar_t data_dir[2048];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
 #ifdef _WIN32
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 #endif
-	wgetcurdir( data_dir, 1024 );
+	wgetcurdir( data_dir, 2048 );
 	wpathjoin( data_dir, data_dir, L"data" );
 	len = wcslen( data_dir );
 	if( data_dir[len - 1] != PATH_SEP ) {
@@ -384,9 +384,9 @@ static void LCFinder_InitWorkDir( void )
 	finder.data_dir = NEW( wchar_t, len );
 	finder.fileset_dir = NEW( wchar_t, len1 );
 	finder.thumbs_dir = NEW( wchar_t, len2 );
-	swprintf( finder.fileset_dir, len1, L"%s%s", data_dir, dirs[0] );
-	swprintf( finder.thumbs_dir, len2, L"%s%s", data_dir, dirs[1] );
 	wcsncpy( finder.data_dir, data_dir, len );
+	swprintf( finder.fileset_dir, len1, L"%S%S", data_dir, dirs[0] );
+	swprintf( finder.thumbs_dir, len2, L"%S%S", data_dir, dirs[1] );
 	mkdir( finder.data_dir );
 	mkdir( finder.fileset_dir );
 	mkdir( finder.thumbs_dir );
@@ -504,7 +504,7 @@ static void LCFinder_InitThumbDB( void )
 		}
 		printf("source dir: %s\n", finder.dirs[i]->path);
 		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
-		wprintf(L"thumbdb file: %s\n", path);
+		printf("thumbdb file: %S\n", path);
 		finder.thumb_paths[i] = path;
 	}
 	printf("[thumbdb] init done\n");
