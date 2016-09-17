@@ -177,6 +177,13 @@ void SyncTask_ClearCache( SyncTask t )
 #ifdef _WIN32
 	_wremove( t->file );
 	_wremove( t->tmpfile );
+#else
+	char *file = EncodeUTF8( t->file );
+	char *tmpfile = EncodeUTF8( t->tmpfile );
+	remove( file );
+	remove( tmpfile );
+	free( file );
+	free( tmpfile );
 #endif
 }
 
@@ -376,6 +383,13 @@ void SyncTask_Commit( SyncTask t )
 #ifdef _WIN32
 	_wremove( t->file );
 	_wrename( t->tmpfile, t->file );
+#else
+	char *file = EncodeUTF8( t->file );
+	char *tmpfile = EncodeUTF8( t->tmpfile );
+	remove( file );
+	rename( tmpfile, file );
+	free( file );
+	free( tmpfile );
 #endif
 }
 

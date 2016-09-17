@@ -52,7 +52,7 @@
 #include "sha1.h"
 #include "common.h"
 
-static char *EncodeUTF8( const wchar_t *wstr )
+char *EncodeUTF8( const wchar_t *wstr )
 {
 	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
 	char *str = malloc( len * sizeof(wchar_t) );

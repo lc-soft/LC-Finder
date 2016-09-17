@@ -49,6 +49,8 @@
 #include <wchar.h>
 #include <stdint.h>
 
+char *EncodeUTF8( const wchar_t *wstr );
+
 void EncodeSHA1( char *hash_out, const char *str, int len );
 
 void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len );
