@@ -1,5 +1,5 @@
 .window {
-	background-color: #eff3f5;
+	background-color: #fff;
 	height: 100%;
 	width: 100%;
 }
@@ -626,18 +626,29 @@ textedit.dialog-input {
 #picture-viewer-window .picture-switch-btn.next {
 	right: 10px;
 }
-#picture-loading-tip {
+#tip-picture-loading {
 	width: 100%;
 	max-width: 120px;
-	margin: 0 auto;
 	padding: 15px 25px;
-	position: absolute;
-	vertical-align: middle;
 	background-color: rgba(255,255,255,0.8);
 }
-#picture-loading-tip textview {
+#tip-picture-loading textview {
 	color: #333;
 	font-size: 14px;
+}
+#tip-picture-not-found textview {
+	color: #fff;
+}
+
+.floating {
+	z-index: 10;
+	position: absolute;
+}
+.center.aligned {
+	margin: 0 auto;
+}
+.middle.aligned {
+	vertical-align: middle;
 }
 
 #picture-info-panel {

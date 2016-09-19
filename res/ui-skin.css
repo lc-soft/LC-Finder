@@ -1,5 +1,5 @@
 .skin-light-green .sidebar {
-	background-color: #F0F1F2;
+	background-color: #fff;
 	border: 1px solid #DDDEDF;
 }
 .skin-light-green .sidebar textview {
@@ -28,8 +28,9 @@
 .skin-light-green .sidebar .active textview {
 	color: #fff;
 }
-.skin-light-green .view {
-	background-color: #fff;
+.skin-light-green .view, 
+.skin-light-green .subview {
+	background-color: #f5f7fa;
 }
 .skin-light-green .view-navbar {
 	background-color: #414849;
@@ -99,6 +100,18 @@
 .skin-light-green .view-content-wrapper progressbar {
 	background-color: #44A340;
 }
+.skin-light-green .source-list .source-list-item:hover {
+	background-color: #fdfdfd;
+}
+.skin-light-green .source-list .source-list-item:active {
+	background-color: #fafafa;
+}
+.skin-light-green .source-list .source-list-item .btn-delete:hover {
+	background-color: #fff;
+}
+.skin-light-green .source-list .source-list-item .btn-delete:active {
+	background-color: #fcfcfc;
+}
 #picture-viewer-window.skin-light-green {
 	background-color: #222;
 }
@@ -139,10 +152,10 @@
 .skin-light-green.panel .panel-header {
 	box-shadow: 0 0 4px rgba(0,0,0,0.4);
 }
-.skin-light-green #picture-loading-tip textview {
+.skin-light-green #tip-picture-loading textview {
 	color: #fff;
 }
-.skin-light-green #picture-loading-tip {
+.skin-light-green #tip-picture-loading {
 	background-color: rgba(0,0,0,0.8);
 	box-shadow: 0 0 8px rgba(0,0,0,0.8);
 }
