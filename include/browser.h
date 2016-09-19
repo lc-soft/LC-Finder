@@ -39,21 +39,21 @@
 
 /** 文件浏览器相关数据 */
 typedef struct FileBrowserRec_ {
-	const wchar_t *title;
-	LCUI_Widget view;
-	LCUI_Widget items;
-	LCUI_Widget txt_title;
-	LCUI_Widget btn_select;
-	LCUI_Widget btn_cancel;
-	LCUI_Widget btn_delete;
-	LCUI_Widget btn_tag;
-	LCUI_Widget tip_empty;
-	Dict *file_indexes;
-	LinkedList dirs;
-	LinkedList files;
-	LinkedList selected_files;
-	LCUI_BOOL is_selection_mode;
-	void( *after_deleted )(LCUI_Widget);
+	const wchar_t *title;			/**< 标题文本内容 */
+	LCUI_Widget view;			/**< 视图 */
+	LCUI_Widget items;			/**< 缩略图列表 */
+	LCUI_Widget txt_title;			/**< 标题 */
+	LCUI_Widget btn_select;			/**< “选择”按钮 */
+	LCUI_Widget btn_cancel;			/**< “取消”按钮 */
+	LCUI_Widget btn_delete;			/**< “删除”按钮 */
+	LCUI_Widget btn_tag;			/**< “标签”按钮 */
+	LCUI_Widget tip_empty;			/**< 当内容为空时显示的提示 */
+	Dict *file_indexes;			/**< 文件索引，以路径进行索引 */
+	LinkedList dirs;			/**< 目录列表 */
+	LinkedList files;			/**< 文件列表 */
+	LinkedList selected_files;		/**< 已经选中的文件列表 */
+	LCUI_BOOL is_selection_mode;		/**< 是否为选择模式 */
+	void( *after_deleted )(LCUI_Widget);	/**< 回调函数，在删除一个文件后调用 */
 } FileBrowserRec, *FileBrowser;
 
 void FileBrowser_Empty( FileBrowser browser );

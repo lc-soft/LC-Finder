@@ -55,11 +55,13 @@
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
-	char *filepath;				/**< 当前需加载的图片文件路径  */
+	wchar_t *filepath;			/**< 当前已加载的图片的路径  */
+	wchar_t *filepath_for_load;		/**< 当前需加载的图片的路径  */
 	LCUI_Graph *img;			/**< 当前已经加载的图片数据 */
 	LCUI_Widget window;			/**< 图片查看器窗口 */
 	LCUI_Widget target;			/**< 用于显示目标图片的部件 */
-	LCUI_Widget tip;			/**< 图片载入提示框 */
+	LCUI_Widget tip;			/**< 图片载入提示框，当图片正在载入时显示 */
+	LCUI_Widget tip_empty;			/**< 提示，当无内容时显示 */
 	LCUI_Widget btn_reset;			/**< 按钮，重置图片尺寸 */
 	LCUI_Widget btn_prev;			/**< “上一张”按钮 */
 	LCUI_Widget btn_next;			/**< “下一张”按钮 */
@@ -109,26 +111,28 @@ static void UpdateSwitchButtons( void )
 	}
 }
 
-static void OpenPrevPicture( void )
+static int OpenPrevPicture( void )
 {
 	FileIterator iter = this_view.iterator;
 	if( !iter || iter->index == 0 ) {
-		return;
+		return -1;
 	}
 	iter->prev( iter );
 	UpdateSwitchButtons();
 	UI_OpenPictureView( iter->filepath );
+	return 0;
 }
 
-static void OpenNextPicture( void )
+static int OpenNextPicture( void )
 {
 	FileIterator iter = this_view.iterator;
 	if( !iter || iter->index >= iter->length - 1 ) {
-		return;
+		return -1;
 	}
 	iter->next( iter );
 	UpdateSwitchButtons();
 	UI_OpenPictureView( iter->filepath );
+	return 0;
 }
 
 static void UpdateResetSizeButton( void )
@@ -321,12 +325,25 @@ static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 }
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	int len;
+	char *path;
+	wchar_t *wpath = this_view.filepath;
 	if( !LCUIDialog_Confirm( this_view.window, TEXT_DELETE, NULL ) ) {
 		return;
 	}
-	DB_DeleteFile( this_view.filepath );
-	LCFinder_TriggerEvent( EVENT_FILE_DEL, this_view.filepath );
-	UI_ClosePictureView();
+	len = LCUI_EncodeString( NULL, wpath, 0, ENCODING_UTF8 ) + 1;
+	path = malloc( sizeof( char ) * len );
+	LCUI_EncodeString( path, wpath, len, ENCODING_UTF8 );
+	if( OpenNextPicture() != 0 ) {
+		/** 如果前后都没有图片了，则提示没有可显示的内容 */
+		if( OpenPrevPicture() != 0 ) {
+			Widget_RemoveClass( this_view.tip_empty, "hide" );
+			Widget_Show( this_view.tip_empty );
+		}
+	}
+	LCFinder_DeleteFiles( &this_view.filepath, 1, NULL, NULL );
+	LCFinder_TriggerEvent( EVENT_FILE_DEL, path );
+	free( path );
 }
 
 /** 在”实际大小“按钮被点击的时候 */
@@ -345,8 +362,9 @@ static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 图片加载器 */
 static void PictureLoader( void *arg )
 {
-	int timer;
-	char *filepath;
+	char *apath;
+	wchar_t *wpath;
+	int len, timer;
 	LCUI_Graph *img = NULL;
 	LCUI_Graph *old_img = NULL;
 	LCUI_StyleSheet sheet = this_view.target->custom_style;
@@ -365,11 +383,15 @@ static void PictureLoader( void *arg )
 			Widget_Unlock( this_view.target );
 			continue;
 		}
-		if( !this_view.filepath ) {
+		if( !this_view.filepath_for_load ) {
 			continue;
 		}
-		filepath = this_view.filepath;
-		this_view.filepath = NULL;
+		wpath = this_view.filepath_for_load;
+		this_view.filepath_for_load = NULL;
+		if( this_view.filepath ) {
+			free( this_view.filepath );
+		}
+		this_view.filepath = wpath;
 		if( old_img ) {
 			Graph_Free( old_img );
 			free( old_img );
@@ -378,18 +400,21 @@ static void PictureLoader( void *arg )
 		img = Graph_New();
 		this_view.is_loading = TRUE;
 		this_view.is_zoom_mode = FALSE;
+		len = LCUI_EncodeString( NULL, wpath, 0, ENCODING_ANSI ) + 1;
+		apath = malloc( sizeof( char ) * len );
+		LCUI_EncodeString( apath, wpath, len, ENCODING_ANSI );
 		/** 500毫秒后显示 "图片载入中..." 的提示 */
 		timer = LCUITimer_Set( 500, (FuncPtr)Widget_Show, 
 				       this_view.tip, FALSE );
-		Graph_LoadImage( filepath, img );
+		Graph_LoadImage( apath, img );
 		SetStyle( sheet, key_background_image, img, image );
 		Widget_UpdateStyle( this_view.target, FALSE );
 		this_view.img = img;
 		ResetPictureSize();
-		free( filepath );
 		this_view.is_loading = FALSE;
 		LCUITimer_Free( timer );
 		Widget_Hide( this_view.tip );
+		free( apath );
 	}
 	LCUIMutex_Unlock( &this_view.mutex );
 	LCUIThread_Exit( NULL );
@@ -616,9 +641,10 @@ void UI_InitPictureView( void )
 		Widget_Unwrap( box );
 	}
 	this_view.img = NULL;
-	this_view.filepath = NULL;
 	this_view.is_working = TRUE;
 	this_view.is_opening = FALSE;
+	this_view.filepath = NULL;
+	this_view.filepath_for_load = NULL;
 	this_view.zoom.is_running = FALSE;
 	this_view.zoom.point_ids[0] = -1;
 	this_view.zoom.point_ids[1] = -1;
@@ -631,7 +657,8 @@ void UI_InitPictureView( void )
 	btn[2] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_OUT );
 	btn[3] = LCUIWidget_GetById( ID_BTN_DELETE_PICTURE );
 	this_view.btn_reset = btn[0];
-	this_view.tip = LCUIWidget_GetById( ID_VIEW_PICTURE_LOADING_TIP );
+	this_view.tip = LCUIWidget_GetById( ID_TIP_PICTURE_LOADING );
+	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_PICTURE_NOT_FOUND );
 	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	this_view.target = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
 	Widget_BindEvent( btn[0], "click", OnBtnResetClick, NULL, NULL );
@@ -661,6 +688,7 @@ void UI_InitPictureView( void )
 void UI_OpenPictureView( const char *filepath )
 {
 	int len;
+	char *path;
 	wchar_t *wpath;
 	LCUI_Widget main_window, root;
 
@@ -669,17 +697,20 @@ void UI_OpenPictureView( const char *filepath )
 	root = LCUIWidget_GetRoot();
 	LCUIMutex_Lock( &this_view.mutex );
 	wpath = calloc( len + 1, sizeof( wchar_t ) );
-	this_view.filepath = calloc( len + 1, sizeof( char ) );
+	path = calloc( len + 1, sizeof( char ) );
+	this_view.filepath_for_load = wpath;
 	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
-	LCUI_EncodeString( this_view.filepath, wpath, len, ENCODING_ANSI );
+	LCUI_EncodeString( path, wpath, len, ENCODING_ANSI );
 	main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, wgetfilename( wpath ) );
 	LCUIMutex_Unlock( &this_view.mutex );
 	LCUICond_Signal( &this_view.cond );
+	Widget_Hide( this_view.tip_empty );
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
 	this_view.is_opening = TRUE;
 	UI_SetPictureInfoView( filepath );
+	free( path );
 }
 
 void UI_SetPictureView( FileIterator iter )

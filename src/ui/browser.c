@@ -64,14 +64,14 @@
 
  /** 文件索引记录 */
 typedef struct FileIndexRec_ {
-	LCUI_BOOL is_file;
+	LCUI_BOOL is_file;		/**< 是否为文件 */
 	union {
-		DB_File file;
-		char *path;
+		DB_File file;		/**< 文件信息，当为文件时有效 */
+		char *path;		/**< 路径，当为文件夹时有效 */
 	};
-	LCUI_Widget checkbox;
-	LCUI_Widget item;
-	LinkedListNode node;
+	LCUI_Widget checkbox;		/**< 勾选框 */
+	LCUI_Widget item;		/**< 对应的缩略图列表项 */
+	LinkedListNode node;		/**< 在文件列表中的节点 */
 } FileIndexRec, *FileIndex;
 
 typedef struct DataPackRec_ {
@@ -250,6 +250,22 @@ static int OnFileDeleted( void *privdata, int i, int n )
 	TextView_SetTextW( pack->dialog->content, text );
 	ProgressBar_SetValue( pack->dialog->progress, i );
 	return  pack->active ? 0 : -1;
+}
+
+/** 当其它地方删除了一个文件 */
+static void OnFileDeletionEvent( void *privdata, void *arg )
+{
+	FileBrowser browser = privdata;
+	FileIndex fidx = Dict_FetchValue( browser->file_indexes, arg );
+	if( fidx ) {
+		LCUI_Widget cursor = Widget_GetPrev( fidx->item );
+		Dict_Delete( browser->file_indexes, fidx->file->path );
+		LinkedList_Unlink( &browser->files, &fidx->node );
+		Widget_Destroy( fidx->item );
+		FileIndex_Delete( fidx );
+		free( fidx );
+		ThumbView_UpdateLayout( browser->items, cursor );
+	}
 }
 
 static void FileDeletionThread( void *arg )
@@ -546,4 +562,5 @@ void FileBrowser_Create( FileBrowser browser )
 	LinkedList_Init( &browser->selected_files );
 	browser->file_indexes = StrDict_Create( NULL, NULL );
 	Widget_Hide( browser->btn_select );
+	LCFinder_BindEvent( EVENT_FILE_DEL, OnFileDeletionEvent, browser );
 }
