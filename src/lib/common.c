@@ -348,7 +348,7 @@ int wgettimestr( wchar_t *str, int max_len, time_t time )
 		L"星期五", L"星期六", L"星期天"
 	};
 	t = localtime( &time );
-	return swprintf( str, max_len, L"%d年%d月%d日，%S %d:%d",
+	return swprintf( str, max_len, L"%d年%d月%d日，%ls %d:%d",
 			 1900 + t->tm_year, t->tm_mon + 1, t->tm_mday,
 			 days[t->tm_wday], t->tm_hour, t->tm_min );
 }

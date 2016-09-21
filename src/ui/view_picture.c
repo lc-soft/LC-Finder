@@ -341,7 +341,7 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 			Widget_Show( this_view.tip_empty );
 		}
 	}
-	LCFinder_DeleteFiles( &this_view.filepath, 1, NULL, NULL );
+	LCFinder_DeleteFiles( &path, 1, NULL, NULL );
 	LCFinder_TriggerEvent( EVENT_FILE_DEL, path );
 	free( path );
 }
@@ -422,11 +422,11 @@ static void PictureLoader( void *arg )
 
 static void DragPicture( int mouse_x, int mouse_y )
 {
-	LCUI_Style sheet;
+	LCUI_StyleSheet sheet;
 	if( !this_view.drag.is_running ) {
 		return;
 	}
-	sheet = this_view.target->custom_style->sheet;
+	sheet = this_view.target->custom_style;
 	if( this_view.drag.with_x ) {
 		int x, width;
 		width = (int)(this_view.img->width * this_view.scale);
@@ -446,7 +446,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 		x = (int)(this_view.focus_x / this_view.scale);
 		this_view.origin_focus_x = x;
 	} else {
-		sheet[key_background_position_x].is_valid = FALSE;
+		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	}
 	if( this_view.drag.with_y ) {
 		int y, height;
@@ -467,7 +467,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 		y = (int)(this_view.focus_y / this_view.scale);
 		this_view.origin_focus_y = y;
 	} else {
-		sheet[key_background_position_y].is_valid = FALSE;
+		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	}
 	Widget_UpdateStyle( this_view.target, FALSE );
 }
