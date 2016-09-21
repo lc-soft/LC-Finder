@@ -5,10 +5,18 @@
 .skin-light-green .sidebar textview {
 	color: #000;
 }
+.skin-light-green .sidebar .sidebar-item {
+	border-left: 2px solid transparent;
+}
+.skin-light-green .sidebar .sidebar-item .icon {
+	margin-left: -2px;
+}
 .skin-light-green .sidebar .sidebar-item:hover, 
 .skin-light-green .sidebar sidebar-toggle:hover {
 	background-color: #fafafa;
+	border-color: #fafafa;
 }
+.skin-light-green .sidebar .active textview,
 .skin-light-green .sidebar .sidebar-item:active textview,
 .skin-light-green .sidebar sidebar-toggle:active textview {
 	color: #44BB55;
@@ -17,16 +25,10 @@
 .skin-light-green .sidebar sidebar-toggle:active {
 	background-color: #ECF8EE;
 }
-.skin-light-green .sidebar .active,
-.skin-light-green .sidebar .active:hover {
-	//background-color: #44BB55;
-	background-color: rgba(68,187,85,0.8);
-}
-.skin-light-green .sidebar .active:hover textview {
-	color: #fff;
-}
-.skin-light-green .sidebar .active textview {
-	color: #fff;
+.skin-light-green .sidebar .sidebar-item.active,
+.skin-light-green .sidebar .sidebar-item.active:hover {
+	background-color: #ECF8EE;
+	border-color: #44BB55;
 }
 .skin-light-green .view, 
 .skin-light-green .subview {
