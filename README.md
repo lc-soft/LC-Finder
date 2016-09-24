@@ -1,6 +1,8 @@
 # LC-Finder
 
 [![Join the chat at https://gitter.im/lc-soft/LC-Finder](https://badges.gitter.im/lc-soft/LC-Finder.svg)](https://gitter.im/lc-soft/LC-Finder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Total downloads](https://img.shields.io/github/downloads/lc-soft/LC-Finder/total.svg)](https://github.com/lc-soft/LC-Finder/releases)
+[![License](https://img.shields.io/badge/license-GPLv2-blue.svg)](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 
 一个简单的图片资源检索与管理工具，源代码使用 C 语言编写，基于 [GNU通用公共许可协议](http://www.gnu.org/licenses/gpl-2.0.html) 
 发布。
