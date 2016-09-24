@@ -2,8 +2,10 @@ set_project("lcfinder")
 set_version("0.10.0")
 set_warnings("all")
 set_config_h("include/config.h")
-add_cfuncs("3rdparty", "LCUI", nil, "LCUI_Init")
 add_cfuncs("3rdparty", "sqlite3", "sqlite3.h", "sqlite3_open")
+add_includedirs("include", ".repos/LCUI/include")
+add_ldflags("-L.repos/LCUI/src/.libs")
+add_ldflags("-lLCUI")
 
 if is_mode("debug") then
     set_symbols("debug")
@@ -18,4 +20,3 @@ end
 target("lcfinder")
     set_kind("binary")
     add_files("src/**.c")
-    add_includedirs("include")

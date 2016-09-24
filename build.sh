@@ -1,4 +1,4 @@
 #!/bin/sh
 
-.tools/bin/xmake build
+.tools/bin/xmake $1
 

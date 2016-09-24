@@ -1,6 +1,8 @@
 #!/bin/sh
 
+logfile=`pwd`/autogen.log
 tooldir=`pwd`/.tools
+echo > $logfile
 if [ ! -d ".repos" ]; then
   mkdir .repos
 fi
@@ -19,19 +21,28 @@ else
   git pull origin master
 fi
 echo installing tool ...
-./install $tooldir
+./install $tooldir >> $logfile
+cd ../
 
-echo downloading recipes ...
+echo installing dependencies ...
+apt-get -y install libsqlite3-dev libpng-dev libjpeg-dev libxml2-dev libfreetype6-dev libx11-dev
+if [ ! -d "LCUI" ]; then
+  git clone https://github.com/lc-soft/LCUI.git --branch master --depth 1
+fi
+cd LCUI
+if [ ! -f "configure" ]; then
+  ./autogen.sh >> $logfile
+fi
+./configure >> $logfile
+make >> $logfile
 cd ../
 if [ ! -d "unqlite" ]; then
-  git clone https://github.com/symisc/unqlite.git
+  git clone https://github.com/symisc/unqlite.git --branch master --depth 1
   cd unqlite
 else
   cd unqlite
   git pull origin master
 fi
-
-echo copying unqlite source files ...
 cp unqlite.c ../../src/lib
 cp unqlite.h ../../include
 cd ../../
