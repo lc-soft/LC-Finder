@@ -60,6 +60,14 @@ char *EncodeUTF8( const wchar_t *wstr )
 	return str;
 }
 
+wchar_t *DecodeUTF8( const char *str )
+{
+	int len = strlen( str ) + 1;
+	wchar_t *wstr = malloc( len * sizeof( wchar_t ) );
+	LCUI_DecodeString( wstr, str, len, ENCODING_UTF8 );
+	return wstr;
+}
+
 void EncodeSHA1( char *hash_out, const char *str, int len )
 {
 	int i;

@@ -449,8 +449,8 @@ static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( !data->browser->is_selection_mode &&
 	    e->target != data->fidx->checkbox ) {
 		iter = FileIterator_Create( data->browser, data->fidx );
-		UI_OpenPictureView( data->fidx->file->path );
 		UI_SetPictureView( iter );
+		UI_OpenPictureView( data->fidx->file->path );
 		return;
 	}
 	if( Widget_HasClass( data->fidx->item, "selected" ) ) {

@@ -53,22 +53,33 @@
 #define XML_PATH	"res/ui-view-picture.xml"
 #define TEXT_DELETE	L"删除此文件？"
 
+#define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
+
+/** 图片实例 */
+typedef struct PcitureRec_ {
+	wchar_t *file;			/**< 当前已加载的图片的路径  */
+	wchar_t *file_for_load;		/**< 当前需加载的图片的路径  */
+	LCUI_BOOL is_loading;		/**< 是否正在载入图片 */
+	LCUI_Graph data;		/**< 当前已经加载的图片数据 */
+	LCUI_Widget view;		/**< 视图，用于呈现该图片 */
+	int timer;			/**< 定时器，用于延迟显示“载入中...”提示框 */
+} PictureRec, *Picture;
+
 /** 图片查看器相关数据 */
 static struct PictureViewer {
-	wchar_t *filepath;			/**< 当前已加载的图片的路径  */
-	wchar_t *filepath_for_load;		/**< 当前需加载的图片的路径  */
-	LCUI_Graph *img;			/**< 当前已经加载的图片数据 */
 	LCUI_Widget window;			/**< 图片查看器窗口 */
-	LCUI_Widget target;			/**< 用于显示目标图片的部件 */
 	LCUI_Widget tip;			/**< 图片载入提示框，当图片正在载入时显示 */
 	LCUI_Widget tip_empty;			/**< 提示，当无内容时显示 */
 	LCUI_Widget btn_reset;			/**< 按钮，重置图片尺寸 */
 	LCUI_Widget btn_prev;			/**< “上一张”按钮 */
 	LCUI_Widget btn_next;			/**< “下一张”按钮 */
-	LCUI_BOOL is_loading;			/**< 是否正在载入图片 */
+	LCUI_Widget view_pictures;		/**< 视图，用于容纳多个图片视图 */
 	LCUI_BOOL is_working;			/**< 当前视图是否在工作 */
 	LCUI_BOOL is_opening;			/**< 当前视图是否为打开状态 */
 	LCUI_BOOL is_zoom_mode;			/**< 当前视图是否为放大/缩小模式 */
+	PictureRec pictures[3];			/**< 三组图片实例 */
+	int picture_i;				/**< 当前需加载的图片的序号（下标） */
+	Picture picture;			/**< 当前焦点图片 */
 	double scale;				/**< 图片缩放比例 */
 	double min_scale;			/**< 图片最小缩放比例 */
 	LCUI_Cond cond;				/**< 条件变量 */
@@ -113,24 +124,36 @@ static void UpdateSwitchButtons( void )
 
 static int OpenPrevPicture( void )
 {
+	PictureRec pic;
 	FileIterator iter = this_view.iterator;
 	if( !iter || iter->index == 0 ) {
 		return -1;
 	}
 	iter->prev( iter );
 	UpdateSwitchButtons();
+	pic = this_view.pictures[2];
+	Widget_Prepend( this_view.view_pictures, pic.view );
+	this_view.pictures[2] = this_view.pictures[1];
+	this_view.pictures[1] = this_view.pictures[0];
+	this_view.pictures[0] = pic;
 	UI_OpenPictureView( iter->filepath );
 	return 0;
 }
 
 static int OpenNextPicture( void )
 {
+	PictureRec pic;
 	FileIterator iter = this_view.iterator;
 	if( !iter || iter->index >= iter->length - 1 ) {
 		return -1;
 	}
 	iter->next( iter );
 	UpdateSwitchButtons();
+	pic = this_view.pictures[0];
+	Widget_Append( this_view.view_pictures, pic.view );
+	this_view.pictures[0] = this_view.pictures[1];
+	this_view.pictures[1] = this_view.pictures[2];
+	this_view.pictures[2] = pic;
 	UI_OpenPictureView( iter->filepath );
 	return 0;
 }
@@ -152,17 +175,18 @@ static void UpdatePicturePosition( void )
 {
 	LCUI_Style sheet;
 	int x, y, width, height;
-	sheet = this_view.target->custom_style->sheet;
-	width = (int)(this_view.img->width * this_view.scale);
-	height = (int)(this_view.img->height * this_view.scale);
+	Picture pic = this_view.picture;
+	sheet = pic->view->custom_style->sheet;
+	width = (int)(pic->data.width * this_view.scale);
+	height = (int)(pic->data.height * this_view.scale);
 	/* 若缩放后的图片宽度小于图片查看器的宽度 */
-	if( width <= this_view.target->width ) {
+	if( width <= pic->view->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
 		this_view.focus_x = width / 2;
-		this_view.origin_focus_x = this_view.img->width / 2;
-		x = (this_view.target->width - width) / 2;
-		SetStyle( this_view.target->custom_style,
+		this_view.origin_focus_x = pic->data.width / 2;
+		x = (pic->view->width - width) / 2;
+		SetStyle( pic->view->custom_style,
 			  key_background_position_x, x, px );
 	} else {
 		this_view.drag.with_x = TRUE;
@@ -174,24 +198,24 @@ static void UpdatePicturePosition( void )
 			x = 0;
 			this_view.focus_x = this_view.offset_x;
 		}
-		if( x + this_view.target->width > width ) {
-			x = width - this_view.target->width;
+		if( x + pic->view->width > width ) {
+			x = width - pic->view->width;
 			this_view.focus_x = x + this_view.offset_x;
 		}
-		SetStyle( this_view.target->custom_style,
+		SetStyle( pic->view->custom_style,
 			  key_background_position_x, -x, px );
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
 		x = (int)(this_view.focus_x / this_view.scale + 0.5);
 		this_view.origin_focus_x = x;
 	}
 	/* 原理同上 */
-	if( height <= this_view.target->height ) {
+	if( height <= pic->view->height ) {
 		this_view.drag.with_y = FALSE;
 		this_view.focus_y = height / 2;
-		this_view.origin_focus_y = this_view.img->height / 2;
+		this_view.origin_focus_y = pic->data.height / 2;
 		sheet[key_background_position_y].is_valid = FALSE;
-		y = (this_view.target->height - height) / 2;
-		SetStyle( this_view.target->custom_style,
+		y = (pic->view->height - height) / 2;
+		SetStyle( pic->view->custom_style,
 			  key_background_position_y, y, px );
 	} else {
 		this_view.drag.with_y = TRUE;
@@ -202,23 +226,23 @@ static void UpdatePicturePosition( void )
 			y = 0;
 			this_view.focus_y = this_view.offset_y;
 		}
-		if( y + this_view.target->height > height ) {
-			y = height - this_view.target->height;
+		if( y + pic->view->height > height ) {
+			y = height - pic->view->height;
 			this_view.focus_y = y + this_view.offset_y;
 		}
-		SetStyle( this_view.target->custom_style,
+		SetStyle( pic->view->custom_style,
 			  key_background_position_y, -y, px );
 		y = (int)(this_view.focus_y / this_view.scale + 0.5);
 		this_view.origin_focus_y = y;
 	}
-	Widget_UpdateStyle( this_view.target, FALSE );
+	Widget_UpdateStyle( pic->view, FALSE );
 }
 
 /** 重置浏览区域的位置偏移量 */
 static void ResetOffsetPosition( void )
 {
-	this_view.offset_x = this_view.target->width / 2;
-	this_view.offset_y = this_view.target->height / 2;
+	this_view.offset_x = this_view.picture->view->width / 2;
+	this_view.offset_y = this_view.picture->view->height / 2;
 }
 
 /** 重置当前显示的图片的尺寸 */
@@ -226,19 +250,19 @@ static void ResetPictureSize( void )
 {
 	LCUI_Style sheet;
 	double scale_x, scale_y;
-	LCUI_Graph *img = this_view.img;
-	if( !img ) {
+	Picture pic = this_view.picture;
+	if( !Graph_IsValid( &pic->data ) ) {
 		return;
 	}
 	/* 如果尺寸小于图片查看器尺寸 */
-	if( img && img->width < this_view.target->width && 
-	    img->height < this_view.target->height ) {
-		Widget_RemoveClass( this_view.target, "contain-mode" );
+	if( pic->data.width < pic->view->width && 
+	    pic->data.height < pic->view->height ) {
+		Widget_RemoveClass( pic->view, "contain-mode" );
 		this_view.scale = 1.0;
 	} else {
-		Widget_AddClass( this_view.target, "contain-mode" );
-		scale_x = 1.0 * this_view.target->width / img->width;
-		scale_y = 1.0 * this_view.target->height / img->height;
+		Widget_AddClass( pic->view, "contain-mode" );
+		scale_x = 1.0 * pic->view->width / pic->data.width;
+		scale_y = 1.0 * pic->view->height / pic->data.height;
 		if( scale_y < scale_x ) {
 			this_view.scale = scale_y;
 		} else {
@@ -249,11 +273,11 @@ static void ResetPictureSize( void )
 		}
 		this_view.min_scale = this_view.scale;
 	}
-	sheet = this_view.target->custom_style->sheet;
+	sheet = pic->view->custom_style->sheet;
 	sheet[key_background_size].is_valid = FALSE;
 	sheet[key_background_size_width].is_valid = FALSE;
 	sheet[key_background_size_height].is_valid = FALSE;
-	Widget_UpdateStyle( this_view.target, FALSE );
+	Widget_UpdateStyle( pic->view, FALSE );
 	ResetOffsetPosition();
 	UpdatePicturePosition();
 	UpdateResetSizeButton();
@@ -275,6 +299,17 @@ static void OnPictureResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+static void OnShowTipLoading( void *arg )
+{
+	Picture pic = arg;
+	if( this_view.picture == pic ) {
+		if( pic->is_loading ) {
+			Widget_Show( this_view.tip );
+		}
+	}
+	pic->timer = 0;
+}
+
 /** 设置当前图片缩放比例 */
 static void SetPictureScale( double scale )
 {
@@ -289,147 +324,29 @@ static void SetPictureScale( double scale )
 	if( scale > MAX_SCALE ) {
 		scale = MAX_SCALE;
 	}
-	sheet = this_view.target->custom_style;
-	width = (int)(scale * this_view.img->width);
-	height = (int)(scale * this_view.img->height);
+	sheet = this_view.picture->view->custom_style;
+	width = (int)(scale * this_view.picture->data.width);
+	height = (int)(scale * this_view.picture->data.height);
 	SetStyle( sheet, key_background_size_width, width, px );
 	SetStyle( sheet, key_background_size_height, height, px );
-	Widget_RemoveClass( this_view.target, "contain-mode" );
-	Widget_UpdateStyle( this_view.target, FALSE );
+	Widget_RemoveClass( this_view.picture->view, "contain-mode" );
+	Widget_UpdateStyle( this_view.picture->view, FALSE );
 	this_view.scale = scale;
 	UpdatePicturePosition();
 	UpdateResetSizeButton();
 }
 
-/** 在”放大“按钮被点击的时候 */
-static void OnBtnZoomInClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	ResetOffsetPosition();
-	SetPictureScale( this_view.scale + 0.5 );
-}
-
-/** 在”缩小“按钮被点击的时候 */
-static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	ResetOffsetPosition();
-	SetPictureScale( this_view.scale - 0.5 );
-}
-
-static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	OpenPrevPicture();
-}
-static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	OpenNextPicture();
-}
-static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	int len;
-	char *path;
-	wchar_t *wpath = this_view.filepath;
-	if( !LCUIDialog_Confirm( this_view.window, TEXT_DELETE, NULL ) ) {
-		return;
-	}
-	len = LCUI_EncodeString( NULL, wpath, 0, ENCODING_UTF8 ) + 1;
-	path = malloc( sizeof( char ) * len );
-	LCUI_EncodeString( path, wpath, len, ENCODING_UTF8 );
-	if( OpenNextPicture() != 0 ) {
-		/** 如果前后都没有图片了，则提示没有可显示的内容 */
-		if( OpenPrevPicture() != 0 ) {
-			Widget_RemoveClass( this_view.tip_empty, "hide" );
-			Widget_Show( this_view.tip_empty );
-		}
-	}
-	LCFinder_DeleteFiles( &path, 1, NULL, NULL );
-	LCFinder_TriggerEvent( EVENT_FILE_DEL, path );
-	free( path );
-}
-
-/** 在”实际大小“按钮被点击的时候 */
-static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	double scale;
-	if( this_view.scale == 1.0 ) {
-		scale = this_view.min_scale;
-	} else {
-		scale = 1.0;
-	}
-	ResetOffsetPosition();
-	SetPictureScale( scale );
-}
-
-/** 图片加载器 */
-static void PictureLoader( void *arg )
-{
-	char *apath;
-	wchar_t *wpath;
-	int len, timer;
-	LCUI_Graph *img = NULL;
-	LCUI_Graph *old_img = NULL;
-	LCUI_StyleSheet sheet = this_view.target->custom_style;
-	LCUIMutex_Lock( &this_view.mutex );
-	while( this_view.is_working ) {
-		LCUICond_Wait( &this_view.cond, &this_view.mutex );
-		if( !this_view.is_working ) {
-			break;
-		}
-		if( !this_view.is_opening && img ) {
-			Widget_Lock( this_view.target );
-			Graph_Free( img );
-			sheet->sheet[key_background_image].is_valid = FALSE;
-			Widget_UpdateBackground( this_view.target );
-			Widget_UpdateStyle( this_view.target, FALSE );
-			Widget_Unlock( this_view.target );
-			continue;
-		}
-		if( !this_view.filepath_for_load ) {
-			continue;
-		}
-		wpath = this_view.filepath_for_load;
-		this_view.filepath_for_load = NULL;
-		if( this_view.filepath ) {
-			free( this_view.filepath );
-		}
-		this_view.filepath = wpath;
-		if( old_img ) {
-			Graph_Free( old_img );
-			free( old_img );
-		}
-		old_img = img;
-		img = Graph_New();
-		this_view.is_loading = TRUE;
-		this_view.is_zoom_mode = FALSE;
-		len = LCUI_EncodeString( NULL, wpath, 0, ENCODING_ANSI ) + 1;
-		apath = malloc( sizeof( char ) * len );
-		LCUI_EncodeString( apath, wpath, len, ENCODING_ANSI );
-		/** 500毫秒后显示 "图片载入中..." 的提示 */
-		timer = LCUITimer_Set( 500, (FuncPtr)Widget_Show, 
-				       this_view.tip, FALSE );
-		Graph_LoadImage( apath, img );
-		SetStyle( sheet, key_background_image, img, image );
-		Widget_UpdateStyle( this_view.target, FALSE );
-		this_view.img = img;
-		ResetPictureSize();
-		this_view.is_loading = FALSE;
-		LCUITimer_Free( timer );
-		Widget_Hide( this_view.tip );
-		free( apath );
-	}
-	LCUIMutex_Unlock( &this_view.mutex );
-	LCUIThread_Exit( NULL );
-}
-
 static void DragPicture( int mouse_x, int mouse_y )
 {
 	LCUI_StyleSheet sheet;
+	Picture pic = this_view.picture;
 	if( !this_view.drag.is_running ) {
 		return;
 	}
-	sheet = this_view.target->custom_style;
+	sheet = pic->view->custom_style;
 	if( this_view.drag.with_x ) {
 		int x, width;
-		width = (int)(this_view.img->width * this_view.scale);
+		width = (int)(pic->data.width * this_view.scale);
 		this_view.focus_x = this_view.drag.focus_x;
 		this_view.focus_x -= mouse_x - this_view.drag.mouse_x;
 		x = this_view.focus_x - this_view.offset_x;
@@ -437,11 +354,11 @@ static void DragPicture( int mouse_x, int mouse_y )
 			x = 0;
 			this_view.focus_x = this_view.offset_x;
 		}
-		if( x + this_view.target->width > width ) {
-			x = width - this_view.target->width;
+		if( x + pic->view->width > width ) {
+			x = width - pic->view->width;
 			this_view.focus_x = x + this_view.offset_x;
 		}
-		SetStyle( this_view.target->custom_style,
+		SetStyle( pic->view->custom_style,
 			  key_background_position_x, -x, px );
 		x = (int)(this_view.focus_x / this_view.scale);
 		this_view.origin_focus_x = x;
@@ -450,7 +367,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 	}
 	if( this_view.drag.with_y ) {
 		int y, height;
-		height = (int)(this_view.img->height * this_view.scale);
+		height = (int)(pic->data.height * this_view.scale);
 		this_view.focus_y = this_view.drag.focus_y;
 		this_view.focus_y -= mouse_y - this_view.drag.mouse_y;
 		y = this_view.focus_y - this_view.offset_y;
@@ -458,18 +375,18 @@ static void DragPicture( int mouse_x, int mouse_y )
 			y = 0;
 			this_view.focus_y = this_view.offset_y;
 		}
-		if( y + this_view.target->height > height ) {
-			y = height - this_view.target->height;
+		if( y + pic->view->height > height ) {
+			y = height - pic->view->height;
 			this_view.focus_y = y + this_view.offset_y;
 		}
-		SetStyle( this_view.target->custom_style,
+		SetStyle( pic->view->custom_style,
 			  key_background_position_y, -y, px );
 		y = (int)(this_view.focus_y / this_view.scale);
 		this_view.origin_focus_y = y;
 	} else {
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	}
-	Widget_UpdateStyle( this_view.target, FALSE );
+	Widget_UpdateStyle( pic->view, FALSE );
 }
 
 /** 当鼠标在图片容器上移动的时候 */
@@ -509,13 +426,13 @@ static void OnPictureTouchDown( LCUI_TouchPoint point )
 	this_view.drag.mouse_y = point->y;
 	this_view.drag.focus_x = this_view.focus_x;
 	this_view.drag.focus_y = this_view.focus_y;
-	Widget_SetTouchCapture( this_view.target, point->id );
+	Widget_SetTouchCapture( this_view.picture->view, point->id );
 }
 
 static void OnPictureTouchUp( LCUI_TouchPoint point )
 {
 	this_view.drag.is_running = FALSE;
-	Widget_ReleaseTouchCapture( this_view.target, -1 );
+	Widget_ReleaseTouchCapture( this_view.picture->view, -1 );
 }
 
 static void OnPictureTouchMove( LCUI_TouchPoint point )
@@ -627,6 +544,209 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 }
 
+/** 初始化图片实例 */
+static void InitPicture( Picture pic )
+{
+	pic->timer = 0;
+	pic->file = NULL;
+	pic->is_loading = FALSE;
+	pic->file_for_load = NULL;
+	pic->view = LCUIWidget_New( "picture" );
+	Graph_Init( &pic->data );
+	Widget_Append( this_view.view_pictures, pic->view );
+	BindEvent( pic->view, "resize", OnPictureResize );
+	BindEvent( pic->view, "touch", OnPictureTouch );
+	BindEvent( pic->view, "mousedown", OnPictureMouseDown );
+}
+
+/** 设置图片 */
+static void SetPicture( Picture pic, const wchar_t *file )
+{
+	int len;
+	if( pic->timer > 0 ) {
+		LCUITimer_Free( pic->timer );
+		pic->timer = 0;
+	}
+	if( pic->file_for_load ) {
+		free( pic->file_for_load );
+		pic->file_for_load = NULL;
+	}
+	if( file ) {
+		len = wcslen( file ) + 1;
+		pic->file_for_load = malloc( sizeof( wchar_t ) * len );
+		wcsncpy( pic->file_for_load, file, len );
+	} else {
+		pic->file_for_load = NULL;
+	}
+}
+
+/** 设置图片预加载列表 */
+static void SetPicturePreloadList( void )
+{
+	wchar_t *wpath;
+	FileIterator iter;
+	if( !this_view.iterator ) {
+		return;
+	}
+	iter = this_view.iterator;
+	/* 预加载上一张图片 */
+	if( iter->index > 0 ) {
+		iter->prev( iter );
+		if( iter->filepath ) {
+			wpath = DecodeUTF8( iter->filepath );
+			SetPicture( &this_view.pictures[0], wpath );
+		}
+		iter->next( iter );
+	}
+	/* 预加载下一张图片 */
+	if( iter->index < iter->length - 1 ) {
+		iter->next( iter );
+		if( iter->filepath ) {
+			wpath = DecodeUTF8( iter->filepath );
+			SetPicture( &this_view.pictures[2], wpath );
+		}
+		iter->prev( iter );
+	}
+}
+
+/** 加载图片数据 */
+static int LoadPicture( Picture pic )
+{
+	int len;
+	char *path;
+	wchar_t *wpath;
+#ifdef _WIN32
+	int encoding = ENCODING_ANSI;
+#else
+	int encoding = ENCODING_UTF8;
+#endif
+	LCUI_StyleSheet sheet = pic->view->custom_style;
+	if( !pic->file_for_load || !this_view.is_working ) {
+		return -1;
+	}
+	/* 避免重复加载 */
+	if( pic->file && wcscmp( pic->file, pic->file_for_load ) == 0 ) {
+		free( pic->file_for_load );
+		pic->file_for_load = NULL;
+		return 0;
+	}
+	/** 500毫秒后显示 "图片载入中..." 的提示 */
+	this_view.picture->timer = LCUITimer_Set( 500, OnShowTipLoading, 
+						  this_view.picture, FALSE );
+	if( Graph_IsValid( &pic->data ) ) {
+		Widget_Lock( pic->view );
+		Graph_Free( &pic->data );
+		sheet->sheet[key_background_image].is_valid = FALSE;
+		Widget_UpdateBackground( pic->view );
+		Widget_UpdateStyle( pic->view, FALSE );
+		Widget_Unlock( pic->view );
+	}
+	wpath = pic->file_for_load;
+	pic->file_for_load = NULL;
+	if( pic->file ) {
+		free( pic->file );
+	}
+	pic->file = wpath;
+	pic->is_loading = TRUE;
+	len = LCUI_EncodeString( NULL, wpath, 0, encoding ) + 1;
+	path = malloc( sizeof( char ) * len );
+	LCUI_EncodeString( path, wpath, len, encoding );
+	Graph_LoadImage( path, &pic->data );
+	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
+	if( !pic->file_for_load ) {
+		SetStyle( sheet, key_background_image, &pic->data, image );
+		Widget_UpdateStyle( pic->view, FALSE );
+		ResetPictureSize();
+	}
+	pic->is_loading = FALSE;
+	if( this_view.picture->view == pic->view ) {
+		Widget_Hide( this_view.tip );
+	}
+	free( path );
+	return 0;
+}
+
+/** 在”放大“按钮被点击的时候 */
+static void OnBtnZoomInClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	ResetOffsetPosition();
+	SetPictureScale( this_view.scale + 0.5 );
+}
+
+/** 在”缩小“按钮被点击的时候 */
+static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	ResetOffsetPosition();
+	SetPictureScale( this_view.scale - 0.5 );
+}
+
+static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	OpenPrevPicture();
+}
+static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	OpenNextPicture();
+}
+static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	int len;
+	char *path;
+	wchar_t *wpath = this_view.picture->file;
+	if( !LCUIDialog_Confirm( this_view.window, TEXT_DELETE, NULL ) ) {
+		return;
+	}
+	len = LCUI_EncodeString( NULL, wpath, 0, ENCODING_UTF8 ) + 1;
+	path = malloc( sizeof( char ) * len );
+	LCUI_EncodeString( path, wpath, len, ENCODING_UTF8 );
+	if( OpenNextPicture() != 0 ) {
+		/** 如果前后都没有图片了，则提示没有可显示的内容 */
+		if( OpenPrevPicture() != 0 ) {
+			Widget_RemoveClass( this_view.tip_empty, "hide" );
+			Widget_Show( this_view.tip_empty );
+		}
+	}
+	LCFinder_DeleteFiles( &path, 1, NULL, NULL );
+	LCFinder_TriggerEvent( EVENT_FILE_DEL, path );
+	free( path );
+}
+
+/** 在”实际大小“按钮被点击的时候 */
+static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	double scale;
+	if( this_view.scale == 1.0 ) {
+		scale = this_view.min_scale;
+	} else {
+		scale = 1.0;
+	}
+	ResetOffsetPosition();
+	SetPictureScale( scale );
+}
+
+/** 图片加载器 */
+static void PictureLoader( void *arg )
+{
+	LCUIMutex_Lock( &this_view.mutex );
+	while( this_view.is_working ) {
+		LCUICond_Wait( &this_view.cond, &this_view.mutex );
+		this_view.picture_i = 0;
+		while( this_view.picture_i < 3 ) {
+			int i;
+			switch( this_view.picture_i ) {
+			case 0: i = 1; break;
+			case 1: i = 2; break;
+			case 2: i = 0; break;
+			default: break;
+			}
+			LoadPicture( &this_view.pictures[i] );
+			++this_view.picture_i;
+		}
+	}
+	LCUIMutex_Unlock( &this_view.mutex );
+	LCUIThread_Exit( NULL );
+}
+
 static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	UI_ShowPictureInfoView();
@@ -634,52 +754,45 @@ static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 void UI_InitPictureView( void )
 {
-	LCUI_Widget box, w, btn_back, btn[4];
+	LCUI_Widget box, btn_back, btn_info, btn[4];
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
 		Widget_Unwrap( box );
 	}
-	this_view.img = NULL;
 	this_view.is_working = TRUE;
 	this_view.is_opening = FALSE;
-	this_view.filepath = NULL;
-	this_view.filepath_for_load = NULL;
 	this_view.zoom.is_running = FALSE;
 	this_view.zoom.point_ids[0] = -1;
 	this_view.zoom.point_ids[1] = -1;
 	LCUICond_Init( &this_view.cond );
 	LCUIMutex_Init( &this_view.mutex );
+	btn_info = LCUIWidget_GetById( ID_BTN_SHOW_PICTURE_INFO );
+	btn_back = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_VIEWER );
 	this_view.btn_prev = LCUIWidget_GetById( ID_BTN_PCITURE_PREV );
 	this_view.btn_next = LCUIWidget_GetById( ID_BTN_PCITURE_NEXT );
 	btn[0] = LCUIWidget_GetById( ID_BTN_PICTURE_RESET_SIZE );
 	btn[1] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_IN );
 	btn[2] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_OUT );
 	btn[3] = LCUIWidget_GetById( ID_BTN_DELETE_PICTURE );
-	this_view.btn_reset = btn[0];
 	this_view.tip = LCUIWidget_GetById( ID_TIP_PICTURE_LOADING );
-	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_PICTURE_NOT_FOUND );
 	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	this_view.target = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
-	Widget_BindEvent( btn[0], "click", OnBtnResetClick, NULL, NULL );
-	Widget_BindEvent( btn[1], "click", OnBtnZoomInClick, NULL, NULL );
-	Widget_BindEvent( btn[2], "click", OnBtnZoomOutClick, NULL, NULL );
-	Widget_BindEvent( btn[3], "click", OnBtnDeleteClick, NULL, NULL );
-	Widget_BindEvent( this_view.btn_prev, "click", 
-			  OnBtnPrevClick, NULL, NULL );
-	Widget_BindEvent( this_view.btn_next, "click", 
-			  OnBtnNextClick, NULL, NULL );
-	Widget_BindEvent( this_view.target, "resize", 
-			  OnPictureResize, NULL, NULL );
-	Widget_BindEvent( this_view.target, "touch", 
-			  OnPictureTouch, NULL, NULL );
-	Widget_BindEvent( this_view.target, "mousedown", 
-			  OnPictureMouseDown, NULL, NULL );
+	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_PICTURE_NOT_FOUND );
+	this_view.view_pictures = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
+	this_view.btn_reset = btn[0];
+	InitPicture( &this_view.pictures[0] );
+	InitPicture( &this_view.pictures[1] );
+	InitPicture( &this_view.pictures[2] );
+	this_view.picture = &this_view.pictures[0];
+	BindEvent( btn_info, "click", OnBtnShowInfoClick );
+	BindEvent( btn_back, "click", OnBtnBackClick );
+	BindEvent( btn[0], "click", OnBtnResetClick );
+	BindEvent( btn[1], "click", OnBtnZoomInClick );
+	BindEvent( btn[2], "click", OnBtnZoomOutClick );
+	BindEvent( btn[3], "click", OnBtnDeleteClick );
+	BindEvent( this_view.btn_prev, "click", OnBtnPrevClick );
+	BindEvent( this_view.btn_next, "click", OnBtnNextClick );
 	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
-	w = LCUIWidget_GetById( ID_BTN_SHOW_PICTURE_INFO );
-	btn_back = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_VIEWER );
-	Widget_BindEvent( w, "click", OnBtnShowInfoClick, NULL, NULL );
-	Widget_BindEvent( btn_back, "click", OnBtnBackClick, NULL, NULL );
 	Widget_Hide( this_view.window );
 	UI_InitPictureInfoView();
 	UpdateSwitchButtons();
@@ -688,7 +801,6 @@ void UI_InitPictureView( void )
 void UI_OpenPictureView( const char *filepath )
 {
 	int len;
-	char *path;
 	wchar_t *wpath;
 	LCUI_Widget main_window, root;
 
@@ -697,20 +809,22 @@ void UI_OpenPictureView( const char *filepath )
 	root = LCUIWidget_GetRoot();
 	LCUIMutex_Lock( &this_view.mutex );
 	wpath = calloc( len + 1, sizeof( wchar_t ) );
-	path = calloc( len + 1, sizeof( char ) );
-	this_view.filepath_for_load = wpath;
+	this_view.picture_i = -1;
+	this_view.is_opening = TRUE;
+	this_view.is_zoom_mode = FALSE;
+	this_view.picture = &this_view.pictures[1];
 	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
-	LCUI_EncodeString( path, wpath, len, ENCODING_ANSI );
 	main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, wgetfilename( wpath ) );
+	SetPicture( this_view.picture, wpath );
+	SetPicturePreloadList();
 	LCUIMutex_Unlock( &this_view.mutex );
 	LCUICond_Signal( &this_view.cond );
+	UI_SetPictureInfoView( filepath );
 	Widget_Hide( this_view.tip_empty );
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
-	this_view.is_opening = TRUE;
-	UI_SetPictureInfoView( filepath );
-	free( path );
+	free( wpath );
 }
 
 void UI_SetPictureView( FileIterator iter )

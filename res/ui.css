@@ -584,6 +584,19 @@ textedit.dialog-input {
 	width: 100%;
 	height: 100%;
 }
+#picture-viewer-window .picture-container picture {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+}
+#picture-viewer-window .picture-container picture:first-child {
+	left: -100%;
+}
+#picture-viewer-window .picture-container picture:last-child {
+	left: 100%;
+}
 #picture-viewer-window .picture-container {
 	background-position: center;
 	background-size: auto;
