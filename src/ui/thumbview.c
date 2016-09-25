@@ -427,9 +427,9 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		tdata.origin_width = img.width;
 		tdata.origin_height = img.height;
 		tdata.modify_time = mtime;
-		if( img.width > THUMB_MAX_WIDTH ) {
+		if( img.height > THUMB_MAX_WIDTH ) {
 			Graph_Zoom( &img, &tdata.graph, TRUE,
-				    THUMB_MAX_WIDTH, 0 );
+				    0, THUMB_MAX_WIDTH );
 			Graph_Free( &img );
 		} else {
 			tdata.graph = img;
