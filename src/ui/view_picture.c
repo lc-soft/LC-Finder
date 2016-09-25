@@ -77,6 +77,8 @@ typedef struct PcitureRec_ {
 	LCUI_BOOL is_loading;		/**< 是否正在载入图片 */
 	LCUI_Graph *data;		/**< 当前已经加载的图片数据 */
 	LCUI_Widget view;		/**< 视图，用于呈现该图片 */
+	double scale;			/**< 图片缩放比例 */
+	double min_scale;		/**< 图片最小缩放比例 */
 	int timer;			/**< 定时器，用于延迟显示“载入中...”提示框 */
 } PictureRec, *Picture;
 
@@ -96,8 +98,6 @@ static struct PictureViewer {
 	PictureRec pictures[3];			/**< 三组图片实例 */
 	int picture_i;				/**< 当前需加载的图片的序号（下标） */
 	Picture picture;			/**< 当前焦点图片 */
-	double scale;				/**< 图片缩放比例 */
-	double min_scale;			/**< 图片最小缩放比例 */
 	LCUI_Cond cond;				/**< 条件变量 */
 	LCUI_Mutex mutex;			/**< 互斥锁 */
 	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
@@ -136,6 +136,20 @@ static struct PictureViewer {
 		LCUI_BOOL is_running;		/**< 是否正在运行 */
 	} slide;				/**< 图片水平滑动功能的相关数据 */
 } this_view;
+
+static void GetViewerSize( int *width, int *height )
+{
+	if( this_view.picture->view->width > 200 ) {
+		*width = this_view.picture->view->width - 120;
+	} else {
+		*width = 200;
+	}
+	if( this_view.picture->view->height > 200 ) {
+		*height = this_view.picture->view->height - 120;
+	} else {
+		*height = 200;
+	}
+}
 
 /** 更新图片切换按钮的状态 */
 static void UpdateSwitchButtons( void )
@@ -197,7 +211,7 @@ static void InitSlideTransition( void )
 	st->src_x = 0;
 	st->dst_x = 0;
 	st->timer = 0;
-	st->duration = 300;
+	st->duration = 200;
 	st->start_time = 0;
 	st->is_running = FALSE;
 }
@@ -211,6 +225,7 @@ static void SetSliderPostion( int x )
 	Widget_Move( this_view.pictures[2].view, x + width, 0 );
 }
 
+/** 更新滑动过渡效果 */
 static void OnSlideTransition( void *arg )
 {
 	int delta, x;
@@ -245,6 +260,7 @@ static void OnSlideTransition( void *arg )
 	st->timer = LCUITimer_Set( 10, OnSlideTransition, NULL, FALSE );
 }
 
+/** 还原滑动区块的位置，一般用于将拖动后的图片移动回原来的位置 */
 static void RestoreSliderPosition( void )
 {
 	struct SlideTransition *st;
@@ -316,7 +332,7 @@ static int SwitchNextPicture( void )
 static void UpdateResetSizeButton( void )
 {
 	LCUI_Widget txt = LinkedList_Get( &this_view.btn_reset->children, 0 );
-	if( this_view.scale == 1.0 ) {
+	if( this_view.picture->scale == 1.0 ) {
 		Widget_RemoveClass( txt, "mdi-fullscreen" );
 		Widget_AddClass( txt, "mdi-fullscreen-exit" );
 	} else {
@@ -330,11 +346,13 @@ static void UpdatePicturePosition( Picture pic )
 {
 	LCUI_Style sheet;
 	int x, y, width, height;
+	int viewer_width, viewer_height;
 	sheet = pic->view->custom_style->sheet;
-	width = (int)(pic->data->width * this_view.scale);
-	height = (int)(pic->data->height * this_view.scale);
+	width = (int)(pic->data->width * pic->scale);
+	height = (int)(pic->data->height * pic->scale);
+	GetViewerSize( &viewer_width, &viewer_height );
 	/* 若缩放后的图片宽度小于图片查看器的宽度 */
-	if( width <= pic->view->width ) {
+	if( width <= viewer_width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
 		this_view.focus_x = width / 2;
@@ -345,7 +363,7 @@ static void UpdatePicturePosition( Picture pic )
 	} else {
 		this_view.drag.with_x = TRUE;
 		x = this_view.origin_focus_x;
-		this_view.focus_x = (int)(x * this_view.scale + 0.5);
+		this_view.focus_x = (int)(x * pic->scale + 0.5);
 		x = this_view.focus_x - this_view.offset_x;
 		/* X坐标调整，确保查看器的图片浏览范围不超出图片 */
 		if( x < 0 ) {
@@ -359,11 +377,11 @@ static void UpdatePicturePosition( Picture pic )
 		SetStyle( pic->view->custom_style,
 			  key_background_position_x, -x, px );
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
-		x = (int)(this_view.focus_x / this_view.scale + 0.5);
+		x = (int)(this_view.focus_x / pic->scale + 0.5);
 		this_view.origin_focus_x = x;
 	}
 	/* 原理同上 */
-	if( height <= pic->view->height ) {
+	if( height <= viewer_height ) {
 		this_view.drag.with_y = FALSE;
 		this_view.focus_y = height / 2;
 		this_view.origin_focus_y = pic->data->height / 2;
@@ -374,7 +392,7 @@ static void UpdatePicturePosition( Picture pic )
 	} else {
 		this_view.drag.with_y = TRUE;
 		y = this_view.origin_focus_y;
-		this_view.focus_y = (int)(y * this_view.scale + 0.5);
+		this_view.focus_y = (int)(y * pic->scale + 0.5);
 		y = this_view.focus_y - this_view.offset_y;
 		if( y < 0 ) {
 			y = 0;
@@ -386,7 +404,7 @@ static void UpdatePicturePosition( Picture pic )
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_y, -y, px );
-		y = (int)(this_view.focus_y / this_view.scale + 0.5);
+		y = (int)(this_view.focus_y / pic->scale + 0.5);
 		this_view.origin_focus_y = y;
 	}
 	Widget_UpdateStyle( pic->view, FALSE );
@@ -399,43 +417,68 @@ static void ResetOffsetPosition( void )
 	this_view.offset_y = this_view.picture->view->height / 2;
 }
 
-/** 重置当前显示的图片的尺寸 */
-static void ResetPictureSize( Picture pic )
+/** 设置当前图片缩放比例 */
+static void DirectSetPictureScale( Picture pic, double scale )
 {
-	LCUI_Style sheet;
-	double scale_x, scale_y;
-	if( !Graph_IsValid( pic->data ) ) {
-		return;
+	int width, height;
+	LCUI_StyleSheet sheet;
+	if( scale <= pic->min_scale ) {
+		scale = pic->min_scale;
 	}
-	/* 如果尺寸小于图片查看器尺寸 */
-	if( pic->data->width < pic->view->width && 
-	    pic->data->height < pic->view->height ) {
-		Widget_RemoveClass( pic->view, "contain-mode" );
-		this_view.scale = 1.0;
-	} else {
-		Widget_AddClass( pic->view, "contain-mode" );
-		scale_x = 1.0 * pic->view->width / pic->data->width;
-		scale_y = 1.0 * pic->view->height / pic->data->height;
-		if( scale_y < scale_x ) {
-			this_view.scale = scale_y;
-		} else {
-			this_view.scale = scale_x;
-		}
-		if( this_view.scale < 0.05 ) {
-			this_view.scale = 0.05;
-		}
-		this_view.min_scale = this_view.scale;
+	if( scale > MAX_SCALE ) {
+		scale = MAX_SCALE;
 	}
-	sheet = pic->view->custom_style->sheet;
-	sheet[key_background_size].is_valid = FALSE;
-	sheet[key_background_size_width].is_valid = FALSE;
-	sheet[key_background_size_height].is_valid = FALSE;
+	pic->scale = scale;
+	sheet = pic->view->custom_style;
+	width = (int)(scale * pic->data->width);
+	height = (int)(scale * pic->data->height);
+	SetStyle( sheet, key_background_size_width, width, px );
+	SetStyle( sheet, key_background_size_height, height, px );
 	Widget_UpdateStyle( pic->view, FALSE );
 	UpdatePicturePosition( pic );
 	if( pic == this_view.picture ) {
 		ResetOffsetPosition();
 		UpdateResetSizeButton();
 	}
+}
+
+static void SetPictureScale( Picture pic, double scale )
+{
+	if( scale <= pic->min_scale ) {
+		this_view.is_zoom_mode = FALSE;
+	} else {
+		this_view.is_zoom_mode = TRUE;
+	}
+	DirectSetPictureScale( pic, scale );
+}
+
+
+/** 重置当前显示的图片的尺寸 */
+static void ResetPictureSize( Picture pic )
+{
+	int width, height;
+	double scale_x, scale_y;
+	if( !Graph_IsValid( pic->data ) ) {
+		return;
+	}
+	GetViewerSize( &width, &height );
+	/* 如果尺寸小于图片查看器尺寸 */
+	if( pic->data->width < width && pic->data->height < height ) {
+		pic->scale = 1.0;
+	} else {
+		scale_x = 1.0 * width / pic->data->width;
+		scale_y = 1.0 * height / pic->data->height;
+		if( scale_y < scale_x ) {
+			pic->scale = scale_y;
+		} else {
+			pic->scale = scale_x;
+		}
+		if( pic->scale < 0.05 ) {
+			pic->scale = 0.05;
+		}
+		pic->min_scale = pic->scale;
+	}
+	DirectSetPictureScale( pic, pic->scale );
 }
 
 /** 在返回按钮被点击的时候 */
@@ -467,32 +510,6 @@ static void OnShowTipLoading( void *arg )
 		}
 	}
 	pic->timer = 0;
-}
-
-/** 设置当前图片缩放比例 */
-static void SetPictureScale( double scale )
-{
-	int width, height;
-	LCUI_StyleSheet sheet;
-	if( scale < this_view.min_scale ) {
-		scale = this_view.min_scale;
-		this_view.is_zoom_mode = FALSE;
-	} else {
-		this_view.is_zoom_mode = TRUE;
-	}
-	if( scale > MAX_SCALE ) {
-		scale = MAX_SCALE;
-	}
-	sheet = this_view.picture->view->custom_style;
-	width = (int)(scale * this_view.picture->data->width);
-	height = (int)(scale * this_view.picture->data->height);
-	SetStyle( sheet, key_background_size_width, width, px );
-	SetStyle( sheet, key_background_size_height, height, px );
-	Widget_RemoveClass( this_view.picture->view, "contain-mode" );
-	Widget_UpdateStyle( this_view.picture->view, FALSE );
-	this_view.scale = scale;
-	UpdatePicturePosition( this_view.picture );
-	UpdateResetSizeButton();
 }
 
 /** 向左滑动图片 */
@@ -544,17 +561,15 @@ static int HandleGesture( void )
 {
 	struct Gesture *g = &this_view.gesture;
 	int delta_time = (int)LCUI_GetTimeDelta( g->timestamp );
-	_DEBUG_MSG("%d\n", delta_time);
 	/* 如果坐标停止变化已经超过 100ms，或滑动距离太短，则视为无效手势 */
 	if( delta_time > 100 || abs( g->x - g->start_x ) < 80 ) {
 		return -1;
 	}
 	if( g->x > g->start_x ) {
-		SwitchPrevPicture();
+		return SwitchPrevPicture();
 		return 0;
 	} else if( g->x < g->start_x ) {
-		SwitchNextPicture();
-		return 0;
+		return SwitchNextPicture();
 	}
 	return -1;
 }
@@ -569,7 +584,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 	sheet = pic->view->custom_style;
 	if( this_view.drag.with_x ) {
 		int x, width;
-		width = (int)(pic->data->width * this_view.scale);
+		width = (int)(pic->data->width * pic->scale);
 		this_view.focus_x = this_view.drag.focus_x;
 		this_view.focus_x -= mouse_x - this_view.drag.mouse_x;
 		x = this_view.focus_x - this_view.offset_x;
@@ -583,14 +598,14 @@ static void DragPicture( int mouse_x, int mouse_y )
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_x, -x, px );
-		x = (int)(this_view.focus_x / this_view.scale);
+		x = (int)(this_view.focus_x / pic->scale);
 		this_view.origin_focus_x = x;
 	} else {
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	}
 	if( this_view.drag.with_y ) {
 		int y, height;
-		height = (int)(pic->data->height * this_view.scale);
+		height = (int)(pic->data->height * pic->scale);
 		this_view.focus_y = this_view.drag.focus_y;
 		this_view.focus_y -= mouse_y - this_view.drag.mouse_y;
 		y = this_view.focus_y - this_view.offset_y;
@@ -604,7 +619,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_y, -y, px );
-		y = (int)(this_view.focus_y / this_view.scale);
+		y = (int)(this_view.focus_y / pic->scale);
 		this_view.origin_focus_y = y;
 	} else {
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
@@ -734,7 +749,7 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		x = points[0]->x - (points[0]->x - points[1]->x) / 2;
 		y = points[0]->y - (points[0]->y - points[1]->y) / 2;
 		this_view.zoom.distance = (int)distance;
-		this_view.zoom.scale = this_view.scale;
+		this_view.zoom.scale = this_view.picture->scale;
 		this_view.zoom.is_running = TRUE;
 		this_view.zoom.x = x;
 		this_view.zoom.y = y;
@@ -747,13 +762,13 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		this_view.offset_y = this_view.zoom.y;
 		this_view.focus_x = x + this_view.offset_x;
 		this_view.focus_y = y + this_view.offset_y;
-		x = (int)(this_view.focus_x / this_view.scale + 0.5);
-		y = (int)(this_view.focus_y / this_view.scale + 0.5);
+		x = (int)(this_view.focus_x / this_view.picture->scale + 0.5);
+		y = (int)(this_view.focus_y / this_view.picture->scale + 0.5);
 		this_view.origin_focus_x = x;
 		this_view.origin_focus_y = y;
 		scale = this_view.zoom.scale;
 		scale *= distance / this_view.zoom.distance;
-		SetPictureScale( scale );
+		SetPictureScale( this_view.picture, scale );
 	}
 	for( i = 0; i < 2; ++i ) {
 		int j, id;
@@ -910,14 +925,14 @@ static int LoadPicture( Picture pic )
 static void OnBtnZoomInClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ResetOffsetPosition();
-	SetPictureScale( this_view.scale + 0.5 );
+	SetPictureScale( this_view.picture, this_view.picture->scale + 0.5 );
 }
 
 /** 在”缩小“按钮被点击的时候 */
 static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ResetOffsetPosition();
-	SetPictureScale( this_view.scale - 0.5 );
+	SetPictureScale( this_view.picture, this_view.picture->scale - 0.5 );
 }
 
 static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -955,13 +970,13 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	double scale;
-	if( this_view.scale == 1.0 ) {
-		scale = this_view.min_scale;
+	if( this_view.picture->scale == 1.0 ) {
+		scale = this_view.picture->min_scale;
 	} else {
 		scale = 1.0;
 	}
 	ResetOffsetPosition();
-	SetPictureScale( scale );
+	SetPictureScale( this_view.picture, scale );
 }
 
 /** 图片加载器 */

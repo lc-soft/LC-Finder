@@ -601,10 +601,6 @@ textedit.dialog-input {
 	background-position: center;
 	background-size: auto;
 }
-#picture-viewer-window .contain-mode {
-	background-size: contain;
-	background-position: center;
-}
 #picture-viewer-window .icon-btn .icon {
 	color: #444;
 	width: 24px;
