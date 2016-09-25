@@ -53,14 +53,29 @@
 #define XML_PATH	"res/ui-view-picture.xml"
 #define TEXT_DELETE	L"删除此文件？"
 
+#define ClearPositionStyle(W) do { \
+	W->custom_style->sheet[key_left].is_valid = FALSE; \
+	Widget_UpdateStyle( W, FALSE ); \
+} while(0);
+
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
+
+enum SliderDirection {
+	LEFT,
+	RIGHT
+};
+
+enum SliderAction {
+	SWITCH,
+	RESTORE
+};
 
 /** 图片实例 */
 typedef struct PcitureRec_ {
 	wchar_t *file;			/**< 当前已加载的图片的路径  */
 	wchar_t *file_for_load;		/**< 当前需加载的图片的路径  */
 	LCUI_BOOL is_loading;		/**< 是否正在载入图片 */
-	LCUI_Graph data;		/**< 当前已经加载的图片数据 */
+	LCUI_Graph *data;		/**< 当前已经加载的图片数据 */
 	LCUI_Widget view;		/**< 视图，用于呈现该图片 */
 	int timer;			/**< 定时器，用于延迟显示“载入中...”提示框 */
 } PictureRec, *Picture;
@@ -77,6 +92,7 @@ static struct PictureViewer {
 	LCUI_BOOL is_working;			/**< 当前视图是否在工作 */
 	LCUI_BOOL is_opening;			/**< 当前视图是否为打开状态 */
 	LCUI_BOOL is_zoom_mode;			/**< 当前视图是否为放大/缩小模式 */
+	LCUI_BOOL is_touch_mode;		/**< 当前是否为触屏模式 */
 	PictureRec pictures[3];			/**< 三组图片实例 */
 	int picture_i;				/**< 当前需加载的图片的序号（下标） */
 	Picture picture;			/**< 当前焦点图片 */
@@ -89,21 +105,36 @@ static struct PictureViewer {
 	int focus_x, focus_y;			/**< 当前焦点位置，相对于按比例缩放后的图片 */
 	int origin_focus_x, origin_focus_y;	/**< 当前焦点位置，相对于原始尺寸的图片 */
 	int offset_x, offset_y;			/**< 浏览区域的位置偏移量，相对于焦点位置 */
-	struct PictureDraging {			/**< 图片拖拽功能的相关数据 */
+	struct PictureDraging {
 		int focus_x, focus_y;		/**< 拖动开始时的图片坐标，相对于按比例缩放后的图片 */
 		int mouse_x, mouse_y;		/**< 拖动开始时的鼠标坐标 */
 		LCUI_BOOL is_running;		/**< 是否正在执行拖动操作 */
-		LCUI_BOOL is_started;		/**< 是否已经拖动过一次 */
 		LCUI_BOOL with_x;		/**< 拖动时是否需要改变图片X坐标 */
 		LCUI_BOOL with_y;		/**< 拖动时是否需要改变图片Y坐标 */
-	} drag;					/**< 实现图片拖动浏览功能所需的数据 */
-	struct PictureTouchZoom {		/**< 图片触控缩放功能的相关数据 */
+	} drag;					/**< 图片拖拽功能的相关数据 */
+	struct Gesture {
+		int x, y;			/**< 当前坐标 */
+		int start_x, start_y;		/**< 开始坐标 */
+		int64_t timestamp;		/**< 上次坐标更新时的时间戳 */
+		LCUI_BOOL is_running;		/**< 是否正在运行 */
+	} gesture;				/**< 手势功能的相关数据 */
+	struct PictureTouchZoom {
 		int point_ids[2];		/**< 两个触点的ID */
 		int distance;			/**< 触点距离 */
 		double scale;			/**< 缩放开始前的缩放比例 */
 		LCUI_BOOL is_running;		/**< 缩放是否正在进行 */
 		int x, y;			/**< 缩放开始前的触点位置 */
-	} zoom;
+	} zoom;					/**< 图片触控缩放功能的相关数据 */
+	struct SlideTransition {
+		int action;			/**< 在滑动完后的行为 */
+		int direction;			/**< 滚动方向 */
+		int src_x;			/**< 初始 X 坐标 */
+		int dst_x;			/**< 目标 X 坐标 */
+		int timer;			/**< 定时器 */
+		unsigned int duration;		/**< 持续时间 */
+		int64_t start_time;		/**< 开始时间 */
+		LCUI_BOOL is_running;		/**< 是否正在运行 */
+	} slide;				/**< 图片水平滑动功能的相关数据 */
 } this_view;
 
 /** 更新图片切换按钮的状态 */
@@ -158,6 +189,130 @@ static int OpenNextPicture( void )
 	return 0;
 }
 
+static void InitSlideTransition( void )
+{
+	struct SlideTransition *st;
+	st = &this_view.slide;
+	st->direction = 0;
+	st->src_x = 0;
+	st->dst_x = 0;
+	st->timer = 0;
+	st->duration = 300;
+	st->start_time = 0;
+	st->is_running = FALSE;
+}
+
+static void SetSliderPostion( int x )
+{
+	int width;
+	width = this_view.picture->view->width;
+	Widget_Move( this_view.pictures[0].view, x - width, 0 );
+	Widget_Move( this_view.pictures[1].view, x, 0 );
+	Widget_Move( this_view.pictures[2].view, x + width, 0 );
+}
+
+static void OnSlideTransition( void *arg )
+{
+	int delta, x;
+	unsigned int  delta_time;
+	struct SlideTransition *st;
+
+	st = &this_view.slide;
+	delta = st->dst_x - st->src_x;
+	delta_time = (unsigned int)LCUI_GetTimeDelta( st->start_time );
+	if( delta_time < st->duration ) {
+		x = st->src_x + delta * (int)delta_time / (int)st->duration;
+	} else {
+		x = st->dst_x;
+	}
+	SetSliderPostion( x );
+	if( x == st->dst_x ) {
+		st->timer = 0;
+		st->is_running = FALSE;
+		if( st->action != SWITCH ) {
+			return;
+		}
+		if( st->direction == RIGHT ) {
+			OpenPrevPicture();
+		} else {
+			OpenNextPicture();
+		}
+		ClearPositionStyle( this_view.pictures[0].view );
+		ClearPositionStyle( this_view.pictures[1].view );
+		ClearPositionStyle( this_view.pictures[2].view );
+		return;	
+	}
+	st->timer = LCUITimer_Set( 10, OnSlideTransition, NULL, FALSE );
+}
+
+static void RestoreSliderPosition( void )
+{
+	struct SlideTransition *st;
+	st = &this_view.slide;
+	if( st->is_running ) {
+		return;
+	}
+	st->action = RESTORE;
+	st->src_x = this_view.picture->view->x;
+	if( st->src_x == 0 ) {
+		return;
+	} else if( st->src_x < 0 ) {
+		st->direction = RIGHT;
+	} else {
+		st->direction = LEFT;
+	}
+	st->dst_x = 0;
+	st->is_running = TRUE;
+	st->start_time = LCUI_GetTime();
+	if( st->timer > 0 ) {
+		return;
+	}
+	st->timer = LCUITimer_Set( 20, OnSlideTransition, NULL, FALSE );
+}
+
+static void StartSlideTransition( int direction )
+{
+	struct SlideTransition *st;
+	st = &this_view.slide;
+	if( st->is_running ) {
+		return;
+	}
+	st->action = SWITCH;
+	st->direction = direction;
+	st->src_x = this_view.picture->view->x;
+	if( st->direction == RIGHT ) {
+		st->dst_x = this_view.picture->view->width;
+	} else {
+		st->dst_x = 0 - this_view.picture->view->width;
+	}
+	st->is_running = TRUE;
+	st->start_time = LCUI_GetTime();
+	if( st->timer > 0 ) {
+		return;
+	}
+	st->timer = LCUITimer_Set( 20, OnSlideTransition, NULL, FALSE );
+}
+
+static int SwitchPrevPicture( void )
+{
+	FileIterator iter = this_view.iterator;
+	if( !iter || iter->index == 0 ) {
+		return -1;
+	}
+	StartSlideTransition( RIGHT );
+	return 0;
+}
+
+static int SwitchNextPicture( void )
+{
+	FileIterator iter = this_view.iterator;
+	if( !iter || iter->index >= iter->length - 1 ) {
+		return -1;
+	}
+	StartSlideTransition( LEFT );
+	return 0;
+}
+
 static void UpdateResetSizeButton( void )
 {
 	LCUI_Widget txt = LinkedList_Get( &this_view.btn_reset->children, 0 );
@@ -171,20 +326,19 @@ static void UpdateResetSizeButton( void )
 }
 
 /** 更新图片位置 */
-static void UpdatePicturePosition( void )
+static void UpdatePicturePosition( Picture pic )
 {
 	LCUI_Style sheet;
 	int x, y, width, height;
-	Picture pic = this_view.picture;
 	sheet = pic->view->custom_style->sheet;
-	width = (int)(pic->data.width * this_view.scale);
-	height = (int)(pic->data.height * this_view.scale);
+	width = (int)(pic->data->width * this_view.scale);
+	height = (int)(pic->data->height * this_view.scale);
 	/* 若缩放后的图片宽度小于图片查看器的宽度 */
 	if( width <= pic->view->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
 		this_view.focus_x = width / 2;
-		this_view.origin_focus_x = pic->data.width / 2;
+		this_view.origin_focus_x = pic->data->width / 2;
 		x = (pic->view->width - width) / 2;
 		SetStyle( pic->view->custom_style,
 			  key_background_position_x, x, px );
@@ -212,7 +366,7 @@ static void UpdatePicturePosition( void )
 	if( height <= pic->view->height ) {
 		this_view.drag.with_y = FALSE;
 		this_view.focus_y = height / 2;
-		this_view.origin_focus_y = pic->data.height / 2;
+		this_view.origin_focus_y = pic->data->height / 2;
 		sheet[key_background_position_y].is_valid = FALSE;
 		y = (pic->view->height - height) / 2;
 		SetStyle( pic->view->custom_style,
@@ -246,23 +400,22 @@ static void ResetOffsetPosition( void )
 }
 
 /** 重置当前显示的图片的尺寸 */
-static void ResetPictureSize( void )
+static void ResetPictureSize( Picture pic )
 {
 	LCUI_Style sheet;
 	double scale_x, scale_y;
-	Picture pic = this_view.picture;
-	if( !Graph_IsValid( &pic->data ) ) {
+	if( !Graph_IsValid( pic->data ) ) {
 		return;
 	}
 	/* 如果尺寸小于图片查看器尺寸 */
-	if( pic->data.width < pic->view->width && 
-	    pic->data.height < pic->view->height ) {
+	if( pic->data->width < pic->view->width && 
+	    pic->data->height < pic->view->height ) {
 		Widget_RemoveClass( pic->view, "contain-mode" );
 		this_view.scale = 1.0;
 	} else {
 		Widget_AddClass( pic->view, "contain-mode" );
-		scale_x = 1.0 * pic->view->width / pic->data.width;
-		scale_y = 1.0 * pic->view->height / pic->data.height;
+		scale_x = 1.0 * pic->view->width / pic->data->width;
+		scale_y = 1.0 * pic->view->height / pic->data->height;
 		if( scale_y < scale_x ) {
 			this_view.scale = scale_y;
 		} else {
@@ -278,9 +431,11 @@ static void ResetPictureSize( void )
 	sheet[key_background_size_width].is_valid = FALSE;
 	sheet[key_background_size_height].is_valid = FALSE;
 	Widget_UpdateStyle( pic->view, FALSE );
-	ResetOffsetPosition();
-	UpdatePicturePosition();
-	UpdateResetSizeButton();
+	UpdatePicturePosition( pic );
+	if( pic == this_view.picture ) {
+		ResetOffsetPosition();
+		UpdateResetSizeButton();
+	}
 }
 
 /** 在返回按钮被点击的时候 */
@@ -293,9 +448,13 @@ static OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnPictureResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	if( this_view.is_zoom_mode ) {
-		UpdatePicturePosition();
+		UpdatePicturePosition( &this_view.pictures[0] );
+		UpdatePicturePosition( &this_view.pictures[1] );
+		UpdatePicturePosition( &this_view.pictures[2] );
 	} else {
-		ResetPictureSize();
+		ResetPictureSize( &this_view.pictures[0] );
+		ResetPictureSize( &this_view.pictures[1] );
+		ResetPictureSize( &this_view.pictures[2] );
 	}
 }
 
@@ -325,15 +484,79 @@ static void SetPictureScale( double scale )
 		scale = MAX_SCALE;
 	}
 	sheet = this_view.picture->view->custom_style;
-	width = (int)(scale * this_view.picture->data.width);
-	height = (int)(scale * this_view.picture->data.height);
+	width = (int)(scale * this_view.picture->data->width);
+	height = (int)(scale * this_view.picture->data->height);
 	SetStyle( sheet, key_background_size_width, width, px );
 	SetStyle( sheet, key_background_size_height, height, px );
 	Widget_RemoveClass( this_view.picture->view, "contain-mode" );
 	Widget_UpdateStyle( this_view.picture->view, FALSE );
 	this_view.scale = scale;
-	UpdatePicturePosition();
+	UpdatePicturePosition( this_view.picture );
 	UpdateResetSizeButton();
+}
+
+/** 向左滑动图片 */
+static void LeftSlidePicture( void )
+{
+
+}
+
+/** 向右滑动图片 */
+static void RightSlidePicture( void )
+{
+
+}
+
+static void StartGesture( int mouse_x, int mouse_y )
+{
+	struct Gesture *g;
+	g = &this_view.gesture;
+	g->x = mouse_x;
+	g->y = mouse_y;
+	g->start_x = mouse_x;
+	g->start_y = mouse_y;
+	g->timestamp = LCUI_GetTime();
+	g->is_running = TRUE;
+}
+
+static void StopGesture( void )
+{
+	this_view.gesture.is_running = FALSE;
+}
+
+static void UpdateGesture( int mouse_x, int mouse_y )
+{
+	struct Gesture *g = &this_view.gesture;
+	/* 只处理左右滑动 */
+	if( g->x != mouse_x ) {
+		/* 如果滑动方向不同 */
+		if( g->x > g->start_x && mouse_x < g->x ||
+		    g->x < g->start_x && mouse_x > g->x ) {
+			g->start_x = mouse_x;
+		}
+		g->x = mouse_x;
+		g->timestamp = LCUI_GetTime();
+	}
+	g->y = mouse_y;
+}
+
+static int HandleGesture( void )
+{
+	struct Gesture *g = &this_view.gesture;
+	int delta_time = (int)LCUI_GetTimeDelta( g->timestamp );
+	_DEBUG_MSG("%d\n", delta_time);
+	/* 如果坐标停止变化已经超过 100ms，或滑动距离太短，则视为无效手势 */
+	if( delta_time > 100 || abs( g->x - g->start_x ) < 80 ) {
+		return -1;
+	}
+	if( g->x > g->start_x ) {
+		SwitchPrevPicture();
+		return 0;
+	} else if( g->x < g->start_x ) {
+		SwitchNextPicture();
+		return 0;
+	}
+	return -1;
 }
 
 static void DragPicture( int mouse_x, int mouse_y )
@@ -346,7 +569,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 	sheet = pic->view->custom_style;
 	if( this_view.drag.with_x ) {
 		int x, width;
-		width = (int)(pic->data.width * this_view.scale);
+		width = (int)(pic->data->width * this_view.scale);
 		this_view.focus_x = this_view.drag.focus_x;
 		this_view.focus_x -= mouse_x - this_view.drag.mouse_x;
 		x = this_view.focus_x - this_view.offset_x;
@@ -367,7 +590,7 @@ static void DragPicture( int mouse_x, int mouse_y )
 	}
 	if( this_view.drag.with_y ) {
 		int y, height;
-		height = (int)(pic->data.height * this_view.scale);
+		height = (int)(pic->data->height * this_view.scale);
 		this_view.focus_y = this_view.drag.focus_y;
 		this_view.focus_y -= mouse_y - this_view.drag.mouse_y;
 		y = this_view.focus_y - this_view.offset_y;
@@ -392,6 +615,10 @@ static void DragPicture( int mouse_x, int mouse_y )
 /** 当鼠标在图片容器上移动的时候 */
 static void OnPictureMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	/* 如果是触控模式就不再处理鼠标事件了，因为触控事件中已经处理了一次图片拖动 */
+	if( this_view.is_touch_mode ) {
+		return;
+	}
 	DragPicture( e->motion.x, e->motion.y );
 }
 
@@ -407,8 +634,10 @@ static void OnPictureMouseUp( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 当鼠标按钮在图片容器上点住的时候 */
 static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	this_view.drag.is_started = TRUE;
 	this_view.drag.is_running = TRUE;
+	if( !this_view.is_zoom_mode ) {
+		StartGesture( e->motion.x, e->motion.y );
+	}
 	this_view.drag.mouse_x = e->motion.x;
 	this_view.drag.mouse_y = e->motion.y;
 	this_view.drag.focus_x = this_view.focus_x;
@@ -420,7 +649,6 @@ static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnPictureTouchDown( LCUI_TouchPoint point )
 {
-	this_view.drag.is_started = TRUE;
 	this_view.drag.is_running = TRUE;
 	this_view.drag.mouse_x = point->x;
 	this_view.drag.mouse_y = point->y;
@@ -432,12 +660,22 @@ static void OnPictureTouchDown( LCUI_TouchPoint point )
 static void OnPictureTouchUp( LCUI_TouchPoint point )
 {
 	this_view.drag.is_running = FALSE;
+	if( this_view.gesture.is_running ) {
+		if( HandleGesture() != 0 ) {
+			RestoreSliderPosition();
+		}
+		StopGesture();
+	}
 	Widget_ReleaseTouchCapture( this_view.picture->view, -1 );
 }
 
 static void OnPictureTouchMove( LCUI_TouchPoint point )
 {
 	DragPicture( point->x, point->y );
+	if( this_view.gesture.is_running ) {
+		UpdateGesture( point->x, point->y );
+		SetSliderPostion( point->x - this_view.drag.mouse_x );
+	}
 }
 
 static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -454,6 +692,7 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		point = &e->touch.points[0];
 		switch( point->state ) {
 		case WET_TOUCHDOWN: 
+			this_view.is_touch_mode = TRUE;
 			OnPictureTouchDown( point );
 			point_ids[0] = point->id;
 			break;
@@ -461,6 +700,7 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 			OnPictureTouchMove( point );
 			break;
 		case WET_TOUCHUP: 
+			this_view.is_touch_mode = FALSE;
 			OnPictureTouchUp( point ); 
 			point_ids[0] = -1;
 			break;
@@ -551,8 +791,8 @@ static void InitPicture( Picture pic )
 	pic->file = NULL;
 	pic->is_loading = FALSE;
 	pic->file_for_load = NULL;
+	pic->data = Graph_New();
 	pic->view = LCUIWidget_New( "picture" );
-	Graph_Init( &pic->data );
 	Widget_Append( this_view.view_pictures, pic->view );
 	BindEvent( pic->view, "resize", OnPictureResize );
 	BindEvent( pic->view, "touch", OnPictureTouch );
@@ -633,9 +873,9 @@ static int LoadPicture( Picture pic )
 	/** 500毫秒后显示 "图片载入中..." 的提示 */
 	this_view.picture->timer = LCUITimer_Set( 500, OnShowTipLoading, 
 						  this_view.picture, FALSE );
-	if( Graph_IsValid( &pic->data ) ) {
+	if( Graph_IsValid( pic->data ) ) {
 		Widget_Lock( pic->view );
-		Graph_Free( &pic->data );
+		Graph_Free( pic->data );
 		sheet->sheet[key_background_image].is_valid = FALSE;
 		Widget_UpdateBackground( pic->view );
 		Widget_UpdateStyle( pic->view, FALSE );
@@ -651,12 +891,12 @@ static int LoadPicture( Picture pic )
 	len = LCUI_EncodeString( NULL, wpath, 0, encoding ) + 1;
 	path = malloc( sizeof( char ) * len );
 	LCUI_EncodeString( path, wpath, len, encoding );
-	Graph_LoadImage( path, &pic->data );
+	Graph_LoadImage( path, pic->data );
 	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
 	if( !pic->file_for_load ) {
-		SetStyle( sheet, key_background_image, &pic->data, image );
+		SetStyle( sheet, key_background_image, pic->data, image );
 		Widget_UpdateStyle( pic->view, FALSE );
-		ResetPictureSize();
+		ResetPictureSize( pic );
 	}
 	pic->is_loading = FALSE;
 	if( this_view.picture->view == pic->view ) {
@@ -682,11 +922,11 @@ static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	OpenPrevPicture();
+	SwitchPrevPicture();
 }
 static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	OpenNextPicture();
+	SwitchNextPicture();
 }
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
@@ -780,6 +1020,7 @@ void UI_InitPictureView( void )
 	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_PICTURE_NOT_FOUND );
 	this_view.view_pictures = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
 	this_view.btn_reset = btn[0];
+	InitSlideTransition();
 	InitPicture( &this_view.pictures[0] );
 	InitPicture( &this_view.pictures[1] );
 	InitPicture( &this_view.pictures[2] );
@@ -804,7 +1045,6 @@ void UI_OpenPictureView( const char *filepath )
 	wchar_t *wpath;
 	LCUI_Widget main_window, root;
 
-	_DEBUG_MSG("open: %s\n", filepath);
 	len = strlen( filepath );
 	root = LCUIWidget_GetRoot();
 	LCUIMutex_Lock( &this_view.mutex );
@@ -844,7 +1084,7 @@ void UI_ClosePictureView( void )
 	LCUI_Widget root = LCUIWidget_GetRoot();
 	LCUI_Widget main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, L"LC-Finder" );
-	ResetPictureSize();
+	ResetPictureSize( this_view.picture );
 	Widget_Show( main_window );
 	Widget_Hide( this_view.window );
 	this_view.is_opening = FALSE;
