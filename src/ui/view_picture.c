@@ -58,6 +58,11 @@
 	Widget_UpdateStyle( W, FALSE ); \
 } while(0);
 
+#define HideSiwtchButtons() do { \
+	Widget_Hide( this_view.btn_prev ); \
+	Widget_Hide( this_view.btn_next ); \
+} while(0);
+
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
 
 enum SliderDirection {
@@ -157,6 +162,9 @@ static void UpdateSwitchButtons( void )
 	FileIterator iter = this_view.iterator;
 	Widget_Hide( this_view.btn_prev );
 	Widget_Hide( this_view.btn_next );
+	if( this_view.is_zoom_mode ) {
+		return;
+	}
 	if( iter ) {
 		if( iter->index > 0 ) {
 			Widget_Show( this_view.btn_prev );
@@ -332,34 +340,30 @@ static int SwitchNextPicture( void )
 static void UpdateResetSizeButton( void )
 {
 	LCUI_Widget txt = LinkedList_Get( &this_view.btn_reset->children, 0 );
-	if( this_view.picture->scale == 1.0 ) {
-		Widget_RemoveClass( txt, "mdi-fullscreen" );
-		Widget_AddClass( txt, "mdi-fullscreen-exit" );
-	} else {
+	if( this_view.picture->scale == this_view.picture->min_scale ) {
 		Widget_RemoveClass( txt, "mdi-fullscreen-exit" );
 		Widget_AddClass( txt, "mdi-fullscreen" );
+	} else {
+		Widget_RemoveClass( txt, "mdi-fullscreen" );
+		Widget_AddClass( txt, "mdi-fullscreen-exit" );
 	}
 }
 
 /** 更新图片位置 */
 static void UpdatePicturePosition( Picture pic )
 {
-	LCUI_Style sheet;
-	int x, y, width, height;
-	int viewer_width, viewer_height;
-	sheet = pic->view->custom_style->sheet;
+	LCUI_StyleSheet sheet;
+	int x = 0, y = 0, width, height;
+	sheet = pic->view->custom_style;
 	width = (int)(pic->data->width * pic->scale);
 	height = (int)(pic->data->height * pic->scale);
-	GetViewerSize( &viewer_width, &viewer_height );
 	/* 若缩放后的图片宽度小于图片查看器的宽度 */
-	if( width <= viewer_width ) {
+	if( width <= pic->view->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
 		this_view.focus_x = width / 2;
 		this_view.origin_focus_x = pic->data->width / 2;
-		x = (pic->view->width - width) / 2;
-		SetStyle( pic->view->custom_style,
-			  key_background_position_x, x, px );
+		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	} else {
 		this_view.drag.with_x = TRUE;
 		x = this_view.origin_focus_x;
@@ -374,21 +378,17 @@ static void UpdatePicturePosition( Picture pic )
 			x = width - pic->view->width;
 			this_view.focus_x = x + this_view.offset_x;
 		}
-		SetStyle( pic->view->custom_style,
-			  key_background_position_x, -x, px );
+		SetStyle( sheet, key_background_position_x, -x, px );
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
 		x = (int)(this_view.focus_x / pic->scale + 0.5);
 		this_view.origin_focus_x = x;
 	}
 	/* 原理同上 */
-	if( height <= viewer_height ) {
+	if( height <= pic->view->height ) {
 		this_view.drag.with_y = FALSE;
 		this_view.focus_y = height / 2;
 		this_view.origin_focus_y = pic->data->height / 2;
-		sheet[key_background_position_y].is_valid = FALSE;
-		y = (pic->view->height - height) / 2;
-		SetStyle( pic->view->custom_style,
-			  key_background_position_y, y, px );
+		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	} else {
 		this_view.drag.with_y = TRUE;
 		y = this_view.origin_focus_y;
@@ -402,8 +402,7 @@ static void UpdatePicturePosition( Picture pic )
 			y = height - pic->view->height;
 			this_view.focus_y = y + this_view.offset_y;
 		}
-		SetStyle( pic->view->custom_style,
-			  key_background_position_y, -y, px );
+		SetStyle( sheet, key_background_position_y, -y, px );
 		y = (int)(this_view.focus_y / pic->scale + 0.5);
 		this_view.origin_focus_y = y;
 	}
@@ -437,7 +436,7 @@ static void DirectSetPictureScale( Picture pic, double scale )
 	Widget_UpdateStyle( pic->view, FALSE );
 	UpdatePicturePosition( pic );
 	if( pic == this_view.picture ) {
-		ResetOffsetPosition();
+		UpdateSwitchButtons();
 		UpdateResetSizeButton();
 	}
 }
@@ -478,6 +477,7 @@ static void ResetPictureSize( Picture pic )
 		}
 		pic->min_scale = pic->scale;
 	}
+	ResetOffsetPosition();
 	DirectSetPictureScale( pic, pic->scale );
 }
 
@@ -640,6 +640,9 @@ static void OnPictureMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 当鼠标按钮在图片容器上释放的时候 */
 static void OnPictureMouseUp( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	if( this_view.is_touch_mode ) {
+		return;
+	}
 	this_view.drag.is_running = FALSE;
 	Widget_UnbindEvent( w, "mouseup", OnPictureMouseUp );
 	Widget_UnbindEvent( w, "mousemove", OnPictureMouseMove );
@@ -649,10 +652,10 @@ static void OnPictureMouseUp( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 当鼠标按钮在图片容器上点住的时候 */
 static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	this_view.drag.is_running = TRUE;
-	if( !this_view.is_zoom_mode ) {
-		StartGesture( e->motion.x, e->motion.y );
+	if( this_view.is_touch_mode ) {
+		return;
 	}
+	this_view.drag.is_running = TRUE;
 	this_view.drag.mouse_x = e->motion.x;
 	this_view.drag.mouse_y = e->motion.y;
 	this_view.drag.focus_x = this_view.focus_x;
@@ -664,7 +667,11 @@ static void OnPictureMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnPictureTouchDown( LCUI_TouchPoint point )
 {
+	this_view.is_touch_mode = TRUE;
 	this_view.drag.is_running = TRUE;
+	if( !this_view.is_zoom_mode ) {
+		StartGesture( point->x, point->y );
+	}
 	this_view.drag.mouse_x = point->x;
 	this_view.drag.mouse_y = point->y;
 	this_view.drag.focus_x = this_view.focus_x;
@@ -674,10 +681,13 @@ static void OnPictureTouchDown( LCUI_TouchPoint point )
 
 static void OnPictureTouchUp( LCUI_TouchPoint point )
 {
+	this_view.is_touch_mode = FALSE;
 	this_view.drag.is_running = FALSE;
 	if( this_view.gesture.is_running ) {
-		if( HandleGesture() != 0 ) {
-			RestoreSliderPosition();
+		if( !this_view.zoom.is_running && !this_view.is_zoom_mode ) {
+			if( HandleGesture() != 0 ) {
+				RestoreSliderPosition();
+			}
 		}
 		StopGesture();
 	}
@@ -707,7 +717,6 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		point = &e->touch.points[0];
 		switch( point->state ) {
 		case WET_TOUCHDOWN: 
-			this_view.is_touch_mode = TRUE;
 			OnPictureTouchDown( point );
 			point_ids[0] = point->id;
 			break;
@@ -715,7 +724,6 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 			OnPictureTouchMove( point );
 			break;
 		case WET_TOUCHUP: 
-			this_view.is_touch_mode = FALSE;
 			OnPictureTouchUp( point ); 
 			point_ids[0] = -1;
 			break;
@@ -723,6 +731,7 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		}
 		return;
 	}
+	StopGesture();
 	this_view.drag.is_running = FALSE;
 	/* 遍历各个触点，确定两个用于缩放功能的触点 */
 	for( i = 0; i < e->touch.n_points; ++i ) {
@@ -970,7 +979,7 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	double scale;
-	if( this_view.picture->scale == 1.0 ) {
+	if( this_view.picture->scale != this_view.picture->min_scale ) {
 		scale = this_view.picture->min_scale;
 	} else {
 		scale = 1.0;
