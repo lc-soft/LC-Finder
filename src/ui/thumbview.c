@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
@@ -378,8 +379,8 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 	Dict *dbs;
 	DB_Dir dir;
 	ThumbDB db;
-	uint_t mtime;
 	int len, ret;
+	struct stat buf;
 	ThumbDataRec tdata;
 	ThumbViewItem item;
 	const char *filename;
@@ -413,11 +414,11 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		LCUI_DecodeString( wpath, item->path, 
 				   PATH_LEN, ENCODING_UTF8 );
 	}
-	mtime = (uint_t)wgetfilemtime( wpath );
+	wgetfilestat( wpath, &buf );
 	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
 	ret = ThumbDB_Load( db, filename, &tdata );
 	DEBUG_MSG( "load thumb from: %s\n", filename );
-	if( ret != 0 || tdata.modify_time != mtime ) {
+	if( ret != 0 || tdata.modify_time != buf.st_mtime ) {
 		LCUI_Graph img;
 		Graph_Init( &img );
 		Graph_Init( &tdata.graph );
@@ -426,7 +427,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		}
 		tdata.origin_width = img.width;
 		tdata.origin_height = img.height;
-		tdata.modify_time = mtime;
+		tdata.modify_time = buf.st_mtime;
 		if( img.height > THUMB_MAX_WIDTH ) {
 			Graph_Zoom( &img, &tdata.graph, TRUE,
 				    0, THUMB_MAX_WIDTH );

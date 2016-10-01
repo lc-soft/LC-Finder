@@ -40,11 +40,16 @@
 #define PATH_LEN 2048
 
 #ifdef _WIN32
+#include <io.h>
 #define PATH_SEP '\\'
 #else
+#include <unistd.h>
 #define PATH_SEP '/'
 #endif
 
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <wchar.h>
 #include <stdint.h>
@@ -63,11 +68,7 @@ const char *getfilename( const char *path );
 
 const wchar_t *wgetfilename( const wchar_t *path );
 
-time_t wgetfilectime( const wchar_t *wpath );
-
-time_t wgetfilemtime( const wchar_t *wpath );
-
-int64_t wgetfilesize( const wchar_t *wpath );
+int wgetfilestat( const wchar_t *wpath, struct stat *buf );
 
 int pathjoin( char *path, const char *path1, const char *path2 );
 
@@ -75,6 +76,8 @@ int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
 
 /** 获取程序当前所在目录 */
 void wgetcurdir( wchar_t *path, int max_len );
+
+int wmkdir( wchar_t *wpath );
 
 Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
 		      void (*val_del)(void*, void*) );

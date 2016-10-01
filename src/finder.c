@@ -46,7 +46,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <direct.h>
-#define mkdir(PATH) _wmkdir(PATH)
 #endif
 #include "finder.h"
 #include "ui.h"
@@ -245,18 +244,20 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 
 static void SyncAddedFile( void *data, const wchar_t *wpath )
 {
-	static char path[PATH_LEN];
+	struct stat buf;
+	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
-	time_t ctime = wgetfilectime( wpath );
+
+	wgetfilestat( wpath, &buf );
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
-	DB_AddFile( pack->dir, path, (int)ctime );
+	DB_AddFile( pack->dir, path, (int)buf.st_ctime, (int)buf.st_mtime );
 	//wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
 static void SyncDeletedFile( void *data, const wchar_t *wpath )
 {
-	static char path[PATH_LEN];
+	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
@@ -280,10 +281,15 @@ DB_Dir LCFinder_GetSourceDir( const char *filepath )
 int64_t LCFinder_GetThumbDBTotalSize( void )
 {
 	int i;
+	struct stat buf;
 	int64_t sum_size;
+
 	for( i = 0, sum_size = 0; i < finder.n_dirs; ++i ) {
-		if( finder.thumb_paths[i] ) {
-			sum_size += wgetfilesize( finder.thumb_paths[i] );
+		if( !finder.thumb_paths[i] ) {
+			continue;
+		}
+		if( wgetfilestat( finder.thumb_paths[i], &buf ) == 0) {
+			sum_size += buf.st_size;
 		}
 	}
 	return sum_size;
@@ -387,9 +393,9 @@ static void LCFinder_InitWorkDir( void )
 	wcsncpy( finder.data_dir, data_dir, len );
 	swprintf( finder.fileset_dir, len1, L"%ls%ls", data_dir, dirs[0] );
 	swprintf( finder.thumbs_dir, len2, L"%ls%ls", data_dir, dirs[1] );
-	mkdir( finder.data_dir );
-	mkdir( finder.fileset_dir );
-	mkdir( finder.thumbs_dir );
+	wmkdir( finder.data_dir );
+	wmkdir( finder.fileset_dir );
+	wmkdir( finder.thumbs_dir );
 #ifdef _WIN32
 	_wsetlocale(LC_ALL, L"chs");
 #endif
@@ -502,9 +508,7 @@ static void LCFinder_InitThumbDB( void )
 		if( !finder.dirs[i] ) {
 			continue;
 		}
-		printf("source dir: %s\n", finder.dirs[i]->path);
 		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
-		printf("thumbdb file: %S\n", path);
 		finder.thumb_paths[i] = path;
 	}
 	printf("[thumbdb] init done\n");

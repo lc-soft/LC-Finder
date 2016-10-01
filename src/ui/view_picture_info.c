@@ -245,28 +245,38 @@ void UI_InitPictureInfoView( void )
 void UI_SetPictureInfoView( const char *filepath )
 {
 	size_t len;
-	char *apath;
 	DB_Tag *tags;
+	struct stat buf;
 	int i, n, width, height;
 	wchar_t str[256], *path, *dirpath;
+
 	len = strlen( filepath ) + 1;
-	apath = malloc( sizeof( wchar_t ) * len );
 	path = malloc( sizeof( wchar_t ) * len );
 	dirpath = malloc( sizeof( wchar_t ) * len );
 	LCUI_DecodeString( path, filepath, len, ENCODING_UTF8 );
-	LCUI_EncodeString( apath, path, len, ENCODING_ANSI );
+#ifdef _WIN32
+	{
+		char *apath = malloc( sizeof( char ) * len );
+		LCUI_EncodeString( apath, path, len, ENCODING_ANSI );
+		Graph_GetImageSize( apath, &width, &height );
+		free( apath );
+	}
+#else
+	Graph_GetImageSize( filepath, &width, &height );
+#endif
+
 	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );
 	wgetdirpath( dirpath, len, path );
+	wgetfilestat( path, &buf );
 	TextView_SetTextW( this_view.txt_dirpath, dirpath );
-	this_view.mtime = wgetfilemtime( path );
+	this_view.mtime = buf.st_mtime;
 	wgettimestr( str, 256, this_view.mtime );
 	TextView_SetTextW( this_view.txt_time, str );
-	Graph_GetImageSize( apath, &width, &height );
 	swprintf( str, 256, L"%dx%d", width, height );
 	TextView_SetTextW( this_view.txt_size, str );
 	this_view.width = width;
 	this_view.height = height;
-	this_view.size = wgetfilesize( path );
+	this_view.size = buf.st_size;
 	getsizestr( str, 256, this_view.size );
 	TextView_SetTextW( this_view.txt_fsize, str );
 	if( this_view.filepath ) {

@@ -38,14 +38,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#ifdef _WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
@@ -55,7 +47,7 @@
 char *EncodeUTF8( const wchar_t *wstr )
 {
 	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
-	char *str = malloc( len * sizeof(wchar_t) );
+	char *str = malloc( len * sizeof(char) );
 	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
 	return str;
 }
@@ -205,85 +197,26 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 	return i;
 }
 
-time_t wgetfilectime( const wchar_t *wpath )
+int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 {
-	int fd;
-	time_t ctime = 0;
-	struct stat buf;
+	int fd, ret = -1;
 #ifdef _WIN32
 	fd = _wopen( wpath, _O_RDONLY );
 	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			ctime = buf.st_ctime;
-		}
+		ret = fstat( fd, buf );
 		_close( fd );
 	}
 #else
-	char *path = EncodeUTF8( wpath );
-	fd = open( path, O_RDONLY);
+	char *path;
+	path = EncodeUTF8( wpath );
+	fd = open( path, O_RDONLY );
 	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			ctime = buf.st_ctime;
-		}
+		ret = fstat( fd, buf );
 		close( fd );
 	}
 	free( path );
 #endif
-	return ctime;
-}
-
-time_t wgetfilemtime( const wchar_t *wpath )
-{
-	int fd;
-	time_t mtime = 0;
-	struct stat buf;
-#ifdef _WIN32
-	fd = _wopen( wpath, _O_RDONLY );
-	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			mtime = buf.st_mtime;
-		}
-		_close( fd );
-	}
-#else
-	char *path = EncodeUTF8( wpath );
-	fd = open( path, O_RDONLY);
-	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			mtime = buf.st_mtime;
-		}
-		close( fd );
-	}
-	free( path );
-#endif
-	return mtime;
-}
-
-int64_t wgetfilesize( const wchar_t *wpath )
-{
-	int fd;
-	int64_t size = 0;
-	struct stat buf;
-#ifdef _WIN32
-	fd = _wopen( wpath, _O_RDONLY );
-	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			size = buf.st_size;
-		}
-		_close( fd );
-	}
-#else
-	char *path = EncodeUTF8( wpath );
-	fd = open( path, O_RDONLY);
-	if( fd > 0 ) {
-		if( fstat( fd, &buf ) == 0 ) {
-			size = buf.st_size;
-		}
-		close( fd );
-	}
-	free( path );
-#endif
-	return size;
+	return ret;
 }
 
 int pathjoin( char *path, const char *path1, const char *path2 )
@@ -306,7 +239,9 @@ int pathjoin( char *path, const char *path1, const char *path2 )
 int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 {
 	int len = wcslen( path1 );
-	wcscpy( path, path1 );
+	if( path != path1 ) {
+		wcscpy( path, path1 );
+	}
 	if( path1[len-1] != PATH_SEP ) {
 		path[len++] = PATH_SEP;
 		path[len] = 0;
@@ -329,6 +264,18 @@ void wgetcurdir( wchar_t *wpath, int max_len )
 	getcwd( path, max_len );
 	LCUI_DecodeString( wpath, path, max_len, ENCODING_UTF8 );
 	free( path );
+#endif
+}
+
+int wmkdir( wchar_t *wpath )
+{
+#ifdef _WIN32
+	_wmkdir( wpath );
+#else
+	char *path = EncodeUTF8( wpath );
+	int ret = mkdir( path, S_IRWXU );
+	free( path );
+	return ret;
 #endif
 }
 
@@ -429,7 +376,8 @@ int wmovefiletotrash( const wchar_t *wfilepath )
 	sctFileOp.pTo = NULL;
 	sctFileOp.pFrom = path;
 	sctFileOp.wFunc = FO_DELETE;
-	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION |
+			   FOF_NOERRORUI | FOF_SILENT;
 	ret = SHFileOperationW( &sctFileOp );
 	free( path );
 	return ret;

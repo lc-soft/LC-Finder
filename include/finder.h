@@ -60,10 +60,10 @@ enum LCFinderEventType {
 
 /** LCFinder 的主要数据记录 */
 typedef struct Finder_ {
-	DB_Dir *dirs;			/** 源文件夹列表 */
-	DB_Tag *tags;			/** 标签列表 */
-	int n_dirs;			/** 多少个源文件夹 */
-	int n_tags;			/** 多少个标签 */
+	DB_Dir *dirs;			/**< 源文件夹列表 */
+	DB_Tag *tags;			/**< 标签列表 */
+	int n_dirs;			/**< 多少个源文件夹 */
+	int n_tags;			/**< 多少个标签 */
 	wchar_t *data_dir;		/**< 数据文件夹 */
 	wchar_t *fileset_dir;		/**< 文件列表缓存所在文件夹 */
 	wchar_t *thumbs_dir;		/**< 缩略图数据库所在文件夹 */
