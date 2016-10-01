@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS file (\
 	width INTEGER DEFAULT 0,\
 	height INTEGER DEFAULT 0,\
 	create_time INTEGER NOT NULL,\
+	modify_time INTEGER NOT NULL,\
 	FOREIGN KEY(did) REFERENCES dir(id) ON DELETE CASCADE\
 );\
 CREATE TABLE IF NOT EXISTS tag_group (\
@@ -139,18 +140,18 @@ REPLACE INTO file_tag_relation(fid, tid) VALUES(?, ?);";
 STATIC_STR sql_file_del_tag = "\
 DELETE FROM file_tag_relation WHERE fid = ? AND tid = ?;";
 STATIC_STR sql_add_file = "\
-INSERT INTO file(did, path, create_time) VALUES(?,  ?, ?);";
+INSERT INTO file(did, path, create_time, modify_time) VALUES(?, ?, ?, ?);";
 STATIC_STR sql_del_file = "DELETE FROM file WHERE path = ?;";
 STATIC_STR sql_get_tag = "SELECT id FROM tag WHERE name = ?;";
 STATIC_STR sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 STATIC_STR sql_get_file = "\
-SELECT f.id, f.did, f.score, f.path, f.width, f.height, f.create_time \
-FROM file f WHERE f.path = ?;";
+SELECT f.id, f.did, f.score, f.path, f.width, f.height, f.create_time, \
+f.modify_time FROM file f WHERE f.path = ?;";
 STATIC_STR sql_get_file_tags = "\
 SELECT t.id, t.name, count(*) FROM tag t, file_tag_relation ftr \
 WHERE t.id = ftr.tid and ftr.fid = ? GROUP BY t.id ORDER BY count(*) ASC;";
 STATIC_STR sql_search_files = "SELECT f.id, f.did, f.score, f.path, \
-f.width, f.height, f.create_time FROM file f ";
+f.width, f.height, f.create_time, f.modify_time FROM file f ";
 STATIC_STR sql_count_files = "SELECT COUNT(*) FROM ";
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
@@ -375,13 +376,14 @@ DB_Tag DB_AddTag( const char *tagname )
 	return tag;
 }
 
-void DB_AddFile( DB_Dir dir, const char *filepath, int create_time )
+void DB_AddFile( DB_Dir dir, const char *filepath, int ctime, int mtime )
 {
 	sqlite3_stmt *stmt = self.stmts[SQL_ADD_FILE];
 	sqlite3_reset( stmt );
 	sqlite3_bind_int( stmt, 1, dir->id );
 	sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
-	sqlite3_bind_int( stmt, 3, create_time );
+	sqlite3_bind_int( stmt, 3, ctime );
+	sqlite3_bind_int( stmt, 4, mtime );
 	sqlite3_step( stmt );
 }
 
@@ -424,6 +426,7 @@ static DB_File DB_LoadFile( sqlite3_stmt *stmt )
 	file->width = sqlite3_column_int( stmt, 4 );
 	file->height = sqlite3_column_int( stmt, 5 );
 	file->create_time = sqlite3_column_int( stmt, 6 );
+	file->modify_time = sqlite3_column_int( stmt, 7 );
 	len = strlen( path ) + 1;
 	file->path = malloc( len *sizeof( char ) );
 	strncpy( file->path, path, len );
@@ -710,6 +713,15 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	} else if( terms->create_time == ASC ) {
 		strcat( q->sql_orderby, buf_orderby );
 		strcat( q->sql_orderby, "f.create_time ASC " );
+		strcpy( buf_orderby, ", " );
+	}
+	if( terms->modify_time == DESC ) {
+		strcat( q->sql_orderby, buf_orderby );
+		strcat( q->sql_orderby, "f.modify_time DESC " );
+		strcpy( buf_orderby, ", " );
+	} else if( terms->modify_time == ASC ) {
+		strcat( q->sql_orderby, buf_orderby );
+		strcat( q->sql_orderby, "f.modify_time ASC " );
 		strcpy( buf_orderby, ", " );
 	}
 	if( terms->score != NONE ) {

@@ -62,6 +62,7 @@ typedef struct DB_FileRec_ {
 	int width;			/**< 宽度 */
 	int height;			/**< 高度 */
 	unsigned int create_time;	/**< 创建时间 */
+	unsigned int modify_time;	/**< 修改时间 */
 } DB_FileRec, *DB_File;
 
 /*< 搜索规则定义 */
@@ -76,6 +77,7 @@ typedef struct DB_QueryTermsRec_ {
 	char *dirpath;			/**< 文件所在的目录路径 */
 	enum order score;		/**< 按评分排序时使用的排序规则 */
 	enum order create_time;		/**< 按创建时间排序时使用的排序规则 */
+	enum order modify_time;		/**< 按修改时间排序时使用的排序规则 */
 } DB_QueryTermsRec, *DB_QueryTerms;
 
 #ifdef LCFINDER_FILE_SEARCH_C
@@ -100,7 +102,7 @@ int DB_GetDirs( DB_Dir **outlist );
 DB_Tag DB_AddTag( const char *tagname );
 
 /** 添加一个文件记录 */
-void DB_AddFile( DB_Dir dir, const char *filepath, int create_time );
+void DB_AddFile( DB_Dir dir, const char *filepath, int ctime, int mtime );
 
 /** 删除一个文件记录 */
 void DB_DeleteFile( const char *filepath );

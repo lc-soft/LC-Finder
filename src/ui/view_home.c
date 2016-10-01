@@ -182,7 +182,8 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	terms.tags = NULL;
 	terms.dirs = NULL;
 	terms.for_tree = FALSE;
-	terms.create_time = DESC;
+	terms.create_time = NONE;
+	terms.modify_time = DESC;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	scanner->total = total;
@@ -291,7 +292,7 @@ static void HomeView_AppendFile( DB_File file )
 	wchar_t title[128];
 	LCUI_Widget sep, range;
 
-	time = file->create_time;
+	time = file->modify_time;
 	t = localtime( &time );
 	sep = LinkedList_Get( &this_view.separators, -1 );
 	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
