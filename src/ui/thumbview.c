@@ -290,14 +290,10 @@ static int GetDirThumbFilePath( char *filepath, char *dirpath )
 	int total;
 	DB_File file;
 	DB_Query query;
-	DB_QueryTermsRec terms;
+	DB_QueryTermsRec terms = {0};
 	terms.dirpath = dirpath;
 	terms.n_dirs = 1;
-	terms.n_tags = 0;
 	terms.limit = 10;
-	terms.offset = 0;
-	terms.tags = NULL;
-	terms.dirs = NULL;
 	terms.for_tree = TRUE;
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );

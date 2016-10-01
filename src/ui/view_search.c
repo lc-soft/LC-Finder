@@ -106,21 +106,14 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	DB_File file;
 	DB_Query query;
 	int i, total, count;
-	DB_QueryTermsRec terms;
-	terms.dirpath = NULL;
-	terms.n_dirs = 0;
-	terms.dirs = NULL;
+	DB_QueryTermsRec terms = {0};
 	terms.limit = 100;
-	terms.offset = 0;
-	terms.score = NONE;
-	terms.for_tree = FALSE;
 	terms.tags = scanner->tags;
 	terms.n_tags = scanner->n_tags;
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
-	scanner->total = total;
-	scanner->count = 0;
+	scanner->total = total, scanner->count = 0;
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &terms );
@@ -384,16 +377,12 @@ static DB_File GetFileByTag( DB_Tag tag )
 {
 	DB_File file;
 	DB_Query query;
-	DB_QueryTermsRec terms;
-	terms.dirpath = NULL;
+	DB_QueryTermsRec terms = {0};
 	terms.tags = malloc( sizeof( DB_Tag ) );
 	terms.tags[0] = tag;
 	terms.n_dirs = 1;
 	terms.n_tags = 1;
 	terms.limit = 1;
-	terms.offset = 0;
-	terms.dirs = NULL;
-	terms.for_tree = FALSE;
 	terms.create_time = DESC;
 	query = DB_NewQuery( &terms );
 	file = DBQuery_FetchFile( query );

@@ -98,3 +98,4 @@ void UI_Exit( void )
 	UI_ExitFolderView();
 	UI_ExitPictureView();
 }
+

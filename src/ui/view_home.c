@@ -172,22 +172,13 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	DB_File file;
 	DB_Query query;
 	int i, total, count;
-	DB_QueryTermsRec terms;
-	terms.dirpath = NULL;
-	terms.n_dirs = 0;
-	terms.n_tags = 0;
+	DB_QueryTermsRec terms = {0};
+
 	terms.limit = 100;
-	terms.offset = 0;
-	terms.score = NONE;
-	terms.tags = NULL;
-	terms.dirs = NULL;
-	terms.for_tree = FALSE;
-	terms.create_time = NONE;
 	terms.modify_time = DESC;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
-	scanner->total = total;
-	scanner->count = 0;
+	scanner->total = total, scanner->count = 0;
 	ProgressBar_SetValue( this_view.progressbar, 0 );
 	ProgressBar_SetMaxValue( this_view.progressbar, count );
 	Widget_Show( this_view.progressbar );

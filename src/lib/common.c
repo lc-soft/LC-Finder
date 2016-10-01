@@ -222,7 +222,9 @@ int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 int pathjoin( char *path, const char *path1, const char *path2 )
 {
 	int len = strlen( path1 );
-	strcpy( path, path1 );
+	if( path != path1 ) {
+		strcpy( path, path1 );
+	}
 	if( path1[len-1] != PATH_SEP ) {
 		path[len++] = PATH_SEP;
 		path[len] = 0;

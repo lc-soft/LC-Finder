@@ -178,17 +178,11 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 	DB_Query query;
 	FileEntry entry;
 	int i, total, count;
-	DB_QueryTermsRec terms;
-	terms.dirpath = path;
-	terms.n_dirs = 0;
-	terms.n_tags = 0;
+	DB_QueryTermsRec terms = {0};
+
 	terms.limit = 50;
-	terms.offset = 0;
-	terms.score = NONE;
-	terms.tags = NULL;
-	terms.dirs = NULL;
-	terms.for_tree = FALSE;
-	terms.create_time = NONE;
+	terms.dirpath = path;
+	terms.modify_time = DESC;
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	while( scanner->is_running && count > 0 ) {
