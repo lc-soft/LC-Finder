@@ -25,7 +25,7 @@ echo installing tool ...
 cd ../
 
 echo installing dependencies ...
-sudo apt-get -y install libsqlite3-dev libpng-dev libjpeg-dev libxml2-dev libfreetype6-dev libx11-dev
+sudo apt-get -y install build-essential automake libtool pkg-config libsqlite3-dev libpng-dev libjpeg-dev libxml2-dev libfreetype6-dev libx11-dev
 if [ ! -d "LCUI" ]; then
   git clone https://github.com/lc-soft/LCUI.git --branch master --depth 1
 fi
