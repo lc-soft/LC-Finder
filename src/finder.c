@@ -40,13 +40,6 @@
 #include <string.h>
 #include <wchar.h>
 #include <locale.h>
-#ifdef _WIN32
-#include <io.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <direct.h>
-#endif
 #include "finder.h"
 #include "ui.h"
 #include <LCUI/font/charset.h>

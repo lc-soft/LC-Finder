@@ -118,7 +118,7 @@
 	background-color: #222;
 }
 #picture-viewer-window.skin-light-green .window-navbar {
-	background-color: rgba(0,0,0,0.2);
+	background-color: rgba(0,0,0,0.5);
 }
 #picture-viewer-window.skin-light-green .zoom-btn-group {
 	background-color: rgba(0,0,0,0.8);
@@ -135,7 +135,23 @@
 #picture-viewer-window.skin-light-green .icon-btn:active {
 	background-color: rgba(255,255,255,0.5);
 }
-
+#picture-viewer-window.skin-light-green .icon-btn:disabled .icon,
+#picture-viewer-window.skin-light-green .icon-btn:disabled:hover .icon,
+#picture-viewer-window.skin-light-green .icon-btn:disabled:active .icon {
+	color: #888;
+}
+#picture-viewer-window.skin-light-green .icon-btn:disabled,
+#picture-viewer-window.skin-light-green .icon-btn:disabled:hover,
+#picture-viewer-window.skin-light-green .icon-btn:disabled:active {
+	background-color: transparent;
+}
+.skin-light-green .message textview {
+	color: #fff;
+}
+.skin-light-green .message.box {
+	background-color: rgba(0,0,0,0.8);
+	box-shadow: 0 0 8px rgba(0,0,0,0.8);
+}
 #picture-info-panel.skin-light-green {
 	background-color: #323232;	
 }
@@ -153,11 +169,4 @@
 }
 .skin-light-green.panel .panel-header {
 	box-shadow: 0 0 4px rgba(0,0,0,0.4);
-}
-.skin-light-green #tip-picture-loading textview {
-	color: #fff;
-}
-.skin-light-green #tip-picture-loading {
-	background-color: rgba(0,0,0,0.8);
-	box-shadow: 0 0 8px rgba(0,0,0,0.8);
 }

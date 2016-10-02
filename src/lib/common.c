@@ -272,7 +272,7 @@ void wgetcurdir( wchar_t *wpath, int max_len )
 int wmkdir( wchar_t *wpath )
 {
 #ifdef _WIN32
-	_wmkdir( wpath );
+	return _wmkdir( wpath );
 #else
 	char *path = EncodeUTF8( wpath );
 	int ret = mkdir( path, S_IRWXU );

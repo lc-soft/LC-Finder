@@ -51,6 +51,7 @@
 #include "dialog.h"
 #include "starrating.h"
 
+#define TXT_UNKNOWN			L"未知"
 #define DIALOG_TITLE_ADDTAG		L"添加标签"
 #define DIALOG_TITLE_EDITTAG		L"编辑标签"
 #define DIALOG_INPUT_PLACEHOLDER	L"标签名称，多个标签用空格隔开"
@@ -248,6 +249,7 @@ void UI_SetPictureInfoView( const char *filepath )
 	DB_Tag *tags;
 	struct stat buf;
 	int i, n, width, height;
+	LCUI_BOOL is_picture = FALSE;
 	wchar_t str[256], *path, *dirpath;
 
 	len = strlen( filepath ) + 1;
@@ -258,27 +260,39 @@ void UI_SetPictureInfoView( const char *filepath )
 	{
 		char *apath = malloc( sizeof( char ) * len );
 		LCUI_EncodeString( apath, path, len, ENCODING_ANSI );
-		Graph_GetImageSize( apath, &width, &height );
+		if( Graph_GetImageSize( apath, &width, &height ) == 0 ) {
+			is_picture = TRUE;
+		}
 		free( apath );
 	}
 #else
-	Graph_GetImageSize( filepath, &width, &height );
+	if( Graph_GetImageSize( filepath, &width, &height ) == 0 ) {
+		is_picture = TRUE;
+	}
 #endif
-
-	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );
 	wgetdirpath( dirpath, len, path );
-	wgetfilestat( path, &buf );
+	if( wgetfilestat( path, &buf ) == 0 ) {
+		wchar_t mtime_str[256], fsize_str[256];
+		this_view.size = buf.st_size;
+		this_view.mtime = buf.st_mtime;
+		getsizestr( fsize_str, 256, this_view.size );
+		wgettimestr( mtime_str, 256, this_view.mtime );
+		TextView_SetTextW( this_view.txt_time, mtime_str );
+		TextView_SetTextW( this_view.txt_fsize, fsize_str );
+	} else {
+		TextView_SetTextW( this_view.txt_time, TXT_UNKNOWN );
+		TextView_SetTextW( this_view.txt_fsize, TXT_UNKNOWN );
+	}
+	if( is_picture ) {
+		this_view.width = width;
+		this_view.height = height;
+		swprintf( str, 256, L"%dx%d", width, height );
+		TextView_SetTextW( this_view.txt_size, str );
+	} else {
+		TextView_SetTextW( this_view.txt_size, TXT_UNKNOWN );
+	}
 	TextView_SetTextW( this_view.txt_dirpath, dirpath );
-	this_view.mtime = buf.st_mtime;
-	wgettimestr( str, 256, this_view.mtime );
-	TextView_SetTextW( this_view.txt_time, str );
-	swprintf( str, 256, L"%dx%d", width, height );
-	TextView_SetTextW( this_view.txt_size, str );
-	this_view.width = width;
-	this_view.height = height;
-	this_view.size = buf.st_size;
-	getsizestr( str, 256, this_view.size );
-	TextView_SetTextW( this_view.txt_fsize, str );
+	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );
 	if( this_view.filepath ) {
 		free( this_view.filepath );
 	}

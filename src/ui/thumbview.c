@@ -139,6 +139,7 @@ typedef struct ThumbViewItemRec_ {
 	ThumbView view;					/**< 所属缩略图列表视图 */
 	LCUI_Widget cover;				/**< 遮罩层部件 */
 	LCUI_BOOL is_dir;				/**< 是否为目录 */
+	LCUI_BOOL is_valid;				/**< 是否有效 */
 	void (*unsetthumb)(LCUI_Widget);		/**< 取消缩略图 */
 	void (*setthumb)(LCUI_Widget, LCUI_Graph*);	/**< 设置缩略图 */
 	void(*updatesize)(LCUI_Widget);			/**< 更新自身尺寸 */
@@ -410,7 +411,9 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		LCUI_DecodeString( wpath, item->path, 
 				   PATH_LEN, ENCODING_UTF8 );
 	}
-	wgetfilestat( wpath, &buf );
+	if( wgetfilestat( wpath, &buf ) != 0 ) {
+		return NULL;
+	}
 	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
 	ret = ThumbDB_Load( db, filename, &tdata );
 	DEBUG_MSG( "load thumb from: %s\n", filename );
@@ -423,7 +426,7 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		}
 		tdata.origin_width = img.width;
 		tdata.origin_height = img.height;
-		tdata.modify_time = buf.st_mtime;
+		tdata.modify_time = (uint_t)buf.st_mtime;
 		if( img.height > THUMB_MAX_WIDTH ) {
 			Graph_Zoom( &img, &tdata.graph, TRUE,
 				    0, THUMB_MAX_WIDTH );
@@ -452,16 +455,29 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 /** 执行加载缩略图的任务 */
 static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 {
+	LCUI_Widget icon;
 	LCUI_Graph *thumb;
 	ThumbView view = w->private_data;
 	ThumbViewItem data = target->private_data;
 	thumb = ThumbCache_Link( view->cache, data->path,
 				 view->linker, target );
-	if( !thumb ) {
+	while( !thumb ) {
 		thumb = LoadThumb( view, target );
-		if( !thumb ) {
+		if( thumb ) {
+			break;
+		}
+		if( !data->is_valid ) {
 			return;
 		}
+		if( data->is_dir ) {
+			return;
+		}
+		icon = LCUIWidget_New( "textview" );
+		Widget_AddClass( icon, "tip mdi mdi-help" );
+		Widget_AddClass( icon, "floating center middle aligned" );
+		Widget_Append( data->cover, icon );
+		data->is_valid = FALSE;
+		return;
 	}
 	if( data->setthumb ) {
 		data->setthumb( target, thumb );
@@ -1051,8 +1067,10 @@ static void ThumbViewItem_OnInit( LCUI_Widget w )
 	self = Widget_NewPrivateData( w, ThumbViewItemRec );
 	self->file = NULL;
 	self->is_dir = FALSE;
+	self->is_valid = TRUE;
 	self->path = NULL;
 	self->view = NULL;
+	self->cover = NULL;
 	self->setthumb = NULL;
 	self->unsetthumb = NULL;
 	self->updatesize = NULL;

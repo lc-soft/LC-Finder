@@ -63,6 +63,7 @@
 	Widget_Hide( this_view.btn_next ); \
 } while(0);
 
+#define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
 
 enum SliderDirection {
@@ -80,6 +81,7 @@ typedef struct PcitureRec_ {
 	wchar_t *file;			/**< 当前已加载的图片的路径  */
 	wchar_t *file_for_load;		/**< 当前需加载的图片的路径  */
 	LCUI_BOOL is_loading;		/**< 是否正在载入图片 */
+	LCUI_BOOL is_valid;		/**< 是否有效 */
 	LCUI_Graph *data;		/**< 当前已经加载的图片数据 */
 	LCUI_Widget view;		/**< 视图，用于呈现该图片 */
 	double scale;			/**< 图片缩放比例 */
@@ -90,11 +92,14 @@ typedef struct PcitureRec_ {
 /** 图片查看器相关数据 */
 static struct PictureViewer {
 	LCUI_Widget window;			/**< 图片查看器窗口 */
-	LCUI_Widget tip;			/**< 图片载入提示框，当图片正在载入时显示 */
+	LCUI_Widget tip_loading;		/**< 图片载入提示框，当图片正在载入时显示 */
 	LCUI_Widget tip_empty;			/**< 提示，当无内容时显示 */
+	LCUI_Widget tip_unsupport;		/**< 提示，当图片内容不受支持时显示 */
 	LCUI_Widget btn_reset;			/**< 按钮，重置图片尺寸 */
 	LCUI_Widget btn_prev;			/**< “上一张”按钮 */
 	LCUI_Widget btn_next;			/**< “下一张”按钮 */
+	LCUI_Widget btn_zoomin;			/**< “放大”按钮 */
+	LCUI_Widget btn_zoomout;		/**< “缩小”按钮 */
 	LCUI_Widget view_pictures;		/**< 视图，用于容纳多个图片视图 */
 	LCUI_BOOL is_working;			/**< 当前视图是否在工作 */
 	LCUI_BOOL is_opening;			/**< 当前视图是否为打开状态 */
@@ -172,6 +177,43 @@ static void UpdateSwitchButtons( void )
 		if( iter->length >= 1 && iter->index < iter->length - 1 ) {
 			Widget_Show( this_view.btn_next );
 		}
+	}
+}
+
+/** 更新图片缩放按钮的状态 */
+static void UpdateZoomButtons( void )
+{
+	if( !this_view.picture->is_valid ) {
+		Widget_SetDisabled( this_view.btn_zoomin, TRUE );
+		Widget_SetDisabled( this_view.btn_zoomout, TRUE );
+		return;
+	}
+	if( this_view.picture->scale > this_view.picture->min_scale ) {
+		Widget_SetDisabled( this_view.btn_zoomout, FALSE );
+	} else {
+		Widget_SetDisabled( this_view.btn_zoomout, TRUE );
+	}
+	if( this_view.picture->scale < MAX_SCALE ) {
+		Widget_SetDisabled( this_view.btn_zoomin, FALSE );
+	} else {
+		Widget_SetDisabled( this_view.btn_zoomin, TRUE );
+	}
+}
+
+static void UpdateResetSizeButton( void )
+{
+	LCUI_Widget txt = LinkedList_Get( &this_view.btn_reset->children, 0 );
+	if( this_view.picture->is_valid ) {
+		Widget_SetDisabled( this_view.btn_reset, FALSE );
+	} else {
+		Widget_SetDisabled( this_view.btn_reset, TRUE );
+	}
+	if( this_view.picture->scale == this_view.picture->min_scale ) {
+		Widget_RemoveClass( txt, "mdi-fullscreen-exit" );
+		Widget_AddClass( txt, "mdi-fullscreen" );
+	} else {
+		Widget_RemoveClass( txt, "mdi-fullscreen" );
+		Widget_AddClass( txt, "mdi-fullscreen-exit" );
 	}
 }
 
@@ -337,18 +379,6 @@ static int SwitchNextPicture( void )
 	return 0;
 }
 
-static void UpdateResetSizeButton( void )
-{
-	LCUI_Widget txt = LinkedList_Get( &this_view.btn_reset->children, 0 );
-	if( this_view.picture->scale == this_view.picture->min_scale ) {
-		Widget_RemoveClass( txt, "mdi-fullscreen-exit" );
-		Widget_AddClass( txt, "mdi-fullscreen" );
-	} else {
-		Widget_RemoveClass( txt, "mdi-fullscreen" );
-		Widget_AddClass( txt, "mdi-fullscreen-exit" );
-	}
-}
-
 /** 更新图片位置 */
 static void UpdatePicturePosition( Picture pic )
 {
@@ -436,6 +466,7 @@ static void DirectSetPictureScale( Picture pic, double scale )
 	Widget_UpdateStyle( pic->view, FALSE );
 	UpdatePicturePosition( pic );
 	if( pic == this_view.picture ) {
+		UpdateZoomButtons();
 		UpdateSwitchButtons();
 		UpdateResetSizeButton();
 	}
@@ -506,22 +537,10 @@ static void OnShowTipLoading( void *arg )
 	Picture pic = arg;
 	if( this_view.picture == pic ) {
 		if( pic->is_loading ) {
-			Widget_Show( this_view.tip );
+			Widget_Show( this_view.tip_loading );
 		}
 	}
 	pic->timer = 0;
-}
-
-/** 向左滑动图片 */
-static void LeftSlidePicture( void )
-{
-
-}
-
-/** 向右滑动图片 */
-static void RightSlidePicture( void )
-{
-
 }
 
 static void StartGesture( int mouse_x, int mouse_y )
@@ -877,8 +896,8 @@ static void SetPicturePreloadList( void )
 static int LoadPicture( Picture pic )
 {
 	int len;
-	char *path;
 	wchar_t *wpath;
+	char *path = NULL;
 #ifdef _WIN32
 	int encoding = ENCODING_ANSI;
 #else
@@ -892,7 +911,7 @@ static int LoadPicture( Picture pic )
 	if( pic->file && wcscmp( pic->file, pic->file_for_load ) == 0 ) {
 		free( pic->file_for_load );
 		pic->file_for_load = NULL;
-		return 0;
+		goto load_finished;
 	}
 	/** 500毫秒后显示 "图片载入中..." 的提示 */
 	this_view.picture->timer = LCUITimer_Set( 500, OnShowTipLoading, 
@@ -911,22 +930,35 @@ static int LoadPicture( Picture pic )
 		free( pic->file );
 	}
 	pic->file = wpath;
+	pic->is_valid = FALSE;
 	pic->is_loading = TRUE;
 	len = LCUI_EncodeString( NULL, wpath, 0, encoding ) + 1;
 	path = malloc( sizeof( char ) * len );
 	LCUI_EncodeString( path, wpath, len, encoding );
-	Graph_LoadImage( path, pic->data );
+	if( Graph_LoadImage( path, pic->data ) == 0 ) {
+		pic->is_valid = TRUE;
+	}
 	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
-	if( !pic->file_for_load ) {
+	if( pic->is_valid && !pic->file_for_load ) {
 		SetStyle( sheet, key_background_image, pic->data, image );
 		Widget_UpdateStyle( pic->view, FALSE );
 		ResetPictureSize( pic );
 	}
+load_finished:
 	pic->is_loading = FALSE;
 	if( this_view.picture->view == pic->view ) {
-		Widget_Hide( this_view.tip );
+		Widget_Hide( this_view.tip_loading );
+		if( pic->is_valid ) {
+			Widget_Hide( this_view.tip_unsupport );
+		} else {
+			Widget_Show( this_view.tip_unsupport );
+		}
+		UpdateResetSizeButton();
+		UpdateZoomButtons();
 	}
-	free( path );
+	if( path ) {
+		free( path );
+	}
 	return 0;
 }
 
@@ -1018,7 +1050,7 @@ static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 void UI_InitPictureView( void )
 {
-	LCUI_Widget box, btn_back, btn_info, btn[4];
+	LCUI_Widget box, btn_back, btn_info, btn_del;
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
@@ -1026,37 +1058,37 @@ void UI_InitPictureView( void )
 	}
 	this_view.is_working = TRUE;
 	this_view.is_opening = FALSE;
-	this_view.zoom.is_running = FALSE;
 	this_view.zoom.point_ids[0] = -1;
 	this_view.zoom.point_ids[1] = -1;
+	this_view.zoom.is_running = FALSE;
+	SelectWidget( btn_del, ID_BTN_DELETE_PICTURE );
+	SelectWidget( btn_info, ID_BTN_SHOW_PICTURE_INFO );
+	SelectWidget( btn_back, ID_BTN_HIDE_PICTURE_VIEWER );
+	SelectWidget( this_view.btn_prev, ID_BTN_PCITURE_PREV );
+	SelectWidget( this_view.btn_next, ID_BTN_PCITURE_NEXT );
+	SelectWidget( this_view.btn_zoomin, ID_BTN_PICTURE_ZOOM_IN );
+	SelectWidget( this_view.btn_zoomout, ID_BTN_PICTURE_ZOOM_OUT );
+	SelectWidget( this_view.btn_reset, ID_BTN_PICTURE_RESET_SIZE );
+	SelectWidget( this_view.window, ID_WINDOW_PCITURE_VIEWER );
+	SelectWidget( this_view.tip_empty, ID_TIP_PICTURE_NOT_FOUND );
+	SelectWidget( this_view.tip_loading, ID_TIP_PICTURE_LOADING );
+	SelectWidget( this_view.tip_unsupport, ID_TIP_PICTURE_UNSUPPORT );
+	SelectWidget( this_view.view_pictures, ID_VIEW_PICTURE_TARGET );
+	BindEvent( btn_back, "click", OnBtnBackClick );
+	BindEvent( btn_del, "click", OnBtnDeleteClick );
+	BindEvent( btn_info, "click", OnBtnShowInfoClick );
+	BindEvent( this_view.btn_prev, "click", OnBtnPrevClick );
+	BindEvent( this_view.btn_next, "click", OnBtnNextClick );
+	BindEvent( this_view.btn_reset, "click", OnBtnResetClick );
+	BindEvent( this_view.btn_zoomin, "click", OnBtnZoomInClick );
+	BindEvent( this_view.btn_zoomout, "click", OnBtnZoomOutClick );
+	InitSlideTransition();
 	LCUICond_Init( &this_view.cond );
 	LCUIMutex_Init( &this_view.mutex );
-	btn_info = LCUIWidget_GetById( ID_BTN_SHOW_PICTURE_INFO );
-	btn_back = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_VIEWER );
-	this_view.btn_prev = LCUIWidget_GetById( ID_BTN_PCITURE_PREV );
-	this_view.btn_next = LCUIWidget_GetById( ID_BTN_PCITURE_NEXT );
-	btn[0] = LCUIWidget_GetById( ID_BTN_PICTURE_RESET_SIZE );
-	btn[1] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_IN );
-	btn[2] = LCUIWidget_GetById( ID_BTN_PICTURE_ZOOM_OUT );
-	btn[3] = LCUIWidget_GetById( ID_BTN_DELETE_PICTURE );
-	this_view.tip = LCUIWidget_GetById( ID_TIP_PICTURE_LOADING );
-	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_PICTURE_NOT_FOUND );
-	this_view.view_pictures = LCUIWidget_GetById( ID_VIEW_PICTURE_TARGET );
-	this_view.btn_reset = btn[0];
-	InitSlideTransition();
 	InitPicture( &this_view.pictures[0] );
 	InitPicture( &this_view.pictures[1] );
 	InitPicture( &this_view.pictures[2] );
 	this_view.picture = &this_view.pictures[0];
-	BindEvent( btn_info, "click", OnBtnShowInfoClick );
-	BindEvent( btn_back, "click", OnBtnBackClick );
-	BindEvent( btn[0], "click", OnBtnResetClick );
-	BindEvent( btn[1], "click", OnBtnZoomInClick );
-	BindEvent( btn[2], "click", OnBtnZoomOutClick );
-	BindEvent( btn[3], "click", OnBtnDeleteClick );
-	BindEvent( this_view.btn_prev, "click", OnBtnPrevClick );
-	BindEvent( this_view.btn_next, "click", OnBtnNextClick );
 	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
 	Widget_Hide( this_view.window );
 	UI_InitPictureInfoView();
@@ -1078,14 +1110,15 @@ void UI_OpenPictureView( const char *filepath )
 	this_view.is_zoom_mode = FALSE;
 	this_view.picture = &this_view.pictures[1];
 	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
-	main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	SelectWidget( main_window, ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, wgetfilename( wpath ) );
+	Widget_Hide( this_view.tip_unsupport );
+	Widget_Hide( this_view.tip_empty );
 	SetPicture( this_view.picture, wpath );
 	SetPicturePreloadList();
 	LCUIMutex_Unlock( &this_view.mutex );
 	LCUICond_Signal( &this_view.cond );
 	UI_SetPictureInfoView( filepath );
-	Widget_Hide( this_view.tip_empty );
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
 	free( wpath );
@@ -1105,8 +1138,9 @@ void UI_SetPictureView( FileIterator iter )
 
 void UI_ClosePictureView( void )
 {
+	LCUI_Widget main_window;
 	LCUI_Widget root = LCUIWidget_GetRoot();
-	LCUI_Widget main_window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	SelectWidget( main_window, ID_WINDOW_MAIN );
 	Widget_SetTitleW( root, L"LC-Finder" );
 	ResetPictureSize( this_view.picture );
 	Widget_Show( main_window );

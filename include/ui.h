@@ -112,6 +112,7 @@
 #define ID_TIP_SEARCH_FILES_EMPTY	"tip-search-no-result"
 #define ID_TIP_PICTURE_LOADING		"tip-picture-loading"
 #define ID_TIP_PICTURE_NOT_FOUND	"tip-picture-not-found"
+#define ID_TIP_PICTURE_UNSUPPORT	"tip-picture-unsupport"
 #define ID_INPUT_SEARCH			"input-search"
 
 /** 文件迭代器 */

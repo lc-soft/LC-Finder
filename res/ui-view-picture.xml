@@ -34,11 +34,14 @@
         <widget id="btn-picture-next" class="icon-btn picture-switch-btn next">
           <widget class="icon mdi mdi-chevron-right" type="textview"></widget>
         </widget>
-        <widget id="tip-picture-loading" class="floating center middle aligned">
+        <widget id="tip-picture-loading" class="floating center middle aligned message box">
           <widget type="textview">图片载入中...</widget>
         </widget>
-        <widget id="tip-picture-not-found" class="floating center middle aligned">
+        <widget id="tip-picture-not-found" class="floating center middle aligned message">
           <widget type="textview">此处没有任何要显示的内容。</widget>
+        </widget>
+        <widget id="tip-picture-unsupport" class="floating center middle aligned message">
+          <widget type="textview">无法识别该图片的内容。</widget>
         </widget>
       </widget>
     </widget>
