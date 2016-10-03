@@ -978,11 +978,11 @@ static void OnBtnZoomOutClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	SwitchPrevPicture();
+	OpenPrevPicture();
 }
 static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	SwitchNextPicture();
+	OpenNextPicture();
 }
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
