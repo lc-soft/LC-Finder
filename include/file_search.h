@@ -131,6 +131,9 @@ int DBFile_SetScore( DB_File file, int score );
 /** 为文件设置尺寸 */
 int DBFile_SetSize( DB_File file, int width, int height );
 
+/** 为文件设置时间属性，包括创建时间、修改时间 */
+int DBFile_SetTime( DB_File file, int ctime, int mtime );
+
 /** 复制文件信息 */
 DB_File DBFile_Dup( DB_File file );
 

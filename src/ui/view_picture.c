@@ -980,10 +980,12 @@ static void OnBtnPrevClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	OpenPrevPicture();
 }
+
 static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	OpenNextPicture();
 }
+
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	char *path;

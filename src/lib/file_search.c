@@ -58,6 +58,7 @@ enum SQLCodeList {
 	SQL_DEL_FILE_TAG,
 	SQL_SET_FILE_SIZE,
 	SQL_SET_FILE_SCORE,
+	SQL_SET_FILE_TIME,
 	SQL_GET_DIR_TOTAL,
 	SQL_GET_DIR_LIST,
 	SQL_ADD_TAG,
@@ -135,6 +136,8 @@ STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
 STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
 STATIC_STR sql_file_set_size = "\
 UPDATE file SET width = ?, height = ? WHERE id = ?;";
+STATIC_STR sql_file_set_time = "\
+UPDATE file SET create_time = ?, modify_time = ? WHERE id = ?;";
 STATIC_STR sql_file_add_tag = "\
 REPLACE INTO file_tag_relation(fid, tid) VALUES(?, ?);";
 STATIC_STR sql_file_del_tag = "\
@@ -252,6 +255,7 @@ int DB_Init( void )
 	self.sqls[SQL_DEL_FILE_TAG] = sql_file_del_tag;
 	self.sqls[SQL_SET_FILE_SIZE] = sql_file_set_size;
 	self.sqls[SQL_SET_FILE_SCORE] = sql_file_set_score;
+	self.sqls[SQL_SET_FILE_TIME] = sql_file_set_time;
 	self.sqls[SQL_GET_FILE_TAGS] = sql_get_file_tags;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
 	self.sqls[SQL_GET_DIR_TOTAL] = sql_get_dir_total;
@@ -562,6 +566,24 @@ int DBFile_SetScore( DB_File file, int score )
 	sqlite3_bind_int( stmt, 2, file->id );
 	ret = sqlite3_step( stmt );
 	if( ret == SQLITE_DONE ) {
+		return 0;
+	}
+	printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
+	return -1;
+}
+
+int DBFile_SetTime( DB_File file, int ctime, int mtime )
+{
+	int ret;
+	sqlite3_stmt *stmt = self.stmts[SQL_SET_FILE_TIME];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, ctime );
+	sqlite3_bind_int( stmt, 2, mtime );
+	sqlite3_bind_int( stmt, 3, file->id );
+	ret = sqlite3_step( stmt );
+	if( ret == SQLITE_DONE ) {
+		file->create_time = ctime;
+		file->modify_time = mtime;
 		return 0;
 	}
 	printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );

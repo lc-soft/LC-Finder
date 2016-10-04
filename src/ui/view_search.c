@@ -383,7 +383,7 @@ static DB_File GetFileByTag( DB_Tag tag )
 	terms.n_dirs = 1;
 	terms.n_tags = 1;
 	terms.limit = 1;
-	terms.create_time = DESC;
+	terms.modify_time = DESC;
 	query = DB_NewQuery( &terms );
 	file = DBQuery_FetchFile( query );
 	free( terms.tags );

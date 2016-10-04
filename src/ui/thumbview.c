@@ -440,6 +440,11 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		ThumbDB_Save( db, filename, &tdata );
 	}
 	if( !item->is_dir ) {
+		if( item->file->modify_time != (uint_t)buf.st_mtime ) {
+			int ctime = (int)buf.st_ctime;
+			int mtime = (int)buf.st_mtime;
+			DBFile_SetTime( item->file, ctime, mtime );
+		}
 		if( tdata.origin_width > 0 && tdata.origin_height > 0 &&
 			(item->file->width != tdata.origin_width ||
 			  item->file->height != tdata.origin_height) ) {
