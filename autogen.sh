@@ -14,7 +14,7 @@ fi
 echo downloading tool ...
 cd .repos
 if [ ! -d "xmake" ]; then
-  git clone git@github.com:waruqi/xmake.git
+  git clone https://github.com/waruqi/xmake.git --branch master --depth 1
   cd xmake
 else
   cd xmake
