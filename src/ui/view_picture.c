@@ -506,8 +506,8 @@ static void ResetPictureSize( Picture pic )
 		if( pic->scale < 0.05 ) {
 			pic->scale = 0.05;
 		}
-		pic->min_scale = pic->scale;
 	}
+	pic->min_scale = pic->scale;
 	ResetOffsetPosition();
 	DirectSetPictureScale( pic, pic->scale );
 }
@@ -913,8 +913,8 @@ static int LoadPicture( Picture pic )
 		pic->file_for_load = NULL;
 		goto load_finished;
 	}
-	/** 500毫秒后显示 "图片载入中..." 的提示 */
-	this_view.picture->timer = LCUITimer_Set( 500, OnShowTipLoading, 
+	/** 300毫秒后显示 "图片载入中..." 的提示 */
+	this_view.picture->timer = LCUITimer_Set( 300, OnShowTipLoading, 
 						  this_view.picture, FALSE );
 	if( Graph_IsValid( pic->data ) ) {
 		Widget_Lock( pic->view );
@@ -986,15 +986,12 @@ static void OnBtnNextClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 }
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int len;
 	char *path;
 	wchar_t *wpath = this_view.picture->file;
 	if( !LCUIDialog_Confirm( this_view.window, TEXT_DELETE, NULL ) ) {
 		return;
 	}
-	len = LCUI_EncodeString( NULL, wpath, 0, ENCODING_UTF8 ) + 1;
-	path = malloc( sizeof( char ) * len );
-	LCUI_EncodeString( path, wpath, len, ENCODING_UTF8 );
+	path = EncodeUTF8( wpath );
 	if( OpenNextPicture() != 0 ) {
 		/** 如果前后都没有图片了，则提示没有可显示的内容 */
 		if( OpenPrevPicture() != 0 ) {
