@@ -712,16 +712,16 @@ textedit.dialog-input {
 	line-height: 48px;
 }
 .tag-list {
-
+	margin-top: 5px;
 }
 .tag-list-item {
 	border: 1px solid #eee;
 	display: inline-block;
-	margin: 4px 4px 0 0;
+	margin: 0 5px 5px 0;
 }
 .tag-list-item textview {
 	display: inline-block;	
-	padding: 4 8px;
+	padding: 4px 8px;
 	color: #666;
 	line-height: 24px;
 	font-size: 13px;

@@ -95,9 +95,6 @@
 	box-shadow: 0 0 6px rgba(68,187,85,0.4);
 	border-color: #44BB55;
 }
-.skin-light-green starrating .mdi-star {
-	color: #44A340;
-}
 .skin-light-green .dialog-content progressbar,
 .skin-light-green .view-content-wrapper progressbar {
 	background-color: #44A340;
@@ -169,4 +166,21 @@
 }
 .skin-light-green.panel .panel-header {
 	box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
+#picture-info-panel.skin-light-green .tag-list-item {
+	background-color: #4c4c4c;
+	border-color: #5b5b5b;
+}
+#picture-info-panel.skin-light-green .tag-list-item:hover {
+	background-color: #5a5a5a;
+	border-color: #6c6c6c;
+}
+#picture-info-panel.skin-light-green .tag-list-item .btn-delete {
+	color: #fff;
+}
+#picture-info-panel.skin-light-green .tag-list-item .btn-delete:hover {
+	color: #aaa;
+}
+#picture-info-panel.skin-light-green starrating .mdi-star {
+	color: #44A340;
 }
