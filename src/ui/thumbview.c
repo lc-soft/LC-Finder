@@ -1115,7 +1115,7 @@ void ThumbView_OnLayout( LCUI_Widget w, void (*func)(LCUI_Widget) )
 
 static void ThumbView_OnInit( LCUI_Widget w )
 {
-	const size_t data_size = sizeof( ThumbViewItemRec );
+	const size_t data_size = sizeof( ThumbViewRec );
 	ThumbView view = Widget_AddData( w, self.thumbview, data_size );
 	view->dbs = &finder.thumb_dbs;
 	view->is_loading = FALSE;
