@@ -40,6 +40,8 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 
+static LCUI_WidgetPrototype prototype = NULL;
+
 static const char *starrating_css = ToString(
 
 starrating .star {
@@ -94,7 +96,7 @@ static void OnMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	int x, y;
 	LCUI_Widget target;
-	StarRating data = w->private_data;
+	StarRating data = Widget_GetData( w, prototype );
 	Widget_GetAbsXY( w, NULL, &x, &y );
 	x = e->motion.x - x;
 	y = e->motion.y - y;
@@ -111,17 +113,19 @@ static void OnMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnMouseOut( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	StarRating data = w->private_data;
+	StarRating data = Widget_GetData( w, prototype );
 	UpdateRating( w, data->rating );
 }
 
 static void OnInit( LCUI_Widget w )
 {
 	int i;
-	StarRating self = Widget_NewPrivateData( w, StarRatingRec );
-	self->rating = 0;
-	self->max_rating = 5;
-	for( i = 0; i < self->max_rating; ++i ) {
+	const size_t data_size = sizeof( StarRatingRec );
+	StarRating data = Widget_AddData( w, prototype, data_size );
+
+	data->rating = 0;
+	data->max_rating = 5;
+	for( i = 0; i < data->max_rating; ++i ) {
 		LCUI_Widget child = LCUIWidget_New( "textview" );
 		Widget_AddClass( child, "star mdi mdi-star-outline" );
 		Widget_Append( w, child );
@@ -131,31 +135,25 @@ static void OnInit( LCUI_Widget w )
 	Widget_BindEvent( w, "mouseout", OnMouseOut, NULL, NULL );
 }
 
-static void OnDestroy( LCUI_Widget w )
-{
-
-}
-
 void StarRating_SetRating( LCUI_Widget w, int rating )
 {
-	StarRating self = w->private_data;
-	if( rating > self->max_rating ) {
-		rating = self->max_rating;
+	StarRating data = Widget_GetData( w, prototype );
+	if( rating > data->max_rating ) {
+		rating = data->max_rating;
 	}
-	self->rating = rating;
+	data->rating = rating;
 	UpdateRating( w, rating );
 }
 
 int StarRating_GetRating( LCUI_Widget w )
 {
-	StarRating self = w->private_data;
-	return self->rating;
+	StarRating data = Widget_GetData( w, prototype );
+	return data->rating;
 }
 
 void LCUIWidget_AddStarRating( void )
 {
-	LCUI_WidgetClass *wc = LCUIWidget_AddClass( "starrating" );
-	wc->methods.init = OnInit;
-	wc->methods.destroy = OnDestroy;
+	prototype = LCUIWidget_NewPrototype( "starrating", NULL );
+	prototype->init = OnInit;
 	LCUI_LoadCSSString( starrating_css, NULL );
 }

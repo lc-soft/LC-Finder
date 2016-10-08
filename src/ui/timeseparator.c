@@ -54,10 +54,13 @@ typedef struct TimeSeparatorRec_ {
 	LCUI_Widget title;	/**< 标题 */
 } TimeSeparatorRec, *TimeSeparator;
 
+static LCUI_WidgetPrototype prototype = NULL;
+
 static void TimeSeparator_OnInit( LCUI_Widget w )
 {
-	TimeSeparator sep;
-	sep = Widget_NewPrivateData( w, TimeSeparatorRec );
+	const size_t data_size = sizeof( TimeSeparatorRec );
+	TimeSeparator sep = Widget_AddData( w, prototype, data_size );
+
 	sep->count = 0;
 	sep->time.tm_mon = 0;
 	sep->time.tm_mday = 0;
@@ -70,14 +73,9 @@ static void TimeSeparator_OnInit( LCUI_Widget w )
 	Widget_Append( w, sep->subtitle );
 }
 
-static void TimeSeparator_OnDestroy( LCUI_Widget  w )
-{
-	free( w->private_data );
-}
-
 LCUI_BOOL TimeSeparator_CheckTime( LCUI_Widget w, struct tm *t )
 {
-	TimeSeparator sep = w->private_data;
+	TimeSeparator sep = Widget_GetData( w, prototype );
 	return t->tm_year == sep->time.tm_year &&
 		t->tm_mon == sep->time.tm_mon;
 }
@@ -85,7 +83,7 @@ LCUI_BOOL TimeSeparator_CheckTime( LCUI_Widget w, struct tm *t )
 void TimeSeparator_SetTime( LCUI_Widget w, const struct tm *t )
 {
 	wchar_t title[128];
-	TimeSeparator sep = w->private_data;
+	TimeSeparator sep = Widget_GetData( w, prototype );
 	swprintf( title, 128, TEXT_TIME_TITLE, 
 		  1900 + t->tm_year, t->tm_mon + 1 );
 	TextView_SetTextW( sep->title, title );
@@ -95,7 +93,7 @@ void TimeSeparator_SetTime( LCUI_Widget w, const struct tm *t )
 void TimeSeparator_AddTime( LCUI_Widget w, struct tm *t )
 {
 	wchar_t text[128];
-	TimeSeparator sep = w->private_data;
+	TimeSeparator sep = Widget_GetData( w, prototype );
 
 	sep->count += 1;
 	/** 如果时间跨度不超过一天 */
@@ -114,19 +112,18 @@ void TimeSeparator_AddTime( LCUI_Widget w, struct tm *t )
 
 void TimeSeparator_Reset( LCUI_Widget w )
 {
-	TimeSeparator sep = w->private_data;
+	TimeSeparator sep = Widget_GetData( w, prototype );
 	sep->count = 0;
 }
 
 LCUI_Widget TimeSeparator_GetTitle( LCUI_Widget w )
 {
-	TimeSeparator sep = w->private_data;
+	TimeSeparator sep = Widget_GetData( w, prototype );
 	return sep->title;
 }
 
 void LCUIWidget_AddTimeSeparator( void )
 {
-	LCUI_WidgetClass *wc = LCUIWidget_AddClass( "time-separator" );
-	wc->methods.init = TimeSeparator_OnInit;
-	wc->methods.destroy = TimeSeparator_OnDestroy;
+	prototype = LCUIWidget_NewPrototype( "time-separator", NULL );
+	prototype->init = TimeSeparator_OnInit;
 }
