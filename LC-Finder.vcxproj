@@ -23,6 +23,7 @@
     <ClCompile Include="src\lib\common.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
+    <ClCompile Include="src\lib\i18n.c" />
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
@@ -33,6 +34,7 @@
     <ClCompile Include="src\ui\filesync.c" />
     <ClCompile Include="src\ui\progressbar.c" />
     <ClCompile Include="src\ui\starrating.c" />
+    <ClCompile Include="src\ui\textview_i18n.c" />
     <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\timeseparator.c" />
     <ClCompile Include="src\ui\view_folders.c" />
@@ -64,9 +66,11 @@
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\finder.h" />
+    <ClInclude Include="include\i18n.h" />
     <ClInclude Include="include\progressbar.h" />
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\starrating.h" />
+    <ClInclude Include="include\textview_i18n.h" />
     <ClInclude Include="include\thumb_db.h" />
     <ClInclude Include="include\thumb_cache.h" />
     <ClInclude Include="include\thumbview.h" />
@@ -174,7 +178,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -210,7 +214,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrtd.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>

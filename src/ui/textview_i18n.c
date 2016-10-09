@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * ui.c -- ui managment module
+ * textview_i18n.c -- textview internationalization version
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -18,7 +18,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * ui.c -- 图形界面管理模块
+ * textview_i18n.c -- 文本显示部件的国际化版本
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -34,70 +34,68 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <stdlib.h>
-#include "finder.h"
-#include <LCUI/timer.h>
-#include <LCUI/display.h>
-#include <LCUI/font/charset.h>
-#include <LCUI/gui/builder.h>
-#include "ui.h"
-#include "thumbview.h"
-#include "starrating.h"
-#include "timeseparator.h"
-#include "progressbar.h"
+#include <LCUI_Build.h>
+#include <LCUI/LCUI.h>
+#include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/textview.h>
 #include "textview_i18n.h"
+#include "i18n.h"
 
-#define XML_PATH "res/ui.xml"
+#define WIDGET_NAME "textview-i18n"
 
-static void onTimer( void *arg )
+typedef struct TextViewI18nRec_ {
+	char *text;
+} TextViewI18nRec, *TextViewI18n;
+
+static struct TextViewI18nModule {
+	Dict *texts;
+	LinkedList textviews;
+	LCUI_WidgetPrototype prototype;
+} self;
+
+static void TextViewI18n_Init( LCUI_Widget w )
 {
-	//LCUI_Widget w = LCUIWidget_GetById( "debug-widget" );
-	//LCUI_PrintStyleSheet( w->style );
-	//LCUI_Widget w = LCUIWidget_GetById( "sidebar-btn-search" );
-	//LCUI_PrintStyleSheet( w->style );
-	Widget_PrintTree( NULL );
+	const size_t data_size = sizeof( TextViewI18nRec );
+	TextViewI18n txt = Widget_AddData( w, self.prototype, data_size );
+	txt->text = NULL;
 }
 
-void UI_Init(void)
+static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name, 
+				  const char *value  )
 {
-	LCUI_Widget box, root;
-	LCUI_Init();
-	LCUIWidget_AddThumbView();
-	LCUIWidget_AddStarRating();
-	LCUIWidget_AddProgressBar();
-	LCUIWidget_AddTimeSeparator();
-	LCUIWidget_AddTextViewI18n();
-	LCUIDisplay_SetMode( LCDM_WINDOWED );
-	LCUIDisplay_SetSize( 960, 640 );
-	//LCUIDisplay_ShowRectBorder();
-	box = LCUIBuilder_LoadFile( XML_PATH );
-	if( !box ) {
-		return;
+	const char *text;
+	if( strcasecmp( name, "data-i18n-key" ) == 0 ) {
+		text = I18n_GetText( self.texts, value );
+		if( text ) {
+			TextView_SetText( w, text );
+			return;
+		}
 	}
-	Widget_Top( box );
-	Widget_Unwrap( box );
-	root = LCUIWidget_GetRoot();
-	Widget_SetTitleW( root, L"LC-Finder" );
-	Widget_UpdateStyle( root, TRUE );
-	UI_InitSidebar();
-	UI_InitHomeView();
-	UI_InitSettingsView();
-	UI_InitFoldersView();
-	UI_InitFileSyncTip();
-	UI_InitPictureView();
-	UI_InitSearchView();
-	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
+	w->proto->proto->setattr( w, name, value );
 }
 
-int UI_Run( void )
+static void TextViewI18n_SetText( LCUI_Widget w, const char *text  )
 {
-	return LCUI_Main();
+	size_t len = strlen( text ) + 1;
+	TextViewI18n txt = Widget_GetData( w, self.prototype );
+	if( txt->text ) {
+		free( txt->text );
+	}
+	txt->text = malloc( sizeof( char ) * len );
+	strncpy( txt->text, text, len );
+	TextView_SetText( w, text );
 }
 
-void UI_Exit( void )
+int LCUIWidget_SetTextViewI18nLanguage( const char *language )
 {
-	UI_ExitHomeView();
-	UI_ExitFolderView();
-	UI_ExitPictureView();
+	return 0;
 }
 
+void LCUIWidget_AddTextViewI18n( void )
+{
+	/* 继承自 textview */
+	self.prototype = LCUIWidget_NewPrototype( WIDGET_NAME, "textview" );
+	self.prototype->init = TextViewI18n_Init;
+	self.prototype->setattr = TextViewI18n_SetAttr;
+	self.prototype->settext = TextViewI18n_SetText;
+}

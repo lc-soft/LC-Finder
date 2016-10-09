@@ -44,6 +44,8 @@
 #include "ui.h"
 #include <LCUI/font/charset.h>
 
+#define DEBUG
+
 #define THUMB_CACHE_SIZE (64*1024*1024)
 #define EncodeUTF8(STR, WSTR, LEN) LCUI_EncodeString( STR, WSTR, LEN, ENCODING_UTF8 )
 
@@ -367,8 +369,8 @@ static void LCFinder_InitWorkDir( void )
 	wchar_t data_dir[2048];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
-#ifdef _WIN32
-	//_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
+#if defined(_WIN32) && defined(DEBUG)
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 #endif
 	wgetcurdir( data_dir, 2048 );
 	wpathjoin( data_dir, data_dir, L"data" );
@@ -563,8 +565,7 @@ static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 
 int main( int argc, char **argv )
 {
-//#define DEBUG
-#if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
+#if defined (_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
 	LCFinder_InitWorkDir();
