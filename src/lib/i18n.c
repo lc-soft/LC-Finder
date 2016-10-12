@@ -70,7 +70,7 @@ static char *yaml_get_token_string( yaml_token_t *token )
 	if( str ) {
 		strncpy( str, token->data.scalar.value, len );
 	}
-	return NULL;
+	return str;
 }
 
 static void DeleteDictValue( void *privdata, void *data )
@@ -92,13 +92,14 @@ Dict *I18n_LoadFile( const char *path )
 	yaml_parser_t parser;
 	Dict *dict, *parent_dict;
 	DictValue value, parent_value;
+	int state = 0;
 
 	file = fopen( path, "r" );
 	if( !file ) {
 		fprintf( stderr, "[i18n] Failed to open file: %s\n", path );
 		return NULL;
 	}
-	parent_value = NULL;
+	parent_value = value = NULL;
 	parent_dict = dict = StrDict_Create( NULL, DeleteDictValue );
 	if( !yaml_parser_initialize( &parser ) ) {
 		fputs( "[i18n] Failed to initialize parser!\n", stderr );
@@ -106,19 +107,28 @@ Dict *I18n_LoadFile( const char *path )
 	}
 	yaml_parser_set_input_file( &parser, file );
 	do {
-		int state = 0;
-		yaml_parser_scan( &parser, &token );
+		if( !yaml_parser_scan( &parser, &token ) ) {
+			Dict_Release( dict );
+			dict = NULL;
+			break;
+		}
 		switch( token.type ) {
 		case YAML_KEY_TOKEN: state = 0; break;
 		case YAML_VALUE_TOKEN: state = 1; break;
-		case YAML_BLOCK_ENTRY_TOKEN: 
+		case YAML_BLOCK_MAPPING_START_TOKEN: 
+			if( !value ) {
+				break;
+			}
 			value->type = DICT;
 			value->dict = StrDict_Create( NULL, DeleteDictValue );
 			value->parent_value = parent_value;
+			parent_dict = value->dict;
 			parent_value = value;
 			break;
 		case YAML_BLOCK_END_TOKEN: 
-			parent_value = parent_value->parent_value;
+			if( parent_value ) {
+				parent_value = parent_value->parent_value;
+			}
 			break;
 		case YAML_SCALAR_TOKEN:
 			if( state == 0 ) {
@@ -161,7 +171,11 @@ const char *I18n_GetText( Dict *dict, const char *keystr )
 		key[i] = 0;
 		value = Dict_FetchValue( dict, key );
 		if( value ) {
-			dict = value->dict;
+			if( value->type == DICT ) {
+				dict = value->dict;
+			} else {
+				break;
+			}
 		}
 		i = -1;
 	}
@@ -169,8 +183,25 @@ const char *I18n_GetText( Dict *dict, const char *keystr )
 		key[i] = 0;
 		value = Dict_FetchValue( dict, key );
 	}
-	if( value->type == STRING ) {
+	if( value && value->type == STRING ) {
 		return value->string.data;
 	}
 	return NULL;
+}
+
+/** 测试用例 */
+int TestI18n( void )
+{
+	Dict *dict = I18n_LoadFile( "lang/en.yaml" );
+	if( !dict ) {
+		return -1;
+	}
+	printf( "============ test i18n api ============\n"
+		"name: %s\nstrings.title: %s\n"
+		"strings.window.title: %s\n"
+		"=======================================\n",
+		I18n_GetText( dict, "name" ),
+		I18n_GetText( dict, "strings.title" ),
+		I18n_GetText( dict, "strings.window.title" ) );
+	return 0;
 }
