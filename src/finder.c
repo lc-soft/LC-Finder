@@ -46,6 +46,10 @@
 
 #define DEBUG
 
+#define DATA_DIR	L"data"
+#define LANG_DIR	L"lang"
+#define LANG_FILE_EXT	L".yaml"
+
 #define THUMB_CACHE_SIZE (64*1024*1024)
 #define EncodeUTF8(STR, WSTR, LEN) LCUI_EncodeString( STR, WSTR, LEN, ENCODING_UTF8 )
 
@@ -372,8 +376,10 @@ static void LCFinder_InitWorkDir( void )
 #if defined(_WIN32) && defined(DEBUG)
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 #endif
-	wgetcurdir( data_dir, 2048 );
-	wpathjoin( data_dir, data_dir, L"data" );
+	len = wgetcurdir( data_dir, 2048 ) + 1;
+	finder.work_dir = NEW( wchar_t, len );
+	wcsncpy( finder.work_dir, data_dir, len );
+	wpathjoin( data_dir, data_dir, DATA_DIR );
 	len = wcslen( data_dir );
 	if( data_dir[len - 1] != PATH_SEP ) {
 		data_dir[len++] = PATH_SEP;
@@ -486,6 +492,54 @@ static void LCFinder_InitThumbCache( void )
 	finder.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE );
 }
 
+/** 初始化语言文件列表 */
+static void LCFinder_InitLanguageFiles( void )
+{
+	int i = 1;
+	LCUI_Dir dir;
+	LCUI_DirEntry *entry;
+	wchar_t *name, *p, lang_dir[2048];
+	wpathjoin( lang_dir, finder.work_dir, LANG_DIR );
+	if( LCUI_OpenDir( lang_dir, &dir ) != 0 ) {
+		return;
+	}
+	finder.lang_files = NULL;
+	while( (entry = LCUI_ReadDir( &dir )) ) {
+		size_t len;
+		wchar_t *file, **files;
+		name = LCUI_GetFileName( entry );
+		/* 忽略 . 和 .. 文件夹 */
+		if( name[0] == '.' ) {
+			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {
+				continue;
+			}
+		}
+		if( !LCUI_FileIsArchive( entry ) ) {
+			continue;
+		}
+		p = wcsstr( name, LANG_FILE_EXT );
+		if( !p ) {
+			continue;
+		}
+		p += sizeof( LANG_FILE_EXT ) / sizeof( wchar_t ) - 1;
+		if( *p ) {
+			continue;
+		}
+		i += 1;
+		files = realloc( finder.lang_files, sizeof( wchar_t* ) * i );
+		if( !files ) {
+			break;
+		}
+		len = wcslen( name ) + 1;
+		file = malloc( len * sizeof( wchar_t ) );
+		wcsncpy( file, name, len );
+		files[i - 2] = file;
+		files[i - 1] = NULL;
+		finder.lang_files = files;
+	}
+}
+
+
 static void ThumbDBDict_ValDel( void *privdata, void *val )
 {
 	ThumbDB_Close( val );
@@ -572,6 +626,7 @@ int main( int argc, char **argv )
 	LCFinder_InitFileDB();
 	LCFinder_InitThumbDB();
 	LCFinder_InitThumbCache();
+	LCFinder_InitLanguageFiles();
 	finder.trigger = EventTrigger();
 	UI_Init();
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );

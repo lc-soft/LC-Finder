@@ -75,7 +75,7 @@ int pathjoin( char *path, const char *path1, const char *path2 );
 int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
 
 /** 获取程序当前所在目录 */
-void wgetcurdir( wchar_t *path, int max_len );
+int wgetcurdir( wchar_t *path, int max_len );
 
 int wmkdir( wchar_t *wpath );
 

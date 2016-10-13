@@ -257,15 +257,17 @@ int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 	return len;
 }
 
-void wgetcurdir( wchar_t *wpath, int max_len )
+int wgetcurdir( wchar_t *wpath, int max_len )
 {
 #ifdef _WIN32
-	GetCurrentDirectoryW( max_len, wpath );
+	return GetCurrentDirectoryW( max_len, wpath );
 #else
+	int len;
 	char *path = malloc( sizeof(char) * (max_len + 1) );
 	getcwd( path, max_len );
-	LCUI_DecodeString( wpath, path, max_len, ENCODING_UTF8 );
+	len = LCUI_DecodeString( wpath, path, max_len, ENCODING_UTF8 );
 	free( path );
+	return len;
 #endif
 }
 
