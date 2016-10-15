@@ -31,6 +31,7 @@
     <ClCompile Include="src\ui\dialog_confirm.c" />
     <ClCompile Include="src\ui\dialog_progress.c" />
     <ClCompile Include="src\ui\dialog_prompt.c" />
+    <ClCompile Include="src\ui\dropdown.c" />
     <ClCompile Include="src\ui\filesync.c" />
     <ClCompile Include="src\ui\progressbar.c" />
     <ClCompile Include="src\ui\starrating.c" />
@@ -63,6 +64,7 @@
     <ClInclude Include="include\browser.h" />
     <ClInclude Include="include\common.h" />
     <ClInclude Include="include\dialog.h" />
+    <ClInclude Include="include\dropdown.h" />
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\finder.h" />
@@ -173,6 +175,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -209,6 +212,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MinimalRebuild>true</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

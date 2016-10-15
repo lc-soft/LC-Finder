@@ -99,6 +99,9 @@
     <ClCompile Include="src\lib\i18n.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\dropdown.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -171,6 +174,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\i18n.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dropdown.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -46,6 +46,7 @@
 #include "timeseparator.h"
 #include "progressbar.h"
 #include "textview_i18n.h"
+#include "dropdown.h"
 
 #define XML_PATH "res/ui.xml"
 
@@ -67,6 +68,7 @@ void UI_Init(void)
 	LCUIWidget_AddProgressBar();
 	LCUIWidget_AddTimeSeparator();
 	LCUIWidget_AddTextViewI18n();
+	LCUIWidget_AddDropdown();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 640 );
 	//LCUIDisplay_ShowRectBorder();
@@ -100,4 +102,3 @@ void UI_Exit( void )
 	UI_ExitFolderView();
 	UI_ExitPictureView();
 }
-
