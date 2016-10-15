@@ -34,8 +34,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
+#include "finder.h"
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "textview_i18n.h"
@@ -45,6 +44,7 @@
 
 typedef struct TextViewI18nRec_ {
 	char *text;
+	LinkedListNode node;
 } TextViewI18nRec, *TextViewI18n;
 
 static struct TextViewI18nModule {
@@ -57,7 +57,16 @@ static void TextViewI18n_Init( LCUI_Widget w )
 {
 	const size_t data_size = sizeof( TextViewI18nRec );
 	TextViewI18n txt = Widget_AddData( w, self.prototype, data_size );
+
 	txt->text = NULL;
+	txt->node.data = w;
+	LinkedList_Append( &self.textviews, &txt->node );
+}
+
+static void TextViewI18n_Destroy( LCUI_Widget w )
+{
+	TextViewI18n txt = Widget_GetData( w, self.prototype );
+	LinkedList_Unlink( &self.textviews, &txt->node );
 }
 
 static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name, 
@@ -65,7 +74,7 @@ static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name,
 {
 	const char *text;
 	if( strcasecmp( name, "data-i18n-key" ) == 0 ) {
-		text = I18n_GetText( self.texts, value );
+		text = I18n_GetText( value );
 		if( text ) {
 			TextView_SetText( w, text );
 			return;
@@ -86,7 +95,7 @@ static void TextViewI18n_SetText( LCUI_Widget w, const char *text  )
 	TextView_SetText( w, text );
 }
 
-int LCUIWidget_SetTextViewI18nLanguage( const char *language )
+int LCUIWidget_RefreshTextViewI18n( void )
 {
 	return 0;
 }
@@ -96,6 +105,7 @@ void LCUIWidget_AddTextViewI18n( void )
 	/* 继承自 textview */
 	self.prototype = LCUIWidget_NewPrototype( WIDGET_NAME, "textview" );
 	self.prototype->init = TextViewI18n_Init;
+	self.prototype->destroy = TextViewI18n_Destroy;
 	self.prototype->setattr = TextViewI18n_SetAttr;
 	self.prototype->settext = TextViewI18n_SetText;
 }

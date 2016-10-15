@@ -41,6 +41,7 @@
 #include <wchar.h>
 #include <locale.h>
 #include "finder.h"
+#include "i18n.h"
 #include "ui.h"
 #include <LCUI/font/charset.h>
 
@@ -495,18 +496,21 @@ static void LCFinder_InitThumbCache( void )
 /** 初始化语言文件列表 */
 static void LCFinder_InitLanguageFiles( void )
 {
-	int i = 1;
-	LCUI_Dir dir;
+	int dir_len;
+	char file[PATH_LEN];
+	wchar_t *wfile, lang_path[PATH_LEN];
 	LCUI_DirEntry *entry;
-	wchar_t *name, *p, lang_dir[2048];
-	wpathjoin( lang_dir, finder.work_dir, LANG_DIR );
-	if( LCUI_OpenDir( lang_dir, &dir ) != 0 ) {
+	LCUI_Dir dir;
+
+	dir_len = wpathjoin( lang_path, finder.work_dir, LANG_DIR );
+	if( LCUI_OpenDir( lang_path, &dir ) != 0 ) {
 		return;
 	}
-	finder.lang_files = NULL;
+	lang_path[dir_len++] = PATH_SEP;
+	wfile = lang_path + dir_len;
 	while( (entry = LCUI_ReadDir( &dir )) ) {
-		size_t len;
-		wchar_t *file, **files;
+		int len;
+		wchar_t *name, *p;
 		name = LCUI_GetFileName( entry );
 		/* 忽略 . 和 .. 文件夹 */
 		if( name[0] == '.' ) {
@@ -525,20 +529,13 @@ static void LCFinder_InitLanguageFiles( void )
 		if( *p ) {
 			continue;
 		}
-		i += 1;
-		files = realloc( finder.lang_files, sizeof( wchar_t* ) * i );
-		if( !files ) {
-			break;
-		}
-		len = wcslen( name ) + 1;
-		file = malloc( len * sizeof( wchar_t ) );
-		wcsncpy( file, name, len );
-		files[i - 2] = file;
-		files[i - 1] = NULL;
-		finder.lang_files = files;
+		wcscpy( wfile, name );
+		len = LCUI_EncodeString( file, lang_path, PATH_LEN - 1,
+					 ENCODING_ANSI );
+		file[len] = 0;
+		I18n_LoadLanguage( file );
 	}
 }
-
 
 static void ThumbDBDict_ValDel( void *privdata, void *val )
 {

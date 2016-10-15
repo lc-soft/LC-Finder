@@ -39,7 +39,7 @@
 
 void LCUIWidget_AddTextViewI18n( void );
 
-/** 为所有 textview-i18n 设置语言 */
-int LCUIWidget_SetTextViewI18nLanguage( const char *language );
+/**< 刷新全部 textview-i18n 部件显示的文本 */
+int LCUIWidget_RefreshTextViewI18n( void );
 
 #endif

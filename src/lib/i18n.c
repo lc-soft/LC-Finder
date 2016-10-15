@@ -63,6 +63,13 @@ struct DictValueRec_ {
 	DictValue parent_value;
 };
 
+static struct I18nModule {
+	int length;		/**< 语言列表的长度 */
+	Language *languages;	/**< 语言列表 */
+	Language language;	/**< 当前选中的语言 */
+	Dict *texts;		/**< 文本库 */
+} self = {0};
+
 static char *yaml_get_token_string( yaml_token_t *token )
 {
 	size_t len = token->data.scalar.length + 1;
@@ -85,6 +92,51 @@ static void DeleteDictValue( void *privdata, void *data )
 	free( data );
 }
 
+static Language I18n_AddLanguage( const char *path, Dict *dict )
+{
+	int i, pos;
+	DictValue name, code;
+	Language lang, *langs;
+	size_t len = strlen( path ) + 1;
+	lang = malloc( sizeof( LanguageRec ) );
+	name = Dict_FetchValue( dict, "name" );
+	code = Dict_FetchValue( dict, "code" );
+	if( !name || !code ) {
+		return NULL;
+	}
+	lang->filename = malloc( sizeof( char ) * len );
+	strncpy( lang->filename, path, len );
+	len = name->string.length + 1;
+	lang->name = malloc( sizeof( char ) * len );
+	strncpy( lang->name, name->string.data, len );
+	len = code->string.length + 1;
+	lang->code = malloc( sizeof( char ) * len );
+	strncpy( lang->code, code->string.data, len );
+	len = self.length + 2;
+	langs = realloc( self.languages, sizeof( Language ) * len );
+	if( !langs ) {
+		return NULL;
+	}
+	langs[len - 1] = NULL;
+	for( i = 0, pos = -1; i < self.length; ++i ) {
+		if( strcmp( lang->code, langs[i]->code ) < 0 ) {
+			pos = i;
+			break;
+		}
+	}
+	if( pos == -1 ) {
+		pos = self.length;
+	} else {
+		for( i = self.length; i > pos; --i ) {
+			langs[i] = langs[i - 1];
+		}
+	}
+	langs[pos] = lang;
+	self.languages = langs;
+	self.length += 1;
+	return lang;
+}
+
 Dict *I18n_LoadFile( const char *path )
 {
 	FILE *file;
@@ -94,15 +146,16 @@ Dict *I18n_LoadFile( const char *path )
 	DictValue value, parent_value;
 	int state = 0;
 
+	printf( "[i18n] load language file: %s\n", path );
 	file = fopen( path, "r" );
 	if( !file ) {
-		fprintf( stderr, "[i18n] Failed to open file: %s\n", path );
+		fprintf( stderr, "[i18n] failed to open file: %s\n", path );
 		return NULL;
 	}
 	parent_value = value = NULL;
 	parent_dict = dict = StrDict_Create( NULL, DeleteDictValue );
 	if( !yaml_parser_initialize( &parser ) ) {
-		fputs( "[i18n] Failed to initialize parser!\n", stderr );
+		fputs( "[i18n] failed to initialize parser!\n", stderr );
 		return NULL;
 	}
 	yaml_parser_set_input_file( &parser, file );
@@ -127,6 +180,7 @@ Dict *I18n_LoadFile( const char *path )
 			break;
 		case YAML_BLOCK_END_TOKEN: 
 			if( parent_value ) {
+				parent_dict = parent_value->dict;
 				parent_value = parent_value->parent_value;
 			}
 			break;
@@ -156,13 +210,39 @@ Dict *I18n_LoadFile( const char *path )
 	return dict;
 }
 
-const char *I18n_GetText( Dict *dict, const char *keystr )
+Language I18n_LoadLanguage( const char *filename )
+{
+	Dict *dict;
+	Language lang;
+	dict = I18n_LoadFile( filename );
+	if( !dict ) {
+		return NULL;
+	}
+	lang = I18n_AddLanguage( filename, dict );
+	Dict_Release( dict );
+	if( lang ) {
+		printf( "[i18n] language loaded, name: %s, code: %s\n", 
+			lang->name, lang->code );
+	}
+	return lang;
+}
+
+const char *I18n_GetText( const char *keystr )
 {
 	int i;
 	char key[256];
 	const char *p;
+	Dict *dict;
 	DictValue value;
 
+	if( !self.texts ) {
+		return NULL;
+	}
+	value = Dict_FetchValue( self.texts, "strings" );
+	if( !value || value->type != DICT ) {
+		return NULL;
+	}
+	dict = value->dict;
 	for( i = 0, p = keystr, value = NULL; *p; ++p, ++i ) {
 		if( *p != '.' ) {
 			key[i] = *p;
@@ -189,19 +269,23 @@ const char *I18n_GetText( Dict *dict, const char *keystr )
 	return NULL;
 }
 
-/** 测试用例 */
-int TestI18n( void )
+Language I18n_SetLanguage( const char *lang_code )
 {
-	Dict *dict = I18n_LoadFile( "lang/en.yaml" );
-	if( !dict ) {
-		return -1;
+	int i;
+	for( i = 0; i < self.length; ++i ) {
+		Dict *dict;
+		Language lang;
+		lang = self.languages[i];
+		if( strcmp( lang->code, lang_code ) ) {
+			continue;
+		}
+		dict = I18n_LoadFile( lang->filename );
+		if( !dict ) {
+			break;
+		}
+		self.language = lang;
+		self.texts = dict;
+		return lang;
 	}
-	printf( "============ test i18n api ============\n"
-		"name: %s\nstrings.title: %s\n"
-		"strings.window.title: %s\n"
-		"=======================================\n",
-		I18n_GetText( dict, "name" ),
-		I18n_GetText( dict, "strings.title" ),
-		I18n_GetText( dict, "strings.window.title" ) );
-	return 0;
+	return NULL;
 }

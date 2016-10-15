@@ -37,10 +37,25 @@
 #ifndef LCFINDER_I18N_H
 #define LCFINDER_I18N_H
 
+typedef struct LanguageRec_ {
+	char *name;		/**< 语言名称  */
+	char *code;		/**< 语言代码，如：zh-cn、en */
+	char *filename;		/**< 语言文件 */
+} LanguageRec, *Language;
+
 /** 从文件中载入数据 */
 Dict *I18n_LoadFile( const char *path );
 
 /** 获取与 key 对应的文本 */
-const char *I18n_GetText( Dict *dict, const char *key );
+const char *I18n_GetText( const char *key );
+
+/** 从语言文件中载入数据 */
+Dict *I18n_LoadFile( const char *path );
+
+/** 载入语言文件 */
+Language I18n_LoadLanguage( const char *filename );
+
+/** 设置当前语言 */
+Language I18n_SetLanguage( const char *lang_code );
 
 #endif
