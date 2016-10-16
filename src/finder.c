@@ -494,7 +494,7 @@ static void LCFinder_InitThumbCache( void )
 }
 
 /** 初始化语言文件列表 */
-static void LCFinder_InitLanguageFiles( void )
+static void LCFinder_InitLanguage( void )
 {
 	int dir_len;
 	char file[PATH_LEN];
@@ -535,6 +535,8 @@ static void LCFinder_InitLanguageFiles( void )
 		file[len] = 0;
 		I18n_LoadLanguage( file );
 	}
+	
+	I18n_SetLanguage( "en-us" );
 }
 
 static void ThumbDBDict_ValDel( void *privdata, void *val )
@@ -623,7 +625,7 @@ int main( int argc, char **argv )
 	LCFinder_InitFileDB();
 	LCFinder_InitThumbDB();
 	LCFinder_InitThumbCache();
-	LCFinder_InitLanguageFiles();
+	LCFinder_InitLanguage();
 	finder.trigger = EventTrigger();
 	UI_Init();
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );

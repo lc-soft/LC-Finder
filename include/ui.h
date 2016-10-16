@@ -114,6 +114,7 @@
 #define ID_TIP_PICTURE_NOT_FOUND	"tip-picture-not-found"
 #define ID_TIP_PICTURE_UNSUPPORT	"tip-picture-unsupport"
 #define ID_INPUT_SEARCH			"input-search"
+#define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
 
 /** 文件迭代器 */
 typedef struct FileIteratorRec_* FileIterator;

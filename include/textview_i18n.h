@@ -39,7 +39,11 @@
 
 void LCUIWidget_AddTextViewI18n( void );
 
+void TextViewI18n_Refresh( LCUI_Widget w );
+
+void TextViewI18n_SetKey( LCUI_Widget w, const char *key );
+
 /**< 刷新全部 textview-i18n 部件显示的文本 */
-int LCUIWidget_RefreshTextViewI18n( void );
+void LCUIWidget_RefreshTextViewI18n( void );
 
 #endif

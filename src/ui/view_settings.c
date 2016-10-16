@@ -46,6 +46,9 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
+#include "dropdown.h"
+#include "textview_i18n.h"
+#include "i18n.h"
 
 #define MAX_DIRPATH_LEN			2048
 #define TEXT_DELETING 			L"正在清除..."
@@ -263,7 +266,28 @@ static void OnBtnWebSiteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 /** 在“问题反馈”按钮被点击时 */
 static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 {
-	wopenbrowser( L"https://github.com/lc-soft/LC-Finder/issues/new" );
+	wopenbrowser( L"https://github.com/lc-soft/LC-Finder/issues" );
+}
+
+static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *lang_code )
+{
+	printf("lang_code: %s\n", lang_code);
+	I18n_SetLanguage( lang_code );
+	LCUIWidget_RefreshTextViewI18n();
+}
+
+static void UI_InitLanguages( void )
+{
+	int i, n;
+	Language *langs;
+	LCUI_Widget menu;
+	n = I18n_GetLanguages( &langs );
+	menu = LCUIWidget_GetById( ID_DROPDOWN_LANGUAGES );
+	for( i = 0; i < n; ++i ) {
+		Dropdwon_AddItem( menu, langs[i]->code, langs[i]->name );
+	}
+	Widget_BindEvent( menu, "change.dropdown", 
+			  OnSelectLanguage, NULL, NULL );
 }
 
 void UI_InitSettingsView( void )
@@ -285,4 +309,5 @@ void UI_InitSettingsView( void )
 	Widget_BindEvent( btn, "click", OnBtnWebSiteClick, NULL, NULL );
 	btn = LCUIWidget_GetById( ID_BTN_OPEN_FEEDBACK );
 	Widget_BindEvent( btn, "click", OnBtnFeedbackClick, NULL, NULL );
+	UI_InitLanguages();
 }

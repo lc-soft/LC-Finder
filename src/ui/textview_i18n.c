@@ -43,12 +43,13 @@
 #define WIDGET_NAME "textview-i18n"
 
 typedef struct TextViewI18nRec_ {
+	char *key;
 	char *text;
+	LCUI_BOOL key_valid;
 	LinkedListNode node;
 } TextViewI18nRec, *TextViewI18n;
 
 static struct TextViewI18nModule {
-	Dict *texts;
 	LinkedList textviews;
 	LCUI_WidgetPrototype prototype;
 } self;
@@ -58,9 +59,11 @@ static void TextViewI18n_Init( LCUI_Widget w )
 	const size_t data_size = sizeof( TextViewI18nRec );
 	TextViewI18n txt = Widget_AddData( w, self.prototype, data_size );
 
-	txt->text = NULL;
 	txt->node.data = w;
+	txt->key_valid = FALSE;
+	txt->key = txt->text = NULL;
 	LinkedList_Append( &self.textviews, &txt->node );
+	self.prototype->proto->init( w );
 }
 
 static void TextViewI18n_Destroy( LCUI_Widget w )
@@ -69,35 +72,68 @@ static void TextViewI18n_Destroy( LCUI_Widget w )
 	LinkedList_Unlink( &self.textviews, &txt->node );
 }
 
-static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name, 
-				  const char *value  )
+void TextViewI18n_Refresh( LCUI_Widget w )
 {
 	const char *text;
-	if( strcasecmp( name, "data-i18n-key" ) == 0 ) {
-		text = I18n_GetText( value );
+	TextViewI18n textview;
+
+	textview = Widget_GetData( w, self.prototype );
+	if( textview->key ) {
+		text = I18n_GetText( textview->key );
 		if( text ) {
+			textview->key_valid = TRUE;
 			TextView_SetText( w, text );
 			return;
 		}
+		textview->key_valid = FALSE;
 	}
-	w->proto->proto->setattr( w, name, value );
+	if( textview->text ) {
+		TextView_SetText( w, textview->text );
+	}
+}
+
+void TextViewI18n_SetKey( LCUI_Widget w, const char *key )
+{
+	TextViewI18n txt = Widget_GetData( w, self.prototype );
+	if( txt->key ) {
+		free( txt->key );
+	}
+	txt->key = strdup( key );
+	TextViewI18n_Refresh( w );
+}
+
+static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name, 
+				  const char *value  )
+{
+	if( strcasecmp( name, "data-i18n-key" ) == 0 ) {
+		TextViewI18n_SetKey( w, value );
+	}
+	if( w->proto->proto->setattr ) {
+		w->proto->proto->setattr( w, name, value );
+	}
 }
 
 static void TextViewI18n_SetText( LCUI_Widget w, const char *text  )
 {
 	size_t len = strlen( text ) + 1;
 	TextViewI18n txt = Widget_GetData( w, self.prototype );
+
 	if( txt->text ) {
 		free( txt->text );
 	}
 	txt->text = malloc( sizeof( char ) * len );
 	strncpy( txt->text, text, len );
-	TextView_SetText( w, text );
+	if( !txt->key_valid ) {
+		TextView_SetText( w, text );
+	}
 }
 
-int LCUIWidget_RefreshTextViewI18n( void )
+void LCUIWidget_RefreshTextViewI18n( void )
 {
-	return 0;
+	LinkedListNode *node;
+	for( LinkedList_Each( node, &self.textviews ) ) {
+		TextViewI18n_Refresh( node->data );
+	}
 }
 
 void LCUIWidget_AddTextViewI18n( void )
