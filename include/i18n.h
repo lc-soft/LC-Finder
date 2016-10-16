@@ -52,6 +52,9 @@ const char *I18n_GetText( const char *key );
 /** 从语言文件中载入数据 */
 Dict *I18n_LoadFile( const char *path );
 
+/** 获取全部语言信息列表 */
+int I18n_GetLanguages( Language **languages );
+
 /** 载入语言文件 */
 Language I18n_LoadLanguage( const char *filename );
 

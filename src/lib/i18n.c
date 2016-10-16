@@ -180,8 +180,12 @@ Dict *I18n_LoadFile( const char *path )
 			break;
 		case YAML_BLOCK_END_TOKEN: 
 			if( parent_value ) {
-				parent_dict = parent_value->dict;
 				parent_value = parent_value->parent_value;
+				if(parent_value ) {
+					parent_dict = parent_value->dict;
+				} else {
+					parent_dict = dict;
+				}
 			}
 			break;
 		case YAML_SCALAR_TOKEN:
@@ -250,12 +254,10 @@ const char *I18n_GetText( const char *keystr )
 		}
 		key[i] = 0;
 		value = Dict_FetchValue( dict, key );
-		if( value ) {
-			if( value->type == DICT ) {
-				dict = value->dict;
-			} else {
-				break;
-			}
+		if( value && value->type == DICT ) {
+			dict = value->dict;
+		} else {
+			return NULL;
 		}
 		i = -1;
 	}
@@ -267,6 +269,12 @@ const char *I18n_GetText( const char *keystr )
 		return value->string.data;
 	}
 	return NULL;
+}
+
+int I18n_GetLanguages( Language **languages )
+{
+	*languages = self.languages;
+	return self.length;
 }
 
 Language I18n_SetLanguage( const char *lang_code )
