@@ -10,6 +10,7 @@
 }
 .text, textview-i18n, textview {
 	font-size: 14px;
+	line-height: 20px;
 	font-family: Microsoft YaHei;
 }
 .text-muted {
@@ -50,12 +51,16 @@
 }
 .btn-default {
 	background-color: #eee;
+	border: 2px solid #eee;
+	box-sizing: border-box;
 }
 .btn-default:hover {
 	background-color: #ccc;
+	border-color: #aaa;
 }
 .btn-default:active {
 	background-color: #aaa;
+	border-color: #aaa;
 }
 .disabled,
 .disabled:hover,
@@ -723,7 +728,8 @@ textedit.dialog-input {
 	display: inline-block;
 	margin: 0 5px 5px 0;
 }
-.tag-list-item .text {
+.tag-list-item .text,
+.tag-list-item textview {
 	display: inline-block;	
 	padding: 4px 8px;
 	color: #666;

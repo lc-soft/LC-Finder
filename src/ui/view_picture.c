@@ -1097,7 +1097,7 @@ void UI_InitPictureView( void )
 void UI_OpenPictureView( const char *filepath )
 {
 	int len;
-	wchar_t *wpath;
+	wchar_t *wpath, title[256] = {0};
 	LCUI_Widget main_window, root;
 
 	len = strlen( filepath );
@@ -1110,7 +1110,8 @@ void UI_OpenPictureView( const char *filepath )
 	this_view.picture = &this_view.pictures[1];
 	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
 	SelectWidget( main_window, ID_WINDOW_MAIN );
-	Widget_SetTitleW( root, wgetfilename( wpath ) );
+	swprintf( title, 255, L"%s - LC-Finder", wgetfilename( wpath ) );
+	Widget_SetTitleW( root, title );
 	Widget_Hide( this_view.tip_unsupport );
 	Widget_Hide( this_view.tip_empty );
 	SetPicture( this_view.picture, wpath );

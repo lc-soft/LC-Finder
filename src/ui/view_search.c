@@ -405,8 +405,8 @@ static LCUI_Widget CreateTagWidget( DB_Tag tag )
 	Widget_AddClass( info, "tag-thumb-list-item-info" );
 	Widget_AddClass( cover, "tag-thumb-list-item-cover" );
 	Widget_AddClass( check, "mdi mdi-check tag-thumb-list-item-checkbox" );
-	Widget_AddClass( txt_name, "name" );
-	Widget_AddClass( txt_count, "count" );
+	Widget_AddClass( txt_name, "text name" );
+	Widget_AddClass( txt_count, "text count" );
 	TextView_SetText( txt_name, tag->name );
 	TextView_SetTextW( txt_count, str );
 	Widget_Append( cover, check );
