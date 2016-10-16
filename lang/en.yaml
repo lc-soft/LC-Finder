@@ -17,6 +17,16 @@ strings:
     license: License
     website: Website
     feedback: Feedback
+    file_info: File infomation
+    file_name: Name
+    file_date: Date
+    file_size: Size
+    file_score: Score
+    file_tags: Tags
+    image_resolution: Resolution
+    folder_path: Folder
+    open_folder: Open folder
+    add_tags: Add tags
     message:
         empty_folder: No pictures or folders.
         empty_collection: No pictures.
