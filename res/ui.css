@@ -1,3 +1,80 @@
+
+.pull-right {
+	top: 0;
+	right: 0;
+	height: 100%;
+	position: absolute;
+}
+.hide {
+	display: none;
+}
+.text, textview-i18n, textview {
+	font-size: 14px;
+	font-family: Microsoft YaHei;
+}
+.text-muted {
+	color: #888;
+}
+.text-line {
+	margin-bottom: 5px;
+	width: 100%;
+	max-width: 440px;
+}
+.text-line .text {
+	display: inline-block;
+}
+.btn {
+	padding: 8px 14px;
+}
+.btn .text {
+	line-height: 22px;
+	display: inline-block;
+}
+.btn:disabled {
+	background-color: #fff;
+	border: 1px solid #dedede;
+}
+.btn:disabled .text {
+	color: #7B7B7B;
+}
+.text.btn-link, .btn-link {
+	padding: 0;
+	margin-right: 20px;
+}
+.text.btn-link, .btn-link .text {
+	color: #007acc;
+	padding: 0;
+}
+.text.btn-link:hover, .btn-link:hover .text {
+	color: #23527c;
+}
+.btn-default {
+	background-color: #eee;
+}
+.btn-default:hover {
+	background-color: #ccc;
+}
+.btn-default:active {
+	background-color: #aaa;
+}
+.disabled,
+.disabled:hover,
+.disabled:active {
+	background-color: #eee;
+}
+.disabled .text,
+.disabled:hover .text,
+.disabled:active .text {
+	color: #ccc;
+}
+.btn-group .btn {
+	display: inline-block;
+}
+.container {
+	background-color: #fff;
+	width: 100%;
+	height: 100%;
+}
 .window {
 	background-color: #fff;
 	height: 100%;
@@ -28,7 +105,6 @@
 .sidebar .sidebar-item .icon,
 .sidebar .sidebar-item .text {
 	display: inline-block;
-	font-size: 14px;
 	line-height: 28px;
 	color: #515253;
 }
@@ -44,8 +120,8 @@
 	text-align: center;
 	padding: 2px 0 0 0;
 }
-.sidebar .sidebar-item:hover textview,
-.sidebar .sidebar-item:active textview {
+.sidebar .sidebar-item:hover .text,
+.sidebar .sidebar-item:active .text {
 	color: #262626;
 }
 .sidebar .sidebar-item:hover, .sidebar sidebar-toggle:hover {
@@ -53,9 +129,6 @@
 }
 .sidebar .sidebar-item:active, .sidebar sidebar-toggle:active {
 	background-color: #f3f3f3;
-}
-.sidebar-item .text {
-	font-family: Microsoft YaHei;
 }
 .view {
 	top: 0;
@@ -117,7 +190,7 @@
 	display: inline-block;
 	padding: 14px 12px 12px 10px;
 }
-.view-navbar .view-navbar-btn textview {
+.view-navbar .view-navbar-btn .text {
 	font-size: 16px;
 	height: 24px;
 }
@@ -239,7 +312,7 @@
 	box-sizing: border-box;
 	border: 2px solid rgba(0,0,0,0);
 }
-.file-list .file-list-item-picture .picture-cover textview.tip {
+.file-list .file-list-item-picture .picture-cover .text.tip {
 	font-size: 32px;
 	color: #aaa;
 }
@@ -354,95 +427,22 @@ time-separator:first-child {
 	font-size: 13px;
 	display: block;
 }
-.pull-right {
-	top: 0;
-	right: 0;
-	height: 100%;
-	position: absolute;
-}
-.hide {
-	display: none;
-}
-textview {
-	font-size: 14px;
-}
-.text-muted {
-	color: #888;
-}
-.text-line {
-	margin-bottom: 5px;
-	width: 100%;
-}
-.text-line textview {
-	display: inline-block;
-}
-.btn {
-	padding: 8px 14px;
-}
-.btn textview {
-	line-height: 22px;
-}
-.btn:disabled {
-	background-color: #fff;
-	border: 1px solid #dedede;
-}
-.btn:disabled textview {
-	color: #7B7B7B;
-}
-textview.btn-link, .btn-link {
-	padding: 0;
-	margin-right: 20px;
-}
-textview.btn-link, .btn-link textview {
-	color: #007acc;
-	padding: 0;
-}
-textview.btn-link:hover, .btn-link:hover textview {
-	color: #23527c;
-}
-.btn-default {
-	background-color: #eee;
-}
-.btn-default:hover {
-	background-color: #ccc;
-}
-.btn-default:active {
-	background-color: #aaa;
-}
-.disabled,
-.disabled:hover,
-.disabled:active {
-	background-color: #eee;
-}
-.disabled textview,
-.disabled:hover textview,
-.disabled:active textview {
-	color: #ccc;
-}
-.btn-group .btn {
-	display: inline-block;
-}
-.container {
-	background-color: #fff;
-	width: 100%;
-	height: 100%;
-}
 .dialog {
-	background-color: rgba(0,0,0,0.5);
-	width: 100%;
-	height: 100%;
-	position: absolute;
 	top: 0;
 	left: 0;
 	z-index: 1000;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	background-color: rgba(0,0,0,0.5);
 }
 .dialog-content {
 	width: 100%;
 	padding: 25px;
-	vertical-align: middle;
-	background-color: #fff;
 	max-width: 450px;
 	margin: 0 auto;
+	vertical-align: middle;
+	background-color: #fff;
 	box-sizing: border-box;
 }
 textedit.dialog-input {
@@ -456,9 +456,11 @@ textedit.dialog-input {
 	margin-bottom: 20px;
 	width: 100%;
 }
+.dialog-content .dialog-header .text,
 .dialog-content .dialog-header textview {
 	font-size: 18px;
 }
+.dialog-content .dialog-body .text,
 .dialog-content .dialog-body textview {
 	font-size: 14px;
 	width: 100%;
@@ -505,9 +507,11 @@ textedit.dialog-input {
 	background-color: #eaeaea;
 	border: 2px solid #eaeaea;
 }
+.dialog-content .dialog-btn:disabled .text,
 .dialog-content .dialog-btn:disabled textview {
 	color: #bbb;
 }
+.dialog-content .dialog-btn .text,
 .dialog-content .dialog-btn textview {
 	width: 100%;
 	text-align: center;
@@ -547,7 +551,7 @@ textedit.dialog-input {
 	background-color: #888;
 }
 
-#view-home-content textview:first-child {
+#view-home-content .text:first-child {
 	margin-top: 0;
 }
 
@@ -645,7 +649,7 @@ textedit.dialog-input {
 	padding: 15px 25px;
 	background-color: rgba(255,255,255,0.8);
 }
-.message textview {
+.message .text {
 	color: #333;
 	font-size: 14px;
 }
@@ -719,14 +723,14 @@ textedit.dialog-input {
 	display: inline-block;
 	margin: 0 5px 5px 0;
 }
-.tag-list-item textview {
+.tag-list-item .text {
 	display: inline-block;	
 	padding: 4px 8px;
 	color: #666;
 	line-height: 24px;
 	font-size: 13px;
 }
-.tag-list-item textview:first-child {
+.tag-list-item .text:first-child {
 	padding-right: 0;
 }
 .tag-list-item .btn-delete {
@@ -797,7 +801,7 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 	display: block;
 	background-color: rgba(255,255,255,0.8);
 }
-.tag-thumb-list-item-info textview {
+.tag-thumb-list-item-info .text {
 	color: #fff;
 	line-height: 18px;
 	display: inline-block;
@@ -886,4 +890,7 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 }
 .selection-mode .file-list .file-list-item-picture .checkbox {
 	display: block;
+}
+.btn .mdi-chevron-down {
+	margin-left: 10px;
 }

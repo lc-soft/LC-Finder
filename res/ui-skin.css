@@ -2,9 +2,6 @@
 	background-color: #fff;
 	border: 1px solid #DDDEDF;
 }
-.skin-light-green .sidebar textview {
-	color: #000;
-}
 .skin-light-green .sidebar .sidebar-item {
 	border-left: 2px solid transparent;
 }
@@ -16,9 +13,9 @@
 	background-color: #fafafa;
 	border-color: #fafafa;
 }
-.skin-light-green .sidebar .active textview,
-.skin-light-green .sidebar .sidebar-item:active textview,
-.skin-light-green .sidebar sidebar-toggle:active textview {
+.skin-light-green .sidebar .active .text,
+.skin-light-green .sidebar .sidebar-item:active .text,
+.skin-light-green .sidebar sidebar-toggle:active .text {
 	color: #44BB55;
 }
 .skin-light-green .sidebar .sidebar-item:active,
@@ -37,13 +34,13 @@
 .skin-light-green .view-navbar {
 	background-color: #414849;
 }
-.skin-light-green .view-navbar textview {
+.skin-light-green .view-navbar .text {
 	color: #fff;
 }
 .skin-light-green .view-navbar .divider {
 	background-color: #373D3E;
 }
-.skin-light-green .selection-mode textview.view-navbar-title {
+.skin-light-green .selection-mode .text.view-navbar-title {
 	color: #ddd;
 }
 .skin-light-green .view-navbar .view-navbar-btn:hover {
@@ -57,22 +54,22 @@
 .skin-light-green .view-navbar .view-navbar-btn:disabled:active {
 	background-color: transparent;
 }
-.skin-light-green .view-navbar .view-navbar-btn:disabled textview,
-.skin-light-green .view-navbar .view-navbar-btn:disabled:hover textview,
-.skin-light-green .view-navbar .view-navbar-btn:disabled:active textview {
+.skin-light-green .view-navbar .view-navbar-btn:disabled .text,
+.skin-light-green .view-navbar .view-navbar-btn:disabled:hover .text,
+.skin-light-green .view-navbar .view-navbar-btn:disabled:active .text {
 	color: #727e80;
 }
-.skin-light-green .btn-link textview,
-.skin-light-green textview.btn-link {
+.skin-light-green .btn-link .text,
+.skin-light-green .text.btn-link {
 	color: #44BB55;
 }
-.skin-light-green .btn-link:hover textview,
-.skin-light-green textview.btn-link:hover {
+.skin-light-green .btn-link:hover .text,
+.skin-light-green .text.btn-link:hover {
 	color: #2E7D39;
 }
-.skin-light-green textview.btn-link.selected,
-.skin-light-green textview.btn-link.selected:active,
-.skin-light-green textview.btn-link.selected:hover {
+.skin-light-green .text.btn-link.selected,
+.skin-light-green .text.btn-link.selected:active,
+.skin-light-green .text.btn-link.selected:hover {
 	color: #333;
 }
 .skin-light-green .file-list .file-list-item-picture.selected .checkbox {
@@ -142,7 +139,7 @@
 #picture-viewer-window.skin-light-green .icon-btn:disabled:active {
 	background-color: transparent;
 }
-.skin-light-green .message textview {
+.skin-light-green .message .text {
 	color: #fff;
 }
 .skin-light-green .message.box {
@@ -152,13 +149,14 @@
 #picture-info-panel.skin-light-green {
 	background-color: #323232;	
 }
+#picture-info-panel.skin-light-green .text,
 #picture-info-panel.skin-light-green textview {
 	color: #fff;
 }
-#picture-info-panel.skin-light-green .btn-link textview {
+#picture-info-panel.skin-light-green .btn-link .text {
 	color: #44BB55;
 }
-#picture-info-panel.skin-light-green .btn-link:hover textview {
+#picture-info-panel.skin-light-green .btn-link:hover .text {
 	color: #2E7D39;
 }
 #picture-info-panel.skin-light-green .info-item .info-item-name {

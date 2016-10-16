@@ -67,7 +67,7 @@ static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title, 
 			      const wchar_t *text )
 {
-	DialogContextRec ctx;
+	DialogContextRec ctx = {0};
 	LCUI_Widget dialog_text, box;
 	LCUI_Widget dialog = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_body = LCUIWidget_New( NULL );
