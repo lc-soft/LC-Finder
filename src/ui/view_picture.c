@@ -63,9 +63,6 @@
 	Widget_Hide( this_view.btn_next ); \
 } while(0);
 
-#define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
-#define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
-
 enum SliderDirection {
 	LEFT,
 	RIGHT

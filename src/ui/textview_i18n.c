@@ -45,6 +45,8 @@
 typedef struct TextViewI18nRec_ {
 	char *key;
 	char *text;
+	void *formatter_data;
+	TextFormatter formatter;
 	LCUI_BOOL key_valid;
 	LinkedListNode node;
 } TextViewI18nRec, *TextViewI18n;
@@ -60,6 +62,8 @@ static void TextViewI18n_Init( LCUI_Widget w )
 	TextViewI18n txt = Widget_AddData( w, self.prototype, data_size );
 
 	txt->node.data = w;
+	txt->formatter = NULL;
+	txt->formatter_data = NULL;
 	txt->key_valid = FALSE;
 	txt->key = txt->text = NULL;
 	LinkedList_Append( &self.textviews, &txt->node );
@@ -75,6 +79,7 @@ static void TextViewI18n_Destroy( LCUI_Widget w )
 void TextViewI18n_Refresh( LCUI_Widget w )
 {
 	const char *text;
+	char buf[TXTFMT_BUF_MAX_LEN];
 	TextViewI18n textview;
 
 	textview = Widget_GetData( w, self.prototype );
@@ -82,14 +87,20 @@ void TextViewI18n_Refresh( LCUI_Widget w )
 		text = I18n_GetText( textview->key );
 		if( text ) {
 			textview->key_valid = TRUE;
-			TextView_SetText( w, text );
-			return;
+		} else {
+			textview->key_valid = FALSE;
 		}
-		textview->key_valid = FALSE;
+	} else {
+		text = textview->text;
 	}
-	if( textview->text ) {
-		TextView_SetText( w, textview->text );
+	if( !text ) {
+		return;
 	}
+	if( textview->formatter ) {
+		textview->formatter( buf, text, textview->formatter_data );
+		text = buf;
+	}
+	TextView_SetText( w, text );
 }
 
 void TextViewI18n_SetKey( LCUI_Widget w, const char *key )
@@ -100,6 +111,13 @@ void TextViewI18n_SetKey( LCUI_Widget w, const char *key )
 	}
 	txt->key = strdup( key );
 	TextViewI18n_Refresh( w );
+}
+
+void TextViewI18n_SetFormater( LCUI_Widget w, TextFormatter fmt, void *data )
+{
+	TextViewI18n txt = Widget_GetData( w, self.prototype );
+	txt->formatter_data = data;
+	txt->formatter = fmt;
 }
 
 static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name, 

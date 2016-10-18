@@ -60,7 +60,8 @@
 #define DIALOG_TEXT_DEL_DIR		L"一旦移除后，该源文件夹内的文件相关信息将一同被移除。"
 
 static struct SettingsViewData {
-	LCUI_Widget dirlist;
+	LCUI_Widget source_dirs;
+	LCUI_Widget thumb_db_stats;
 	Dict *dirpaths;
 } this_view;
 
@@ -109,7 +110,7 @@ static void OnAddDir( void *privdata, void *arg )
 {
 	DB_Dir dir = arg;
 	LCUI_Widget item = NewDirListItem( dir );
-	Widget_Append( this_view.dirlist, item );
+	Widget_Append( this_view.source_dirs, item );
 	Dict_Add( this_view.dirpaths, dir->path, item );
 }
 
@@ -203,26 +204,23 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 #endif
 
-/** 更新缩略图数据库的空间占用量 */
-static void UpdateThumbDBSpaceUsage( void )
+/** 渲染缩略图缓存占用空间文本 */
+static void RenderThumbDBSizeText( char *buf, const char *text, void *data )
 {
-	int64_t sum_size;
-	wchar_t text[128];
-	LCUI_Widget widget;
-	sum_size = LCFinder_GetThumbDBTotalSize();
-	widget = LCUIWidget_GetById( ID_TXT_THUMB_DB_SPACE_USAGE );
-	getsizestr( text, 128, sum_size );
-	TextView_SetTextW( widget, text );
+	char size_str[128];
+	int64_t size = LCFinder_GetThumbDBTotalSize();
+	getsizestr( size_str, size );
+	sprintf( buf, text, size_str );
 }
 
 static void OnBtnSettingsClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	UpdateThumbDBSpaceUsage();
+	TextViewI18n_Refresh( this_view.thumb_db_stats );
 }
 
 static void OnThumbDBDelDone( LCUI_Event e, void *arg )
 {
-	UpdateThumbDBSpaceUsage();
+	TextViewI18n_Refresh( this_view.thumb_db_stats );
 }
 
 /** 在“清除”按钮被点击时 */
@@ -282,32 +280,34 @@ static void UI_InitLanguages( void )
 	Language *langs;
 	LCUI_Widget menu;
 	n = I18n_GetLanguages( &langs );
-	menu = LCUIWidget_GetById( ID_DROPDOWN_LANGUAGES );
+	SelectWidget( menu, ID_DROPDOWN_LANGUAGES );
 	for( i = 0; i < n; ++i ) {
 		Dropdwon_AddItem( menu, langs[i]->code, langs[i]->name );
 	}
-	Widget_BindEvent( menu, "change.dropdown", 
-			  OnSelectLanguage, NULL, NULL );
+	BindEvent( menu, "change.dropdown", OnSelectLanguage );
 }
 
 void UI_InitSettingsView( void )
 {
-	LCUI_Widget btn = LCUIWidget_GetById( ID_BTN_ADD_SOURCE );
-	LCUI_Widget dirlist = LCUIWidget_GetById( ID_VIEW_SOURCE_LIST );
-	Widget_BindEvent( btn, "click", OnSelectDir, NULL, NULL );
-	UI_InitDirList( dirlist );
-	UpdateThumbDBSpaceUsage();
-	this_view.dirlist = dirlist;
-	btn = LCUIWidget_GetById( ID_BTN_SIDEBAR_SETTINGS );
-	Widget_BindEvent( btn, "click", OnBtnSettingsClick, NULL, NULL );
+	LCUI_Widget btn;
+	SelectWidget( this_view.source_dirs, ID_VIEW_SOURCE_LIST );
+	SelectWidget( this_view.thumb_db_stats, ID_TXT_THUMB_DB_SIZE );
+	SelectWidget( btn, ID_BTN_ADD_SOURCE );
+	BindEvent( btn, "click", OnSelectDir );
+	SelectWidget( btn, ID_BTN_SIDEBAR_SETTINGS );
+	BindEvent( btn, "click", OnBtnSettingsClick );
+	SelectWidget( btn, ID_BTN_CLEAR_THUMB_DB );
+	BindEvent( btn, "click", OnBtnClearThumbDBClick );
+	SelectWidget( btn, ID_BTN_OPEN_LICENSE );
+	BindEvent( btn, "click", OnBtnLicenseClick );
+	SelectWidget( btn, ID_BTN_OPEN_WEBSITE );
+	BindEvent( btn, "click", OnBtnWebSiteClick );
+	SelectWidget( btn, ID_BTN_OPEN_FEEDBACK );
+	BindEvent( btn, "click", OnBtnFeedbackClick );
 	LCFinder_BindEvent( EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL );
-	btn = LCUIWidget_GetById( ID_BTN_CLEAR_THUMB_DB );
-	Widget_BindEvent( btn, "click", OnBtnClearThumbDBClick, NULL, NULL );
-	btn = LCUIWidget_GetById( ID_BTN_OPEN_LICENSE );
-	Widget_BindEvent( btn, "click", OnBtnLicenseClick, NULL, NULL );
-	btn = LCUIWidget_GetById( ID_BTN_OPEN_WEBSITE );
-	Widget_BindEvent( btn, "click", OnBtnWebSiteClick, NULL, NULL );
-	btn = LCUIWidget_GetById( ID_BTN_OPEN_FEEDBACK );
-	Widget_BindEvent( btn, "click", OnBtnFeedbackClick, NULL, NULL );
+	TextivewI18n_SetFormater( this_view.thumb_db_stats,
+				  RenderThumbDBSizeText, NULL );
+	TextViewI18n_Refresh( this_view.thumb_db_stats );
+	UI_InitDirList( this_view.source_dirs );
 	UI_InitLanguages();
 }

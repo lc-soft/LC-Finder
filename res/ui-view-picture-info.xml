@@ -26,7 +26,7 @@
               <widget id="picture-info-file-size" type="textview" class="text info-item-value"></widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="image_size">尺寸</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="image_resolution">尺寸</widget>
               <widget id="picture-info-size" type="textview" class="text info-item-value"></widget>
             </widget>
             <widget class="info-item">

@@ -37,11 +37,21 @@
 #ifndef LCFINDER_TEXTVIEW_H
 #define LCFINDER_TEXTVIEW_H
 
+/** 格式化器输出的字符串的最大长度 */
+#define TXTFMT_BUF_MAX_LEN 256
+
+typedef void (*TextFormatter)(char*, const char*, void*);
+
 void LCUIWidget_AddTextViewI18n( void );
 
+/** 刷新内容 */
 void TextViewI18n_Refresh( LCUI_Widget w );
 
+/** 设置 key，内容将被替换成与 key 对应的文本 */
 void TextViewI18n_SetKey( LCUI_Widget w, const char *key );
+
+/** 设置格式化器，在呈现文本前，会调用格式化器来格式化内容 */
+void TextivewI18n_SetFormater( LCUI_Widget w, TextFormatter fmt, void *data );
 
 /**< 刷新全部 textview-i18n 部件显示的文本 */
 void LCUIWidget_RefreshTextViewI18n( void );

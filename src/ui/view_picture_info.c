@@ -275,7 +275,7 @@ void UI_SetPictureInfoView( const char *filepath )
 		wchar_t mtime_str[256], fsize_str[256];
 		this_view.size = buf.st_size;
 		this_view.mtime = buf.st_mtime;
-		getsizestr( fsize_str, 256, this_view.size );
+		wgetsizestr( fsize_str, 256, this_view.size );
 		wgettimestr( mtime_str, 256, this_view.mtime );
 		TextView_SetTextW( this_view.txt_time, mtime_str );
 		TextView_SetTextW( this_view.txt_fsize, fsize_str );

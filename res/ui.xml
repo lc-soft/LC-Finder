@@ -176,9 +176,7 @@
               <widget type="textview-i18n" class="text title" data-i18n-key="thumb_cache">缓存</widget>
               <widget class="item-group">
                 <widget class="text-line">
-                  <widget type="textview" class="text">当前缩略图缓存共占用 </widget>
-                  <widget id="text-thumb-db-space-usage" type="textview" class="text">0KB</widget>
-                  <widget type="textview" class="text"> 的空间</widget>
+                  <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="description.thumb_cache_stats">当前缩略图缓存共占用 %s 的空间</widget>
                 </widget>
                 <widget id="test-text" class="text text-line text-muted" type="textview-i18n" data-i18n-key="description.thumb_cache">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
                 <widget id="btn-clear-thumb-db" class="btn btn-default">

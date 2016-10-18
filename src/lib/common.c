@@ -312,7 +312,28 @@ int wgettimestr( wchar_t *str, int max_len, time_t time )
 			 days[t->tm_wday], t->tm_hour, t->tm_min );
 }
 
-int getsizestr( wchar_t *str, int max_len, int64_t size )
+int getsizestr( char *str, int64_t size )
+{
+	int i;
+	double num;
+	int64_t tmp, prev_tmp;
+	char *units[5] = {"B", "KB", "MB", "GB", "TB"};
+
+	if( size < 1024 ) {
+		return sprintf( str, "%d%s", (int)size, units[0] );
+	}
+	for( i = 0, tmp = size; i < 5; ++i ) {
+		if( tmp < 1024 ) {
+			break;
+		}
+		prev_tmp = tmp;
+		tmp = tmp / 1024;
+	}
+	num = 1.0 * prev_tmp / 1024.0;
+	return sprintf( str, "%0.2f%s", num, units[i] );
+}
+
+int wgetsizestr( wchar_t *str, int max_len, int64_t size )
 {
 	int i;
 	double num;

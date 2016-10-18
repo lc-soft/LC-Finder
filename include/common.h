@@ -91,7 +91,9 @@ void wopenfilemanger( const wchar_t *filepath );
 
 int wgettimestr( wchar_t *str, int max_len, time_t time );
 
-int getsizestr( wchar_t *str, int max_len, int64_t size );
+int getsizestr( char *str, int64_t size );
+
+int wgetsizestr( wchar_t *str, int max_len, int64_t size );
 
 int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
 

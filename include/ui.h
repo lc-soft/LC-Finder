@@ -51,7 +51,7 @@
 #define ID_TXT_PICTURE_PATH		"picture-info-path"
 #define ID_TXT_FILE_SYNC_STATS		"file-sync-tip-stats"
 #define ID_TXT_FILE_SYNC_TITLE		"file-sync-tip-title"
-#define ID_TXT_THUMB_DB_SPACE_USAGE	"text-thumb-db-space-usage"
+#define ID_TXT_THUMB_DB_SIZE		"text-thumb-db-size"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
 #define ID_VIEW_PCITURE_RATING		"picture-info-rating"
@@ -115,6 +115,9 @@
 #define ID_TIP_PICTURE_UNSUPPORT	"tip-picture-unsupport"
 #define ID_INPUT_SEARCH			"input-search"
 #define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
+
+#define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
+#define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
 
 /** 文件迭代器 */
 typedef struct FileIteratorRec_* FileIterator;

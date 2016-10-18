@@ -547,6 +547,7 @@ LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 	return item;
 }
 
+#undef  BindEvent
 #define BindEvent(BTN, EVENT, CALLBACK) \
 	Widget_BindEvent( browser->btn_##BTN, EVENT, CALLBACK, browser, NULL )
 

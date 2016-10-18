@@ -34,6 +34,7 @@ strings:
         empty_search_results: No results found.
         sync_resources: Sync resources
     description:
+        thumb_cache_stats: current thumbnail cache has used %s space.
         thumb_cache: >
             This application will automatically cache the thumbnail
             when you browse the list of pictures, so that you can quickly
