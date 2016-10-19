@@ -14,37 +14,37 @@
         <widget id="picture-info-content-wrapper" class="panel-content-wrapper">
           <widget id="picture-info-content" class="panel-content scrolllayer">
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="file_name">文件名</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.file_name">文件名</widget>
               <widget id="picture-info-name" type="textview" class="text info-item-value"></widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="file_date">日期</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.file_date">日期</widget>
               <widget id="picture-info-time" type="textview" class="text info-item-value"></widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="file_size">大小</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.file_size">大小</widget>
               <widget id="picture-info-file-size" type="textview" class="text info-item-value"></widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="image_resolution">尺寸</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.image_resolution">尺寸</widget>
               <widget id="picture-info-size" type="textview" class="text info-item-value"></widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="folder_path">文件夹路径</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.folder_path">文件夹路径</widget>
               <widget id="picture-info-path" type="textview" class="info-item-value"></widget>
               <widget id="btn-open-picture-dir" class="btn btn-link">
-                <widget type="textview-i18n" class="text" data-i18n-key="open_folder">打开文件夹</widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="picture.open_folder">打开文件夹</widget>
               </widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="file_score">评分</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.file_score">评分</widget>
               <widget id="picture-info-rating" type="starrating"></widget>
             </widget>
             <widget class="info-item">
-              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="file_tags">标签</widget>
+              <widget type="textview-i18n" class="text info-item-name" data-i18n-key="picture.file_tags">标签</widget>
               <widget id="picture-info-tags" class="tag-list"></widget>
               <widget id="btn-add-picture-tag" class="btn btn-link">
-                <widget type="textview-i18n" class="text" data-i18n-key="add_tags">添加标签</widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="picture.add_tags">添加标签</widget>
               </widget>
             </widget>
           </widget>

@@ -15,27 +15,27 @@
         </widget>
         <widget id="sidebar-btn-search" class="sidebar-item">
           <widget type="textview" class="text icon mdi mdi-magnify"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="search">搜索</widget>
+          <widget type="textview-i18n" class="text" data-i18n-key="search.title">搜索</widget>
         </widget>
         <widget id="sidebar-btn-home" class="sidebar-item active">
           <widget type="textview" class="text icon mdi mdi-image-multiple"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="collection">集锦</widget>
+          <widget type="textview-i18n" class="text" data-i18n-key="home.title">集锦</widget>
         </widget>
         <widget id="sidebar-btn-folders" class="sidebar-item">
           <widget type="textview" class="text icon mdi mdi-folder-multiple-outline"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="folders">文件夹</widget>
+          <widget type="textview-i18n" class="text" data-i18n-key="folders.title">文件夹</widget>
         </widget>
         <widget id="sidebar-btn-settings" class="sidebar-item">
           <widget type="textview" class="text icon mdi mdi-settings"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="settings">设置</widget>
+          <widget type="textview-i18n" class="text" data-i18n-key="settings.title">设置</widget>
         </widget>
       </widget>
       <widget id="view-home" class="view">
         <widget class="view-navbar">
-          <widget id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="collection">集锦</widget>
+          <widget id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="home.title">集锦</widget>
           <widget class="pull-right on-selection-mode">
             <widget id="btn-cancel-home-select" class="view-navbar-btn">
-              <widget type="textview-i18n" class="text" data-i18n-key="cancel">取消</widget>
+              <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>
             </widget>
             <widget class="divider"></widget>
             <widget id="btn-tag-home-files" class="view-navbar-btn">
@@ -58,7 +58,7 @@
           <widget id="view-home-content-wrapper" class="view-content-wrapper">
             <widget id="view-home-progress" type="progress"></widget>
             <widget id="view-home-content" class="view-content full-height">
-              <widget id="tip-empty-collection" type="textview-i18n" class="text hide" data-i18n-key="message.empty_collection">未找到可读取的图片。</widget>
+              <widget id="tip-empty-collection" type="textview-i18n" class="text hide" data-i18n-key="home.message.empty">未找到可读取的图片。</widget>
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
@@ -73,7 +73,7 @@
       </widget>
       <widget id="view-search" class="view hide">
         <widget class="view-navbar">
-          <widget type="textview-i18n" class="text view-navbar-title" data-i18n-key="search">搜索</widget>
+          <widget type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.title">搜索</widget>
         </widget>
         <widget class="view-body">
           <widget class="search-panel">
@@ -84,7 +84,7 @@
           </widget>
           <widget class="view-content-wrapper">
             <widget id="view-search-content" class="view-content full-height">
-              <widget id="tip-search-tags-empty" type="textview-i18n" class="text hide" data-i18n-key="message.empty_tags">未找到标签记录。</widget>
+              <widget id="tip-search-tags-empty" type="textview-i18n" class="text hide" data-i18n-key="search.message.empty_tags">未找到标签记录。</widget>
               <widget id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
@@ -95,10 +95,10 @@
             <widget class="view-navbar-btn" id="btn-hide-search-result">
               <widget type="textview" class="text icon mdi mdi-arrow-left"></widget>
             </widget>
-            <widget  id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search_results">搜索结果</widget>
+            <widget  id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.results.title">搜索结果</widget>
             <widget class="pull-right on-selection-mode">
               <widget id="btn-cancel-search-select" class="view-navbar-btn">
-                <widget type="textview-i18n" class="text" data-i18n-key="cancel">取消</widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>
               </widget>
               <widget class="divider"></widget>
               <widget id="btn-tag-search-files" class="view-navbar-btn">
@@ -117,7 +117,7 @@
           <widget class="view-body">
             <widget class="view-content-wrapper">
               <widget id="view-search-result-content" class="view-content full-height">
-                <widget id="tip-search-no-result" type="textview-i18n" class="text hide" data-i18n-key="message.empty_search_results">未找到符合条件的图片。</widget>
+                <widget id="tip-search-no-result" type="textview-i18n" class="text hide" data-i18n-key="search.message.empty_results">未找到符合条件的图片。</widget>
                 <widget id="view-search-files" type="thumbview" class="scrolllayer file-list"></widget>
               </widget>
               <widget type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
@@ -127,10 +127,10 @@
       </widget>
       <widget id="view-folders" class="view hide">
         <widget class="view-navbar">
-          <widget id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders">文件夹</widget>
+          <widget id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders.title">文件夹</widget>
           <widget class="pull-right on-selection-mode">
             <widget id="btn-cancel-folder-select" class="view-navbar-btn">
-              <widget type="textview-i18n" class="text" data-i18n-key="cancel">取消</widget>
+              <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>
             </widget>
             <widget class="divider"></widget>
             <widget id="btn-tag-folder-files" class="view-navbar-btn">
@@ -154,12 +154,12 @@
             <widget id="view-folders-info-box-name" type="textview" class="text folder-info-box-name"></widget>
             <widget id="view-folders-info-box-path" type="textview" class="text folder-info-box-path"></widget>
             <widget id="btn-return-root-folder" class="btn btn-link">
-              <widget type="textview-i18n" class="text" data-18n-key="return_to_source_folder">返回到源文件夹</widget>
+              <widget type="textview-i18n" class="text" data-i18n-key="folders.return">返回到源文件夹</widget>
             </widget>
           </widget>
           <widget id="view-folders-content-wrapper" class="view-content-wrapper">
             <widget id="view-folders-content" class="view-content full-height">
-              <widget id="tip-empty-folder" type="textview-i18n" class="text hide" data-i18n-key="message.empty_folder">未找到可读取的图片或文件夹。</widget>
+              <widget id="tip-empty-folder" type="textview-i18n" class="text hide" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹。</widget>
               <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
@@ -168,52 +168,52 @@
       </widget>
       <widget id="view-settings" class="view hide">
         <widget class="view-navbar">
-          <widget type="textview-i18n" class="text view-navbar-title" data-i18n-key="settings">设置</widget>
+          <widget type="textview-i18n" class="text view-navbar-title" data-i18n-key="settings.title">设置</widget>
         </widget>
         <widget class="view-body">
           <widget id="view-settings-content-wrapper" class="view-content-wrapper">
             <widget id="view-settings-content" class="scrolllayer view-content">
-              <widget type="textview-i18n" class="text title" data-i18n-key="thumb_cache">缓存</widget>
+              <widget type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache">缓存</widget>
               <widget class="item-group">
                 <widget class="text-line">
-                  <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="description.thumb_cache_stats">当前缩略图缓存共占用 %s 的空间</widget>
+                  <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache_stats">当前缩略图缓存共占用 %s 的空间</widget>
                 </widget>
-                <widget id="test-text" class="text text-line text-muted" type="textview-i18n" data-i18n-key="description.thumb_cache">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
+                <widget id="test-text" class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache_description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
                 <widget id="btn-clear-thumb-db" class="btn btn-default">
-                  <widget type="textview-i18n" class="text" data-i18n-key="clear">清除</widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="button.clear">清除</widget>
                 </widget>
               </widget>
-              <widget type="textview-i18n" class="title" data-i18n-key="language">语言</widget>
+              <widget type="textview-i18n" class="title" data-i18n-key="settings.language">语言</widget>
               <widget class="item-group">
                 <widget class="text-line">
-                  <widget type="textview-i18n" class="text" data-i18n-key="description.change_language_setting">更改界面的显示语言</widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</widget>
                 </widget>
                 <widget id="btn-change-language" class="btn btn-default">
                   <widget id="current-language" type="textview" class="text">简体中文</widget>
                   <widget type="textview" class="text mdi mdi-chevron-down"></widget>
                 </widget>
               </widget>
-              <widget type="textview-i18n" class="title" data-i18n-key="source_folders">源</widget>
+              <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders">源</widget>
               <widget class="source-list">
                 <widget id="current-source-list"></widget>
                 <widget id="btn-add-source" class="source-list-item">
                   <widget type="textview" class="text icon mdi mdi-plus"></widget>
-                  <widget type="textview-i18n" class="text" data-i18n-key="add_folder">添加文件夹</widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="settings.add_folder">添加文件夹</widget>
                 </widget>
               </widget>
-              <widget type="textview-i18n" class="text title" data-i18n-key="about_this_app">关于此应用</widget>
+              <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
               <widget class="item-group">
                 <widget type="textview" class="text">LC-Finder 0.1.0 Beta 1</widget>
-                <widget type="textview-i18n" class="text" data-i18n-key="description.copyright">© 2016 LC's Software，保留所有权利。</widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2016 LC's Software，保留所有权利。</widget>
                 <widget class="btn-group">
                   <widget id="btn-open-license" class="btn btn-link">
-                    <widget type="textview-i18n" class="text" data-i18n-key="license">许可协议</widget>
+                    <widget type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</widget>
                   </widget>
                   <widget id="btn-open-website" class="btn btn-link">
-                    <widget type="textview-i18n" class="text" data-i18n-key="website">官方网站</widget>
+                    <widget type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</widget>
                   </widget>
                   <widget id="btn-open-feedback" class="btn btn-link">
-                    <widget type="textview-i18n" class="text" data-i18n-key="feedback">问题反馈</widget>
+                    <widget type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</widget>
                   </widget>
                 </widget>
               </widget>
@@ -228,7 +228,7 @@
           <widget type="spin" class="ion ion-android-sync"></widget>
           <widget id="file-sync-tip-title" type="textview-i18n" class="text alert-title" data-i18n-key="sync_resources">正在同步你的资源</widget>
         </widget>
-        <widget id="file-sync-tip-stats" type="textview" class="text alert-text">已扫描 0 个文件</widget>
+        <widget id="file-sync-tip-stats" type="textview-i18n" class="text alert-text">已扫描 0 个文件</widget>
       </widget>
     </widget>
   </ui>

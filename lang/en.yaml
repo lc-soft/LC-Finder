@@ -1,43 +1,77 @@
 name: English
 code: en-us
 strings:
-    search: Search
-    collection: Collection
-    folders: Folders
-    settings: Settings
-    language: Language
-    cancel: Cancel
-    clear: Clear
-    add_folder: Add folder
-    source_folders: Sources
-    search_results: Search results
-    about_this_app: About
-    return_to_source_folder: Return to source folder
-    thumb_cache: Cache
-    license: License
-    website: Website
-    feedback: Feedback
-    file_info: File infomation
-    file_name: Name
-    file_date: Date
-    file_size: Size
-    file_score: Score
-    file_tags: Tags
-    image_resolution: Resolution
-    folder_path: Folder
-    open_folder: Open folder
-    add_tags: Add tags
-    message:
-        empty_folder: No pictures or folders.
-        empty_collection: No pictures.
-        empty_tags: No tags.
-        empty_search_results: No results found.
-        sync_resources: Sync resources
-    description:
+    button:
+        cancel: Cancel
+        clear: Clear
+    home:
+        title: Collection
+        message:
+            empty: No pictures.
+    folders:
+        title: Folders
+        return: Return to source folder
+        message:
+            empty: No pictures or folders.
+    search:
+        title: Search
+        results: 
+            title: Search results
+        message:
+            empty_tags: No tags.
+            empty_results: No results found.
+    filesync:
+        title_syncing: Syncing resources
+        title_finished: Resources sync done !
+        text_scaning: 'scaning %d files'
+        text_saving: 'syncing %d/%d files'
+        text_finished: '%d files synced'
+    picture:
+        message:
+            empty: There is nothing to show here.
+            loading: Loading ...
+            unsupport: Cannot read this picture.
+        info:
+            title: File infomation
+            file_name: Name
+            file_date: Date
+            file_size: Size
+            file_score: Score
+            file_tags: Tags
+            image_resolution: Resolution
+            folder_path: Folder
+            open_folder: Open folder
+            add_tags: Add tags
+    browser:
+        text:
+            no_selected_items: No item selected
+            selected_items: 'Selected %d items'
+        progress:
+            deletion: 'Deleting %d of %d files.'
+            tags_addtion: 'Processing %d of %d files.'
+        dialog:
+            title:
+                delete: Delete files
+                add_tags: Add tags
+                deleting: Deleting ...
+                adding_tags: Adding tags ...
+            text:
+                delete: 'Delete the selected %d files ?'
+            placeholder: 'tag name, multiple tag names separated by space.'
+    settings:
+        title: Settings
+        thumb_cache: Cache
         thumb_cache_stats: current thumbnail cache has used %s space.
-        thumb_cache: >
+        thumb_cache_description: >
             This application will automatically cache the thumbnail
             when you browse the list of pictures, so that you can quickly
             render thumbnail images in the next time you browse the pictures.
-        change_language_setting: Change language
+        language: Language
+        language_description: Change language
+        license: License
+        website: Website
+        feedback: Feedback
+        add_folder: Add folder
+        source_folders: Sources
+        about: About
         copyright: © 2016 LC's Software，All rights reserved.
