@@ -45,21 +45,23 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/button.h>
 #include "thumbview.h"
+#include "textview_i18n.h"
 #include "progressbar.h"
 #include "dialog.h"
 #include "browser.h"
+#include "i18n.h"
 
-#define TEXT_CANCEL			L"取消"
-#define TEXT_DELETING			L"删除中..."
-#define TEXT_TAG_ADDING			L"添加标签中..."
-#define TEXT_DELETION_PROGRESS		L"已删除 %d 个文件，共 %d 个文件"
-#define TEXT_TAG_ADDTION_PROGRESS	L"已处理 %d 个文件，共 %d 个文件"
-#define TEXT_NO_SELECTED_ITEMS		L"未选择任何项目"
-#define TEXT_SELECTED_ITEMS		L"已选择 %d 项"
-#define DIALOG_TITLE_DELETE		L"提示"
-#define DIALOG_TEXT_DELETE		L"确定要删除选中的 %d 项文件？"
-#define DIALOG_TITLE_ADD_TAG		L"为选中的文件添加标签"
-#define DIALOG_PLACEHOLDER_ADD_TAG	L"标签名称，多个标签用空格隔开"
+#define KEY_CANCEL			"button.cancel"
+#define KEY_TITLE_DELETE		"browser.dialog.title.delete"
+#define KEY_TITLE_DELETING		"browser.dialog.title.deleting"
+#define KEY_CONTENT_DELETE		"browser.dialog.text.delete"
+#define KEY_TITLE_ADD_TAGS		"browser.dialog.title.add_tags"
+#define KEY_TITLE_ADDING_TAGS		"browser.dialog.title.adding_tags"
+#define KEY_PLACEHOLDER			"browser.dialog.placeholder"
+#define KEY_DELETION_PROGRESS		"browser.progress.deletion"
+#define KEY_TAGS_ADDTION_PROGRESS	"browser.progress.tags_addtion"
+#define KEY_NO_SELECTED_ITEMS		"browser.text.no_selected_items"
+#define KEY_SELECTED_ITEMS		"browser.text.selected_items"
 #define MAX_TAG_LEN			256
 
  /** 文件索引记录 */
@@ -81,6 +83,7 @@ typedef struct DataPackRec_ {
 
  /** 对话框数据包 */
 typedef struct DialogDataPackRec_ {
+	int i, n;
 	LCUI_BOOL active;
 	LCUI_Thread thread;
 	FileBrowser browser;
@@ -159,23 +162,36 @@ static void FileIndex_Delete( FileIndex fidx )
 	fidx->item = NULL;
 }
 
+static void RenderSelectedItemsText( char *buf, const char *text, void *data )
+{
+	FileBrowser browser = data;
+	sprintf( buf, text, browser->selected_files.length );
+}
+
+static void RenderProgressText( char *buf, const char *text, void *data )
+{
+	DialogDataPack pack = data;
+	sprintf( buf, text, pack->i + 1, pack->n );
+}
+
 static void FileBrowser_UpdateSelectionUI( FileBrowser browser )
 {
-	wchar_t str[256];
 	LCUI_Widget btn_del, btn_add_tags;
 	btn_del = LCUIWidget_GetById( ID_BTN_DELETE_HOME_FILES );
 	btn_add_tags = LCUIWidget_GetById( ID_BTN_TAG_HOME_FILES );
 	if( browser->selected_files.length > 0 ) {
 		Widget_SetDisabled( btn_del, FALSE );
 		Widget_SetDisabled( btn_add_tags, FALSE );
-		swprintf( str, 255, TEXT_SELECTED_ITEMS,
-			  browser->selected_files.length );
-		TextView_SetTextW( browser->txt_title, str );
-	} else {
-		Widget_SetDisabled( btn_del, TRUE );
-		Widget_SetDisabled( btn_add_tags, TRUE );
-		TextView_SetTextW( browser->txt_title, TEXT_NO_SELECTED_ITEMS );
+		TextViewI18n_SetFormater( browser->txt_title, 
+					  RenderSelectedItemsText, browser );
+		TextViewI18n_SetKey( browser->txt_title, KEY_SELECTED_ITEMS );
+		return;
 	}
+	Widget_SetDisabled( btn_del, TRUE );
+	Widget_SetDisabled( btn_add_tags, TRUE );
+	TextViewI18n_SetFormater( browser->txt_title, NULL, NULL );
+	TextViewI18n_SetKey( browser->txt_title, KEY_NO_SELECTED_ITEMS );
+	TextViewI18n_Refresh( browser->txt_title );
 }
 
 static void FileBrowser_DisableSelectionMode( FileBrowser browser )
@@ -244,10 +260,9 @@ static LCUI_BOOL CheckTagName( const wchar_t *tagname )
 
 static int OnFileDeleted( void *privdata, int i, int n )
 {
-	wchar_t text[256];
-	DialogDataPack pack = privdata;
-	swprintf( text, 255, TEXT_DELETION_PROGRESS, i, n );
-	TextView_SetTextW( pack->dialog->content, text );
+	DialogDataPack pack;
+	pack = privdata, pack->i = i, pack->n = n;
+	TextViewI18n_Refresh( pack->dialog->content );
 	ProgressBar_SetValue( pack->dialog->progress, i );
 	return  pack->active ? 0 : -1;
 }
@@ -276,16 +291,17 @@ static void FileDeletionThread( void *arg )
 	LinkedList *files;
 	LinkedListNode *node;
 	LinkedList deleted_files;
-	LCUI_Widget cursor = NULL;
 	DialogDataPack pack = arg;
+	LCUI_Widget cursor, content;
 	LinkedList_Init( &deleted_files );
+	content = pack->dialog->content;
 	files = &pack->browser->selected_files;
 	n = pack->browser->selected_files.length;
 	filepaths = malloc( sizeof( char* ) * n );
 	ProgressBar_SetMaxValue( pack->dialog->progress, n );
 	/* 先禁用缩略图滚动加载，避免滚动加载功能访问已删除的部件 */
 	ThumbView_DisableScrollLoading( pack->browser->items );
-	for( i = 0; pack->active && i < n; ++i ) {
+	for( cursor = NULL, i = 0; pack->active && i < n; ++i ) {
 		node = LinkedList_GetNode( files, 0 );
 		fidx = node->data;
 		LinkedList_Unlink( files, node );
@@ -296,6 +312,8 @@ static void FileDeletionThread( void *arg )
 			cursor = fidx->item;
 		}
 	}
+	TextViewI18n_SetFormater( content, RenderProgressText, pack );
+	TextViewI18n_SetKey( content, KEY_DELETION_PROGRESS );
 	LCFinder_DeleteFiles( filepaths, n, OnFileDeleted, pack );
 	free( filepaths );
 	while( cursor ) {
@@ -332,24 +350,25 @@ static void FileDeletionThread( void *arg )
 
 static void FileTagAddtionThread( void *arg )
 {
-	int i, j, n;
-	wchar_t text[256];
+	int i;
 	LinkedList *files;
+	LCUI_Widget content;
 	LinkedListNode *node;
 	DialogDataPack pack = arg;
+	content = pack->dialog->content;
 	files = &pack->browser->selected_files;
-	n = pack->browser->selected_files.length;
-	ProgressBar_SetMaxValue( pack->dialog->progress, n );
+	pack->n = pack->browser->selected_files.length;
+	ProgressBar_SetMaxValue( pack->dialog->progress, pack->n );
+	TextViewI18n_SetFormater( content, RenderProgressText, pack );
 	node = LinkedList_GetNode( files, 0 );
-	for( i = 0; pack->active && i < n; ++i ) {
+	for( pack->i = 0; pack->active && pack->i < pack->n; ++pack->i ) {
 		FileIndex fidx = node->data;
-		for( j = 0; pack->tagnames[j]; ++j ) {
-			const char *tagname = pack->tagnames[j];
+		for( i = 0; pack->tagnames[i]; ++i ) {
+			const char *tagname = pack->tagnames[i];
 			LCFinder_AddTagForFile( fidx->file, tagname );
 		}
-		swprintf( text, 255, TEXT_TAG_ADDTION_PROGRESS, i, n );
-		TextView_SetTextW( pack->dialog->content, text );
 		ProgressBar_SetValue( pack->dialog->progress, i );
+		TextViewI18n_Refresh( content );
 		node = node->next;
 	}
 	Widget_SetDisabled( pack->dialog->btn_cancel, TRUE );
@@ -372,15 +391,20 @@ static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	int len;
 	char *buf, **tagnames;
 	DialogDataPackRec pack;
-	wchar_t text[MAX_TAG_LEN];
-	LCUI_Widget window;
+	const char *cancel = I18n_GetText( KEY_CANCEL );
+	const char *title = I18n_GetText( KEY_TITLE_ADD_TAGS );
+	const char *title2 = I18n_GetText( KEY_TITLE_ADDING_TAGS );
+	const char *placeholder = I18n_GetText( KEY_PLACEHOLDER );
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	wchar_t text[MAX_TAG_LEN], *wtitle, *wplaceholder, *wtitle2;
 
 	if( w->disabled ) {
 		return;
 	}
-	window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_TAG,
-				    DIALOG_PLACEHOLDER_ADD_TAG, NULL,
+	wtitle = DecodeUTF8( title );
+	wtitle2 = DecodeUTF8( title2 );
+	wplaceholder = DecodeUTF8( placeholder );
+	if( 0 != LCUIDialog_Prompt( window, wtitle, wplaceholder, NULL,
 				    text, MAX_TAG_LEN - 1, CheckTagName ) ) {
 		return;
 	}
@@ -392,40 +416,50 @@ static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	pack.browser = e->data;
 	pack.tagnames = tagnames;
 	pack.dialog = NewProgressDialog();
-	Button_SetTextW( pack.dialog->btn_cancel, TEXT_CANCEL );
-	TextView_SetTextW( pack.dialog->title, TEXT_TAG_ADDING );
+	Button_SetText( pack.dialog->btn_cancel, cancel );
+	TextView_SetTextW( pack.dialog->title, wtitle2 );
 	Widget_BindEvent( pack.dialog->btn_cancel, "click", 
 			  OnCancelProcessing, &pack, NULL );
 	LCUIThread_Create( &pack.thread, FileTagAddtionThread, &pack );
 	OpenProgressDialog( pack.dialog, window );
+	free( wplaceholder );
 	freestrs( tagnames );
+	free( wtitle );
+	free(wtitle2 );
 	free( buf );
 }
 
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	wchar_t text[512];
+	char buf[512];
+	wchar_t *wtext, *wtitle;
 	DialogDataPackRec pack;
 	FileBrowser fb = e->data;
-	LCUI_Widget window;
+	const char *cancel = I18n_GetText( KEY_CANCEL );
+	const char *title = I18n_GetText( KEY_TITLE_DELETE );
+	const char *text = I18n_GetText( KEY_CONTENT_DELETE );
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 
 	if( w->disabled ) {
 		return;
 	}
-	window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	swprintf( text, 511, DIALOG_TEXT_DELETE, fb->selected_files.length );
-	if( !LCUIDialog_Confirm(window, DIALOG_TITLE_DELETE, text) ) {
-		return;
+	sprintf( buf, text, fb->selected_files.length );
+	wtitle = DecodeUTF8( title );
+	wtext = DecodeUTF8( buf );
+	if( LCUIDialog_Confirm(window, wtitle, wtext) ) {
+		pack.browser = fb;
+		pack.active = TRUE;
+		pack.dialog = NewProgressDialog();
+		title = I18n_GetText( KEY_TITLE_DELETING );
+		TextView_SetText( pack.dialog->title, title );
+		Button_SetText( pack.dialog->btn_cancel, cancel );
+		Widget_BindEvent( pack.dialog->btn_cancel, "click", 
+				  OnCancelProcessing, &pack, NULL );
+		LCUIThread_Create( &pack.thread, FileDeletionThread, &pack );
+		OpenProgressDialog( pack.dialog, window );
 	}
-	pack.browser = fb;
-	pack.active = TRUE;
-	pack.dialog = NewProgressDialog();
-	Button_SetTextW( pack.dialog->btn_cancel, TEXT_CANCEL );
-	TextView_SetTextW( pack.dialog->title, TEXT_DELETING );
-	Widget_BindEvent( pack.dialog->btn_cancel, "click", 
-			  OnCancelProcessing, &pack, NULL );
-	LCUIThread_Create( &pack.thread, FileDeletionThread, &pack );
-	OpenProgressDialog( pack.dialog, window );
+	free( wtitle );
+	free( wtext );
 }
 
 static void OnBtnSelectionClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

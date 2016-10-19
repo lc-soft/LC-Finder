@@ -305,7 +305,7 @@ void UI_InitSettingsView( void )
 	SelectWidget( btn, ID_BTN_OPEN_FEEDBACK );
 	BindEvent( btn, "click", OnBtnFeedbackClick );
 	LCFinder_BindEvent( EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL );
-	TextivewI18n_SetFormater( this_view.thumb_db_stats,
+	TextViewI18n_SetFormater( this_view.thumb_db_stats,
 				  RenderThumbDBSizeText, NULL );
 	TextViewI18n_Refresh( this_view.thumb_db_stats );
 	UI_InitDirList( this_view.source_dirs );

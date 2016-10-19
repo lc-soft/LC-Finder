@@ -34,11 +34,13 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdio.h>
 #include <LCUI_Build.h>
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "textview_i18n.h"
 #include "ui.h"
 
 #define TEXT_STARED	L"正在同步你的资源"
@@ -57,9 +59,8 @@ static struct SyncContextRec_ {
 	int timer;			/**< 用于动态更新提示框内容的定时器 */
 } self;
 
-static void OnUpdateStats( void *arg )
+static void RenderStatusText( char *buf, const char *text, void *data )
 {
-	wchar_t wstr[256];
 	int count, total;
 	switch( self.status.state ) {
 	case STATE_STARTED:
@@ -67,20 +68,35 @@ static void OnUpdateStats( void *arg )
 		if( self.status.task ) {
 			count += self.status.task->total_files;
 		}
-		swprintf( wstr, 255, TEXT_SCANING, count );
+		sprintf( buf, text, count );
 		break;
 	case STATE_SAVING:
 		count = self.status.synced_files;
 		total = self.status.added_files + self.status.deleted_files;
-		swprintf( wstr, 255, TEXT_SAVING, count, total );
+		sprintf( buf, text, count, total );
 		break;
 	case STATE_FINISHED:
 		count = self.status.synced_files;
-		swprintf( wstr, 255, TEXT_SAVED, count );
+		sprintf( buf, text, count );
 		break;
 	default:return;
 	}
-	TextView_SetTextW( self.text, wstr );
+}
+
+static void OnUpdateStats( void *arg )
+{
+	switch( self.status.state ) {
+	case STATE_STARTED:
+		TextViewI18n_SetKey( self.text, "filesync.text_scaning" );
+		break;
+	case STATE_SAVING:
+		TextViewI18n_SetKey( self.text, "filesync.text_saving" );
+		break;
+	case STATE_FINISHED:
+		TextViewI18n_SetKey( self.text, "filesync.text_finished" );
+		break;
+	default:return;
+	}
 }
 
 static void OnHideTip( void *arg )
@@ -93,12 +109,14 @@ static void OnHideTip( void *arg )
 static void FileSyncThread( void *arg )
 {
 	LCUI_Widget alert = self.text->parent;
-	TextView_SetTextW( self.title, TEXT_STARED );
+	TextViewI18n_SetFormater( self.text, RenderStatusText, NULL );
+	TextViewI18n_SetKey( self.title, "filesync.title_syncing" );
 	Widget_RemoveClass( alert, "hide" );
 	LCFinder_SyncFiles( &self.status );
 	OnUpdateStats( NULL );
 	LCUITimer_Free( self.timer );
-	TextView_SetTextW( self.title, TEXT_FINISHED );
+	TextViewI18n_Refresh( self.text );
+	TextViewI18n_SetKey( self.title, "filesync.title_finished" );
 	LCUITimer_Set( 3000, OnHideTip, NULL, FALSE );
 	self.is_syncing = FALSE;
 	self.timer = 0;

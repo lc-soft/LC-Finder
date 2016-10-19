@@ -51,7 +51,7 @@ void TextViewI18n_Refresh( LCUI_Widget w );
 void TextViewI18n_SetKey( LCUI_Widget w, const char *key );
 
 /** 设置格式化器，在呈现文本前，会调用格式化器来格式化内容 */
-void TextivewI18n_SetFormater( LCUI_Widget w, TextFormatter fmt, void *data );
+void TextViewI18n_SetFormater( LCUI_Widget w, TextFormatter fmt, void *data );
 
 /**< 刷新全部 textview-i18n 部件显示的文本 */
 void LCUIWidget_RefreshTextViewI18n( void );
