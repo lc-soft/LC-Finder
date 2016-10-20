@@ -10,7 +10,6 @@
 }
 .text, textview-i18n, textview {
 	font-size: 14px;
-	line-height: 20px;
 	font-family: Microsoft YaHei;
 }
 .text-muted {
@@ -60,6 +59,19 @@
 }
 .btn-default:active {
 	background-color: #aaa;
+	border-color: #aaa;
+}
+.btn-dropdown {
+	border: 1px solid rgba(34,36,38,.15);
+	background-color: #fff;
+}
+.btn-dropdown:hover {
+	border-color: rgba(34,36,38,.35);
+}
+.btn-dropdown .text {
+	color: rgba(191,191,191,.87);
+}
+.btn-dropdown.active {
 	border-color: #aaa;
 }
 .disabled,
@@ -317,9 +329,9 @@
 	box-sizing: border-box;
 	border: 2px solid rgba(0,0,0,0);
 }
-.file-list .file-list-item-picture .picture-cover .text.tip {
-	font-size: 32px;
+.file-list .file-list-item-picture .picture-cover .icon.tip {
 	color: #aaa;
+	font-size: 32px;
 }
 .file-list .file-list-item-picture .checkbox {
 	top: 10px;

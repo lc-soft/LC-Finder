@@ -39,7 +39,7 @@
 
 /** 文件浏览器相关数据 */
 typedef struct FileBrowserRec_ {
-	const wchar_t *title;			/**< 标题文本内容 */
+	const char *title_key;			/**< 标题文本的索引 key */
 	LCUI_Widget view;			/**< 视图 */
 	LCUI_Widget items;			/**< 缩略图列表 */
 	LCUI_Widget txt_title;			/**< 标题 */

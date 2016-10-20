@@ -484,7 +484,7 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 			return;
 		}
 		icon = LCUIWidget_New( "textview" );
-		Widget_AddClass( icon, "tip mdi mdi-help" );
+		Widget_AddClass( icon, "tip icon mdi mdi-help" );
 		Widget_AddClass( icon, "floating center middle aligned" );
 		Widget_Append( data->cover, icon );
 		data->is_valid = FALSE;

@@ -198,7 +198,8 @@ static void FileBrowser_DisableSelectionMode( FileBrowser browser )
 {
 	FileBrowser_UpdateSelectionUI( browser );
 	Widget_RemoveClass( browser->view, "selection-mode" );
-	TextView_SetTextW( browser->txt_title, browser->title );
+	TextViewI18n_SetFormater( browser->txt_title, NULL, NULL );
+	TextViewI18n_SetKey( browser->txt_title, browser->title_key );
 	browser->is_selection_mode = FALSE;
 }
 

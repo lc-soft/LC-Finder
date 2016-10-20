@@ -84,7 +84,11 @@ dropdown dropdown-item:active {
 static void Dropdown_OnClickOther( LCUI_Widget w, 
 				   LCUI_WidgetEvent e, void *arg )
 {
+	Dropdown data = Widget_GetData( e->data, self.dropdown );
 	Widget_Hide( e->data );
+	if( data->target ) {
+		Widget_RemoveClass( data->target, "active" );
+	}
 }
 
 static void Dropdown_Init( LCUI_Widget w )
@@ -142,8 +146,14 @@ void Dropdown_Toggle( LCUI_Widget w )
 
 	if( visible ) {
 		Widget_Show( w );
+		if( data->target ) {
+			Widget_AddClass( data->target, "active" );
+		}
 	} else {
 		Widget_Hide( w );
+		if( data->target ) {
+			Widget_RemoveClass( data->target, "active" );
+		}
 	}
 	if( data->target ) {
 		int x, y;

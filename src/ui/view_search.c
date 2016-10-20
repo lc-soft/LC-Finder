@@ -46,7 +46,7 @@
 #include "thumbview.h"
 #include "browser.h"
 
-#define TEXT_TITLE		L"搜索结果"
+#define KEY_TITLE		"search.results.title"
 #define TAG_MAX_WIDTH		180
 #define TAG_MARGIN_RIGHT	10
 
@@ -556,32 +556,28 @@ void UI_UpdateSearchView( void )
 
 void UI_InitSearchView( void )
 {
-	LCUI_Widget btn[6], title;
-	LCUI_Widget tip1 = LCUIWidget_GetById( ID_TIP_SEARCH_TAGS_EMPTY );
-	LCUI_Widget tip2 = LCUIWidget_GetById( ID_TIP_SEARCH_FILES_EMPTY );
-	LCUI_Widget btn_search = LCUIWidget_GetById( ID_BTN_SEARCH_FILES );
-	LCUI_Widget btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_SEARCH_RESULT );
-	LCUI_Widget input = LCUIWidget_GetById( ID_INPUT_SEARCH );
-	title = LCUIWidget_GetById( ID_TXT_VIEW_SEARCH_RESULT_TITLE );
-	btn[0] = LCUIWidget_GetById( ID_BTN_SIDEBAR_SEEARCH );
-	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_SEARCH_FILES );
-	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_SEARCH_SELECT );
-	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_SEARCH_FILES );
-	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_SEARCH_FILES );
+	LCUI_Widget btn[6], title, btn_hide;
+	this_view.layout.count = 0;
+	this_view.layout.tags_per_row = 2;
 	LinkedList_Init( &this_view.tags );
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
-	this_view.layout.tags_per_row = 2;
-	this_view.layout.count = 0;
-	this_view.input = input;
-	this_view.tip_empty_tags = tip1;
-	this_view.tip_empty_files = tip2;
-	this_view.btn_search = btn_search;
-	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_SEARCH_TAGS );
-	this_view.view_result = LCUIWidget_GetById( ID_VIEW_SEARCH_RESULT );
-	this_view.view_files = LCUIWidget_GetById( ID_VIEW_SEARCH_FILES );
-	this_view.browser.title = TEXT_TITLE;
+	SelectWidget( btn[0], ID_BTN_SIDEBAR_SEEARCH );
+	SelectWidget( btn[1], ID_BTN_SELECT_SEARCH_FILES );
+	SelectWidget( btn[2], ID_BTN_CANCEL_SEARCH_SELECT );
+	SelectWidget( btn[3], ID_BTN_TAG_SEARCH_FILES );
+	SelectWidget( btn[4], ID_BTN_DELETE_SEARCH_FILES );
+	SelectWidget( this_view.input, ID_INPUT_SEARCH );
+	SelectWidget( btn_hide, ID_BTN_HIDE_SEARCH_RESULT );
+	SelectWidget( title, ID_TXT_VIEW_SEARCH_RESULT_TITLE );
+	SelectWidget( this_view.tip_empty_tags, ID_TIP_SEARCH_FILES_EMPTY );
+	SelectWidget( this_view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY );
+	SelectWidget( this_view.btn_search, ID_BTN_SEARCH_FILES );
+	SelectWidget( this_view.view_tags, ID_VIEW_SEARCH_TAGS );
+	SelectWidget( this_view.view_result, ID_VIEW_SEARCH_RESULT );
+	SelectWidget( this_view.view_files, ID_VIEW_SEARCH_FILES );
+	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
 	this_view.browser.btn_tag = btn[3];
@@ -591,13 +587,13 @@ void UI_InitSearchView( void )
 	this_view.browser.view = this_view.view_result;
 	ThumbView_SetCache( this_view.view_tags, finder.thumb_cache );
 	ThumbView_SetCache( this_view.view_files, finder.thumb_cache );
-	Widget_BindEvent( btn[0], "click", OnBtnClick, NULL, NULL );
-	Widget_BindEvent( btn_search, "click", OnBtnSearchClick, NULL, NULL );
-	Widget_BindEvent( btn_hide, "click", OnBtnHideReusltClick, NULL, NULL );
+	BindEvent( btn[0], "click", OnBtnClick );
+	BindEvent( btn_hide, "click", OnBtnHideReusltClick );
+	BindEvent( this_view.btn_search, "click", OnBtnSearchClick );
 	LCFinder_BindEvent( EVENT_TAG_UPDATE, OnTagUpdate, NULL );
 	ThumbView_OnLayout( this_view.view_tags, OnTagViewStartLayout );
-	FileBrowser_Create( &this_view.browser );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSyncThread, NULL );
+	FileBrowser_Create( &this_view.browser );
 	UI_UpdateSearchView();
 }
 

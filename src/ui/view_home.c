@@ -49,7 +49,7 @@
 #include "timeseparator.h"
 #include "browser.h"
 
-#define TEXT_TITLE		L"集锦"
+#define KEY_TITLE		"home.title"
 #define TEXT_TIME_TITLE		L"%d年%d月"
 
 /* 延时隐藏进度条 */
@@ -379,27 +379,26 @@ static void OnSyncDone( void *privdata, void *arg )
 void UI_InitHomeView( void )
 {
 	LCUI_Thread tid;
-	LCUI_Widget btn[5], items, title;
+	LCUI_Widget btn[5], title;
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
-	this_view.view = LCUIWidget_GetById( ID_VIEW_HOME );
-	title = LCUIWidget_GetById( ID_TXT_VIEW_HOME_TITLE );
-	items = LCUIWidget_GetById( ID_VIEW_HOME_COLLECTIONS );
-	btn[0] = LCUIWidget_GetById( ID_BTN_SYNC_HOME_FILES );
-	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_HOME_FILES );
-	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_HOME_SELECT );
-	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_HOME_FILES );
-	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_HOME_FILES );
-	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_HOME_EMPTY );
-	this_view.progressbar = LCUIWidget_GetById( ID_VIEW_HOME_PROGRESS );
-	this_view.time_ranges = LCUIWidget_GetById( ID_VIEW_TIME_RANGE_LIST );
-	this_view.items = items;
-	this_view.browser.title = TEXT_TITLE;
+	SelectWidget( title, ID_TXT_VIEW_HOME_TITLE );
+	SelectWidget( this_view.view, ID_VIEW_HOME );
+	SelectWidget( this_view.items, ID_VIEW_HOME_COLLECTIONS );
+	SelectWidget( this_view.time_ranges, ID_VIEW_TIME_RANGE_LIST );
+	SelectWidget( this_view.progressbar, ID_VIEW_HOME_PROGRESS );
+	SelectWidget( this_view.tip_empty, ID_TIP_HOME_EMPTY );
+	SelectWidget( btn[0], ID_BTN_SYNC_HOME_FILES );
+	SelectWidget( btn[1], ID_BTN_SELECT_HOME_FILES );
+	SelectWidget( btn[2], ID_BTN_CANCEL_HOME_SELECT );
+	SelectWidget( btn[3], ID_BTN_TAG_HOME_FILES );
+	SelectWidget( btn[4], ID_BTN_DELETE_HOME_FILES );
+	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
-	this_view.browser.btn_tag = btn[3];
 	this_view.browser.btn_delete = btn[4];
+	this_view.browser.btn_tag = btn[3];
 	this_view.browser.txt_title = title;
 	this_view.browser.view = this_view.view;
 	this_view.browser.items = this_view.items;
@@ -408,9 +407,9 @@ void UI_InitHomeView( void )
 	ThumbView_SetCache( this_view.items, finder.thumb_cache );
 	Widget_Hide( this_view.time_ranges->parent->parent );
 	Widget_AddClass( this_view.time_ranges, "time-range-list" );
-	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );
+	BindEvent( btn[0], "click", OnBtnSyncClick );
 	this_view.viewsync.tid = tid;
 	LoadCollectionFiles();
 }

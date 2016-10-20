@@ -188,7 +188,7 @@
                 <widget class="text-line">
                   <widget type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</widget>
                 </widget>
-                <widget id="btn-change-language" class="btn btn-default">
+                <widget id="btn-change-language" class="btn btn-dropdown">
                   <widget id="current-language" type="textview" class="text">简体中文</widget>
                   <widget type="textview" class="text mdi mdi-chevron-down"></widget>
                 </widget>

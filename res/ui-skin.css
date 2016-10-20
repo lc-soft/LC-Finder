@@ -182,3 +182,6 @@
 #picture-info-panel.skin-light-green starrating .mdi-star {
 	color: #44A340;
 }
+.skin-light-green .btn-dropdown.active {
+	border-color: #44BB55;
+}

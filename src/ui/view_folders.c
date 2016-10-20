@@ -45,8 +45,9 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 #include "browser.h"
+#include "i18n.h"
 
-#define TEXT_TITLE		L"文件夹"
+#define KEY_TITLE		"folders.title"
 #define THUMB_CACHE_SIZE	(20*1024*1024)
 
 /** 视图同步功能的相关数据 */
@@ -75,6 +76,7 @@ typedef struct FileEntryRec_ {
 
 static struct FoldersViewData {
 	DB_Dir dir;
+	wchar_t *title;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget info;
@@ -84,7 +86,7 @@ static struct FoldersViewData {
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
-} this_view;
+} this_view = {0};
 
 static void OpenFolder( const char *dirpath );
 
@@ -411,38 +413,46 @@ static void OnSyncDone( void *privdata, void *arg )
 	OpenFolder( NULL );
 }
 
+static void RefreshTitle( void )
+{
+	const char *title = I18n_GetText( KEY_TITLE );
+	if( this_view.title ) {
+		free( this_view.title );
+	}
+	this_view.title = DecodeUTF8( title );
+}
+
 void UI_InitFoldersView( void )
 {
-	LCUI_Widget btn[5], btn_return, items, title;
+	LCUI_Widget btn[5], btn_return, title;
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
-	items = LCUIWidget_GetById( ID_VIEW_FILE_LIST );
-	title = LCUIWidget_GetById( ID_TXT_VIEW_FOLDERS_TITLE );
-	btn[0] = LCUIWidget_GetById( ID_BTN_SYNC_FOLDER_FILES );
-	btn[1] = LCUIWidget_GetById( ID_BTN_SELECT_FOLDER_FILES );
-	btn[2] = LCUIWidget_GetById( ID_BTN_CANCEL_FOLDER_SELECT );
-	btn[3] = LCUIWidget_GetById( ID_BTN_TAG_FOLDER_FILES );
-	btn[4] = LCUIWidget_GetById( ID_BTN_DELETE_FOLDER_FILES );
-	btn_return = LCUIWidget_GetById( ID_BTN_RETURN_ROOT_FOLDER );
-	this_view.view = LCUIWidget_GetById( ID_VIEW_FOLDERS );
-	this_view.info = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO );
-	this_view.info_name = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO_NAME );
-	this_view.info_path = LCUIWidget_GetById( ID_VIEW_FOLDER_INFO_PATH );
-	this_view.tip_empty = LCUIWidget_GetById( ID_TIP_FOLDERS_EMPTY );
-	this_view.items = items;
-	this_view.browser.title = TEXT_TITLE;
+	SelectWidget( this_view.items, ID_VIEW_FILE_LIST );
+	SelectWidget( title, ID_TXT_VIEW_FOLDERS_TITLE );
+	SelectWidget( btn[0], ID_BTN_SYNC_FOLDER_FILES );
+	SelectWidget( btn[1], ID_BTN_SELECT_FOLDER_FILES );
+	SelectWidget( btn[2], ID_BTN_CANCEL_FOLDER_SELECT );
+	SelectWidget( btn[3], ID_BTN_TAG_FOLDER_FILES );
+	SelectWidget( btn[4], ID_BTN_DELETE_FOLDER_FILES );
+	SelectWidget( btn_return, ID_BTN_RETURN_ROOT_FOLDER );
+	SelectWidget( this_view.view, ID_VIEW_FOLDERS );
+	SelectWidget( this_view.info, ID_VIEW_FOLDER_INFO );
+	SelectWidget( this_view.info_name, ID_VIEW_FOLDER_INFO_NAME );
+	SelectWidget( this_view.info_path, ID_VIEW_FOLDER_INFO_PATH );
+	SelectWidget( this_view.tip_empty, ID_TIP_FOLDERS_EMPTY );
+	this_view.browser.btn_tag = btn[3];
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
-	this_view.browser.btn_tag = btn[3];
 	this_view.browser.btn_delete = btn[4];
 	this_view.browser.txt_title = title;
-	this_view.browser.items = this_view.items;
+	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.view = this_view.view;
+	this_view.browser.items = this_view.items;
+	BindEvent( btn[0], "click", OnBtnSyncClick );
+	BindEvent( btn_return, "click", OnBtnReturnClick );
+	BindEvent( this_view.items, "ready", OnThumbViewReady );
 	ThumbView_SetCache( this_view.items, finder.thumb_cache );
-	Widget_BindEvent( btn[0], "click", OnBtnSyncClick, NULL, NULL );
-	Widget_BindEvent( items, "ready", OnThumbViewReady, NULL, NULL );
-	Widget_BindEvent( btn_return, "click", OnBtnReturnClick, NULL, NULL );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
