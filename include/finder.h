@@ -46,6 +46,19 @@
 #include "thumb_db.h" 
 #include "thumb_cache.h" 
 
+enum VersionType {
+	VERSION_RELEASE,
+	VERSION_RC,
+	VERSION_BETA,
+	VERSION_ALPHA
+};
+
+#define LCFINDER_CONFIG_HEAD	"LC-Finder Config Data"
+#define LCFINDER_VER_MAJOR	0
+#define LCFINDER_VER_MINOR	1
+#define LCFINDER_VER_REVISION	0
+#define LCFINDER_VER_TYPE	VERSION_BETA
+
 /** 事件类型 */
 enum LCFinderEventType {
 	EVENT_DIR_ADD,
@@ -58,6 +71,18 @@ enum LCFinderEventType {
 	EVENT_THUMBDB_DEL_DONE,
 	EVENT_LANG_CHG
 };
+
+/** 配置数据结构 */
+typedef struct FinderConfigRec_ {
+	char head[32];			/**< 头部标记 */
+	struct {
+		int major;
+		int minor;
+		int revision;
+		int type;
+	} version;			/**< 版本号 */
+	char language[32];		/**< 当前语言 */
+} FinderConfigRec, *FinderConfig;
 
 /** LCFinder 的主要数据记录 */
 typedef struct Finder_ {
@@ -73,6 +98,7 @@ typedef struct Finder_ {
 	ThumbCache thumb_cache;		/**< 缩略图数据缓存 */
 	Dict *thumb_dbs;		/**< 缩略图数据库记录，以源文件夹路径作为索引 */
 	LCUI_EventTrigger trigger;	/**< 事件触发器 */
+	FinderConfigRec config;		/**< 当前配置 */
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);
@@ -128,5 +154,11 @@ void LCFinder_DeleteDir( DB_Dir dir );
 
 int LCFinder_DeleteFiles( const char **files, int nfiles,
 			  int( *onstep )(void*, int, int), void *privdata );
+
+/** 保存配置 */
+int LCFinder_SaveConfig( void );
+
+/** 载入配置 */
+int LCFinder_LoadConfig( void );
 
 #endif

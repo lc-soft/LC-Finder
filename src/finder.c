@@ -50,9 +50,9 @@
 #define DATA_DIR	L"data"
 #define LANG_DIR	L"lang"
 #define LANG_FILE_EXT	L".yaml"
+#define CONFIG_FILE	L"config.bin"
 
 #define THUMB_CACHE_SIZE (64*1024*1024)
-#define EncodeUTF8(STR, WSTR, LEN) LCUI_EncodeString( STR, WSTR, LEN, ENCODING_UTF8 )
 
 Finder finder;
 
@@ -102,18 +102,19 @@ static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 {
 	int len;
 	ThumbDB db;
-	wchar_t *wpath;
 	char dbpath[PATH_LEN], path[PATH_LEN], name[44];
 
 	strcpy( path, dirpath );
 	EncodeSHA1( name, path, strlen(path) );
-	EncodeUTF8( dbpath, finder.thumbs_dir, PATH_LEN );
+	LCUI_EncodeString( dbpath, finder.thumbs_dir,
+			   PATH_LEN - 1, ENCODING_UTF8 );
 	len = pathjoin( dbpath, dbpath, name ) + 1;
 	db = ThumbDB_Open( dbpath );
+	if( !db ) {
+		return NULL;
+	}
 	Dict_Add( finder.thumb_dbs, path, db );
-	wpath = malloc( sizeof( wchar_t )*len );
-	LCUI_DecodeString( wpath, dbpath, len, ENCODING_UTF8 );
-	return wpath;
+	return DecodeUTF8( dbpath );
 }
 
 DB_Dir LCFinder_AddDir( const char *dirpath )
@@ -535,8 +536,7 @@ static void LCFinder_InitLanguage( void )
 		file[len] = 0;
 		I18n_LoadLanguage( file );
 	}
-	
-	I18n_SetLanguage( "en-us" );
+	I18n_SetLanguage( finder.config.language );
 }
 
 static void ThumbDBDict_ValDel( void *privdata, void *val )
@@ -582,18 +582,7 @@ static void LCFinder_ExitThumbDB( void )
 void LCFinder_ClearThumbDB( void )
 {
 	int i;
-	ThumbDB db;
 	wchar_t *path;
-	DictEntry *entry;
-	DictIterator *iter;
-	iter = Dict_GetIterator( finder.thumb_dbs );
-	entry = Dict_Next( iter );
-	while( entry ) {
-		db = DictEntry_GetVal( entry );
-		ThumbDB_Close( db );
-		entry = Dict_Next( iter );
-	}
-	Dict_ReleaseIterator( iter );
 	Dict_Release( finder.thumb_dbs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		path = finder.thumb_paths[i];
@@ -610,6 +599,57 @@ void LCFinder_ClearThumbDB( void )
 	LCFinder_TriggerEvent( EVENT_THUMBDB_DEL_DONE, NULL );
 }
 
+int LCFinder_SaveConfig( void )
+{
+	FILE *file;
+	char *path;
+	wchar_t wpath[PATH_LEN];
+	wpathjoin( wpath, finder.work_dir, CONFIG_FILE );
+	path = EncodeANSI( wpath );
+	file = fopen( path, "wb" );
+	if( !file ) {
+		fprintf( stderr, "[config] cannot open file: %s\n", path );
+		return -1;
+	}
+	fwrite( &finder.config, sizeof( finder.config ), 1, file );
+	fclose( file );
+	free( path );
+	return 0;
+}
+
+int LCFinder_LoadConfig( void )
+{
+	FILE *file;
+	char *path;
+	size_t size;
+	FinderConfigRec config;
+	wchar_t wpath[PATH_LEN];
+	LCUI_BOOL has_error = TRUE;
+	strcpy( finder.config.language, "en-us" );
+	strcpy( finder.config.head, LCFINDER_CONFIG_HEAD );
+	finder.config.version.type = LCFINDER_VER_TYPE;
+	finder.config.version.major = LCFINDER_VER_MAJOR;
+	finder.config.version.minor = LCFINDER_VER_MINOR;
+	finder.config.version.revision = LCFINDER_VER_REVISION;
+	wpathjoin( wpath, finder.work_dir, CONFIG_FILE );
+	path = EncodeANSI( wpath );
+	file = fopen( path, "rb" );
+	if( file ) {
+		size = fwrite( &config, sizeof( config ), 1, file );
+		if( size == sizeof( config ) &&
+		    strcmp( finder.config.head, config.head ) == 0 ) {
+			has_error = FALSE;
+			finder.config = config;
+		}
+		fclose( file );
+	}
+	if( has_error ) {
+		LCFinder_SaveConfig();
+	}
+	free( path );
+	return 0;
+}
+
 static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 {
 	UI_Exit();
@@ -622,6 +662,7 @@ int main( int argc, char **argv )
 	InitConsoleWindow();
 #endif
 	LCFinder_InitWorkDir();
+	LCFinder_LoadConfig();
 	LCFinder_InitFileDB();
 	LCFinder_InitThumbDB();
 	LCFinder_InitThumbCache();
