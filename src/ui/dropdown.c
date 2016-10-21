@@ -44,7 +44,7 @@ typedef struct DropdownRec_ {
 } DropdownRec, *Dropdown;
 
 typedef struct DropdownItemRec_ {
-	char *value;
+	void *value;
 	char *text;
 } DropdownItemRec, *DropdownItem;
 
@@ -81,14 +81,54 @@ dropdown dropdown-item:active {
 
 );
 
-static void Dropdown_OnClickOther( LCUI_Widget w, 
-				   LCUI_WidgetEvent e, void *arg )
+void Dropdown_UpdatePosition( LCUI_Widget w )
 {
-	Dropdown data = Widget_GetData( e->data, self.dropdown );
-	Widget_Hide( e->data );
+	Dropdown data = Widget_GetData( w, self.dropdown );
+	if( data->target ) {
+		int x, y;
+		Widget_GetAbsXY( data->target, w->parent, &x, &y );
+		y += data->target->height;
+		if( y + w->height > w->parent->height ) {
+			Widget_GetAbsXY( data->target, w->parent, &x, &y );
+			y = y - data->target->height - w->height;
+		}
+		Widget_Move( w, x, y );
+	}
+}
+
+void Dropdown_Show( LCUI_Widget w )
+{
+	Dropdown data = Widget_GetData( w, self.dropdown );
+	if( data->target ) {
+		Widget_AddClass( data->target, "active" );
+	}
+	Dropdown_UpdatePosition( w );
+	Widget_Show( w );
+}
+
+void Dropdown_Hide( LCUI_Widget w )
+{
+	Dropdown data = Widget_GetData( w, self.dropdown );
 	if( data->target ) {
 		Widget_RemoveClass( data->target, "active" );
 	}
+	Dropdown_UpdatePosition( w );
+	Widget_Hide( w );
+}
+
+void Dropdown_Toggle( LCUI_Widget w )
+{
+	if( w->computed_style.visible ) {
+		Dropdown_Hide( w );
+	} else {
+		Dropdown_Show( w );
+	}
+}
+
+static void Dropdown_OnClickOther( LCUI_Widget w, 
+				   LCUI_WidgetEvent e, void *arg )
+{
+	Dropdown_Hide( e->data );
 }
 
 static void Dropdown_Init( LCUI_Widget w )
@@ -112,18 +152,16 @@ static void DropdownItem_Init( LCUI_Widget w )
 static void DropdownItem_Destrtoy( LCUI_Widget w )
 {
 	DropdownItem item = Widget_GetData( w, self.item );
-	free( item->value );
 	free( item->text );
 	item->value = NULL;
 	item->text = NULL;
 }
 
-void DropdownItem_SetData( LCUI_Widget w, const char *value,
-			   const char *text )
+void DropdownItem_SetData( LCUI_Widget w, void *value, const char *text )
 {
 	DropdownItem data = Widget_GetData( w, self.item );
-	data->value = value ? strdup( value ) : NULL;
 	data->text = text ? strdup( text ) : NULL;
+	data->value = value;
 	TextView_SetText( w, text );
 }
 
@@ -136,39 +174,14 @@ static void DropdownItem_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ev.type = self.change_event;
 	item = Widget_GetData( w, self.item );
 	Widget_TriggerEvent( menu, &ev, item->value );
-	Widget_Hide( menu );
-}
-
-void Dropdown_Toggle( LCUI_Widget w )
-{
-	Dropdown data = Widget_GetData( w, self.dropdown );
-	LCUI_BOOL visible = !w->computed_style.visible;
-
-	if( visible ) {
-		Widget_Show( w );
-		if( data->target ) {
-			Widget_AddClass( data->target, "active" );
-		}
-	} else {
-		Widget_Hide( w );
-		if( data->target ) {
-			Widget_RemoveClass( data->target, "active" );
-		}
-	}
-	if( data->target ) {
-		int x, y;
-		Widget_GetAbsXY( data->target, w->parent, &x, &y );
-		y += data->target->height;
-		if( y + w->height > w->parent->height ) {
-			Widget_GetAbsXY( data->target, w->parent, &x, &y );
-			y = y - data->target->height - w->height;
-		}
-		Widget_Move( w, x, y );
-	}
+	Dropdown_Hide( menu );
 }
 
 static void Dropdown_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	if( w->disabled ) {
+		return;
+	}
 	Dropdown_Toggle( e->data );
 	e->cancel_bubble = TRUE;
 }
@@ -195,8 +208,7 @@ static void Dropdown_SetAttr( LCUI_Widget w, const char *name,
 	}
 }
 
-LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, const char *value,
-			      const char *text )
+LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *value, const char *text )
 {
 	LCUI_Widget item = LCUIWidget_New( "dropdown-item" );
 	DropdownItem_SetData( item, value, text );

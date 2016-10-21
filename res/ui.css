@@ -62,14 +62,18 @@
 	border-color: #aaa;
 }
 .btn-dropdown {
-	border: 1px solid rgba(34,36,38,.15);
+	border: 1px solid #ddd;
 	background-color: #fff;
 }
-.btn-dropdown:hover {
-	border-color: rgba(34,36,38,.35);
+.btn-dropdown .default.text {
+	min-width: 80px;
+	display: inline-block;
 }
-.btn-dropdown .text {
-	color: rgba(191,191,191,.87);
+.btn-dropdown .icon {
+	display: inline-block;
+}
+.btn-dropdown:hover {
+	border-color: #bbb;
 }
 .btn-dropdown.active {
 	border-color: #aaa;

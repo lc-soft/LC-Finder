@@ -41,15 +41,13 @@
 void Dropdown_Toggle( LCUI_Widget w );
 
 /** 为下来菜单添加菜单项 */
-LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, const char *value,
-			      const char *text );
+LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *value, const char *text );
 
 /** 为下来菜单绑定目标 */
 void Dropdown_BindTarget( LCUI_Widget w, LCUI_Widget target );
 
 /** 为下来菜单项设置值和文本内容 */
-void DropdownItem_SetData( LCUI_Widget w, const char *value,
-			   const char *text );
+void DropdownItem_SetData( LCUI_Widget w, void *value, const char *text );
 
 /** 添加下拉菜单部件 */
 void LCUIWidget_AddDropdown( void );
