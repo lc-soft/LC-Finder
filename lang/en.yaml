@@ -21,11 +21,13 @@ strings:
             empty_tags: No tags.
             empty_results: No results found.
     filesync:
-        title_syncing: Syncing resources
-        title_finished: Resources sync done !
-        text_scaning: 'scaning %d files'
-        text_saving: 'syncing %d/%d files'
-        text_finished: '%d files synced'
+        title:
+            syncing: Syncing resources
+            finished: Resources sync done !
+        text:
+            scaning: 'scaning %d files'
+            saving: 'syncing %d/%d files'
+            finished: '%d files synced'
     picture:
         message:
             empty: There is nothing to show here.

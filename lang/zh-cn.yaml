@@ -1,4 +1,78 @@
 name: 简体中文
 code: zh-cn
 strings:
-    title: title
+    button:
+        cancel: 取消
+        clear: 清除
+    home:
+        title: 集锦
+        message:
+            empty: 未找到可读取的图片。
+    folders:
+        title: 文件夹
+        return: 返回源文件夹
+        message:
+            empty: 未找到可读取的图片或文件夹。
+    search:
+        title: 搜索
+        results: 
+            title: 搜索结果
+        message:
+            empty_tags: 未找到标签记录。
+            empty_results: 未找到符合条件的图片。
+    filesync:
+        title:
+            syncing: 正在同步你的资源
+            finished: Resources sync done !
+        text:
+            scaning: '已扫描 %d 个文件'
+            saving: '正同步 %d/%d 个文件'
+            finished: '已同步 %d 个文件'
+    picture:
+        message:
+            empty: 此处没有任何要显示的内容。
+            loading: 图片载入中...
+            unsupport: 无法识别该图片的内容。
+        info:
+            title: 文件信息
+            file_name: 文件名
+            file_date: 日期
+            file_size: 大小
+            file_score: 评分
+            file_tags: 标签
+            image_resolution: 尺寸
+            folder_path: 文件夹路径
+            open_folder: 打开文件夹
+            add_tags: 添加标签
+    browser:
+        text:
+            no_selected_items: 未选择任何项目
+            selected_items: '已选择 %d 项'
+        progress:
+            deletion: '已删除 %d 个文件，共 %d 个文件'
+            tags_addtion: '已处理 %d 个文件，共 %d 个文件'
+        dialog:
+            title:
+                delete: 删除文件
+                add_tags: 为选中的文件添加标签
+                deleting: 删除中 ...
+                adding_tags: 添加标签中 ...
+            text:
+                delete: '确定要删除选中的 %d 项文件？'
+            placeholder: '标签名称，多个标签用空格隔开'
+    settings:
+        title: 设置
+        thumb_cache: 缓存
+        thumb_cache_stats: 当前缩略图缓存共占用 %s 的空间
+        thumb_cache_description: >
+            本应用会在你浏览图片列表的时候自动缓存缩略图，
+            以便在下次浏览图片时能够快速呈现缩略图。
+        language: 语言
+        language_description: 更改界面的显示语言
+        license: 许可协议
+        website: 官方网站
+        feedback: 问题反馈
+        add_folder: 添加文件夹
+        source_folders: 源
+        about: 关于此应用
+        copyright: © 2016 LC's Software，保留所有权利。
