@@ -43,11 +43,11 @@
 #include "textview_i18n.h"
 #include "ui.h"
 
-#define TEXT_STARED	L"正在同步你的资源"
-#define TEXT_SCANING	L"已扫描 %d 个文件"
-#define TEXT_SAVING	L"正同步 %d/%d 个文件"
-#define TEXT_SAVED	L"已同步 %d 个文件"
-#define TEXT_FINISHED	L"资源同步完成！"
+#define KEY_TITLE_SCANING	"filesync.title.syncing"
+#define KEY_TITLE_FINISHED	"filesync.title.finished"
+#define KEY_TEXT_SCANING	"filesync.text.scaning"
+#define KEY_TEXT_SAVING		"filesync.text.saving"
+#define KEY_TEXT_FINISHED	"filesync.text.finished"
 
 /** 当前文件同步功能所需的数据 */
 static struct SyncContextRec_ {
@@ -87,13 +87,13 @@ static void OnUpdateStats( void *arg )
 {
 	switch( self.status.state ) {
 	case STATE_STARTED:
-		TextViewI18n_SetKey( self.text, "filesync.text_scaning" );
+		TextViewI18n_SetKey( self.text, KEY_TEXT_SCANING );
 		break;
 	case STATE_SAVING:
-		TextViewI18n_SetKey( self.text, "filesync.text_saving" );
+		TextViewI18n_SetKey( self.text, KEY_TEXT_SAVING );
 		break;
 	case STATE_FINISHED:
-		TextViewI18n_SetKey( self.text, "filesync.text_finished" );
+		TextViewI18n_SetKey( self.text, KEY_TEXT_FINISHED );
 		break;
 	default:return;
 	}
@@ -110,13 +110,13 @@ static void FileSyncThread( void *arg )
 {
 	LCUI_Widget alert = self.text->parent;
 	TextViewI18n_SetFormater( self.text, RenderStatusText, NULL );
-	TextViewI18n_SetKey( self.title, "filesync.title_syncing" );
+	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
 	Widget_RemoveClass( alert, "hide" );
 	LCFinder_SyncFiles( &self.status );
 	OnUpdateStats( NULL );
 	LCUITimer_Free( self.timer );
 	TextViewI18n_Refresh( self.text );
-	TextViewI18n_SetKey( self.title, "filesync.title_finished" );
+	TextViewI18n_SetKey( self.title, KEY_TITLE_FINISHED );
 	LCUITimer_Set( 3000, OnHideTip, NULL, FALSE );
 	self.is_syncing = FALSE;
 	self.timer = 0;

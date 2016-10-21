@@ -76,6 +76,7 @@ static char *yaml_get_token_string( yaml_token_t *token )
 	char *str = malloc( sizeof( char ) * len );
 	if( str ) {
 		strncpy( str, token->data.scalar.value, len );
+		str[len - 1] = 0;
 	}
 	return str;
 }
@@ -291,8 +292,8 @@ Language I18n_SetLanguage( const char *lang_code )
 		if( !dict ) {
 			break;
 		}
-		self.language = lang;
 		self.texts = dict;
+		self.language = lang;
 		return lang;
 	}
 	return NULL;

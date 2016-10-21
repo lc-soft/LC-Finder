@@ -52,6 +52,7 @@
 #define ID_TXT_FILE_SYNC_STATS		"file-sync-tip-stats"
 #define ID_TXT_FILE_SYNC_TITLE		"file-sync-tip-title"
 #define ID_TXT_THUMB_DB_SIZE		"text-thumb-db-size"
+#define ID_TXT_CURRENT_LANGUAGE		"txt-current-language"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
 #define ID_VIEW_PCITURE_RATING		"picture-info-rating"

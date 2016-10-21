@@ -189,8 +189,8 @@
                   <widget type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</widget>
                 </widget>
                 <widget id="btn-change-language" class="btn btn-dropdown">
-                  <widget id="current-language" type="textview" class="text">简体中文</widget>
-                  <widget type="textview" class="text mdi mdi-chevron-down"></widget>
+                  <widget id="txt-current-language" type="textview" class="default text">简体中文</widget>
+                  <widget type="textview" class="icon mdi mdi-chevron-down"></widget>
                 </widget>
               </widget>
               <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders">源</widget>
@@ -226,9 +226,9 @@
       <widget class="alert alert-primary hide">
         <widget class="alert-header">
           <widget type="spin" class="ion ion-android-sync"></widget>
-          <widget id="file-sync-tip-title" type="textview-i18n" class="text alert-title" data-i18n-key="sync_resources">正在同步你的资源</widget>
+          <widget id="file-sync-tip-title" type="textview-i18n" class="text alert-title" data-i18n-key="filesync.title.syncing">正在同步你的资源</widget>
         </widget>
-        <widget id="file-sync-tip-stats" type="textview-i18n" class="text alert-text">已扫描 0 个文件</widget>
+        <widget id="file-sync-tip-stats" type="textview-i18n" class="text alert-text" data-i18n-key="filesync.text.scaning">已扫描 0 个文件</widget>
       </widget>
     </widget>
   </ui>

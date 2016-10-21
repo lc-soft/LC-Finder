@@ -66,8 +66,8 @@ static void TextViewI18n_Init( LCUI_Widget w )
 	txt->formatter_data = NULL;
 	txt->key_valid = FALSE;
 	txt->key = txt->text = NULL;
-	LinkedList_Append( &self.textviews, &txt->node );
 	self.prototype->proto->init( w );
+	LinkedList_AppendNode( &self.textviews, &txt->node );
 }
 
 static void TextViewI18n_Destroy( LCUI_Widget w )
@@ -162,4 +162,5 @@ void LCUIWidget_AddTextViewI18n( void )
 	self.prototype->destroy = TextViewI18n_Destroy;
 	self.prototype->setattr = TextViewI18n_SetAttr;
 	self.prototype->settext = TextViewI18n_SetText;
+	LinkedList_Init( &self.textviews );
 }

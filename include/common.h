@@ -56,6 +56,8 @@
 
 char *EncodeUTF8( const wchar_t *wstr );
 
+char *EncodeANSI( const wchar_t *wstr );
+
 wchar_t *DecodeUTF8( const char *str );
 
 void EncodeSHA1( char *hash_out, const char *str, int len );

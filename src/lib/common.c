@@ -47,7 +47,15 @@
 char *EncodeUTF8( const wchar_t *wstr )
 {
 	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
-	char *str = malloc( len * sizeof(char) );
+	char *str = malloc( len * sizeof( char ) );
+	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
+	return str;
+}
+
+char *EncodeANSI( const wchar_t *wstr )
+{
+	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_ANSI ) + 1;
+	char *str = malloc( len * sizeof( char ) );
 	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
 	return str;
 }
@@ -115,7 +123,7 @@ static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
 
 static void *Dict_KeyDup( void *privdata, const void *key )
 {
-	char *newkey = malloc( (strlen( key ) + 1)*sizeof( char ) );
+	char *newkey = malloc( (strlen( key ) + 1) * sizeof( char ) );
 	strcpy( newkey, key );
 	return newkey;
 }

@@ -62,6 +62,7 @@
 static struct SettingsViewData {
 	LCUI_Widget source_dirs;
 	LCUI_Widget thumb_db_stats;
+	LCUI_Widget language;
 	Dict *dirpaths;
 } this_view;
 
@@ -235,10 +236,13 @@ static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e,
 	}
 	LinkedList_ForEach( node, &w->children ) {
 		LCUI_Widget child = node->data;
-		if( child->type && strcmp(child->type, "textview") == 0 ) {
+		if( Widget_HasClass( child, "text" ) ) {
 			text = child;
 			break;
 		}
+	}
+	if( !text ) {
+		return;
 	}
 	Widget_SetDisabled( w, TRUE );
 	Widget_AddClass( w, "disabled" );
@@ -267,11 +271,16 @@ static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 	wopenbrowser( L"https://github.com/lc-soft/LC-Finder/issues" );
 }
 
-static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *lang_code )
+static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	printf("lang_code: %s\n", lang_code);
-	I18n_SetLanguage( lang_code );
-	LCUIWidget_RefreshTextViewI18n();
+	Language lang = arg;
+	lang = I18n_SetLanguage( lang->code );
+	if( lang ) {
+		LCUIWidget_RefreshTextViewI18n();
+		TextView_SetText( this_view.language, lang->name );
+		strcpy( finder.config.language, lang->code );
+		LCFinder_SaveConfig();
+	}
 }
 
 static void UI_InitLanguages( void )
@@ -281,8 +290,13 @@ static void UI_InitLanguages( void )
 	LCUI_Widget menu;
 	n = I18n_GetLanguages( &langs );
 	SelectWidget( menu, ID_DROPDOWN_LANGUAGES );
+	SelectWidget( this_view.language, ID_TXT_CURRENT_LANGUAGE );
 	for( i = 0; i < n; ++i ) {
-		Dropdwon_AddItem( menu, langs[i]->code, langs[i]->name );
+		Language lang = langs[i];
+		Dropdwon_AddItem( menu, lang, lang->name );
+		if( strcmp( finder.config.language, lang->code ) == 0 ) {
+			TextView_SetText( this_view.language, lang->name );
+		}
 	}
 	BindEvent( menu, "change.dropdown", OnSelectLanguage );
 }
