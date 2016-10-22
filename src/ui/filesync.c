@@ -59,7 +59,7 @@ static struct SyncContextRec_ {
 	int timer;			/**< 用于动态更新提示框内容的定时器 */
 } self;
 
-static void RenderStatusText( char *buf, const char *text, void *data )
+static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 {
 	int count, total;
 	switch( self.status.state ) {
@@ -68,16 +68,16 @@ static void RenderStatusText( char *buf, const char *text, void *data )
 		if( self.status.task ) {
 			count += self.status.task->total_files;
 		}
-		sprintf( buf, text, count );
+		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
 		break;
 	case STATE_SAVING:
 		count = self.status.synced_files;
 		total = self.status.added_files + self.status.deleted_files;
-		sprintf( buf, text, count, total );
+		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count, total );
 		break;
 	case STATE_FINISHED:
 		count = self.status.synced_files;
-		sprintf( buf, text, count );
+		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
 		break;
 	default:return;
 	}

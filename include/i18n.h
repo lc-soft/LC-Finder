@@ -47,7 +47,7 @@ typedef struct LanguageRec_ {
 Dict *I18n_LoadFile( const char *path );
 
 /** 获取与 key 对应的文本 */
-const char *I18n_GetText( const char *key );
+const wchar_t *I18n_GetText( const char *keystr );
 
 /** 从语言文件中载入数据 */
 Dict *I18n_LoadFile( const char *path );

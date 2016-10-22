@@ -76,7 +76,6 @@ typedef struct FileEntryRec_ {
 
 static struct FoldersViewData {
 	DB_Dir dir;
-	wchar_t *title;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget info;
@@ -411,15 +410,6 @@ static void OpenFolder( const char *dirpath )
 static void OnSyncDone( void *privdata, void *arg )
 {
 	OpenFolder( NULL );
-}
-
-static void RefreshTitle( void )
-{
-	const char *title = I18n_GetText( KEY_TITLE );
-	if( this_view.title ) {
-		free( this_view.title );
-	}
-	this_view.title = DecodeUTF8( title );
 }
 
 void UI_InitFoldersView( void )

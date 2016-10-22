@@ -206,12 +206,12 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 #endif
 
 /** 渲染缩略图缓存占用空间文本 */
-static void RenderThumbDBSizeText( char *buf, const char *text, void *data )
+static void RenderThumbDBSizeText( wchar_t *buf, const wchar_t *text, void *data )
 {
-	char size_str[128];
+	wchar_t size_str[128];
 	int64_t size = LCFinder_GetThumbDBTotalSize();
-	getsizestr( size_str, size );
-	sprintf( buf, text, size_str );
+	wgetsizestr( size_str, 127, size );
+	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, size_str );
 }
 
 static void OnBtnSettingsClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

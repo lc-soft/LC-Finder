@@ -162,16 +162,16 @@ static void FileIndex_Delete( FileIndex fidx )
 	fidx->item = NULL;
 }
 
-static void RenderSelectedItemsText( char *buf, const char *text, void *data )
+static void RenderSelectedItemsText( wchar_t *buf, const wchar_t *text, void *data )
 {
 	FileBrowser browser = data;
-	sprintf( buf, text, browser->selected_files.length );
+	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, browser->selected_files.length );
 }
 
-static void RenderProgressText( char *buf, const char *text, void *data )
+static void RenderProgressText( wchar_t *buf, const wchar_t *text, void *data )
 {
 	DialogDataPack pack = data;
-	sprintf( buf, text, pack->i + 1, pack->n );
+	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, pack->i + 1, pack->n );
 }
 
 static void FileBrowser_UpdateSelectionUI( FileBrowser browser )
@@ -392,20 +392,17 @@ static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	int len;
 	char *buf, **tagnames;
 	DialogDataPackRec pack;
-	const char *cancel = I18n_GetText( KEY_CANCEL );
-	const char *title = I18n_GetText( KEY_TITLE_ADD_TAGS );
-	const char *title2 = I18n_GetText( KEY_TITLE_ADDING_TAGS );
-	const char *placeholder = I18n_GetText( KEY_PLACEHOLDER );
+	wchar_t text[MAX_TAG_LEN];
+	const wchar_t *cancel = I18n_GetText( KEY_CANCEL );
+	const wchar_t *title = I18n_GetText( KEY_TITLE_ADD_TAGS );
+	const wchar_t *title2 = I18n_GetText( KEY_TITLE_ADDING_TAGS );
+	const wchar_t *placeholder = I18n_GetText( KEY_PLACEHOLDER );
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	wchar_t text[MAX_TAG_LEN], *wtitle, *wplaceholder, *wtitle2;
 
 	if( w->disabled ) {
 		return;
 	}
-	wtitle = DecodeUTF8( title );
-	wtitle2 = DecodeUTF8( title2 );
-	wplaceholder = DecodeUTF8( placeholder );
-	if( 0 != LCUIDialog_Prompt( window, wtitle, wplaceholder, NULL,
+	if( 0 != LCUIDialog_Prompt( window, title, placeholder, NULL,
 				    text, MAX_TAG_LEN - 1, CheckTagName ) ) {
 		return;
 	}
@@ -417,50 +414,42 @@ static void OnBtnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	pack.browser = e->data;
 	pack.tagnames = tagnames;
 	pack.dialog = NewProgressDialog();
-	Button_SetText( pack.dialog->btn_cancel, cancel );
-	TextView_SetTextW( pack.dialog->title, wtitle2 );
+	Button_SetTextW( pack.dialog->btn_cancel, cancel );
+	TextView_SetTextW( pack.dialog->title, title2 );
 	Widget_BindEvent( pack.dialog->btn_cancel, "click", 
 			  OnCancelProcessing, &pack, NULL );
 	LCUIThread_Create( &pack.thread, FileTagAddtionThread, &pack );
 	OpenProgressDialog( pack.dialog, window );
-	free( wplaceholder );
 	freestrs( tagnames );
-	free( wtitle );
-	free(wtitle2 );
 	free( buf );
 }
 
 static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	char buf[512];
-	wchar_t *wtext, *wtitle;
+	wchar_t buf[512];
 	DialogDataPackRec pack;
 	FileBrowser fb = e->data;
-	const char *cancel = I18n_GetText( KEY_CANCEL );
-	const char *title = I18n_GetText( KEY_TITLE_DELETE );
-	const char *text = I18n_GetText( KEY_CONTENT_DELETE );
+	const wchar_t *cancel = I18n_GetText( KEY_CANCEL );
+	const wchar_t *title = I18n_GetText( KEY_TITLE_DELETE );
+	const wchar_t *text = I18n_GetText( KEY_CONTENT_DELETE );
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 
 	if( w->disabled ) {
 		return;
 	}
-	sprintf( buf, text, fb->selected_files.length );
-	wtitle = DecodeUTF8( title );
-	wtext = DecodeUTF8( buf );
-	if( LCUIDialog_Confirm(window, wtitle, wtext) ) {
+	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, fb->selected_files.length );
+	if( LCUIDialog_Confirm( window, title, buf ) ) {
 		pack.browser = fb;
 		pack.active = TRUE;
 		pack.dialog = NewProgressDialog();
 		title = I18n_GetText( KEY_TITLE_DELETING );
-		TextView_SetText( pack.dialog->title, title );
-		Button_SetText( pack.dialog->btn_cancel, cancel );
-		Widget_BindEvent( pack.dialog->btn_cancel, "click", 
+		TextView_SetTextW( pack.dialog->title, title );
+		Button_SetTextW( pack.dialog->btn_cancel, cancel );
+		Widget_BindEvent( pack.dialog->btn_cancel, "click",
 				  OnCancelProcessing, &pack, NULL );
 		LCUIThread_Create( &pack.thread, FileDeletionThread, &pack );
 		OpenProgressDialog( pack.dialog, window );
 	}
-	free( wtitle );
-	free( wtext );
 }
 
 static void OnBtnSelectionClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

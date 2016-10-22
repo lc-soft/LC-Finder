@@ -44,7 +44,7 @@
 
 typedef struct TextViewI18nRec_ {
 	char *key;
-	char *text;
+	wchar_t *text;
 	void *formatter_data;
 	TextFormatter formatter;
 	LCUI_BOOL key_valid;
@@ -61,11 +61,12 @@ static void TextViewI18n_Init( LCUI_Widget w )
 	const size_t data_size = sizeof( TextViewI18nRec );
 	TextViewI18n txt = Widget_AddData( w, self.prototype, data_size );
 
+	txt->key = NULL;
+	txt->text = NULL;
 	txt->node.data = w;
+	txt->key_valid = FALSE;
 	txt->formatter = NULL;
 	txt->formatter_data = NULL;
-	txt->key_valid = FALSE;
-	txt->key = txt->text = NULL;
 	self.prototype->proto->init( w );
 	LinkedList_AppendNode( &self.textviews, &txt->node );
 }
@@ -78,8 +79,8 @@ static void TextViewI18n_Destroy( LCUI_Widget w )
 
 void TextViewI18n_Refresh( LCUI_Widget w )
 {
-	const char *text;
-	char buf[TXTFMT_BUF_MAX_LEN];
+	const wchar_t *text;
+	wchar_t buf[TXTFMT_BUF_MAX_LEN];
 	TextViewI18n textview;
 
 	textview = Widget_GetData( w, self.prototype );
@@ -100,7 +101,7 @@ void TextViewI18n_Refresh( LCUI_Widget w )
 		textview->formatter( buf, text, textview->formatter_data );
 		text = buf;
 	}
-	TextView_SetText( w, text );
+	TextView_SetTextW( w, text );
 }
 
 void TextViewI18n_SetKey( LCUI_Widget w, const char *key )
@@ -139,8 +140,7 @@ static void TextViewI18n_SetText( LCUI_Widget w, const char *text  )
 	if( txt->text ) {
 		free( txt->text );
 	}
-	txt->text = malloc( sizeof( char ) * len );
-	strncpy( txt->text, text, len );
+	txt->text = DecodeUTF8( text );
 	if( !txt->key_valid ) {
 		TextView_SetText( w, text );
 	}

@@ -40,7 +40,7 @@
 /** 格式化器输出的字符串的最大长度 */
 #define TXTFMT_BUF_MAX_LEN 256
 
-typedef void (*TextFormatter)(char*, const char*, void*);
+typedef void (*TextFormatter)(wchar_t*, const wchar_t*, void*);
 
 void LCUIWidget_AddTextViewI18n( void );
 

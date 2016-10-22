@@ -37,6 +37,7 @@
 #include <yaml.h>
 #include <LCUI_Build.h>
 #include <LCUI/util/dict.h>
+#include <LCUI/font/charset.h>
 #include "common.h"
 #include "i18n.h"
 
@@ -47,7 +48,7 @@ enum DictValueType {
 };
 
 typedef struct DictStringValueRec_ {
-	char *data;
+	wchar_t *data;
 	size_t length;
 } DictStringValueRec, *DictStringValue;
 
@@ -70,7 +71,7 @@ static struct I18nModule {
 	Dict *texts;		/**< 文本库 */
 } self = {0};
 
-static char *yaml_get_token_string( yaml_token_t *token )
+static char *yaml_token_getstr( yaml_token_t *token )
 {
 	size_t len = token->data.scalar.length + 1;
 	char *str = malloc( sizeof( char ) * len );
@@ -79,6 +80,15 @@ static char *yaml_get_token_string( yaml_token_t *token )
 		str[len - 1] = 0;
 	}
 	return str;
+}
+
+static wchar_t *yaml_token_getwcs( yaml_token_t *token )
+{
+	char *str = token->data.scalar.value;
+	size_t len = token->data.scalar.length + 1;
+	wchar_t *wcs = malloc( sizeof( wchar_t ) * len );
+	LCUI_DecodeString( wcs, str, len, ENCODING_UTF8 );
+	return wcs;
 }
 
 static void DeleteDictValue( void *privdata, void *data )
@@ -107,12 +117,8 @@ static Language I18n_AddLanguage( const char *path, Dict *dict )
 	}
 	lang->filename = malloc( sizeof( char ) * len );
 	strncpy( lang->filename, path, len );
-	len = name->string.length + 1;
-	lang->name = malloc( sizeof( char ) * len );
-	strncpy( lang->name, name->string.data, len );
-	len = code->string.length + 1;
-	lang->code = malloc( sizeof( char ) * len );
-	strncpy( lang->code, code->string.data, len );
+	lang->name = EncodeUTF8( name->string.data );
+	lang->code = EncodeUTF8( code->string.data );
 	len = self.length + 2;
 	langs = realloc( self.languages, sizeof( Language ) * len );
 	if( !langs ) {
@@ -195,13 +201,13 @@ Dict *I18n_LoadFile( const char *path )
 				value->type = NONE;
 				value->parent_dict = parent_dict;
 				value->parent_value = parent_value;
-				value->key = yaml_get_token_string( &token );
+				value->key = yaml_token_getstr( &token );
 				Dict_Add( parent_dict, value->key, value );
 				break;
 			}
 			value->type = STRING;
 			value->string.length = token.data.scalar.length;
-			value->string.data = yaml_get_token_string( &token );
+			value->string.data = yaml_token_getwcs( &token );
 			break;
 		default: break;
 		}
@@ -232,7 +238,7 @@ Language I18n_LoadLanguage( const char *filename )
 	return lang;
 }
 
-const char *I18n_GetText( const char *keystr )
+const wchar_t *I18n_GetText( const char *keystr )
 {
 	int i;
 	char key[256];
