@@ -1,4 +1,78 @@
 name: 繁體中文
 code: zh-tw
 strings:
-    title: title
+    button:
+        cancel: 取消
+        clear: 清除
+    home:
+        title: 集錦
+        message:
+            empty: 未找到可讀取的圖片。
+    folders:
+        title: 文件夾
+        return: 返回源文件夾
+        message:
+            empty: 未找到可讀取的圖片或文件夾。
+    search:
+        title: 搜索
+        results: 
+            title: 搜索結果
+        message:
+            empty_tags: 未找到標籤記錄。
+            empty_results: 未找到符合條件的圖片。
+    filesync:
+        title:
+            syncing: 正在同步你的資源
+            finished: 資源同步完成！
+        text:
+            scaning: '已掃描 %d 個文件'
+            saving: '正同步 %d/%d 個文件'
+            finished: '已同步 %d 個文件'
+    picture:
+        message:
+            empty: 此處沒有任何要顯示的內容。
+            loading: 圖片載入中...
+            unsupport: 無法識別該圖片的內容。
+        info:
+            title: 文件信息
+            file_name: 文件名
+            file_date: 日期
+            file_size: 大小
+            file_score: 評分
+            file_tags: 標籤
+            image_resolution: 尺寸
+            folder_path: 文件夾路徑
+            open_folder: 打開文件夾
+            add_tags: 添加標籤
+    browser:
+        text:
+            no_selected_items: 未選擇任何項目
+            selected_items: '已選擇 %d 項'
+        progress:
+            deletion: '已刪除 %d 個文件，共 %d 個文件'
+            tags_addtion: '已處理 %d 個文件，共 %d 個文件'
+        dialog:
+            title:
+                delete: 刪除文件
+                add_tags: 爲選中的文件添加標籤
+                deleting: 刪除中 ...
+                adding_tags: 添加標籤中 ...
+            text:
+                delete: '確定要刪除選中的 %d 項文件？'
+            placeholder: '標籤名稱，多個標籤用空格隔開'
+    settings:
+        title: 設置
+        thumb_cache: 緩存
+        thumb_cache_stats: 當前縮略圖緩存共佔用 %s 的空間
+        thumb_cache_description: >
+            本應用會在你瀏覽圖片列表的時候自動緩存縮略圖，
+            以便在下次瀏覽圖片時能夠快速呈現縮略圖。
+        language: 語言
+        language_description: 更改界面的顯示語言
+        license: 許可協議
+        website: 官方網站
+        feedback: 問題反饋
+        add_folder: 添加文件夾
+        source_folders: 源
+        about: 關於此應用
+        copyright: © 2016 LC's Software，保留所有權利。

@@ -23,7 +23,7 @@ strings:
     filesync:
         title:
             syncing: 正在同步你的资源
-            finished: Resources sync done !
+            finished: 资源同步完成！
         text:
             scaning: '已扫描 %d 个文件'
             saving: '正同步 %d/%d 个文件'
