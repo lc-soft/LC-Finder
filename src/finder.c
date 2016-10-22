@@ -604,7 +604,7 @@ int LCFinder_SaveConfig( void )
 	FILE *file;
 	char *path;
 	wchar_t wpath[PATH_LEN];
-	wpathjoin( wpath, finder.work_dir, CONFIG_FILE );
+	wpathjoin( wpath, finder.data_dir, CONFIG_FILE );
 	path = EncodeANSI( wpath );
 	file = fopen( path, "wb" );
 	if( !file ) {
@@ -621,7 +621,6 @@ int LCFinder_LoadConfig( void )
 {
 	FILE *file;
 	char *path;
-	size_t size;
 	FinderConfigRec config;
 	wchar_t wpath[PATH_LEN];
 	LCUI_BOOL has_error = TRUE;
@@ -631,12 +630,11 @@ int LCFinder_LoadConfig( void )
 	finder.config.version.major = LCFINDER_VER_MAJOR;
 	finder.config.version.minor = LCFINDER_VER_MINOR;
 	finder.config.version.revision = LCFINDER_VER_REVISION;
-	wpathjoin( wpath, finder.work_dir, CONFIG_FILE );
+	wpathjoin( wpath, finder.data_dir, CONFIG_FILE );
 	path = EncodeANSI( wpath );
 	file = fopen( path, "rb" );
 	if( file ) {
-		size = fwrite( &config, sizeof( config ), 1, file );
-		if( size == sizeof( config ) &&
+		if( fread( &config, sizeof( config ), 1, file ) == 1 &&
 		    strcmp( finder.config.head, config.head ) == 0 ) {
 			has_error = FALSE;
 			finder.config = config;

@@ -56,7 +56,7 @@ char *EncodeANSI( const wchar_t *wstr )
 {
 	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_ANSI ) + 1;
 	char *str = malloc( len * sizeof( char ) );
-	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
+	LCUI_EncodeString( str, wstr, len, ENCODING_ANSI );
 	return str;
 }
 
