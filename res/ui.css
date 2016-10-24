@@ -27,7 +27,6 @@
 	padding: 8px 14px;
 }
 .btn .text {
-	line-height: 22px;
 	display: inline-block;
 }
 .btn:disabled {
@@ -51,7 +50,6 @@
 .btn-default {
 	background-color: #eee;
 	border: 2px solid #eee;
-	box-sizing: border-box;
 }
 .btn-default:hover {
 	background-color: #ccc;
