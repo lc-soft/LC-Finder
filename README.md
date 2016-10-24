@@ -25,10 +25,10 @@
 
 运行以下命令：
 
-	./autogen.sh
+	./setup.sh
 	./build.sh
 
-`autogen.sh` 脚本会下载在构建 LC-Finder 时所需的工具以及相关依赖项，只需要运行一次即可。
+`setup.sh` 脚本会下载在构建 LC-Finder 时所需的工具以及相关依赖项，只需要运行一次即可。
 
 在成功生成后，可以直接输入 `build/lcfinder` 命令行来运行 LC-Finder。
 
