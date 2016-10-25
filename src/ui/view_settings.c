@@ -48,14 +48,11 @@
 #include "dialog.h"
 #include "dropdown.h"
 #include "textview_i18n.h"
+#include "selectfolder.h"
 #include "i18n.h"
 
-#define MAX_DIRPATH_LEN			2048
 #define TEXT_DELETING 			L"正在清除..."
 #define TEXT_DELETE			L"清除" 
-#define TEXT_SELECT_DIR			L"选择文件夹"
-#define DIALOG_TITLE_ADD_DIR		L"添加源文件夹"
-#define DIALOG_PLACEHOLDER_ADD_DIR	L"文件夹的位置"
 #define DIALOG_TITLE_DEL_DIR		L"确定要移除该源文件夹？"
 #define DIALOG_TEXT_DEL_DIR		L"一旦移除后，该源文件夹内的文件相关信息将一同被移除。"
 
@@ -130,36 +127,13 @@ static void UI_InitDirList( LCUI_Widget view )
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
 }
 
-#ifdef _WIN32
-
 static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int len;
-	HWND hwnd;
 	DB_Dir dir;
-	BROWSEINFOW bi;
-	LCUI_Surface s;
-	LPITEMIDLIST iids;
-	char dirpath[PATH_LEN] = "";
-	wchar_t wdirpath[PATH_LEN] = L"";
-	s = LCUIDisplay_GetSurfaceOwner( w );
-	hwnd = Surface_GetHandle( s );
-	memset( &bi, 0, sizeof( bi ) );
-	bi.hwndOwner = hwnd;
-	bi.pidlRoot = NULL;
-	bi.lpszTitle = TEXT_SELECT_DIR;
-	bi.ulFlags = BIF_NEWDIALOGSTYLE;
-	iids = SHBrowseForFolder( &bi );
-	_DEBUG_MSG( "iids: %p\n", iids );
-	if( !iids ) {
+	char dirpath[PATH_LEN] = {0};
+	if( SelectFolder( dirpath, PATH_LEN - 1 ) < 0 ) {
 		return;
 	}
-	SHGetPathFromIDList( iids, wdirpath );
-	len = wcslen( wdirpath );
-	if( len <= 0 ) {
-		return;
-	}
-	LCUI_EncodeString( dirpath, wdirpath, PATH_LEN, ENCODING_UTF8 );
 	if( LCFinder_GetDir( dirpath ) ) {
 		return;
 	}
@@ -168,42 +142,6 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 	}
 }
-
-#else
-
-static LCUI_BOOL CheckDir( const wchar_t *dirpath )
-{
-	if( wgetcharcount( dirpath, L":\"\'\\\n\r\t" ) > 0 ) {
-		return FALSE;
-	}
-	if( wcslen( dirpath ) >= MAX_DIRPATH_LEN ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	DB_Dir dir;
-	char dirpath[MAX_DIRPATH_LEN];
-	wchar_t wdirpath[MAX_DIRPATH_LEN];
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_DIR,
-				    DIALOG_PLACEHOLDER_ADD_DIR, NULL,
-				    wdirpath, MAX_DIRPATH_LEN, CheckDir ) ) {
-		return;
-	}
-	LCUI_EncodeString( dirpath, wdirpath, PATH_LEN, ENCODING_UTF8 );
-	if( LCFinder_GetDir( dirpath ) ) {
-		return;
-	}
-	dir = LCFinder_AddDir( dirpath );
-	if( dir ) {
-		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
-	}
-}
-
-#endif
 
 /** 渲染缩略图缓存占用空间文本 */
 static void RenderThumbDBSizeText( wchar_t *buf, const wchar_t *text, void *data )

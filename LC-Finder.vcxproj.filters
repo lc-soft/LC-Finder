@@ -102,6 +102,9 @@
     <ClCompile Include="src\ui\dropdown.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\selectfolder.cpp">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -177,6 +180,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\dropdown.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\selectfolder.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

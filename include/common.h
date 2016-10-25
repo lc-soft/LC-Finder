@@ -54,6 +54,8 @@
 #include <wchar.h>
 #include <stdint.h>
 
+LCUI_BEGIN_HEADER
+
 char *EncodeUTF8( const wchar_t *wstr );
 
 char *EncodeANSI( const wchar_t *wstr );
@@ -109,5 +111,7 @@ int wcscasecmp( const wchar_t *str1, const wchar_t *str2 );
 int wmovefiletotrash( const wchar_t *wfilepath );
 
 int movefiletotrash( const char *filepath );
+
+LCUI_END_HEADER
 
 #endif
