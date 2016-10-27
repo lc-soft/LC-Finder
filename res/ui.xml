@@ -58,7 +58,10 @@
           <widget id="view-home-content-wrapper" class="view-content-wrapper">
             <widget id="view-home-progress" type="progress"></widget>
             <widget id="view-home-content" class="view-content full-height">
-              <widget id="tip-empty-collection" type="textview-i18n" class="text hide" data-i18n-key="home.message.empty">未找到可读取的图片。</widget>
+              <widget id="tip-empty-collection" class="floating center middle aligned icon message hide">
+                <widget type="textview" class="icon mdi mdi-image-multiple"></widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="home.message.empty">未找到可读取的图片。</widget>
+              </widget>
               <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
@@ -84,7 +87,10 @@
           </widget>
           <widget class="view-content-wrapper">
             <widget id="view-search-content" class="view-content full-height">
-              <widget id="tip-search-tags-empty" type="textview-i18n" class="text hide" data-i18n-key="search.message.empty_tags">未找到标签记录。</widget>
+              <widget id="tip-search-tags-empty" class="floating center middle aligned icon message hide">
+                <widget type="textview" class="icon mdi mdi-tag-multiple"></widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</widget>
+              </widget>
               <widget id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
@@ -116,8 +122,11 @@
           </widget>
           <widget class="view-body">
             <widget class="view-content-wrapper">
-              <widget id="view-search-result-content" class="view-content full-height">
-                <widget id="tip-search-no-result" type="textview-i18n" class="text hide" data-i18n-key="search.message.empty_results">未找到符合条件的图片。</widget>
+              <widget id="view-search-result-content" class="view-content full-height">  
+                <widget id="tip-search-no-result" class="floating center middle aligned icon message hide">
+                  <widget type="textview" class="icon mdi mdi-file-hidden"></widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</widget>
+                </widget>
                 <widget id="view-search-files" type="thumbview" class="scrolllayer file-list"></widget>
               </widget>
               <widget type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
@@ -159,7 +168,10 @@
           </widget>
           <widget id="view-folders-content-wrapper" class="view-content-wrapper">
             <widget id="view-folders-content" class="view-content full-height">
-              <widget id="tip-empty-folder" type="textview-i18n" class="text hide" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹。</widget>
+              <widget id="tip-empty-folder" class="floating center middle aligned icon message hide">
+                <widget type="textview" class="icon mdi mdi-folder-multiple-image"></widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹。</widget>
+              </widget>
               <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>

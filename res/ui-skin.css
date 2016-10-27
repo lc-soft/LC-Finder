@@ -139,8 +139,11 @@
 #picture-viewer-window.skin-light-green .icon-btn:disabled:active {
 	background-color: transparent;
 }
-.skin-light-green .message .text {
+.skin-light-green .message.inverted .text {
 	color: #fff;
+}
+.skin-light-green .icon.message.inverted .icon {
+	color: #555;
 }
 .skin-light-green .message.box {
 	background-color: rgba(0,0,0,0.8);

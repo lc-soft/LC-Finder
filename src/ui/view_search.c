@@ -571,7 +571,7 @@ void UI_InitSearchView( void )
 	SelectWidget( this_view.input, ID_INPUT_SEARCH );
 	SelectWidget( btn_hide, ID_BTN_HIDE_SEARCH_RESULT );
 	SelectWidget( title, ID_TXT_VIEW_SEARCH_RESULT_TITLE );
-	SelectWidget( this_view.tip_empty_tags, ID_TIP_SEARCH_FILES_EMPTY );
+	SelectWidget( this_view.tip_empty_tags, ID_TIP_SEARCH_TAGS_EMPTY );
 	SelectWidget( this_view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY );
 	SelectWidget( this_view.btn_search, ID_BTN_SEARCH_FILES );
 	SelectWidget( this_view.view_tags, ID_VIEW_SEARCH_TAGS );

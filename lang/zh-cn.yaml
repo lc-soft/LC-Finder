@@ -7,19 +7,19 @@ strings:
     home:
         title: 集锦
         message:
-            empty: 未找到可读取的图片。
+            empty: 未找到可读取的图片
     folders:
         title: 文件夹
         return: 返回源文件夹
         message:
-            empty: 未找到可读取的图片或文件夹。
+            empty: 未找到可读取的图片或文件夹
     search:
         title: 搜索
         results: 
             title: 搜索结果
         message:
-            empty_tags: 未找到标签记录。
-            empty_results: 未找到符合条件的图片。
+            empty_tags: 未找到标签记录
+            empty_results: 未找到符合条件的图片
     filesync:
         title:
             syncing: 正在同步你的资源
@@ -30,9 +30,9 @@ strings:
             finished: '已同步 %d 个文件'
     picture:
         message:
-            empty: 此处没有任何要显示的内容。
+            empty: 此处没有任何要显示的内容
             loading: 图片载入中...
-            unsupport: 无法识别该图片的内容。
+            unsupport: 无法识别该图片的内容
         info:
             title: 文件信息
             file_name: 文件名

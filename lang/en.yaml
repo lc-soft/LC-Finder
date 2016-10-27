@@ -7,19 +7,19 @@ strings:
     home:
         title: Collection
         message:
-            empty: No pictures.
+            empty: No pictures
     folders:
         title: Folders
         return: Return to source folder
         message:
-            empty: No pictures or folders.
+            empty: No pictures or folders
     search:
         title: Search
         results: 
             title: Search results
         message:
-            empty_tags: No tags.
-            empty_results: No results found.
+            empty_tags: No tags
+            empty_results: No results found
     filesync:
         title:
             syncing: Syncing resources
@@ -30,9 +30,9 @@ strings:
             finished: '%d files synced'
     picture:
         message:
-            empty: There is nothing to show here.
+            empty: There is nothing to show here
             loading: Loading ...
-            unsupport: Cannot read this picture.
+            unsupport: Cannot read this picture
         info:
             title: File infomation
             file_name: Name

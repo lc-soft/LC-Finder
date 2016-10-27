@@ -7,19 +7,19 @@ strings:
     home:
         title: 集錦
         message:
-            empty: 未找到可讀取的圖片。
+            empty: 未找到可讀取的圖片
     folders:
         title: 文件夾
         return: 返回源文件夾
         message:
-            empty: 未找到可讀取的圖片或文件夾。
+            empty: 未找到可讀取的圖片或文件夾
     search:
         title: 搜索
         results: 
             title: 搜索結果
         message:
-            empty_tags: 未找到標籤記錄。
-            empty_results: 未找到符合條件的圖片。
+            empty_tags: 未找到標籤記錄
+            empty_results: 未找到符合條件的圖片
     filesync:
         title:
             syncing: 正在同步你的資源
