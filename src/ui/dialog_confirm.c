@@ -40,10 +40,11 @@
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "textview_i18n.h"
 #include "dialog.h"
 
-#define BTN_OK_TEXT	L"确定"
-#define BTN_CANCEL_TEXT	L"取消"
+#define KEY_CANCEL	"button.cancel"
+#define KEY_OK		"button.ok"
 
 typedef struct DialogContextRec_ {
 	LCUI_BOOL result;
@@ -89,18 +90,18 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 	TextView_SetTextW( dialog_text, text );
 	Widget_Append( dialog_body, dialog_text );
 	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview" );
+	dialog_text  = LCUIWidget_New( "textview-i18n" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
-	TextView_SetTextW( dialog_text, BTN_OK_TEXT );
+	TextViewI18n_SetKey( dialog_text, KEY_OK );
 	Widget_Append( btn_ok, dialog_text );
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
 	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview" );
+	dialog_text  = LCUIWidget_New( "textview-i18n" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
-	TextView_SetTextW( dialog_text, BTN_CANCEL_TEXT );
+	TextViewI18n_SetKey( dialog_text, KEY_CANCEL );
 	Widget_Append( btn_cancel, dialog_text );
 	Widget_Append( box, btn_cancel );
 	Widget_Append( dialog_footer, box );

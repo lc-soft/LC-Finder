@@ -88,6 +88,7 @@ typedef struct DialogDataPackRec_ {
 	LCUI_Thread thread;
 	FileBrowser browser;
 	const char **tagnames;
+	const wchar_t *text;
 	LCUI_ProgressDialog dialog;
 } DialogDataPackRec, *DialogDataPack;
 
@@ -168,10 +169,11 @@ static void RenderSelectedItemsText( wchar_t *buf, const wchar_t *text, void *da
 	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, browser->selected_files.length );
 }
 
-static void RenderProgressText( wchar_t *buf, const wchar_t *text, void *data )
+static void RenderProgressText( DialogDataPack pack )
 {
-	DialogDataPack pack = data;
-	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, pack->i + 1, pack->n );
+	wchar_t buf[256];
+	swprintf( buf, 255, pack->text, pack->i + 1, pack->n );
+	TextView_SetTextW( pack->dialog->content, buf );
 }
 
 static void FileBrowser_UpdateSelectionUI( FileBrowser browser )
@@ -263,8 +265,8 @@ static int OnFileDeleted( void *privdata, int i, int n )
 {
 	DialogDataPack pack;
 	pack = privdata, pack->i = i, pack->n = n;
-	TextViewI18n_Refresh( pack->dialog->content );
 	ProgressBar_SetValue( pack->dialog->progress, i );
+	RenderProgressText( pack );
 	return  pack->active ? 0 : -1;
 }
 
@@ -289,16 +291,16 @@ static void FileDeletionThread( void *arg )
 	int i, n;
 	FileIndex fidx;
 	char **filepaths;
+	LCUI_Widget cursor;
 	LinkedList *files;
 	LinkedListNode *node;
 	LinkedList deleted_files;
 	DialogDataPack pack = arg;
-	LCUI_Widget cursor, content;
 	LinkedList_Init( &deleted_files );
-	content = pack->dialog->content;
 	files = &pack->browser->selected_files;
 	n = pack->browser->selected_files.length;
 	filepaths = malloc( sizeof( char* ) * n );
+	pack->text = I18n_GetText( KEY_TAGS_ADDTION_PROGRESS );
 	ProgressBar_SetMaxValue( pack->dialog->progress, n );
 	/* 先禁用缩略图滚动加载，避免滚动加载功能访问已删除的部件 */
 	ThumbView_DisableScrollLoading( pack->browser->items );
@@ -313,8 +315,6 @@ static void FileDeletionThread( void *arg )
 			cursor = fidx->item;
 		}
 	}
-	TextViewI18n_SetFormater( content, RenderProgressText, pack );
-	TextViewI18n_SetKey( content, KEY_DELETION_PROGRESS );
 	LCFinder_DeleteFiles( filepaths, n, OnFileDeleted, pack );
 	free( filepaths );
 	while( cursor ) {
@@ -353,14 +353,12 @@ static void FileTagAddtionThread( void *arg )
 {
 	int i;
 	LinkedList *files;
-	LCUI_Widget content;
 	LinkedListNode *node;
 	DialogDataPack pack = arg;
-	content = pack->dialog->content;
 	files = &pack->browser->selected_files;
 	pack->n = pack->browser->selected_files.length;
+	pack->text = I18n_GetText( KEY_TAGS_ADDTION_PROGRESS );
 	ProgressBar_SetMaxValue( pack->dialog->progress, pack->n );
-	TextViewI18n_SetFormater( content, RenderProgressText, pack );
 	node = LinkedList_GetNode( files, 0 );
 	for( pack->i = 0; pack->active && pack->i < pack->n; ++pack->i ) {
 		FileIndex fidx = node->data;
@@ -369,7 +367,7 @@ static void FileTagAddtionThread( void *arg )
 			LCFinder_AddTagForFile( fidx->file, tagname );
 		}
 		ProgressBar_SetValue( pack->dialog->progress, i );
-		TextViewI18n_Refresh( content );
+		RenderProgressText( pack );
 		node = node->next;
 	}
 	Widget_SetDisabled( pack->dialog->btn_cancel, TRUE );
