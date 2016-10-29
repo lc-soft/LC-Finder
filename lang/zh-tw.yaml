@@ -64,7 +64,7 @@ strings:
         title: 設置
         thumb_cache: 緩存
         thumb_cache_stats: 當前縮略圖緩存共佔用 %s 的空間
-        thumb_cache_description: >
+        thumb_cache_description: >-
             本應用會在你瀏覽圖片列表的時候自動緩存縮略圖，
             以便在下次瀏覽圖片時能夠快速呈現縮略圖。
         language: 語言

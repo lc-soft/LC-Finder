@@ -64,7 +64,7 @@ strings:
         title: Settings
         thumb_cache: Cache
         thumb_cache_stats: current thumbnail cache has used %s space.
-        thumb_cache_description: >
+        thumb_cache_description: >-
             This application will automatically cache the thumbnail
             when you browse the list of pictures, so that you can quickly
             render thumbnail images in the next time you browse the pictures.

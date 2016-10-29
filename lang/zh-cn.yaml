@@ -64,7 +64,7 @@ strings:
         title: 设置
         thumb_cache: 缓存
         thumb_cache_stats: 当前缩略图缓存共占用 %s 的空间
-        thumb_cache_description: >
+        thumb_cache_description: >-
             本应用会在你浏览图片列表的时候自动缓存缩略图，
             以便在下次浏览图片时能够快速呈现缩略图。
         language: 语言
