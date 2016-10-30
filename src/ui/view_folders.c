@@ -435,13 +435,8 @@ static void OnSyncDone( void *privdata, void *arg )
 	OpenFolder( NULL );
 }
 
-static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void UpdateQueryTerms( void )
 {
-	FileSortMethod sort = arg;
-	if( finder.config.files_sort == sort->value ) {
-		return;
-	}
-	finder.config.files_sort = sort->value;
 	this_view.terms.modify_time = NONE;
 	this_view.terms.create_time = NONE;
 	this_view.terms.score = NONE;
@@ -466,11 +461,21 @@ static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		this_view.terms.modify_time = DESC;
 		break;
 	}
+}
+
+static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	FileSortMethod sort = arg;
+	if( finder.config.files_sort == sort->value ) {
+		return;
+	}
+	finder.config.files_sort = sort->value;
 	if( this_view.selected_sort ) {
 		Widget_RemoveClass( this_view.selected_sort, "active" );
 	}
 	this_view.selected_sort = e->target;
 	Widget_AddClass( e->target, "active" );
+	UpdateQueryTerms();
 	OpenFolder( this_view.dirpath );
 	LCFinder_SaveConfig();
 }
@@ -499,6 +504,7 @@ static void InitFolderFilesSort( void )
 		}
 	}
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
+	UpdateQueryTerms();
 }
 
 void UI_InitFoldersView( void )

@@ -929,6 +929,9 @@ dropdown.checkable .text {
 	display: inline-block;
 	line-height: 24px;
 }
+dropdown.checkable dropdown-item {
+	padding-right: 20px;
+}
 dropdown.checkable dropdown-item .icon {
 	visible: false;
 	margin-right: 5px;
