@@ -87,6 +87,8 @@ static struct FoldersViewData {
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
+	DB_QueryTermsRec terms;
+	char *dirpath;
 } this_view = {0};
 
 #define SORT_METHODS_LEN 6
@@ -96,8 +98,8 @@ static FileSortMethodRec sort_methods[SORT_METHODS_LEN] = {
 	{"sort.ctime_asc", CREATE_TIME_ASC},
 	{"sort.mtime_desc", MODIFY_TIME_DESC},
 	{"sort.mtime_asc", MODIFY_TIME_ASC},
-	{"sort.score_desc", MODIFY_TIME_DESC},
-	{"sort.score_asc", MODIFY_TIME_ASC}
+	{"sort.score_desc", SCORE_DESC},
+	{"sort.score_asc", SCORE_ASC}
 };
 
 static void OpenFolder( const char *dirpath );
@@ -192,17 +194,19 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 	DB_Query query;
 	FileEntry entry;
 	int i, total, count;
-	DB_QueryTermsRec terms = {0};
-
-	terms.limit = 50;
-	terms.dirpath = path;
-	terms.modify_time = DESC;
-	query = DB_NewQuery( &terms );
+	this_view.terms.limit = 50;
+	this_view.terms.offset = 0;
+	this_view.terms.dirpath = path;
+	query = DB_NewQuery( &this_view.terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
-		query = DB_NewQuery( &terms );
-		i = count < terms.limit ? count : terms.limit;
+		query = DB_NewQuery( &this_view.terms );
+		if(count < this_view.terms.limit) {
+			i = count;
+		} else {
+			i = this_view.terms.limit;
+		}
 		for( ; scanner->is_running && i > 0; --i ) {
 			file = DBQuery_FetchFile( query );
 			if( !file ) {
@@ -218,8 +222,8 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 			LCUICond_Signal( &scanner->cond );
 			LCUIMutex_Unlock( &scanner->mutex );
 		}
-		count -= terms.limit;
-		terms.offset += terms.limit;
+		count -= this_view.terms.limit;
+		this_view.terms.offset += this_view.terms.limit;
 	}
 	return total;
 }
@@ -285,7 +289,6 @@ static void FileScanner_Thread( void *arg )
 	if( arg ) {
 		count = FileScanner_ScanDirs( scanner, arg );
 		count += FileScanner_ScanFiles( scanner, arg );
-		free( arg );
 	} else {
 		count = FileScanner_LoadSourceDirs( scanner );
 	}
@@ -417,6 +420,11 @@ static void OpenFolder( const char *dirpath )
 	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner, path );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
+	if( this_view.dirpath ) {
+		free( this_view.dirpath );
+		this_view.dirpath = NULL;
+	}
+	this_view.dirpath = path;
 	DEBUG_MSG("done\n");
 }
 
@@ -428,7 +436,35 @@ static void OnSyncDone( void *privdata, void *arg )
 static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	FileSortMethod sort = arg;
+	if( finder.config.files_sort == sort->value ) {
+		return;
+	}
 	finder.config.files_sort = sort->value;
+	this_view.terms.modify_time = NONE;
+	this_view.terms.create_time = NONE;
+	this_view.terms.score = NONE;
+	switch( finder.config.files_sort ) {
+	case CREATE_TIME_DESC:
+		this_view.terms.create_time = DESC;
+		break;
+	case CREATE_TIME_ASC:
+		this_view.terms.create_time = ASC;
+		break;
+	case SCORE_DESC:
+		this_view.terms.score = DESC;
+		break;
+	case SCORE_ASC:
+		this_view.terms.score = ASC;
+		break;
+	case MODIFY_TIME_ASC:
+		this_view.terms.modify_time = ASC;
+		break;
+	case MODIFY_TIME_DESC:
+	default:
+		this_view.terms.modify_time = DESC;
+		break;
+	}
+	OpenFolder( this_view.dirpath );
 	LCFinder_SaveConfig();
 }
 
@@ -444,7 +480,7 @@ static void InitFolderFilesSort( void )
 		const wchar_t *text;
 		FileSortMethod sort = &sort_methods[i];
 		text = I18n_GetText( sort->name_key );
-		Dropdwon_AddItemW( menu, sort, text );
+		Dropdown_AddItemW( menu, sort, text );
 	}
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
 }
