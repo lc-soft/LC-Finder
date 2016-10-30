@@ -82,6 +82,7 @@ typedef struct FinderConfigRec_ {
 		int type;
 	} version;			/**< 版本号 */
 	char language[32];		/**< 当前语言 */
+	int files_sort;			/**< 文件的排序方式 */
 } FinderConfigRec, *FinderConfig;
 
 /** LCFinder 的主要数据记录 */

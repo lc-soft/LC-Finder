@@ -4,6 +4,14 @@ strings:
     button:
         cancel: 取消
         clear: 清除
+    sort:
+        header: 排序方式
+        ctime_desc: 最近创建
+        ctime_asc: 最早创建
+        mtime_desc: 最近更新
+        mtime_asc: 最早更新
+        score_desc: 评分最高
+        score_asc: 评分最低
     home:
         title: 集锦
         message:

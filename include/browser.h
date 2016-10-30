@@ -37,6 +37,19 @@
 #ifndef LCFINDER_BROWSER_H
 #define LCFINDER_BROWSER_H
 
+typedef struct FileSortMethodRec_ {
+	char *name_key;
+	enum {
+		CREATE_TIME_DESC,
+		CREATE_TIME_ASC,
+		MODIFY_TIME_DESC,
+		MODIFY_TIME_ASC,
+		SCORE_DESC,
+		SCORE_ASC
+	} value;
+
+} FileSortMethodRec, *FileSortMethod;
+
 /** 文件浏览器相关数据 */
 typedef struct FileBrowserRec_ {
 	const char *title_key;			/**< 标题文本的索引 key */
@@ -47,6 +60,7 @@ typedef struct FileBrowserRec_ {
 	LCUI_Widget btn_cancel;			/**< “取消”按钮 */
 	LCUI_Widget btn_delete;			/**< “删除”按钮 */
 	LCUI_Widget btn_tag;			/**< “标签”按钮 */
+	LCUI_Widget btn_sort;			/**< ”排序“按钮 */
 	LCUI_Widget tip_empty;			/**< 当内容为空时显示的提示 */
 	Dict *file_indexes;			/**< 文件索引，以路径进行索引 */
 	LinkedList dirs;			/**< 目录列表 */

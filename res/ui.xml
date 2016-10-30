@@ -153,6 +153,9 @@
             <widget id="btn-select-folder-files" class="view-navbar-btn">
               <widget type="textview" class="text icon mdi mdi-checkbox-multiple-marked-outline"></widget>
             </widget>
+            <widget id="btn-folder-files-sort" class="view-navbar-btn">
+              <widget type="textview" class="text icon mdi mdi-sort"></widget>
+            </widget>
             <widget id="btn-sync-folder-files" class="view-navbar-btn">
               <widget type="textview" class="text icon mdi mdi-sync"></widget>
             </widget>
@@ -177,6 +180,7 @@
             <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
           </widget>
         </widget>
+        <widget id="dropdown-folder-files-sort" type="dropdown" data-target="btn-folder-files-sort" data-position="bottom right"></widget>
       </widget>
       <widget id="view-settings" class="view hide">
         <widget class="view-navbar">

@@ -107,6 +107,7 @@
 #define ID_BTN_OPEN_FEEDBACK		"btn-open-feedback"
 #define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
 #define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
+#define ID_BTN_FOLDER_FILES_SORT	"btn-folder-files-sort"
 #define ID_TIP_HOME_EMPTY		"tip-empty-collection"
 #define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
 #define ID_TIP_SEARCH_TAGS_EMPTY	"tip-search-tags-empty"
@@ -116,6 +117,7 @@
 #define ID_TIP_PICTURE_UNSUPPORT	"tip-picture-unsupport"
 #define ID_INPUT_SEARCH			"input-search"
 #define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
+#define ID_DROPDOWN_FOLDER_FILES_SORT	"dropdown-folder-files-sort"
 
 #define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )

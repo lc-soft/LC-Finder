@@ -44,9 +44,11 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
+#include "dropdown.h"
 #include "browser.h"
 #include "i18n.h"
 
+#define KEY_SORT_HEADER		"sort.header"
 #define KEY_TITLE		"folders.title"
 #define THUMB_CACHE_SIZE	(20*1024*1024)
 
@@ -86,6 +88,17 @@ static struct FoldersViewData {
 	FileScannerRec scanner;
 	FileBrowserRec browser;
 } this_view = {0};
+
+#define SORT_METHODS_LEN 6
+
+static FileSortMethodRec sort_methods[SORT_METHODS_LEN] = {
+	{"sort.ctime_desc", CREATE_TIME_DESC},
+	{"sort.ctime_asc", CREATE_TIME_ASC},
+	{"sort.mtime_desc", MODIFY_TIME_DESC},
+	{"sort.mtime_asc", MODIFY_TIME_ASC},
+	{"sort.score_desc", MODIFY_TIME_DESC},
+	{"sort.score_asc", MODIFY_TIME_ASC}
+};
 
 static void OpenFolder( const char *dirpath );
 
@@ -412,9 +425,33 @@ static void OnSyncDone( void *privdata, void *arg )
 	OpenFolder( NULL );
 }
 
+static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	FileSortMethod sort = arg;
+	finder.config.files_sort = sort->value;
+	LCFinder_SaveConfig();
+}
+
+static void InitFolderFilesSort( void )
+{
+	int i;
+	LCUI_Widget menu;
+	const wchar_t *header = I18n_GetText( KEY_SORT_HEADER );
+	SelectWidget( menu, ID_DROPDOWN_FOLDER_FILES_SORT );
+	Widget_Empty( menu );
+	Dropdown_SetHeaderW( menu, header );
+	for( i = 0; i < SORT_METHODS_LEN; ++i ) {
+		const wchar_t *text;
+		FileSortMethod sort = &sort_methods[i];
+		text = I18n_GetText( sort->name_key );
+		Dropdwon_AddItemW( menu, sort, text );
+	}
+	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
+}
+
 void UI_InitFoldersView( void )
 {
-	LCUI_Widget btn[5], btn_return, title;
+	LCUI_Widget btn[6], btn_return, title;
 	FileScanner_Init( &this_view.scanner );
 	LCUICond_Init( &this_view.viewsync.ready );
 	LCUIMutex_Init( &this_view.viewsync.mutex );
@@ -425,6 +462,7 @@ void UI_InitFoldersView( void )
 	SelectWidget( btn[2], ID_BTN_CANCEL_FOLDER_SELECT );
 	SelectWidget( btn[3], ID_BTN_TAG_FOLDER_FILES );
 	SelectWidget( btn[4], ID_BTN_DELETE_FOLDER_FILES );
+	SelectWidget( btn[5], ID_BTN_FOLDER_FILES_SORT );
 	SelectWidget( btn_return, ID_BTN_RETURN_ROOT_FOLDER );
 	SelectWidget( this_view.view, ID_VIEW_FOLDERS );
 	SelectWidget( this_view.info, ID_VIEW_FOLDER_INFO );
@@ -435,6 +473,7 @@ void UI_InitFoldersView( void )
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
 	this_view.browser.btn_delete = btn[4];
+	this_view.browser.btn_sort = btn[5];
 	this_view.browser.txt_title = title;
 	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.view = this_view.view;
@@ -448,6 +487,7 @@ void UI_InitFoldersView( void )
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
 	FileBrowser_Create( &this_view.browser );
+	InitFolderFilesSort();
 	OpenFolder( NULL );
 }
 

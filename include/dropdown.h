@@ -37,17 +37,30 @@
 #ifndef LCFINDER_DROPDOWN_H
 #define LCFINDER_DROPDOWN_H
 
+void Dropdown_Show( LCUI_Widget w );
+
+void Dropdown_Hide( LCUI_Widget w );
+
 /** 切换下拉菜单的显示状态 */
 void Dropdown_Toggle( LCUI_Widget w );
 
-/** 为下来菜单添加菜单项 */
-LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *value, const char *text );
+/** 为下来菜单设置头部文本 */
+void Dropdown_SetHeader( LCUI_Widget w, const char *header );
+void Dropdown_SetHeaderW( LCUI_Widget w, const wchar_t *header );
 
-/** 为下来菜单绑定目标 */
+/** 为下拉菜单添加菜单项 */
+LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *data, const char *text );
+LCUI_Widget Dropdwon_AddItemW( LCUI_Widget w, void *data, const wchar_t *text );
+
+/** 为下拉菜单绑定目标 */
 void Dropdown_BindTarget( LCUI_Widget w, LCUI_Widget target );
 
-/** 为下来菜单项设置值和文本内容 */
-void DropdownItem_SetData( LCUI_Widget w, void *value, const char *text );
+/** 为下拉菜单项设置数据 */
+void DropdownItem_SetData( LCUI_Widget w, void *data );
+
+/** 为下拉菜单项设置文本内容 */
+void DropdownItem_SetText( LCUI_Widget w, const char *text );
+void DropdownItem_SetTextW( LCUI_Widget w, const wchar_t *text );
 
 /** 添加下拉菜单部件 */
 void LCUIWidget_AddDropdown( void );

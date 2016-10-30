@@ -16,9 +16,9 @@
 	color: #888;
 }
 .text-line {
-	margin-bottom: 5px;
 	width: 100%;
 	max-width: 440px;
+	margin-bottom: 5px;
 }
 .text-line .text {
 	display: inline-block;
@@ -208,6 +208,9 @@
 .view-navbar .view-navbar-btn {
 	display: inline-block;
 	padding: 14px 12px 12px 10px;
+}
+.view-navbar .view-navbar-btn .text {
+	display: inline-block;
 }
 .view-navbar .view-navbar-btn .text {
 	font-size: 16px;
