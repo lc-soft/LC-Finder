@@ -67,11 +67,13 @@ dropdown {
 	border: 1px solid #ccc;
 	box-shadow: 0 6px 12px rgba(0,0,0,.175);
 	z-index: 1000;
+	max-width: 256px;
 }
 dropdown dropdown-item {
 	width: 100%;
 	padding: 5px 10px;
 	line-height: 24px;
+	box-sizing: border-box;
 	display: block;
 }
 dropdown dropdown-header {
@@ -245,7 +247,7 @@ static void DropdownItem_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	DropdownItem item;
 	LCUI_Widget parent = e->data;
 	LCUI_WidgetEventRec ev = {0};
-	menu = Widget_GetData( w, self.dropdown );
+	menu = Widget_GetData( parent, self.dropdown );
 	if( w == menu->header ) {
 		return;
 	}
@@ -315,7 +317,7 @@ void Dropdown_SetHeaderW( LCUI_Widget w, const wchar_t *header )
 	DropdownItem_SetTextW( data->header, header );
 }
 
-LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *data, const char *text )
+LCUI_Widget Dropdown_AddItem( LCUI_Widget w, void *data, const char *text )
 {
 	LCUI_Widget item = LCUIWidget_New( "dropdown-item" );
 	DropdownItem_SetData( item, data );
@@ -325,7 +327,7 @@ LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *data, const char *text )
 	return item;
 }
 
-LCUI_Widget Dropdwon_AddItemW( LCUI_Widget w, void *data, const wchar_t *text )
+LCUI_Widget Dropdown_AddItemW( LCUI_Widget w, void *data, const wchar_t *text )
 {
 	LCUI_Widget item = LCUIWidget_New( "dropdown-item" );
 	DropdownItem_SetData( item, data );

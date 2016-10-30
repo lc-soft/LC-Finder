@@ -153,7 +153,7 @@
             <widget id="btn-select-folder-files" class="view-navbar-btn">
               <widget type="textview" class="text icon mdi mdi-checkbox-multiple-marked-outline"></widget>
             </widget>
-            <widget id="btn-folder-files-sort" class="view-navbar-btn">
+            <widget id="btn-sort-folder-files" class="view-navbar-btn">
               <widget type="textview" class="text icon mdi mdi-sort"></widget>
             </widget>
             <widget id="btn-sync-folder-files" class="view-navbar-btn">
@@ -173,14 +173,14 @@
             <widget id="view-folders-content" class="view-content full-height">
               <widget id="tip-empty-folder" class="floating center middle aligned icon message hide">
                 <widget type="textview" class="icon mdi mdi-folder-multiple-image"></widget>
-                <widget type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹。</widget>
+                <widget type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹</widget>
               </widget>
               <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
             </widget>
             <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
           </widget>
         </widget>
-        <widget id="dropdown-folder-files-sort" type="dropdown" data-target="btn-folder-files-sort" data-position="bottom right"></widget>
+        <widget id="dropdown-folder-files-sort" type="dropdown" data-target="btn-sort-folder-files" data-position="bottom right"></widget>
       </widget>
       <widget id="view-settings" class="view hide">
         <widget class="view-navbar">

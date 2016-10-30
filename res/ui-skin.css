@@ -46,7 +46,8 @@
 .skin-light-green .view-navbar .view-navbar-btn:hover {
 	background-color: #4C5556;
 }
-.skin-light-green .view-navbar .view-navbar-btn:active {
+.skin-light-green .view-navbar .view-navbar-btn:active,
+.skin-light-green .view-navbar .view-navbar-btn.active {
 	background-color: #616C6D;
 }
 .skin-light-green .view-navbar .view-navbar-btn:disabled,

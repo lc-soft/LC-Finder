@@ -49,8 +49,8 @@ void Dropdown_SetHeader( LCUI_Widget w, const char *header );
 void Dropdown_SetHeaderW( LCUI_Widget w, const wchar_t *header );
 
 /** 为下拉菜单添加菜单项 */
-LCUI_Widget Dropdwon_AddItem( LCUI_Widget w, void *data, const char *text );
-LCUI_Widget Dropdwon_AddItemW( LCUI_Widget w, void *data, const wchar_t *text );
+LCUI_Widget Dropdown_AddItem( LCUI_Widget w, void *data, const char *text );
+LCUI_Widget Dropdown_AddItemW( LCUI_Widget w, void *data, const wchar_t *text );
 
 /** 为下拉菜单绑定目标 */
 void Dropdown_BindTarget( LCUI_Widget w, LCUI_Widget target );

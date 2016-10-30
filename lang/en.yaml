@@ -6,7 +6,7 @@ strings:
         clear: Clear
     sort:
         header: Sort options
-        ctime_desc: Recentyy created
+        ctime_desc: Recently created
         ctime_asc: Least recently created
         mtime_desc: Recently updated
         mtime_asc: Least recently updated
