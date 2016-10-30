@@ -231,7 +231,7 @@ static void UI_InitLanguages( void )
 	SelectWidget( this_view.language, ID_TXT_CURRENT_LANGUAGE );
 	for( i = 0; i < n; ++i ) {
 		Language lang = langs[i];
-		Dropdown_AddItem( menu, lang, lang->name );
+		Dropdown_AddTextItem( menu, lang, lang->name );
 		if( strcmp( finder.config.language, lang->code ) == 0 ) {
 			TextView_SetText( this_view.language, lang->name );
 		}

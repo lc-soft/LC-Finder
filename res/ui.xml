@@ -180,7 +180,7 @@
             <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
           </widget>
         </widget>
-        <widget id="dropdown-folder-files-sort" type="dropdown" data-target="btn-sort-folder-files" data-position="bottom right"></widget>
+        <widget id="dropdown-folder-files-sort" type="dropdown" class="checkable" data-target="btn-sort-folder-files" data-position="bottom right"></widget>
       </widget>
       <widget id="view-settings" class="view hide">
         <widget class="view-navbar">

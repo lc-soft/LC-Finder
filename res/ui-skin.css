@@ -189,3 +189,6 @@
 .skin-light-green .btn-dropdown.active {
 	border-color: #44BB55;
 }
+.skin-light-green dropdown.checkable dropdown-item .icon {
+	color: #44BB55;
+}

@@ -72,17 +72,19 @@ dropdown {
 dropdown dropdown-item {
 	width: 100%;
 	padding: 5px 10px;
-	line-height: 24px;
-	box-sizing: border-box;
 	display: block;
+	box-sizing: border-box;
+}
+dropdown dropdown-item textview {
+	line-height: 24px;
 }
 dropdown dropdown-header {
 	color: #aaa;
 	width: 100%;
-	padding: 0 10px 5px 10px;
 	line-height: 24px;
 	display: block;
 	margin-bottom: 10px;
+	padding: 0 10px 5px 10px;
 	border-bottom: 1px solid #eee;
 }
 dropdown dropdown-item:hover {
@@ -116,7 +118,6 @@ static void DropdownItem_Init( LCUI_Widget w )
 	const size_t data_size = sizeof( DropdownItemRec );
 	DropdownItem item = Widget_AddData( w, self.item, data_size );
 	item->data = NULL;
-	self.item->proto->init( w );
 }
 
 static void DropdownItem_Destrtoy( LCUI_Widget w )
@@ -231,16 +232,6 @@ void DropdownItem_SetData( LCUI_Widget w, void *data )
 	item->data = data;
 }
 
-void DropdownItem_SetText( LCUI_Widget w, const char *text )
-{
-	TextView_SetText( w, text );
-}
-
-void DropdownItem_SetTextW( LCUI_Widget w, const wchar_t *text )
-{
-	TextView_SetTextW( w, text );
-}
-
 static void DropdownItem_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	Dropdown menu;
@@ -251,11 +242,12 @@ static void DropdownItem_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( w == menu->header ) {
 		return;
 	}
-	e->cancel_bubble = TRUE;
+	ev.target = w;
 	ev.type = self.change_event;
 	item = Widget_GetData( w, self.item );
 	Widget_TriggerEvent( parent, &ev, item->data );
 	Dropdown_Hide( parent );
+	e->cancel_bubble = TRUE;
 }
 
 static void Dropdown_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -304,7 +296,7 @@ void Dropdown_SetHeader( LCUI_Widget w, const char *header )
 		data->header = LCUIWidget_New( "dropdown-header" );
 		Widget_Prepend( w, data->header );
 	}
-	DropdownItem_SetText( data->header, header );
+	TextView_SetText( data->header, header );
 }
 
 void Dropdown_SetHeaderW( LCUI_Widget w, const wchar_t *header )
@@ -314,26 +306,33 @@ void Dropdown_SetHeaderW( LCUI_Widget w, const wchar_t *header )
 		data->header = LCUIWidget_New( "dropdown-header" );
 		Widget_Prepend( w, data->header );
 	}
-	DropdownItem_SetTextW( data->header, header );
+	TextView_SetTextW( data->header, header );
 }
 
-LCUI_Widget Dropdown_AddItem( LCUI_Widget w, void *data, const char *text )
+LCUI_Widget Dropdown_AddItem( LCUI_Widget w, void *data )
 {
 	LCUI_Widget item = LCUIWidget_New( "dropdown-item" );
 	DropdownItem_SetData( item, data );
-	DropdownItem_SetText( item, text );
-	Widget_BindEvent( item, "click", DropdownItem_OnClick, NULL, NULL );
+	Widget_BindEvent( item, "click", DropdownItem_OnClick, w, NULL );
 	Widget_Append( w, item );
 	return item;
 }
 
-LCUI_Widget Dropdown_AddItemW( LCUI_Widget w, void *data, const wchar_t *text )
+LCUI_Widget Dropdown_AddTextItem( LCUI_Widget w, void *data, const char *text )
 {
-	LCUI_Widget item = LCUIWidget_New( "dropdown-item" );
-	DropdownItem_SetData( item, data );
-	DropdownItem_SetTextW( item, text );
-	Widget_BindEvent( item, "click", DropdownItem_OnClick, w, NULL );
-	Widget_Append( w, item );
+	LCUI_Widget textview = LCUIWidget_New( "textview" );
+	LCUI_Widget item = Dropdown_AddItem( w, data );
+	TextView_SetText( textview, text );
+	Widget_Append( item, textview );
+	return item;
+}
+
+LCUI_Widget Dropdown_AddTextItemW( LCUI_Widget w, void *data, const wchar_t *text )
+{
+	LCUI_Widget textview = LCUIWidget_New( "textview" );
+	LCUI_Widget item = Dropdown_AddItem( w, data );
+	TextView_SetTextW( textview, text );
+	Widget_Append( item, textview );
 	return item;
 }
 
@@ -347,7 +346,7 @@ void Dropdown_SetPosition( LCUI_Widget w, int position )
 void LCUIWidget_AddDropdown( void )
 {
 	self.dropdown = LCUIWidget_NewPrototype( "dropdown", NULL );
-	self.item = LCUIWidget_NewPrototype( "dropdown-item", "textview" );
+	self.item = LCUIWidget_NewPrototype( "dropdown-item", NULL );
 	self.header = LCUIWidget_NewPrototype( "dropdown-header", "textview" );
 	self.dropdown->init = Dropdown_Init;
 	self.dropdown->setattr = Dropdown_SetAttr;

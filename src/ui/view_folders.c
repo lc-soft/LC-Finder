@@ -44,6 +44,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
+#include "textview_i18n.h"
 #include "dropdown.h"
 #include "browser.h"
 #include "i18n.h"
@@ -84,6 +85,7 @@ static struct FoldersViewData {
 	LCUI_Widget info_name;
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
+	LCUI_Widget selected_sort;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
@@ -464,6 +466,11 @@ static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		this_view.terms.modify_time = DESC;
 		break;
 	}
+	if( this_view.selected_sort ) {
+		Widget_RemoveClass( this_view.selected_sort, "active" );
+	}
+	this_view.selected_sort = e->target;
+	Widget_AddClass( e->target, "active" );
 	OpenFolder( this_view.dirpath );
 	LCFinder_SaveConfig();
 }
@@ -471,16 +478,25 @@ static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void InitFolderFilesSort( void )
 {
 	int i;
-	LCUI_Widget menu;
+	LCUI_Widget menu, item, icon, text;
 	const wchar_t *header = I18n_GetText( KEY_SORT_HEADER );
 	SelectWidget( menu, ID_DROPDOWN_FOLDER_FILES_SORT );
 	Widget_Empty( menu );
 	Dropdown_SetHeaderW( menu, header );
 	for( i = 0; i < SORT_METHODS_LEN; ++i ) {
-		const wchar_t *text;
 		FileSortMethod sort = &sort_methods[i];
-		text = I18n_GetText( sort->name_key );
-		Dropdown_AddItemW( menu, sort, text );
+		item = Dropdown_AddItem( menu, sort );
+		icon = LCUIWidget_New( "textview" );
+		text = LCUIWidget_New( "textview-i18n" );
+		TextViewI18n_SetKey( text, sort->name_key );
+		Widget_AddClass( icon, "icon mdi mdi-check" );
+		Widget_AddClass( text, "text" );
+		Widget_Append( item, icon );
+		Widget_Append( item, text );
+		if( sort->value == finder.config.files_sort ) {
+			Widget_AddClass( item, "active" );
+			this_view.selected_sort = item;
+		}
 	}
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
 }

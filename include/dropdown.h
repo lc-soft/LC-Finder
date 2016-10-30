@@ -48,19 +48,18 @@ void Dropdown_Toggle( LCUI_Widget w );
 void Dropdown_SetHeader( LCUI_Widget w, const char *header );
 void Dropdown_SetHeaderW( LCUI_Widget w, const wchar_t *header );
 
-/** 为下拉菜单添加菜单项 */
-LCUI_Widget Dropdown_AddItem( LCUI_Widget w, void *data, const char *text );
-LCUI_Widget Dropdown_AddItemW( LCUI_Widget w, void *data, const wchar_t *text );
+/** 为下拉菜单添加一个菜单项 */
+LCUI_Widget Dropdown_AddItem( LCUI_Widget w, void *data );
+
+/** 为下拉菜单添加文本菜单项 */
+LCUI_Widget Dropdown_AddTextItem( LCUI_Widget w, void *data, const char *text );
+LCUI_Widget Dropdown_AddTextItemW( LCUI_Widget w, void *data, const wchar_t *text );
 
 /** 为下拉菜单绑定目标 */
 void Dropdown_BindTarget( LCUI_Widget w, LCUI_Widget target );
 
 /** 为下拉菜单项设置数据 */
 void DropdownItem_SetData( LCUI_Widget w, void *data );
-
-/** 为下拉菜单项设置文本内容 */
-void DropdownItem_SetText( LCUI_Widget w, const char *text );
-void DropdownItem_SetTextW( LCUI_Widget w, const wchar_t *text );
 
 /** 添加下拉菜单部件 */
 void LCUIWidget_AddDropdown( void );
