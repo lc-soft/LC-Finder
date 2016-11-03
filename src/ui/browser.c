@@ -507,6 +507,7 @@ void FileBrowser_SetScroll( FileBrowser browser, int y )
 void FileBrowser_Empty( FileBrowser browser )
 {
 	Widget_Hide( browser->btn_select );
+	Widget_SetStyle( browser->btn_select, key_display, SV_NONE, style );
 	FileBrowser_UnselectAllItems( browser );
 	FileBrowser_DisableSelectionMode( browser );
 	ThumbView_Lock( browser->items );
@@ -541,6 +542,7 @@ LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
 	Dict_Add( browser->file_indexes, data->fidx->file->path, data->fidx );
 	LinkedList_AppendNode( &browser->files, &data->fidx->node );
 	Widget_BindEvent( item, "click", OnItemClick, data, NULL );
+	Widget_UnsetStyle( browser->btn_select, key_display );
 	Widget_Show( browser->btn_select );
 	return item;
 }
@@ -569,20 +571,16 @@ LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 	return item;
 }
 
-#undef  BindEvent
-#define BindEvent(BTN, EVENT, CALLBACK) \
-	Widget_BindEvent( browser->btn_##BTN, EVENT, CALLBACK, browser, NULL )
-
 void FileBrowser_Create( FileBrowser browser )
 {
 	browser->is_selection_mode = FALSE;
-	BindEvent( tag, "click", OnBtnTagClick );
-	BindEvent( cancel, "click", OnBtnCancelClick );
-	BindEvent( delete, "click", OnBtnDeleteClick );
-	BindEvent( select, "click", OnBtnSelectionClick );
 	LinkedList_Init( &browser->dirs );
 	LinkedList_Init( &browser->files );
 	LinkedList_Init( &browser->selected_files );
+	BindEvent( browser->btn_tag, "click", OnBtnTagClick );
+	BindEvent( browser->btn_cancel, "click", OnBtnCancelClick );
+	BindEvent( browser->btn_delete, "click", OnBtnDeleteClick );
+	BindEvent( browser->btn_select, "click", OnBtnSelectionClick );
 	browser->file_indexes = StrDict_Create( NULL, NULL );
 	Widget_Hide( browser->btn_select );
 	LCFinder_BindEvent( EVENT_FILE_DEL, OnFileDeletionEvent, browser );
