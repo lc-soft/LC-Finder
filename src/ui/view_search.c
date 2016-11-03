@@ -44,11 +44,16 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
 #include "thumbview.h"
+#include "textview_i18n.h"
 #include "browser.h"
+#include "dropdown.h"
+#include "i18n.h"
 
+#define KEY_SORT_HEADER		"sort.header"
 #define KEY_TITLE		"search.results.title"
 #define TAG_MAX_WIDTH		180
 #define TAG_MARGIN_RIGHT	10
+#define SORT_METHODS_LEN	6
 
  /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
@@ -78,17 +83,29 @@ static struct SearchView {
 	LCUI_Widget btn_search;
 	LCUI_Widget tip_empty_tags;
 	LCUI_Widget tip_empty_files;
+	LCUI_Widget selected_sort;
 	LCUI_BOOL need_update;
 	struct {
 		int count;
 		int tags_per_row;
 		int max_width;
 	} layout;
+	int sort_mode;
 	LinkedList tags;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
-} this_view;
+	DB_QueryTermsRec terms;
+} this_view = {0};
+
+static FileSortMethodRec sort_methods[SORT_METHODS_LEN] = {
+	{"sort.ctime_desc", CREATE_TIME_DESC},
+	{"sort.ctime_asc", CREATE_TIME_ASC},
+	{"sort.mtime_desc", MODIFY_TIME_DESC},
+	{"sort.mtime_asc", MODIFY_TIME_ASC},
+	{"sort.score_desc", SCORE_DESC},
+	{"sort.score_asc", SCORE_ASC}
+};
 
 typedef struct TagItemRec_ {
 	LCUI_Widget widget;
@@ -106,18 +123,21 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	DB_File file;
 	DB_Query query;
 	int i, total, count;
-	DB_QueryTermsRec terms = {0};
-	terms.limit = 100;
-	terms.tags = scanner->tags;
-	terms.n_tags = scanner->n_tags;
-	terms.create_time = DESC;
-	query = DB_NewQuery( &terms );
+	this_view.terms.offset = 0;
+	this_view.terms.limit = 100;
+	this_view.terms.tags = scanner->tags;
+	this_view.terms.n_tags = scanner->n_tags;
+	query = DB_NewQuery( &this_view.terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	scanner->total = total, scanner->count = 0;
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
-		query = DB_NewQuery( &terms );
-		i = count < terms.limit ? count : terms.limit;
+		query = DB_NewQuery( &this_view.terms );
+		if(count < this_view.terms.limit) {
+			i = count;
+		} else {
+			i = this_view.terms.limit;
+		}
 		for( ; scanner->is_running && i > 0; --i ) {
 			file = DBQuery_FetchFile( query );
 			if( !file ) {
@@ -129,8 +149,8 @@ static int FileScanner_ScanAll( FileScanner scanner )
 			LCUIMutex_Unlock( &scanner->mutex );
 			scanner->count += 1;
 		}
-		count -= terms.limit;
-		terms.offset += terms.limit;
+		count -= this_view.terms.limit;
+		this_view.terms.offset += this_view.terms.limit;
 	}
 	return total;
 }
@@ -466,6 +486,15 @@ static void StartSearchFiles( LinkedList *tags )
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }
 
+static void UpdateSearchResults( void )
+{
+	FileScanner_Reset( &this_view.scanner );
+	LCUIMutex_Lock( &this_view.viewsync.mutex );
+	FileBrowser_Empty( &this_view.browser );
+	FileScanner_Start( &this_view.scanner );
+	LCUIMutex_Unlock( &this_view.viewsync.mutex );
+}
+
 static void OnBtnSearchClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	int i, j, len;
@@ -554,6 +583,77 @@ void UI_UpdateSearchView( void )
 	this_view.need_update = FALSE;
 }
 
+static void UpdateQueryTerms( void )
+{
+	this_view.terms.modify_time = NONE;
+	this_view.terms.create_time = NONE;
+	this_view.terms.score = NONE;
+	switch( this_view.sort_mode ) {
+	case CREATE_TIME_DESC:
+		this_view.terms.create_time = DESC;
+		break;
+	case CREATE_TIME_ASC:
+		this_view.terms.create_time = ASC;
+		break;
+	case SCORE_DESC:
+		this_view.terms.score = DESC;
+		break;
+	case SCORE_ASC:
+		this_view.terms.score = ASC;
+		break;
+	case MODIFY_TIME_ASC:
+		this_view.terms.modify_time = ASC;
+		break;
+	case MODIFY_TIME_DESC:
+	default:
+		this_view.terms.modify_time = DESC;
+		break;
+	}
+}
+
+static void OnSelectSortMethod( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	FileSortMethod sort = arg;
+	if( this_view.sort_mode == sort->value ) {
+		return;
+	}
+	this_view.sort_mode = sort->value;
+	if( this_view.selected_sort ) {
+		Widget_RemoveClass( this_view.selected_sort, "active" );
+	}
+	this_view.selected_sort = e->target;
+	Widget_AddClass( e->target, "active" );
+	UpdateQueryTerms();
+	UpdateSearchResults();
+}
+
+static void InitSearchResultsSort( void )
+{
+	int i;
+	LCUI_Widget menu, item, icon, text;
+	const wchar_t *header = I18n_GetText( KEY_SORT_HEADER );
+	SelectWidget( menu, ID_DROPDOWN_SEARCH_FILES_SORT );
+	Widget_Empty( menu );
+	Dropdown_SetHeaderW( menu, header );
+	for( i = 0; i < SORT_METHODS_LEN; ++i ) {
+		FileSortMethod sort = &sort_methods[i];
+		item = Dropdown_AddItem( menu, sort );
+		icon = LCUIWidget_New( "textview" );
+		text = LCUIWidget_New( "textview-i18n" );
+		TextViewI18n_SetKey( text, sort->name_key );
+		Widget_AddClass( icon, "icon mdi mdi-check" );
+		Widget_AddClass( text, "text" );
+		Widget_Append( item, icon );
+		Widget_Append( item, text );
+		if( sort->value == this_view.sort_mode ) {
+			Widget_AddClass( item, "active" );
+			this_view.selected_sort = item;
+		}
+	}
+	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
+	UpdateQueryTerms();
+}
+
 void UI_InitSearchView( void )
 {
 	LCUI_Widget btn[6], title, btn_hide;
@@ -594,6 +694,7 @@ void UI_InitSearchView( void )
 	ThumbView_OnLayout( this_view.view_tags, OnTagViewStartLayout );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSyncThread, NULL );
 	FileBrowser_Create( &this_view.browser );
+	InitSearchResultsSort();
 	UI_UpdateSearchView();
 }
 

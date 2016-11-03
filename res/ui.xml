@@ -115,6 +115,9 @@
               </widget>
             </widget>
             <widget class="pull-right on-normal-mode">
+              <widget id="btn-sort-search-files" class="view-navbar-btn">
+                <widget type="textview" class="text icon mdi mdi-sort"></widget>
+              </widget>
               <widget id="btn-select-search-files" class="view-navbar-btn">
                 <widget type="textview" class="text icon mdi mdi-checkbox-multiple-marked-outline"></widget>
               </widget>
@@ -132,6 +135,7 @@
               <widget type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
             </widget>
           </widget>
+          <widget id="dropdown-search-files-sort" type="dropdown" class="checkable" data-target="btn-sort-search-files" data-position="bottom right"></widget>
         </widget>
       </widget>
       <widget id="view-folders" class="view hide">
@@ -150,11 +154,11 @@
             </widget>
           </widget>
           <widget class="pull-right on-normal-mode">
-            <widget id="btn-select-folder-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon mdi mdi-checkbox-multiple-marked-outline"></widget>
-            </widget>
             <widget id="btn-sort-folder-files" class="view-navbar-btn">
               <widget type="textview" class="text icon mdi mdi-sort"></widget>
+            </widget>
+            <widget id="btn-select-folder-files" class="view-navbar-btn">
+              <widget type="textview" class="text icon mdi mdi-checkbox-multiple-marked-outline"></widget>
             </widget>
             <widget id="btn-sync-folder-files" class="view-navbar-btn">
               <widget type="textview" class="text icon mdi mdi-sync"></widget>
