@@ -392,11 +392,14 @@ static void ViewSync_Thread( void *arg )
 static void OpenFolder( const char *dirpath )
 {
 	int i, len;
-	char *path = NULL;
 	DB_Dir dir = NULL;
+	char *path = NULL, *scan_path = NULL;
+
 	if( dirpath ) {
 		len = strlen( dirpath );
-		path = malloc( sizeof( char )*(len + 2) );
+		path = malloc( sizeof( char )*(len + 1) );
+		scan_path = malloc( sizeof( char )*(len + 2) );
+		strcpy( scan_path, dirpath );
 		strcpy( path, dirpath );
 		for( i = 0; i < finder.n_dirs; ++i ) {
 			if( finder.dirs[i] && 
@@ -405,9 +408,9 @@ static void OpenFolder( const char *dirpath )
 				break;
 			}
 		}
-		if( path[len - 1] != PATH_SEP ) {
-			path[len++] = PATH_SEP;
-			path[len] = 0;
+		if( scan_path[len - 1] != PATH_SEP ) {
+			scan_path[len++] = PATH_SEP;
+			scan_path[len] = 0;
 		}
 		TextView_SetText( this_view.info_name, getdirname( dirpath ) );
 		TextView_SetText( this_view.info_path, dirpath );
@@ -415,18 +418,18 @@ static void OpenFolder( const char *dirpath )
 	} else {
 		Widget_RemoveClass( this_view.view, "show-folder-info-box" );
 	}
-	FileScanner_Reset( &this_view.scanner );
-	LCUIMutex_Lock( &this_view.viewsync.mutex );
-	this_view.dir = dir;
-	this_view.viewsync.prev_item_type = -1;
-	FileBrowser_Empty( &this_view.browser );
-	FileScanner_Start( &this_view.scanner, path );
-	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 	if( this_view.dirpath ) {
 		free( this_view.dirpath );
 		this_view.dirpath = NULL;
 	}
+	FileScanner_Reset( &this_view.scanner );
+	LCUIMutex_Lock( &this_view.viewsync.mutex );
+	this_view.dir = dir;
 	this_view.dirpath = path;
+	this_view.viewsync.prev_item_type = -1;
+	FileBrowser_Empty( &this_view.browser );
+	FileScanner_Start( &this_view.scanner, path );
+	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 	DEBUG_MSG("done\n");
 }
 
