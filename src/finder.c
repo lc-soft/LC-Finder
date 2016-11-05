@@ -243,20 +243,32 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 	return i;
 }
 
-static void SyncAddedFile( void *data, const wchar_t *wpath )
+static void SyncAddedFile( void *data, const wchar_t *wpath,
+			   FileStatus status )
 {
-	struct stat buf;
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
-
-	wgetfilestat( wpath, &buf );
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
-	DB_AddFile( pack->dir, path, (int)buf.st_ctime, (int)buf.st_mtime );
+	DB_AddFile( pack->dir, path, (int)status->ctime, (int)status->mtime );
 	//wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
-static void SyncDeletedFile( void *data, const wchar_t *wpath )
+static void SyncChangedFile( void *data, const wchar_t *wpath,
+			     FileStatus status )
+{
+	char path[PATH_LEN];
+	int ctime = (int)status->ctime;
+	int mtime = (int)status->mtime;
+	DirStatusDataPack pack = data;
+	pack->status->synced_files += 1;
+	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
+	DB_UpdateFileTime( pack->dir, path, ctime, mtime );
+	//wprintf(L"sync: delete file: %s\n", wpath);
+}
+
+static void SyncDeletedFile( void *data, const wchar_t *wpath,
+			     FileStatus status )
 {
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
@@ -323,6 +335,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		s->added_files += s->task->added_files;
 		s->scaned_files += s->task->total_files;
 		s->deleted_files += s->task->deleted_files;
+		s->changed_files += s->task->changed_files;
 		s->tasks[i] = s->task;
 		free( path );
 	}
@@ -339,6 +352,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		s->task = s->tasks[i];
 		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
 		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
+		SyncTask_InChangedFiles( s->task, SyncChangedFile, &pack );
 		SyncTask_Commit( s->task );
 		SyncTask_Delete( s->task );
 		s->task = NULL;

@@ -53,6 +53,7 @@ typedef struct DirStatsRec_ {
 	unqlite *db;
 	Dict *files;		/**< 之前已缓存的文件列表 */
 	Dict *added_files;	/**< 新增的文件 */
+	Dict *changed_files;	/**< 已改变的文件 */
 	Dict *deleted_files;	/**< 删除的文件 */
 } DirStatsRec, *DirStats;
 
@@ -114,13 +115,27 @@ static void Dict_KeyDestructor( void *privdata, void *key )
 	free( key );
 }
 
-static DictType DictType_Files = {
+static void FilesDict_ValDestructor( void *privdata, void *val )
+{
+	free( val );
+}
+
+static DictType FilePathsDict = {
 	Dict_KeyHash,
 	Dict_KeyDup,
 	NULL,
 	Dict_KeyCompare,
 	Dict_KeyDestructor,
 	NULL
+};
+
+static DictType FilesDict = {
+	Dict_KeyHash,
+	Dict_KeyDup,
+	NULL,
+	Dict_KeyCompare,
+	Dict_KeyDestructor,
+	FilesDict_ValDestructor
 };
 
 SyncTask SyncTask_New( const char *data_dir, const char *scan_dir )
@@ -151,9 +166,10 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	ds = GetDirStats( t );
 	len1 = wcslen( data_dir ) + 1;
 	len2 = wcslen( scan_dir ) + 1;
-	ds->deleted_files = Dict_Create( &DictType_Files, NULL );
-	ds->added_files = Dict_Create( &DictType_Files, NULL );
-	ds->files = Dict_Create( &DictType_Files, NULL );
+	ds->files = Dict_Create( &FilesDict, NULL );
+	ds->added_files = Dict_Create( &FilesDict, NULL );
+	ds->changed_files = Dict_Create( &FilePathsDict, NULL );
+	ds->deleted_files = Dict_Create( &FilePathsDict, NULL );
 	t->data_dir = malloc( sizeof( wchar_t ) * len1 );
 	t->scan_dir = malloc( sizeof( wchar_t ) * len2 );
 	wcsncpy( t->data_dir, data_dir, len1 );
@@ -200,6 +216,7 @@ void SyncTask_Delete( SyncTask t )
 	t->data_dir = NULL;
 	Dict_Release( ds->files );
 	Dict_Release( ds->added_files );
+	Dict_Release( ds->changed_files );
 	Dict_Release( ds->deleted_files );
 	free( t );
 }
@@ -210,7 +227,8 @@ static int FileDict_ForEach( Dict *d, FileHanlder func, void *data )
 	DictEntry *entry;
 	DictIterator *iter = Dict_GetIterator( d );
 	while( (entry = Dict_Next( iter )) ) {
-		func( data, DictEntry_GetKey( entry ) );
+		func( data, DictEntry_GetKey( entry ), 
+		      DictEntry_GetVal( entry ) );
 		++count;
 	}
 	Dict_ReleaseIterator( iter );
@@ -221,6 +239,12 @@ int SyncTask_InAddedFiles( SyncTask t, FileHanlder func, void *func_data )
 {
 	DirStats ds = GetDirStats( t );
 	return FileDict_ForEach( ds->added_files, func, func_data );
+}
+
+int SyncTask_InChangedFiles( SyncTask t, FileHanlder func, void *func_data )
+{
+	DirStats ds = GetDirStats( t );
+	return FileDict_ForEach( ds->changed_files, func, func_data );
 }
 
 int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data )
@@ -260,7 +284,7 @@ void SyncTask_CloseCache( SyncTask t )
 /** 从缓存记录中载入文件列表 */
 static int SyncTask_LoadCache( SyncTask t )
 {
-	int rc, count, size;
+	int rc, count;
 	wchar_t buf[MAX_PATH_LEN];
 	unqlite_kv_cursor *cur;
 	DirStats ds;
@@ -280,13 +304,16 @@ static int SyncTask_LoadCache( SyncTask t )
 	}
 	count = 0;
 	while( unqlite_kv_cursor_valid_entry( cur ) ) {
-		size = MAX_PATH_LEN;
-		unqlite_kv_cursor_key( cur, buf, &size );
+		int key_size = MAX_PATH_LEN;
+		FileStatus stat = NEW( FileStatusRec, 1 );
+		unqlite_int64 data_size = sizeof( FileStatusRec );
+		unqlite_kv_cursor_key( cur, buf, &key_size );
+		unqlite_kv_cursor_data( cur, stat, &data_size );
 		unqlite_kv_cursor_next_entry( cur );
-		size /= sizeof( wchar_t );
-		buf[size] = 0;
-		Dict_Add( ds->files, buf, (void*)1 );
-		Dict_Add( ds->deleted_files, buf, (void*)1 );
+		key_size /= sizeof( wchar_t );
+		buf[(int)key_size] = 0;
+		Dict_Add( ds->files, buf, stat );
+		Dict_Add( ds->deleted_files, buf, stat );
 		++count;
 	}
 	unqlite_kv_cursor_release( ds->db, cur );
@@ -316,6 +343,8 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 	}
 	while( (entry = LCUI_ReadDir( &dir )) && t->state == STATE_STARTED ) {
 		int rc;
+		struct stat buf;
+		FileStatus status;
 		name = LCUI_GetFileName( entry );
 		/* 忽略 . 和 .. 文件夹 */
 		if( name[0] == '.' ) {
@@ -335,18 +364,30 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 		if( !IsImageFile( name ) ) {
 			continue;
 		}
+		rc = wgetfilestat( path, &buf );
 		/* 若该文件路径存在于之前的缓存中，说明未被删除，否则将之
 		 * 视为新增的文件。
 		 */
-		if( Dict_FetchValue( ds->files, path ) ) {
+		status = Dict_FetchValue( ds->files, path );
+		if( status ) {
+			if( buf.st_ctime != (time_t)status->ctime ||
+			    buf.st_mtime != (time_t)status->mtime ) {
+				status->ctime = (uint32_t)buf.st_ctime;
+				status->mtime = (uint32_t)buf.st_mtime;
+				++t->changed_files;
+			}
 			Dict_Delete( ds->deleted_files, path );
 			--t->deleted_files;
 		} else {
-			Dict_Add( ds->added_files, path, (void*)1 );
+			status = NEW( FileStatusRec, 1 );
+			status->ctime = (uint32_t)buf.st_ctime;
+			status->mtime = (uint32_t)buf.st_mtime;
+			Dict_Add( ds->added_files, path, status );
 			++t->added_files;
 		}
 		len = sizeof( wchar_t ) / sizeof( char ) * len;
-		rc = unqlite_kv_store( ds->db, path, len, "1", 2 );
+		rc = unqlite_kv_store( ds->db, path, len, status,
+				       sizeof( FileStatusRec ) );
 		++t->total_files;
 	}
 	LCUI_CloseDir( &dir );

@@ -44,6 +44,12 @@ typedef enum {
 	STATE_FINISHED
 } SyncTaskState;
 
+/** 文件状态信息 */
+typedef struct FileStatusRec_ {
+	unsigned int ctime;	/**< 创建时间 */
+	unsigned int mtime;	/**< 修改时间 */
+} FileStatusRec, *FileStatus;
+
 /** 文件列表同步任务 */
 typedef struct SyncTaskRec_ {
 	wchar_t *file;				/**< 数据文件 */
@@ -53,10 +59,11 @@ typedef struct SyncTaskRec_ {
 	SyncTaskState state;			/**< 任务状态 */
 	unsigned long int total_files;		/**< 当前缓存的总文件数量 */
 	unsigned long int added_files;		/**< 当前缓存的新增的文件数量 */
+	unsigned long int changed_files;	/**< 当前缓存的已修改的文件数量 */
 	unsigned long int deleted_files;	/**< 当前缓存的删除的文件数量 */
 } SyncTaskRec, *SyncTask;
 
-typedef void(*FileHanlder)(void*, const wchar_t*);
+typedef void(*FileHanlder)(void*, const wchar_t*, FileStatus);
 
 SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
 
@@ -80,6 +87,9 @@ void SyncTask_Delete( SyncTask t );
 
 /** 遍历每个新增的文件 */
 int SyncTask_InAddedFiles( SyncTask t, FileHanlder func, void *func_data );
+
+/** 遍历每个已修改的文件 */
+int SyncTask_InChangedFiles( SyncTask t, FileHanlder func, void *func_data );
 
 /** 遍历每个已删除的文件 */
 int SyncTask_InDeletedFiles( SyncTask t, FileHanlder func, void *func_data );

@@ -104,6 +104,10 @@ DB_Tag DB_AddTag( const char *tagname );
 /** 添加一个文件记录 */
 void DB_AddFile( DB_Dir dir, const char *filepath, int ctime, int mtime );
 
+/** 修改文件的时间信息 */
+void DB_UpdateFileTime( DB_Dir dir, const char *filepath,
+			int ctime, int mtime );
+
 /** 删除一个文件记录 */
 void DB_DeleteFile( const char *filepath );
 

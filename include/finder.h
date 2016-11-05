@@ -108,6 +108,7 @@ typedef void( *EventHandler )(void*, void*);
 typedef struct FileSyncStatusRec_ {
 	int state;		/**< 当前状态 */
 	int added_files;	/**< 增加的文件数量 */
+	int changed_files;	/**< 改变的文件数量 */
 	int deleted_files;	/**< 删除的文件数量 */
 	int scaned_files;	/**< 已扫描的文件数量 */
 	int synced_files;	/**< 已同步的文件数量 */

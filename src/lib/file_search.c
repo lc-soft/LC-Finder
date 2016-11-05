@@ -59,6 +59,7 @@ enum SQLCodeList {
 	SQL_SET_FILE_SIZE,
 	SQL_SET_FILE_SCORE,
 	SQL_SET_FILE_TIME,
+	SQL_SET_FILE_TIME_BY_PATH,
 	SQL_GET_DIR_TOTAL,
 	SQL_GET_DIR_LIST,
 	SQL_ADD_TAG,
@@ -121,41 +122,56 @@ CREATE TABLE IF NOT EXISTS file_tag_relation (\
 	FOREIGN KEY (tid) REFERENCES tag(id) ON DELETE CASCADE,\
 	UNIQUE(fid, tid)\
 );";
-STATIC_STR sql_get_dir_list = "\
-SELECT id, path FROM dir ORDER BY PATH ASC;";
-STATIC_STR sql_get_tag_list = "\
-SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
-WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;\
-";
+
 STATIC_STR sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 STATIC_STR sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
 STATIC_STR sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
 STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
-STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
-STATIC_STR sql_file_set_size = "\
-UPDATE file SET width = ?, height = ? WHERE id = ?;";
-STATIC_STR sql_file_set_time = "\
-UPDATE file SET create_time = ?, modify_time = ? WHERE id = ?;";
-STATIC_STR sql_file_add_tag = "\
-REPLACE INTO file_tag_relation(fid, tid) VALUES(?, ?);";
-STATIC_STR sql_file_del_tag = "\
-DELETE FROM file_tag_relation WHERE fid = ? AND tid = ?;";
-STATIC_STR sql_add_file = "\
-INSERT INTO file(did, path, create_time, modify_time) VALUES(?, ?, ?, ?);";
 STATIC_STR sql_del_file = "DELETE FROM file WHERE path = ?;";
 STATIC_STR sql_get_tag = "SELECT id FROM tag WHERE name = ?;";
 STATIC_STR sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
+STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
+STATIC_STR sql_count_files = "SELECT COUNT(*) FROM ";
+
+STATIC_STR sql_get_dir_list = "\
+SELECT id, path FROM dir ORDER BY PATH ASC;";
+
+STATIC_STR sql_get_tag_list = "\
+SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
+WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;";
+
+STATIC_STR sql_file_set_size = "\
+UPDATE file SET width = ?, height = ? WHERE id = ?;";
+
+STATIC_STR sql_file_set_time = "\
+UPDATE file SET create_time = ?, modify_time = ? WHERE id = ?;";
+
+STATIC_STR sql_file_set_time_by_path = "\
+UPDATE file SET create_time = ?, modify_time = ? \
+WHERE did = ? AND path = ?;";
+
+STATIC_STR sql_file_add_tag = "\
+REPLACE INTO file_tag_relation(fid, tid) VALUES(?, ?);";
+
+STATIC_STR sql_file_del_tag = "\
+DELETE FROM file_tag_relation WHERE fid = ? AND tid = ?;";
+
+STATIC_STR sql_add_file = "\
+INSERT INTO file(did, path, create_time, modify_time) VALUES(?, ?, ?, ?);";
+
 STATIC_STR sql_get_file = "\
 SELECT f.id, f.did, f.score, f.path, f.width, f.height, f.create_time, \
 f.modify_time FROM file f WHERE f.path = ?;";
+
 STATIC_STR sql_get_file_tags = "\
 SELECT t.id, t.name, count(*) FROM tag t, file_tag_relation ftr \
 WHERE t.id = ftr.tid and ftr.fid = ? GROUP BY t.id ORDER BY count(*) ASC;";
+
 STATIC_STR sql_search_files = "SELECT f.id, f.did, f.score, f.path, \
 f.width, f.height, f.create_time, f.modify_time FROM file f ";
-STATIC_STR sql_count_files = "SELECT COUNT(*) FROM ";
+
 
 /** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
 static int DB_CacheSQL( const char *sql )
@@ -255,6 +271,7 @@ int DB_Init( void )
 	self.sqls[SQL_DEL_FILE_TAG] = sql_file_del_tag;
 	self.sqls[SQL_SET_FILE_SIZE] = sql_file_set_size;
 	self.sqls[SQL_SET_FILE_SCORE] = sql_file_set_score;
+	self.sqls[SQL_SET_FILE_TIME_BY_PATH] = sql_file_set_time_by_path;
 	self.sqls[SQL_SET_FILE_TIME] = sql_file_set_time;
 	self.sqls[SQL_GET_FILE_TAGS] = sql_get_file_tags;
 	self.sqls[SQL_GET_DIR_LIST] = sql_get_dir_list;
@@ -388,6 +405,18 @@ void DB_AddFile( DB_Dir dir, const char *filepath, int ctime, int mtime )
 	sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
 	sqlite3_bind_int( stmt, 3, ctime );
 	sqlite3_bind_int( stmt, 4, mtime );
+	sqlite3_step( stmt );
+}
+
+void DB_UpdateFileTime( DB_Dir dir, const char *filepath, 
+			int ctime, int mtime )
+{
+	sqlite3_stmt *stmt = self.stmts[SQL_SET_FILE_TIME_BY_PATH];
+	sqlite3_reset( stmt );
+	sqlite3_bind_int( stmt, 1, ctime );
+	sqlite3_bind_int( stmt, 2, mtime );
+	sqlite3_bind_int( stmt, 3, dir->id );
+	sqlite3_bind_text( stmt, 4, filepath, strlen(filepath), NULL );
 	sqlite3_step( stmt );
 }
 
