@@ -179,7 +179,7 @@ static int FileScanner_ScanDirs( FileScanner scanner, char *path )
 		LCUI_EncodeString( name, wname, len, ENCODING_UTF8 );
 		len = len + dirpath_len;
 		file_entry->path = malloc( sizeof( char ) * len );
-		sprintf( file_entry->path, "%s%s", path, name );
+		pathjoin( file_entry->path, path, name );
 		LCUIMutex_Lock( &scanner->mutex );
 		LinkedList_Append( &scanner->files, file_entry );
 		LCUICond_Signal( &scanner->cond );
@@ -411,9 +411,11 @@ static void OpenFolder( const char *dirpath )
 		if( scan_path[len - 1] != PATH_SEP ) {
 			scan_path[len++] = PATH_SEP;
 			scan_path[len] = 0;
+		} else {
+			path[len] = 0;
 		}
-		TextView_SetText( this_view.info_name, getdirname( dirpath ) );
-		TextView_SetText( this_view.info_path, dirpath );
+		TextView_SetText( this_view.info_name, getfilename( path ) );
+		TextView_SetText( this_view.info_path, path );
 		Widget_AddClass( this_view.view, "show-folder-info-box" );
 	} else {
 		Widget_RemoveClass( this_view.view, "show-folder-info-box" );

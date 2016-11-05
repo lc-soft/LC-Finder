@@ -570,6 +570,9 @@ LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 	Widget_BindEvent( item, "click", OnItemClick, data, NULL );
 	return item;
 }
+#undef BindEvent
+#define BindEvent(BTN, EVENT, CALLBACK) \
+	Widget_BindEvent( browser->btn_##BTN, EVENT, CALLBACK, browser, NULL )
 
 void FileBrowser_Create( FileBrowser browser )
 {
@@ -577,10 +580,10 @@ void FileBrowser_Create( FileBrowser browser )
 	LinkedList_Init( &browser->dirs );
 	LinkedList_Init( &browser->files );
 	LinkedList_Init( &browser->selected_files );
-	BindEvent( browser->btn_tag, "click", OnBtnTagClick );
-	BindEvent( browser->btn_cancel, "click", OnBtnCancelClick );
-	BindEvent( browser->btn_delete, "click", OnBtnDeleteClick );
-	BindEvent( browser->btn_select, "click", OnBtnSelectionClick );
+	BindEvent( tag, "click", OnBtnTagClick );
+	BindEvent( cancel, "click", OnBtnCancelClick );
+	BindEvent( delete, "click", OnBtnDeleteClick );
+	BindEvent( select, "click", OnBtnSelectionClick );
 	browser->file_indexes = StrDict_Create( NULL, NULL );
 	Widget_Hide( browser->btn_select );
 	LCFinder_BindEvent( EVENT_FILE_DEL, OnFileDeletionEvent, browser );

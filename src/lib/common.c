@@ -153,18 +153,6 @@ void StrDict_Release( Dict *d )
 	free( privdata );
 }
 
-const char *getdirname( const char *path )
-{
-	int i;
-	const char *p = NULL;
-	for( i = 0; path[i]; ++i ) {
-		if( path[i] == PATH_SEP ) {
-			p = path + i + 1;
-		}
-	}
-	return p;
-}
-
 const char *getfilename( const char *path )
 {
 	int i;

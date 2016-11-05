@@ -433,7 +433,12 @@ static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
 		tdata.origin_width = img.width;
 		tdata.origin_height = img.height;
 		tdata.modify_time = (uint_t)buf.st_mtime;
-		if( img.height > THUMB_MAX_WIDTH ) {
+		if( item->is_dir && img.width > FOLDER_MAX_WIDTH ) {
+			Graph_Zoom( &img, &tdata.graph, TRUE,
+				    FOLDER_MAX_WIDTH, 0 );
+			Graph_Free( &img );
+		}
+		else if( !item->is_dir && img.height > THUMB_MAX_WIDTH ) {
 			Graph_Zoom( &img, &tdata.graph, TRUE,
 				    0, THUMB_MAX_WIDTH );
 			Graph_Free( &img );
@@ -914,7 +919,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_AddClass( name, "name" );
 	Widget_AddClass( path, "path" );
 	Widget_AddClass( icon, "icon mdi mdi-folder-outline" );
-	TextView_SetText( name, getdirname( filepath ) );
+	TextView_SetText( name, getfilename( filepath ) );
 	TextView_SetText( path, filepath );
 	Widget_Append( item, infobar );
 	Widget_Append( infobar, name );
