@@ -264,7 +264,7 @@ static void SyncChangedFile( void *data, const wchar_t *wpath,
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
 	DB_UpdateFileTime( pack->dir, path, ctime, mtime );
-	//wprintf(L"sync: delete file: %s\n", wpath);
+	DEBUG_MSG( "%ls\n", wpath );
 }
 
 static void SyncDeletedFile( void *data, const wchar_t *wpath,
@@ -408,8 +408,8 @@ static void LCFinder_InitWorkDir( void )
 	finder.fileset_dir = NEW( wchar_t, len1 );
 	finder.thumbs_dir = NEW( wchar_t, len2 );
 	wcsncpy( finder.data_dir, data_dir, len );
-	swprintf( finder.fileset_dir, len1, L"%ls%ls", data_dir, dirs[0] );
-	swprintf( finder.thumbs_dir, len2, L"%ls%ls", data_dir, dirs[1] );
+	wpathjoin( finder.fileset_dir, data_dir, dirs[0] );
+	wpathjoin( finder.thumbs_dir, data_dir, dirs[1] );
 	wmkdir( finder.data_dir );
 	wmkdir( finder.fileset_dir );
 	wmkdir( finder.thumbs_dir );

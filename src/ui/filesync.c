@@ -72,7 +72,9 @@ static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 		break;
 	case STATE_SAVING:
 		count = self.status.synced_files;
-		total = self.status.added_files + self.status.deleted_files;
+		total = self.status.added_files;
+		total += self.status.changed_files;
+		total += self.status.deleted_files;
 		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count, total );
 		break;
 	case STATE_FINISHED:

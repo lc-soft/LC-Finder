@@ -366,7 +366,7 @@ static void FileTagAddtionThread( void *arg )
 			const char *tagname = pack->tagnames[i];
 			LCFinder_AddTagForFile( fidx->file, tagname );
 		}
-		ProgressBar_SetValue( pack->dialog->progress, i );
+		ProgressBar_SetValue( pack->dialog->progress, pack->i );
 		RenderProgressText( pack );
 		node = node->next;
 	}

@@ -374,7 +374,11 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 			    buf.st_mtime != (time_t)status->mtime ) {
 				status->ctime = (uint32_t)buf.st_ctime;
 				status->mtime = (uint32_t)buf.st_mtime;
+				Dict_Add( ds->changed_files, path, status );
+				DEBUG_MSG( "changed file: %ls\n", path );
 				++t->changed_files;
+			} else {
+				DEBUG_MSG( "unchanged file: %ls\n", path );
 			}
 			Dict_Delete( ds->deleted_files, path );
 			--t->deleted_files;
@@ -383,6 +387,7 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 			status->ctime = (uint32_t)buf.st_ctime;
 			status->mtime = (uint32_t)buf.st_mtime;
 			Dict_Add( ds->added_files, path, status );
+			DEBUG_MSG( "added file: %ls\n", path );
 			++t->added_files;
 		}
 		len = sizeof( wchar_t ) / sizeof( char ) * len;
