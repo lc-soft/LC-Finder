@@ -59,6 +59,17 @@
 	background-color: #aaa;
 	border-color: #aaa;
 }
+.btn-basic {
+	border: 1px solid #eaeaea;
+	background-color: #fff;
+}
+.btn-basic:hover {
+	border-color: #cbcbcb;
+	background-color: #e6e6e6;
+}
+.btn-basic:acitve {
+	background-color: #d7d7d7;
+}
 .btn-dropdown {
 	border: 1px solid #ddd;
 	background-color: #fff;
@@ -674,6 +685,8 @@ textedit.dialog-input {
 .message .text {
 	color: #ccc;
 	font-size: 14px;
+	text-align: center;
+	width: 100%;
 }
 .icon.message .icon {
 	width: 100%;
@@ -858,6 +871,7 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 	width: 100%;
 	padding: 10px;
 	z-index: 1;
+	box-sizing: border-box;
 }
 .search-panel .search-input-group .btn {
 	position: absolute;
@@ -866,6 +880,9 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 	height: 40px;
 	box-sizing: border-box;
 	z-index: 0;
+}
+.search-panel .search-input-group .btn:hover {
+	z-index: 2;
 }
 
 .view-time-range {

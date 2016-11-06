@@ -82,7 +82,9 @@
           <widget class="search-panel">
             <widget class="search-input-group">
               <widget id="input-search" type="textedit" class="search-input" data-placeholder="根据标签搜索图片"></widget>
-              <widget id="btn-search-files" type="button" class="btn btn-primary">搜索</widget>
+              <widget id="btn-search-files" class="btn btn-basic">
+                <widget type="textview-i18n" class="text" data-i18n-key="button.search">搜索</widget>
+              </widget>
             </widget>
           </widget>
           <widget class="view-content-wrapper">
@@ -213,12 +215,12 @@
                   <widget type="textview" class="icon mdi mdi-chevron-down"></widget>
                 </widget>
               </widget>
-              <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders">源</widget>
+              <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</widget>
               <widget class="source-list">
                 <widget id="current-source-list"></widget>
                 <widget id="btn-add-source" class="source-list-item">
                   <widget type="textview" class="text icon mdi mdi-plus"></widget>
-                  <widget type="textview-i18n" class="text" data-i18n-key="settings.add_folder">添加文件夹</widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</widget>
                 </widget>
               </widget>
               <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
