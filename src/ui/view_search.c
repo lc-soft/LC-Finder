@@ -51,6 +51,7 @@
 
 #define KEY_SORT_HEADER		"sort.header"
 #define KEY_TITLE		"search.results.title"
+#define KEY_INPUT_PLACEHOLDER	"search.placeholder.search_input"
 #define TAG_MAX_WIDTH		180
 #define TAG_MARGIN_RIGHT	10
 #define SORT_METHODS_LEN	6
@@ -538,6 +539,12 @@ static void OnBtnSearchClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LinkedList_Clear( &tags, free );
 }
 
+static void OnBtnSearchResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	Widget_SetStyle( w->parent, key_padding_right, 9 + w->width, px );
+	Widget_UpdateStyle( w->parent, FALSE );
+}
+
 static void OnBtnHideReusltClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	if( this_view.need_update ) {
@@ -654,6 +661,22 @@ static void InitSearchResultsSort( void )
 	UpdateQueryTerms();
 }
 
+static void UpdateSearchInput( void )
+{
+	const wchar_t *text = I18n_GetText( KEY_INPUT_PLACEHOLDER );
+	TextEdit_SetPlaceHolderW( this_view.input, text );
+}
+
+static void OnLanguageChanged( void *privdata, void *data )
+{
+	LCUI_Widget menu;
+	const wchar_t *header;
+	header = I18n_GetText( KEY_SORT_HEADER );
+	SelectWidget( menu, ID_DROPDOWN_FOLDER_FILES_SORT );
+	Dropdown_SetHeaderW( menu, header );
+	UpdateSearchInput();
+}
+
 void UI_InitSearchView( void )
 {
 	LCUI_Widget btn[6], title, btn_hide;
@@ -690,12 +713,15 @@ void UI_InitSearchView( void )
 	BindEvent( btn[0], "click", OnBtnClick );
 	BindEvent( btn_hide, "click", OnBtnHideReusltClick );
 	BindEvent( this_view.btn_search, "click", OnBtnSearchClick );
+	BindEvent( this_view.btn_search, "resize", OnBtnSearchResize );
 	LCFinder_BindEvent( EVENT_TAG_UPDATE, OnTagUpdate, NULL );
+	LCFinder_BindEvent( EVENT_LANG_CHG, OnLanguageChanged, NULL );
 	ThumbView_OnLayout( this_view.view_tags, OnTagViewStartLayout );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSyncThread, NULL );
 	FileBrowser_Create( &this_view.browser );
 	InitSearchResultsSort();
 	UI_UpdateSearchView();
+	UpdateSearchInput();
 }
 
 void UI_ExitSearchView( void )

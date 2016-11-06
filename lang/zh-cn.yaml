@@ -2,8 +2,11 @@ name: 简体中文
 code: zh-cn
 strings:
     button:
+        ok: 确定
         cancel: 取消
+        search: 搜索
         clear: 清除
+        cleaning: 正在清除...
     sort:
         header: 排序方式
         ctime_desc: 最近创建
@@ -23,6 +26,8 @@ strings:
             empty: 未找到可读取的图片或文件夹
     search:
         title: 搜索
+        placeholder:
+            search_input: 根据标签搜索图片，多个标签用空格隔开
         results: 
             title: 搜索结果
         message:
@@ -80,7 +85,11 @@ strings:
         license: 许可协议
         website: 官方网站
         feedback: 问题反馈
-        add_folder: 添加文件夹
-        source_folders: 源
+        source_folders:
+            title: 源
+            add_folder: 添加文件夹
+            removing_dialog:
+                title: 确定要移除该源文件夹？
+                content: 一旦移除后，该源文件夹内的文件相关信息将一同被移除。
         about: 关于此应用
         copyright: © 2016 LC's Software，保留所有权利。

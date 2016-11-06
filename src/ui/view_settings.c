@@ -51,10 +51,10 @@
 #include "selectfolder.h"
 #include "i18n.h"
 
-#define TEXT_DELETING 			L"正在清除..."
-#define TEXT_DELETE			L"清除" 
-#define DIALOG_TITLE_DEL_DIR		L"确定要移除该源文件夹？"
-#define DIALOG_TEXT_DEL_DIR		L"一旦移除后，该源文件夹内的文件相关信息将一同被移除。"
+#define KEY_CLEANING 			"button.cleaning"
+#define KEY_CLEAR			"button.clear" 
+#define KEY_DIALOG_TITLE_DEL_DIR	"settings.source_folders.removing_dialog.title"
+#define KEY_DIALOG_TEXT_DEL_DIR		"settings.source_folders.removing_dialog.content"
 
 static struct SettingsViewData {
 	LCUI_Widget source_dirs;
@@ -66,9 +66,10 @@ static struct SettingsViewData {
 static void OnBtnRemoveClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DB_Dir dir = e->data;
+	const wchar_t *text = I18n_GetText( KEY_DIALOG_TEXT_DEL_DIR );
+	const wchar_t *title = I18n_GetText( KEY_DIALOG_TITLE_DEL_DIR );
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( !LCUIDialog_Confirm( window, DIALOG_TITLE_DEL_DIR, 
-				 DIALOG_TEXT_DEL_DIR ) ) {
+	if( !LCUIDialog_Confirm( window, title, text ) ) {
 		return;
 	}
 	LCFinder_DeleteDir( dir );
@@ -184,11 +185,11 @@ static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e,
 	}
 	Widget_SetDisabled( w, TRUE );
 	Widget_AddClass( w, "disabled" );
-	TextView_SetTextW( text, TEXT_DELETING );
+	TextView_SetTextW( text, I18n_GetText( KEY_CLEANING ) );
 	LCFinder_ClearThumbDB();
 	Widget_SetDisabled( w, FALSE );
 	Widget_RemoveClass( w, "disabled" );
-	TextView_SetTextW( text, TEXT_DELETE );
+	TextView_SetTextW( text, I18n_GetText( KEY_CLEAR ) );
 }
 
 /** 在“许可协议”按钮被点击时 */
@@ -218,6 +219,7 @@ static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		TextView_SetText( this_view.language, lang->name );
 		strcpy( finder.config.language, lang->code );
 		LCFinder_SaveConfig();
+		LCFinder_TriggerEvent( EVENT_LANG_CHG, lang );
 	}
 }
 

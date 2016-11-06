@@ -2,8 +2,11 @@ name: English
 code: en-us
 strings:
     button:
+        ok: Ok
         cancel: Cancel
+        search: Search
         clear: Clear
+        cleaning: Cleaning...
     sort:
         header: Sort options
         ctime_desc: Recently created
@@ -23,6 +26,8 @@ strings:
             empty: No pictures or folders
     search:
         title: Search
+        placeholder:
+            search_input: 'search by tags, use spaces to separate tags.'
         results: 
             title: Search results
         message:
@@ -81,7 +86,11 @@ strings:
         license: License
         website: Website
         feedback: Feedback
-        add_folder: Add folder
-        source_folders: Sources
+        source_folders:
+            title: Sources
+            add_folder: Add folder
+            removing_dialog:
+                title: Remove this source folder ?
+                content: This source folder's files related infomation will be remove.
         about: About
         copyright: © 2016 LC's Software，All rights reserved.

@@ -90,9 +90,10 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 	TextView_SetTextW( dialog_text, text );
 	Widget_Append( dialog_body, dialog_text );
 	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview-i18n" );
+	dialog_text = LCUIWidget_New( "textview-i18n" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
+	Widget_AddClass( dialog_text, "text" );
 	TextViewI18n_SetKey( dialog_text, KEY_OK );
 	Widget_Append( btn_ok, dialog_text );
 	Widget_Append( box, btn_ok );
@@ -101,6 +102,7 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 	dialog_text  = LCUIWidget_New( "textview-i18n" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
+	Widget_AddClass( dialog_text, "text" );
 	TextViewI18n_SetKey( dialog_text, KEY_CANCEL );
 	Widget_Append( btn_cancel, dialog_text );
 	Widget_Append( box, btn_cancel );

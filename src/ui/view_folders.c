@@ -508,8 +508,18 @@ static void InitFolderFilesSort( void )
 			this_view.selected_sort = item;
 		}
 	}
+	
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
 	UpdateQueryTerms();
+}
+
+static void OnLanguageChanged( void *privdata, void *data )
+{
+	LCUI_Widget menu;
+	const wchar_t *header;
+	header = I18n_GetText( KEY_SORT_HEADER );
+	SelectWidget( menu, ID_DROPDOWN_FOLDER_FILES_SORT );
+	Dropdown_SetHeaderW( menu, header );
 }
 
 void UI_InitFoldersView( void )
@@ -549,6 +559,7 @@ void UI_InitFoldersView( void )
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+	LCFinder_BindEvent( EVENT_LANG_CHG, OnLanguageChanged, NULL );
 	FileBrowser_Create( &this_view.browser );
 	InitFolderFilesSort();
 	OpenFolder( NULL );
