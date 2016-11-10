@@ -43,6 +43,7 @@
 #define ID_PANEL_PICTURE_INFO		"picture-info-panel"
 #define ID_TXT_VIEW_HOME_TITLE		"view-home-title"
 #define ID_TXT_VIEW_SEARCH_RESULT_TITLE	"view-search-result-title"
+#define ID_TXT_VIEW_SEARCH_RESULT_COUNT	"view-search-result-count"
 #define ID_TXT_VIEW_FOLDERS_TITLE	"view-folders-title"
 #define ID_TXT_PICTURE_NAME		"picture-info-name"
 #define ID_TXT_PICTURE_TIME		"picture-info-time"

@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
@@ -293,6 +294,29 @@ void wopenfilemanger( const wchar_t *filepath )
 	swprintf( args, 4095, L"/select,\"%s\"", filepath );
 	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
 #endif
+}
+
+int wgetnumberstr( wchar_t *str, int max_len, size_t number )
+{
+	int right, j, k, len, buf_len, count;
+	wchar_t *buf = malloc( sizeof( wchar_t ) * (max_len + 1) );
+	len = swprintf( buf, max_len, L"%lu", number );
+	count = (int)ceil( len / 3.0 - 1.0 );
+	buf_len = len + count;
+	max_len = max_len > buf_len ? buf_len : max_len;
+	for( k = 1, right = max_len - 1, j = len - 1; right >= 0; --right ) {
+		if( right < max_len - 1 && count > 0 && k % 4 == 0 ) {
+			str[right] = L',';
+			--count;
+			k = 1;
+		} else {
+			str[right] = buf[j--];
+			++k;
+		}
+	}
+	str[max_len] = 0;
+	free( buf );
+	return len;
 }
 
 int wgettimestr( wchar_t *str, int max_len, time_t time )

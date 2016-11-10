@@ -103,7 +103,8 @@
             <widget class="view-navbar-btn" id="btn-hide-search-result">
               <widget type="textview" class="text icon mdi mdi-arrow-left"></widget>
             </widget>
-            <widget  id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.results.title">搜索结果</widget>
+            <widget id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.results.title">搜索结果</widget>
+            <widget id="view-search-result-count" type="textview" class="text view-navbar-text"></widget>
             <widget class="pull-right on-selection-mode">
               <widget id="btn-cancel-search-select" class="view-navbar-btn">
                 <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>

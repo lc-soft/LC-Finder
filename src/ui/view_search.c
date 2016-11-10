@@ -81,6 +81,7 @@ static struct SearchView {
 	LCUI_Widget view_tags;
 	LCUI_Widget view_result;
 	LCUI_Widget view_files;
+	LCUI_Widget txt_count;
 	LCUI_Widget btn_search;
 	LCUI_Widget tip_empty_tags;
 	LCUI_Widget tip_empty_files;
@@ -118,6 +119,19 @@ static void OnDeleteDBFile( void *arg )
 	DBFile_Release( arg );
 }
 
+static void SetSearchResultsCount( int count )
+{
+	wchar_t str[128], count_str[64];
+	wgetnumberstr( count_str, 63, count );
+	swprintf( str, 255, L" (%s)", count_str );
+	TextView_SetTextW( this_view.txt_count, str );
+	if( count > 0 ) {
+		Widget_Show( this_view.txt_count );
+	} else {
+		Widget_Hide( this_view.txt_count );
+	}
+}
+
 /** 扫描全部文件 */
 static int FileScanner_ScanAll( FileScanner scanner )
 {
@@ -131,6 +145,7 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	query = DB_NewQuery( &this_view.terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	scanner->total = total, scanner->count = 0;
+	SetSearchResultsCount( total );
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &this_view.terms );
@@ -694,6 +709,7 @@ void UI_InitSearchView( void )
 	SelectWidget( this_view.input, ID_INPUT_SEARCH );
 	SelectWidget( btn_hide, ID_BTN_HIDE_SEARCH_RESULT );
 	SelectWidget( title, ID_TXT_VIEW_SEARCH_RESULT_TITLE );
+	SelectWidget( this_view.txt_count, ID_TXT_VIEW_SEARCH_RESULT_COUNT );
 	SelectWidget( this_view.tip_empty_tags, ID_TIP_SEARCH_TAGS_EMPTY );
 	SelectWidget( this_view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY );
 	SelectWidget( this_view.btn_search, ID_BTN_SEARCH_FILES );

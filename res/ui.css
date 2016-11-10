@@ -198,9 +198,13 @@
 	box-sizing: border-box;
 	width: 100%;
 }
-.view-navbar .view-navbar-title {
+.view-navbar .view-navbar-title,
+.view-navbar .view-navbar-text {
 	font-size: 16px;
 	line-height: 48px;
+	display: inline-block;
+}
+.view-navbar .view-navbar-title {
 	padding: 0 0 0 25px;
 }
 .view-body .title {
