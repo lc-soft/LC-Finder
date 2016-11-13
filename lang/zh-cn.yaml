@@ -46,6 +46,8 @@ strings:
             empty: 此处没有任何要显示的内容
             loading: 图片载入中...
             unsupport: 无法识别该图片的内容
+        browse_all: 浏览全部图片
+        unknown: 未知
         info:
             title: 文件信息
             file_name: 文件名

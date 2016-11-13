@@ -120,7 +120,8 @@
 	border-color: transparent;
 	padding: 2px;
 }
-#picture-viewer-window.skin-light-green .icon-btn .icon {
+#picture-viewer-window.skin-light-green .icon-btn .icon,
+#picture-viewer-window.skin-light-green .icon-btn .text {
 	color: #fff;
 	background-color: transparent;
 }

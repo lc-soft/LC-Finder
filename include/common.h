@@ -62,11 +62,17 @@ char *EncodeANSI( const wchar_t *wstr );
 
 wchar_t *DecodeUTF8( const char *str );
 
+wchar_t *DecodeANSI( const char *str );
+
 void EncodeSHA1( char *hash_out, const char *str, int len );
 
 void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len );
 
-const char *getdirname( const char *path );
+int IsImageFile( const wchar_t *path );
+
+char *getdirname( const char *path );
+
+wchar_t *wgetdirname( const wchar_t *path );
 
 const char *getfilename( const char *path );
 

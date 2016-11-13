@@ -42,6 +42,8 @@ strings:
             saving: 'syncing %d/%d files'
             finished: '%d files synced'
     picture:
+        unknown: Unknown
+        browse_all: Browse all
         message:
             empty: There is nothing to show here
             loading: Loading ...

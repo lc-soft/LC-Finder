@@ -41,6 +41,7 @@
 #include <string.h>
 #include "finder.h"
 #include "ui.h"
+#include "i18n.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
@@ -51,7 +52,7 @@
 #include "dialog.h"
 #include "starrating.h"
 
-#define TXT_UNKNOWN			L"未知"
+#define KEY_UNKNOWN			"picture.unknown"
 #define DIALOG_TITLE_ADDTAG		L"添加标签"
 #define DIALOG_TITLE_EDITTAG		L"编辑标签"
 #define DIALOG_INPUT_PLACEHOLDER	L"标签名称，多个标签用空格隔开"
@@ -245,21 +246,18 @@ void UI_InitPictureInfoView( void )
 
 void UI_SetPictureInfoView( const char *filepath )
 {
-	size_t len;
 	DB_Tag *tags;
 	struct stat buf;
 	int i, n, width, height;
 	LCUI_BOOL is_picture = FALSE;
-	wchar_t str[256], *path, *dirpath;
+	wchar_t *path, *dirpath;
+	const wchar_t *unknown;
 
-	len = strlen( filepath ) + 1;
-	path = malloc( sizeof( wchar_t ) * len );
-	dirpath = malloc( sizeof( wchar_t ) * len );
-	LCUI_DecodeString( path, filepath, len, ENCODING_UTF8 );
+	path = DecodeUTF8( filepath );
+	dirpath = wgetdirname( path );
 #ifdef _WIN32
 	{
-		char *apath = malloc( sizeof( char ) * len );
-		LCUI_EncodeString( apath, path, len, ENCODING_ANSI );
+		char *apath = EncodeANSI( path );
 		if( Graph_GetImageSize( apath, &width, &height ) == 0 ) {
 			is_picture = TRUE;
 		}
@@ -270,7 +268,7 @@ void UI_SetPictureInfoView( const char *filepath )
 		is_picture = TRUE;
 	}
 #endif
-	wgetdirpath( dirpath, len, path );
+	unknown = I18n_GetText( KEY_UNKNOWN );
 	if( wgetfilestat( path, &buf ) == 0 ) {
 		wchar_t mtime_str[256], fsize_str[256];
 		this_view.size = buf.st_size;
@@ -280,16 +278,17 @@ void UI_SetPictureInfoView( const char *filepath )
 		TextView_SetTextW( this_view.txt_time, mtime_str );
 		TextView_SetTextW( this_view.txt_fsize, fsize_str );
 	} else {
-		TextView_SetTextW( this_view.txt_time, TXT_UNKNOWN );
-		TextView_SetTextW( this_view.txt_fsize, TXT_UNKNOWN );
+		TextView_SetTextW( this_view.txt_time, unknown );
+		TextView_SetTextW( this_view.txt_fsize, unknown );
 	}
 	if( is_picture ) {
+		wchar_t str[256];
 		this_view.width = width;
 		this_view.height = height;
 		swprintf( str, 256, L"%dx%d", width, height );
 		TextView_SetTextW( this_view.txt_size, str );
 	} else {
-		TextView_SetTextW( this_view.txt_size, TXT_UNKNOWN );
+		TextView_SetTextW( this_view.txt_size, unknown );
 	}
 	TextView_SetTextW( this_view.txt_dirpath, dirpath );
 	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );

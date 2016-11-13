@@ -94,6 +94,7 @@
 #define ID_BTN_SHOW_PICTURE_INFO	"btn-show-picture-info"
 #define ID_BTN_DELETE_PICTURE		"btn-delete-picture"
 #define ID_BTN_HIDE_PICTURE_VIEWER	"btn-hide-picture-viewer"
+#define ID_BTN_BROWSE_ALL		"btn-browse-all"
 #define ID_BTN_PICTURE_RESET_SIZE	"btn-picture-reset-size"
 #define ID_BTN_PICTURE_ZOOM_IN		"btn-picture-zoom-in"
 #define ID_BTN_PICTURE_ZOOM_OUT		"btn-picture-zoom-out"
@@ -124,6 +125,11 @@
 #define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
 
+enum UIMode {
+	MODE_FULL,
+	MODE_SINGLE_PICVIEW
+};
+
 /** 文件迭代器 */
 typedef struct FileIteratorRec_* FileIterator;
 typedef struct FileIteratorRec_ {
@@ -136,8 +142,11 @@ typedef struct FileIteratorRec_ {
 	void (*destroy)(FileIterator);	/**< 销毁文件迭代器 */
 } FileIteratorRec;
 
+/** 初始化主界面 */
+void UI_InitMainView( void );
+
 /** 初始化用户界面 */
-void UI_Init( void );
+void UI_Init( int argc, char **argv );
 
 void UI_Exit( void );
 
@@ -164,7 +173,7 @@ void UI_InitHomeView( void );
 void UI_ExitHomeView( void );
 
 /** 初始化图片视图 */
-void UI_InitPictureView( void );
+void UI_InitPictureView( int mode );
 
 /** 退出图片视图并销毁相关资源 */
 void UI_ExitPictureView( void );

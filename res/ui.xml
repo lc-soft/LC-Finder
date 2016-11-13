@@ -81,7 +81,7 @@
         <widget class="view-body">
           <widget class="search-panel">
             <widget class="search-input-group">
-              <widget id="input-search" type="textedit" class="search-input" data-placeholder="根据标签搜索图片"></widget>
+              <widget id="input-search" type="textedit" class="search-input"></widget>
               <widget id="btn-search-files" class="btn btn-basic">
                 <widget type="textview-i18n" class="text" data-i18n-key="button.search">搜索</widget>
               </widget>

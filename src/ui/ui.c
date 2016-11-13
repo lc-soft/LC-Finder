@@ -59,9 +59,20 @@ static void onTimer( void *arg )
 	Widget_PrintTree( NULL );
 }
 
-void UI_Init(void)
+void UI_InitMainView( void )
+{
+	UI_InitSidebar();
+	UI_InitHomeView();
+	UI_InitSettingsView();
+	UI_InitFoldersView();
+	UI_InitFileSyncTip();
+	UI_InitSearchView();
+}
+
+void UI_Init( int argc, char **argv )
 {
 	LCUI_Widget box, root;
+
 	LCUI_Init();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddStarRating();
@@ -81,13 +92,26 @@ void UI_Init(void)
 	root = LCUIWidget_GetRoot();
 	Widget_SetTitleW( root, L"LC-Finder" );
 	Widget_UpdateStyle( root, TRUE );
-	UI_InitSidebar();
-	UI_InitHomeView();
-	UI_InitSettingsView();
-	UI_InitFoldersView();
-	UI_InitFileSyncTip();
-	UI_InitPictureView();
-	UI_InitSearchView();
+	if( argc == 1 ) {
+		UI_InitMainView();
+		UI_InitPictureView( MODE_FULL );
+		return;
+	}
+	UI_InitPictureView( MODE_SINGLE_PICVIEW );
+#ifdef _WIN32
+	{
+		char *filepath;
+		wchar_t *wfilepath;
+		wfilepath = DecodeANSI( argv[1] );
+		filepath = EncodeUTF8( wfilepath );
+		UI_OpenPictureView( filepath );
+		free( wfilepath );
+		free( filepath );
+	}
+#else
+	UI_OpenPictureView( argv[1] );
+#endif
+
 	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 

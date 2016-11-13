@@ -118,9 +118,9 @@ typedef struct ThumbViewRec_ {
 	ThumbLinker linker;		/**< 缩略图链接器 */
 	LinkedList files;		/**< 当前视图下的文件列表 */
 	LinkedList thumb_tasks;		/**< 缩略图加载任务队列 */
+	RBTree task_targets;		/**< 各个任务的目标部件 */
 	LCUI_Cond tasks_cond;		/**< 任务队列条件变量 */
 	LCUI_Mutex tasks_mutex;		/**< 任务队列互斥锁 */
-	LCUI_RBTree task_targets;	/**< 各个任务的目标部件 */
 	LCUI_BOOL tasks[TASK_TOTAL];	/**< 当前任务 */
 	LCUI_Mutex mutex;		/**< 互斥锁 */
 	LCUI_Thread thread;		/**< 任务处理线程 */

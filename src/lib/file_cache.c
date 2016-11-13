@@ -57,29 +57,6 @@ typedef struct DirStatsRec_ {
 	Dict *deleted_files;	/**< 删除的文件 */
 } DirStatsRec, *DirStats;
 
-static LCUI_BOOL IsImageFile( const wchar_t *path )
-{
-	int i;
-	const wchar_t *p, *suffixs[] = {L"png", L"bmp", L"jpg", L"jpeg"};
-
-	for( p = path; *p; ++p );
-	for( --p; p != path; --p ) {
-		if( *p == L'.' ) {
-			break;
-		}
-	}
-	if( *p != L'.' ) {
-		return FALSE;
-	}
-	++p;
-	for( i = 0; i < 4; ++i ) {
-		if( wcscasecmp( p, suffixs[i] ) == 0 ) {
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-
 static unsigned int Dict_KeyHash( const wchar_t *buf )
 {
 	unsigned int hash = 5381;
@@ -338,14 +315,14 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 		path[dir_len++] = PATH_SEP;
 		path[dir_len] = 0;
 	}
-	if( LCUI_OpenDir( path, &dir ) != 0 ) {
+	if( LCUI_OpenDirW( path, &dir ) != 0 ) {
 		return 0;
 	}
-	while( (entry = LCUI_ReadDir( &dir )) && t->state == STATE_STARTED ) {
+	while( (entry = LCUI_ReadDirW( &dir )) && t->state == STATE_STARTED ) {
 		int rc;
 		struct stat buf;
 		FileStatus status;
-		name = LCUI_GetFileName( entry );
+		name = LCUI_GetFileNameW( entry );
 		/* 忽略 . 和 .. 文件夹 */
 		if( name[0] == '.' ) {
 			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {

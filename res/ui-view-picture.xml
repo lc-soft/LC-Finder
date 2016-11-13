@@ -6,6 +6,10 @@
         <widget class="icon-btn window-navbar-btn" id="btn-hide-picture-viewer">
           <widget type="textview" class="icon mdi mdi-arrow-left"></widget>
         </widget>
+        <widget class="icon-btn window-navbar-btn" id="btn-browse-all">
+          <widget type="textview" class="text icon mdi mdi-image-multiple"></widget>
+          <widget type="textview-i18n" class="text" data-i18n-key="picture.browse_all">浏览全部图片</widget>
+        </widget>
         <widget class="pull-right">
           <widget class="icon-btn window-navbar-btn" id="btn-show-picture-info">
             <widget type="textview" class="icon mdi mdi-information"></widget>

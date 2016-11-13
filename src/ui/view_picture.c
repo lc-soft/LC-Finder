@@ -86,6 +86,30 @@ typedef struct PcitureRec_ {
 	int timer;			/**< 定时器，用于延迟显示“载入中...”提示框 */
 } PictureRec, *Picture;
 
+/** 文件索引记录 */
+typedef struct FileIndexRec_ {
+	wchar_t *name;		/**< 文件名 */	
+	LinkedListNode node;	/**< 在列表中的节点 */
+} FileIndexRec, *FileIndex;
+
+/** 文件扫描器数据结构 */
+typedef struct FileScannerRec_ {
+	LCUI_BOOL is_running;	/**< 是否正在运行 */
+	LCUI_BOOL is_ready;	/**< 是否已准备好开始扫描 */
+	LCUI_Thread thread;	/**< 扫描线程 */
+	LCUI_Mutex mutex;	/**< 互斥锁 */
+	LCUI_Cond cond;		/**< 条件变量 */
+	wchar_t *dirpath;	/**< 扫描目录 */
+	wchar_t *file;		/**< 目标文件，当扫描到该文件后会创建文件迭代器 */
+	LinkedList files;	/**< 已扫描到的文件列表 */
+	FileIterator iterator;	/**< 文件迭代器 */
+} FileScannerRec, *FileScanner;
+
+typedef struct FileDataPackRTec_ {
+	FileIndex fidx;
+	FileScanner scanner;
+} FileDataPackRec, *FileDataPack;
+
 /** 图片查看器相关数据 */
 static struct PictureViewer {
 	LCUI_Widget window;			/**< 图片查看器窗口 */
@@ -103,11 +127,13 @@ static struct PictureViewer {
 	LCUI_BOOL is_zoom_mode;			/**< 当前视图是否为放大/缩小模式 */
 	LCUI_BOOL is_touch_mode;		/**< 当前是否为触屏模式 */
 	PictureRec pictures[3];			/**< 三组图片实例 */
+	int mode;				/**< 当前运行模式 */
 	int picture_i;				/**< 当前需加载的图片的序号（下标） */
 	Picture picture;			/**< 当前焦点图片 */
 	LCUI_Cond cond;				/**< 条件变量 */
 	LCUI_Mutex mutex;			/**< 互斥锁 */
 	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
+	LCUI_Thread th_scanner;			/**< 图片文件扫描器线程 */
 	FileIterator iterator;			/**< 图片文件列表迭代器 */
 	int focus_x, focus_y;			/**< 当前焦点位置，相对于按比例缩放后的图片 */
 	int origin_focus_x, origin_focus_y;	/**< 当前焦点位置，相对于原始尺寸的图片 */
@@ -142,7 +168,78 @@ static struct PictureViewer {
 		int64_t start_time;		/**< 开始时间 */
 		LCUI_BOOL is_running;		/**< 是否正在运行 */
 	} slide;				/**< 图片水平滑动功能的相关数据 */
-} this_view;
+	FileScannerRec scanner;
+} this_view = {0};
+
+static void FileIterator_Destroy( FileIterator iter )
+{
+	iter->privdata = NULL;
+	iter->filepath = NULL;
+	iter->next = NULL;
+	iter->prev = NULL;
+	free( iter );
+}
+
+static void FileIterator_Update( FileIterator iter )
+{
+	wchar_t filepath[PATH_LEN];
+	FileDataPack data = iter->privdata;
+	wpathjoin( filepath, data->scanner->dirpath, data->fidx->name );
+	iter->length = data->scanner->files.length;
+	if( iter->filepath ) {
+		free( iter->filepath );
+	}
+	iter->filepath = EncodeUTF8( filepath );
+}
+
+static void FileIterator_Next( FileIterator iter )
+{
+	FileDataPack data = iter->privdata;
+	if( data->fidx->node.next ) {
+		iter->index += 1;
+		data->fidx = data->fidx->node.next->data;
+		FileIterator_Update( iter );
+	}
+}
+
+static void FileIterator_Prev( FileIterator iter )
+{
+	FileDataPack data = iter->privdata;
+	if( data->fidx->node.prev && 
+	    &data->fidx->node != data->scanner->files.head.next ) {
+		iter->index -= 1;
+		data->fidx = data->fidx->node.prev->data;
+		FileIterator_Update( iter );
+	}
+}
+
+static FileIterator FileIterator_Create( FileScanner scanner, FileIndex fidx )
+{
+	LinkedListNode *node = &fidx->node;
+	FileDataPack data = NEW( FileDataPackRec, 1 );
+	FileIterator iter = NEW( FileIteratorRec, 1 );
+
+	data->fidx = fidx;
+	data->scanner = scanner;
+	iter->index = 0;
+	iter->privdata = data;
+	iter->filepath = NULL;
+	iter->next = FileIterator_Next;
+	iter->prev = FileIterator_Prev;
+	iter->destroy = FileIterator_Destroy;
+	while( node != scanner->files.head.next ) {
+		node = node->prev;
+		iter->index += 1;
+	}
+	FileIterator_Update( iter );
+	return iter;
+}
+
+static void FileIndex_Delete( FileIndex fidx )
+{
+	free( fidx->name );
+	fidx->name = NULL;
+}
 
 static void GetViewerSize( int *width, int *height )
 {
@@ -479,7 +576,6 @@ static void SetPictureScale( Picture pic, double scale )
 	DirectSetPictureScale( pic, scale );
 }
 
-
 /** 重置当前显示的图片的尺寸 */
 static void ResetPictureSize( Picture pic )
 {
@@ -512,6 +608,16 @@ static void ResetPictureSize( Picture pic )
 /** 在返回按钮被点击的时候 */
 static OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	if( this_view.mode == MODE_SINGLE_PICVIEW ) {
+		LCUI_Widget btn_back, btn_back2;
+		SelectWidget( btn_back, ID_BTN_BROWSE_ALL );
+		SelectWidget( btn_back2, ID_BTN_HIDE_PICTURE_VIEWER );
+		Widget_UnsetStyle( btn_back2, key_display );
+		Widget_Destroy( btn_back );
+		Widget_Show( btn_back2 );
+		this_view.mode = MODE_FULL;
+		UI_InitMainView();
+	}
 	UI_ClosePictureView();
 }
 
@@ -1016,6 +1122,98 @@ static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	SetPictureScale( this_view.picture, scale );
 }
 
+/** 文件扫描器 */
+static void FileScanner_Thread( void *arg )
+{
+	size_t len;
+	LCUI_Dir dir;
+	LCUI_DirEntry *entry;
+	FileIndex fidx;
+	FileScanner scanner = &this_view.scanner;
+	int i = 0, pos = -1;
+
+	while( !scanner->is_ready ) {
+		LCUICond_Wait( &scanner->cond, &scanner->mutex );
+	}
+	scanner->is_ready = FALSE;
+	if( LCUI_OpenDirW( scanner->dirpath, &dir ) != 0 ) {
+		LCUIThread_Exit( NULL );
+		return;
+	}
+	while( scanner->is_running && (entry = LCUI_ReadDirW( &dir )) ) {
+		wchar_t *name = LCUI_GetFileNameW( entry );
+		/* 忽略 . 和 .. 文件夹 */
+		if( name[0] == '.' ) {
+			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {
+				continue;
+			}
+		}
+		if( !LCUI_FileIsArchive( entry ) || !IsImageFile( name ) ) {
+			continue;
+		}
+		len = wcslen( name ) + 1;
+		fidx = NEW( FileIndexRec, 1 );
+		fidx->name = malloc( sizeof( wchar_t ) * len );
+		wcscpy( fidx->name, name );
+		fidx->node.data = fidx;
+		LinkedList_AppendNode( &scanner->files, &fidx->node );
+		if( wcscmp( name, scanner->file ) == 0 && !scanner->iterator ) {
+			scanner->iterator = FileIterator_Create( scanner, fidx );
+			pos = i;
+		}
+		if( pos >= 0 && i - pos > 2 ) {
+			UI_SetPictureView( scanner->iterator );
+			SetPicturePreloadList();
+			pos = -1;
+		}
+		++i;
+	}
+	if( pos > 0 && scanner->iterator ) {
+		UI_SetPictureView( scanner->iterator );
+		SetPicturePreloadList();
+	}
+	scanner->is_running = FALSE;
+	LCUIThread_Exit( NULL );
+}
+
+static void FileScanner_Init( FileScanner scanner )
+{
+	scanner->iterator = NULL;
+	scanner->is_ready = FALSE;
+	scanner->is_running = TRUE;
+	LCUICond_Init( &scanner->cond );
+	LCUIMutex_Init( &scanner->mutex );
+	LCUIMutex_Lock( &scanner->mutex );
+	LinkedList_Init( &scanner->files );
+	LCUIThread_Create( &scanner->thread, FileScanner_Thread, NULL );
+}
+
+static void FileScanner_Start( FileScanner scanner, const wchar_t *filepath )
+{
+	size_t len;
+	const wchar_t *name;
+	if( scanner->dirpath ) {
+		free( scanner->dirpath );
+	}
+	if( scanner->file ) {
+		free( scanner->file );
+	}
+	name = wgetfilename( filepath );
+	len = wcslen( name ) + 1;
+	scanner->dirpath = wgetdirname( filepath );
+	scanner->file = malloc( sizeof( wchar_t ) * len );
+	wcscpy( scanner->file, name );
+	scanner->is_ready = TRUE;
+	LCUICond_Signal( &scanner->cond );
+	LCUIMutex_Unlock( &scanner->mutex );
+}
+
+static void FileScanner_Exit( FileScanner scanner )
+{
+	scanner->is_running = FALSE;
+	LCUIThread_Join( scanner->thread, NULL );
+}
+
 /** 图片加载器 */
 static void PictureLoader( void *arg )
 {
@@ -1044,22 +1242,24 @@ static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	UI_ShowPictureInfoView();
 }
 
-void UI_InitPictureView( void )
+void UI_InitPictureView( int mode )
 {
-	LCUI_Widget box, btn_back, btn_info, btn_del;
+	LCUI_Widget box, btn_back, btn_back2, btn_info, btn_del;
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( box ) {
 		Widget_Top( box );
 		Widget_Unwrap( box );
 	}
+	this_view.mode = mode;
 	this_view.is_working = TRUE;
 	this_view.is_opening = FALSE;
 	this_view.zoom.point_ids[0] = -1;
 	this_view.zoom.point_ids[1] = -1;
 	this_view.zoom.is_running = FALSE;
+	SelectWidget( btn_back, ID_BTN_BROWSE_ALL );
 	SelectWidget( btn_del, ID_BTN_DELETE_PICTURE );
 	SelectWidget( btn_info, ID_BTN_SHOW_PICTURE_INFO );
-	SelectWidget( btn_back, ID_BTN_HIDE_PICTURE_VIEWER );
+	SelectWidget( btn_back2, ID_BTN_HIDE_PICTURE_VIEWER );
 	SelectWidget( this_view.btn_prev, ID_BTN_PCITURE_PREV );
 	SelectWidget( this_view.btn_next, ID_BTN_PCITURE_NEXT );
 	SelectWidget( this_view.btn_zoomin, ID_BTN_PICTURE_ZOOM_IN );
@@ -1071,6 +1271,7 @@ void UI_InitPictureView( void )
 	SelectWidget( this_view.tip_unsupport, ID_TIP_PICTURE_UNSUPPORT );
 	SelectWidget( this_view.view_pictures, ID_VIEW_PICTURE_TARGET );
 	BindEvent( btn_back, "click", OnBtnBackClick );
+	BindEvent( btn_back2, "click", OnBtnBackClick );
 	BindEvent( btn_del, "click", OnBtnDeleteClick );
 	BindEvent( btn_info, "click", OnBtnShowInfoClick );
 	BindEvent( this_view.btn_prev, "click", OnBtnPrevClick );
@@ -1089,6 +1290,13 @@ void UI_InitPictureView( void )
 	Widget_Hide( this_view.window );
 	UI_InitPictureInfoView();
 	UpdateSwitchButtons();
+	if( this_view.mode == MODE_SINGLE_PICVIEW ) {
+		FileScanner_Init( &this_view.scanner );
+		Widget_SetStyle( btn_back2, key_display, SV_NONE, style );
+		Widget_Hide( btn_back2 );
+	} else {
+		//Widget_Destroy( btn_back );
+	}
 }
 
 void UI_OpenPictureView( const char *filepath )
@@ -1118,6 +1326,10 @@ void UI_OpenPictureView( const char *filepath )
 	UI_SetPictureInfoView( filepath );
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
+	if( this_view.mode == MODE_SINGLE_PICVIEW && 
+	    !this_view.scanner.is_ready ) {
+		FileScanner_Start( &this_view.scanner, wpath );
+	}
 	free( wpath );
 }
 

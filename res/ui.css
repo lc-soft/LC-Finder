@@ -612,6 +612,17 @@ textedit.dialog-input {
 	top: 8px;
 	right: 12px;
 }
+#picture-viewer-window .window-navbar-btn .text,
+#picture-viewer-window .window-navbar-btn .icon {
+	color: #444;
+	height: 24px;
+	font-size: 16px;
+	line-height: 24px;
+	display: inline-block;
+}
+#picture-viewer-window .window-navbar-btn.icon-btn .text {
+	margin-left: 5px;
+}
 #picture-viewer-window .zoom-btn-group {
 	width: 120px;
 	height: 40px;

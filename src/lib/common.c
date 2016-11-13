@@ -69,6 +69,14 @@ wchar_t *DecodeUTF8( const char *str )
 	return wstr;
 }
 
+wchar_t *DecodeANSI( const char *str )
+{
+	int len = strlen( str ) + 1;
+	wchar_t *wstr = malloc( len * sizeof( wchar_t ) );
+	len = LCUI_DecodeString( wstr, str, len, ENCODING_ANSI );
+	return wstr;
+}
+
 void EncodeSHA1( char *hash_out, const char *str, int len )
 {
 	int i;
@@ -102,6 +110,29 @@ void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len )
 		swprintf( elem, 4, L"%02x", results[i] );
 		wcscat( hash_out, elem );
 	}
+}
+
+int IsImageFile( const wchar_t *path )
+{
+	int i;
+	const wchar_t *p, *suffixs[] = {L"png", L"bmp", L"jpg", L"jpeg"};
+
+	for( p = path; *p; ++p );
+	for( --p; p != path; --p ) {
+		if( *p == L'.' ) {
+			break;
+		}
+	}
+	if( *p != L'.' ) {
+		return FALSE;
+	}
+	++p;
+	for( i = 0; i < 4; ++i ) {
+		if( wcscasecmp( p, suffixs[i] ) == 0 ) {
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 static unsigned int Dict_KeyHash( const void *key )
@@ -152,6 +183,38 @@ void StrDict_Release( Dict *d )
 	void *privdata = d->privdata;
 	Dict_Release( d );
 	free( privdata );
+}
+
+char *getdirname( const char *path )
+{
+	int i, len = strlen( path );
+	char *dirname = malloc( sizeof(char) * len );
+	for( i = len - 1; i >= 0; --i ) {
+		if( path[i] == PATH_SEP ) {
+			dirname[i] = 0;
+			break;
+		}
+	}
+	for( ; i >= 0; --i ) {
+		dirname[i] = path[i];
+	}
+	return dirname;
+}
+
+wchar_t *wgetdirname( const wchar_t *path )
+{
+	int i, len = wcslen( path ) + 1;
+	wchar_t *dirname = malloc( sizeof( wchar_t ) * len );
+	for( i = len - 1, dirname[i] = 0; i >= 0; --i ) {
+		if( path[i] == PATH_SEP ) {
+			dirname[i] = 0;
+			break;
+		}
+	}
+	for( --i; i >= 0; --i ) {
+		dirname[i] = path[i];
+	}
+	return dirname;
 }
 
 const char *getfilename( const char *path )

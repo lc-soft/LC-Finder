@@ -680,7 +680,7 @@ int main( int argc, char **argv )
 	LCFinder_InitThumbCache();
 	LCFinder_InitLanguage();
 	finder.trigger = EventTrigger();
-	UI_Init();
+	UI_Init( argc, argv );
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );
 	return UI_Run();
 }

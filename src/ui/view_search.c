@@ -123,7 +123,7 @@ static void SetSearchResultsCount( int count )
 {
 	wchar_t str[128], count_str[64];
 	wgetnumberstr( count_str, 63, count );
-	swprintf( str, 255, L" (%s)", count_str );
+	swprintf( str, 255, L" (%ls)", count_str );
 	TextView_SetTextW( this_view.txt_count, str );
 	if( count > 0 ) {
 		Widget_Show( this_view.txt_count );
