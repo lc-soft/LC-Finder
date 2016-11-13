@@ -69,6 +69,35 @@ void UI_InitMainView( void )
 	UI_InitSearchView();
 }
 
+#ifdef _WIN32
+#include "../resource.h"
+
+/** 在 surface 准备好后，设置与 surface 绑定的窗口的图标 */
+static void OnSurfaceReady( LCUI_Event e, void *arg )
+{
+	HWND hwnd;
+	HICON icon;
+	HINSTANCE instance;
+	LCUI_DisplayEvent dpy_ev = arg;
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	LCUI_Surface surface = LCUIDisplay_GetSurfaceOwner( window );
+	if(surface != dpy_ev->surface ) {
+		return;
+	}
+	instance = (HINSTANCE)LCUI_GetAppData();
+	hwnd = (HWND)Surface_GetHandle( surface );
+	icon = LoadIcon( instance, MAKEINTRESOURCE( IDI_ICON_MAIN ) );
+	SetClassLong( hwnd, GCL_HICON, (LONG)icon );
+}
+#endif
+
+static void UI_SetWindowIcon( void )
+{
+#ifdef _WIN32
+	LCUIDisplay_BindEvent( DET_READY, OnSurfaceReady, NULL, NULL, NULL );
+#endif
+}
+
 void UI_Init( int argc, char **argv )
 {
 	LCUI_Widget box, root;
@@ -92,7 +121,9 @@ void UI_Init( int argc, char **argv )
 	root = LCUIWidget_GetRoot();
 	Widget_SetTitleW( root, L"LC-Finder" );
 	Widget_UpdateStyle( root, TRUE );
+	UI_SetWindowIcon();
 	if( argc == 1 ) {
+		UI_InitSplashScreen();
 		UI_InitMainView();
 		UI_InitPictureView( MODE_FULL );
 		return;
@@ -104,6 +135,7 @@ void UI_Init( int argc, char **argv )
 		wchar_t *wfilepath;
 		wfilepath = DecodeANSI( argv[1] );
 		filepath = EncodeUTF8( wfilepath );
+		strtrim( filepath, filepath, "\"" );
 		UI_OpenPictureView( filepath );
 		free( wfilepath );
 		free( filepath );

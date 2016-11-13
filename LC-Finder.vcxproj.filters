@@ -105,6 +105,9 @@
     <ClCompile Include="src\ui\selectfolder.cpp">
       <Filter>源文件\ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\splashscreen.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -192,7 +195,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="lc-finder-icon.ico">
+    <Image Include="LC-Finder.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

@@ -206,4 +206,7 @@ void UI_UpdateSearchView( void );
 
 void UI_InitSearchView( void );
 
+/** 初始化启动画面 */
+void UI_InitSplashScreen( void );
+
 #endif

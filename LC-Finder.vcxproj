@@ -38,6 +38,7 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
     </ClCompile>
+    <ClCompile Include="src\ui\splashscreen.c" />
     <ClCompile Include="src\ui\starrating.c" />
     <ClCompile Include="src\ui\textview_i18n.c" />
     <ClCompile Include="src\ui\thumbview.c" />
@@ -89,7 +90,7 @@
     <ResourceCompile Include="LC-Finder.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="lc-finder-icon.ico" />
+    <Image Include="LC-Finder.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
