@@ -173,6 +173,7 @@ static struct PictureViewer {
 
 static void FileIterator_Destroy( FileIterator iter )
 {
+	free( iter->filepath );
 	iter->privdata = NULL;
 	iter->filepath = NULL;
 	iter->next = NULL;
@@ -182,14 +183,11 @@ static void FileIterator_Destroy( FileIterator iter )
 
 static void FileIterator_Update( FileIterator iter )
 {
-	wchar_t filepath[PATH_LEN];
+	wchar_t wpath[PATH_LEN];
 	FileDataPack data = iter->privdata;
-	wpathjoin( filepath, data->scanner->dirpath, data->fidx->name );
+	wpathjoin( wpath, data->scanner->dirpath, data->fidx->name );
 	iter->length = data->scanner->files.length;
-	if( iter->filepath ) {
-		free( iter->filepath );
-	}
-	iter->filepath = EncodeUTF8( filepath );
+	LCUI_EncodeString( iter->filepath, wpath, PATH_LEN, ENCODING_UTF8 );
 }
 
 static void FileIterator_Next( FileIterator iter )
@@ -223,10 +221,10 @@ static FileIterator FileIterator_Create( FileScanner scanner, FileIndex fidx )
 	data->scanner = scanner;
 	iter->index = 0;
 	iter->privdata = data;
-	iter->filepath = NULL;
 	iter->next = FileIterator_Next;
 	iter->prev = FileIterator_Prev;
 	iter->destroy = FileIterator_Destroy;
+	iter->filepath = NEW( char, PATH_LEN );
 	while( node != scanner->files.head.next ) {
 		node = node->prev;
 		iter->index += 1;
@@ -1295,7 +1293,7 @@ void UI_InitPictureView( int mode )
 		Widget_SetStyle( btn_back2, key_display, SV_NONE, style );
 		Widget_Hide( btn_back2 );
 	} else {
-		//Widget_Destroy( btn_back );
+		Widget_Destroy( btn_back );
 	}
 }
 
