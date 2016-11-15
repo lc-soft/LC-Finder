@@ -1,5 +1,5 @@
 name: English
-code: en-us
+code: en-US
 strings:
     button:
         ok: Ok

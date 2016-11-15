@@ -304,3 +304,23 @@ Language I18n_SetLanguage( const char *lang_code )
 	}
 	return NULL;
 }
+
+#ifdef _WIN32
+
+#include <windows.h>
+
+int I18n_GetDefaultLanguage( char *lang, int max_len )
+{
+	wchar_t buf[64] = {0};
+	GetUserDefaultLocaleName( buf, 63 );
+	return LCUI_EncodeString( lang, buf, max_len, ENCODING_UTF8 );
+}
+
+#else
+
+int I18n_GetDefaultLanguage( char *lang )
+{
+	strcpy( lang, "en-US" );
+}
+
+#endif

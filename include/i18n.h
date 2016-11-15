@@ -61,4 +61,7 @@ Language I18n_LoadLanguage( const char *filename );
 /** 设置当前语言 */
 Language I18n_SetLanguage( const char *lang_code );
 
+/** 获取系统默认的语言 */
+int I18n_GetDefaultLanguage( char *lang, int max_len );
+
 #endif

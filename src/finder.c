@@ -638,7 +638,7 @@ int LCFinder_LoadConfig( void )
 	FinderConfigRec config;
 	wchar_t wpath[PATH_LEN];
 	LCUI_BOOL has_error = TRUE;
-	strcpy( finder.config.language, "en-us" );
+	I18n_GetDefaultLanguage( finder.config.language, 32 );
 	strcpy( finder.config.head, LCFINDER_CONFIG_HEAD );
 	finder.config.version.type = LCFINDER_VER_TYPE;
 	finder.config.version.major = LCFINDER_VER_MAJOR;

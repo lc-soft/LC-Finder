@@ -1,5 +1,5 @@
 name: 繁體中文
-code: zh-tw
+code: zh-TW
 strings:
     button:
         ok: 確定
