@@ -42,15 +42,16 @@
 #include <locale.h>
 #include "finder.h"
 #include "i18n.h"
+#include "selectfolder.h"
 #include "ui.h"
 #include <LCUI/font/charset.h>
 
 #define DEBUG
-
-#define DATA_DIR	L"data"
 #define LANG_DIR	L"lang"
 #define LANG_FILE_EXT	L".yaml"
 #define CONFIG_FILE	L"config.bin"
+#define STORAGE_FILE	L"storage.db"
+
 
 #define THUMB_CACHE_SIZE (64*1024*1024)
 
@@ -386,24 +387,23 @@ static void InitConsoleWindow( void )
 static void LCFinder_InitWorkDir( void )
 {
 	int len, len1, len2;
-	wchar_t data_dir[2048];
+	wchar_t data_dir[PATH_LEN];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
 #if defined(_WIN32) && defined(DEBUG)
 	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
 #endif
-	len = wgetcurdir( data_dir, 2048 ) + 1;
+	len = wgetcurdir( data_dir, PATH_LEN ) + 1;
 	finder.work_dir = NEW( wchar_t, len );
 	wcsncpy( finder.work_dir, data_dir, len );
-	wpathjoin( data_dir, data_dir, DATA_DIR );
-	len = wcslen( data_dir );
-	if( data_dir[len - 1] != PATH_SEP ) {
-		data_dir[len++] = PATH_SEP;
-		data_dir[len] = 0;
+	if( !GetAppDataFolderW( data_dir, PATH_LEN ) ) {
+		printf( "[workdir] error\n" );
+		return;
 	}
-	len += 2;
-	len1 = len + wcslen(dirs[0]);
-	len2 = len + wcslen(dirs[1]);
+	wpathjoin( data_dir, data_dir, LCFINDER_FOLDER_NAME );
+	len = wcslen( data_dir ) + 2;
+	len1 = len + wcslen( dirs[0] );
+	len2 = len + wcslen( dirs[1] );
 	finder.data_dir = NEW( wchar_t, len );
 	finder.fileset_dir = NEW( wchar_t, len1 );
 	finder.thumbs_dir = NEW( wchar_t, len2 );
@@ -413,9 +413,8 @@ static void LCFinder_InitWorkDir( void )
 	wmkdir( finder.data_dir );
 	wmkdir( finder.fileset_dir );
 	wmkdir( finder.thumbs_dir );
-#ifdef _WIN32
-	_wsetlocale(LC_ALL, L"chs");
-#endif
+	printf( "[workdir] work path: %ls\n", finder.work_dir );
+	printf( "[workdir] data path: %ls\n", finder.data_dir );
 }
 
 DB_Tag LCFinder_GetTag( const char *tagname )
@@ -498,9 +497,16 @@ void LCFinder_ReloadTags( void )
 /** 初始化文件数据库 */
 static void LCFinder_InitFileDB( void )
 {
-	DB_Init();
+	char *path;
+	wchar_t wpath[PATH_LEN];
+	wpathjoin( wpath, finder.data_dir, STORAGE_FILE );
+	_DEBUG_MSG( "data dir: %ls\n", finder.data_dir );
+	_DEBUG_MSG( "dbfile path: %ls\n", wpath );
+	path = EncodeUTF8( wpath );
+	DB_Init( path );
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
+	free( path );
 }
 
 static void LCFinder_InitThumbCache( void )
@@ -671,6 +677,7 @@ static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
 int main( int argc, char **argv )
 {
 #if defined (_WIN32) && defined (DEBUG)
+	_wsetlocale( LC_ALL, L"chs" );
 	InitConsoleWindow();
 #endif
 	LCFinder_InitWorkDir();

@@ -285,13 +285,13 @@ int pathjoin( char *path, const char *path1, const char *path2 )
 	if( path != path1 ) {
 		strcpy( path, path1 );
 	}
-	if( path1[len-1] != PATH_SEP ) {
+	if( path[len - 1] != PATH_SEP ) {
 		path[len++] = PATH_SEP;
 		path[len] = 0;
 	}
 	strcpy( path + len, path2 );
 	len = strlen( path );
-	if( path1[len-1] == PATH_SEP ) {
+	if( path[len - 1] == PATH_SEP ) {
 		--len;
 		path[len] = 0;
 	}
@@ -304,13 +304,13 @@ int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 	if( path != path1 ) {
 		wcscpy( path, path1 );
 	}
-	if( path1[len-1] != PATH_SEP ) {
+	if( path[len - 1] != PATH_SEP ) {
 		path[len++] = PATH_SEP;
 		path[len] = 0;
 	}
 	wcscpy( path + len, path2 );
 	len = wcslen( path );
-	if( path1[len-1] == PATH_SEP ) {
+	if( path[len - 1] == PATH_SEP ) {
 		--len;
 		path[len] = 0;
 	}

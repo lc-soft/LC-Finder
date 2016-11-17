@@ -42,7 +42,6 @@
 #define LCFINDER_FILE_SEARCH_C
 #include "file_search.h"
 
-#define STORAGE_PATH "data/storage.db"
 #define SQL_BUF_SIZE 1024
 
 #ifdef WIN32
@@ -243,12 +242,12 @@ static void sqlite3_hasfile( sqlite3_context *ctx, int argc, sqlite3_value **arg
 	sqlite3_result_int( ctx, DirHasFile( dirpath, filepath ) );
 }
 
-int DB_Init( void )
+int DB_Init( const char *dbpath )
 {
 	int i, ret;
 	char *errmsg;
 	printf( "[database] init ...\n" );
-	ret = sqlite3_open( STORAGE_PATH, &self.db );
+	ret = sqlite3_open( dbpath, &self.db );
 	if( ret != SQLITE_OK ) {
 		printf("[database] open failed\n");
 		return -1;

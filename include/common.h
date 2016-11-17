@@ -37,7 +37,7 @@
 #ifndef LCFINDER_COMMON_H
 #define LCFINDER_COMMON_H
 
-#define PATH_LEN 2048
+#define PATH_LEN 256
 
 #ifdef _WIN32
 #include <io.h>

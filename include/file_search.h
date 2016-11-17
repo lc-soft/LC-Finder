@@ -87,7 +87,7 @@ typedef void* DB_Query;
 #endif
 
 /** 初始化数据库模块 */
-int DB_Init( void );
+int DB_Init( const char *dbpath );
 
 /** 添加一个文件夹 */
 DB_Dir DB_AddDir( const char *dirpath );

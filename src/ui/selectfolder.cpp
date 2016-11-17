@@ -34,7 +34,8 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <LCUI_Build.h>
+#include "finder.h"
+#include <LCUI/display.h>
 #include <LCUI/font/charset.h>
 #include "selectfolder.h"
 
@@ -42,11 +43,17 @@
 #include <Windows.h>
 #include <ShlObj.h>
 
+int GetAppDataFolderW( wchar_t *buf, int max_len )
+{
+	HWND hwnd;
+	LCUI_Surface s;
+	s = LCUIDisplay_GetSurfaceOwner( NULL );
+	hwnd = (HWND)Surface_GetHandle( s );
+	return SHGetSpecialFolderPathW( hwnd, buf, CSIDL_LOCAL_APPDATA, 1 );
+}
+
 /* 如果需要兼容 XP 的话 */
 #ifdef _WINXP
-
-#include <LCUI/display.h>
-#include "common.h"
 
 #define TEXT_SELECT_DIR	L"选择文件夹"
 
@@ -128,9 +135,7 @@ int SelectFolder( char *dirpath, int max_len )
 #endif
 #else
 
-#include "finder.h"
 #include "ui.h"
-#include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include "dialog.h"
 
@@ -161,4 +166,9 @@ int SelectFolder( char *dirpath, int max_len )
 	return LCUI_EncodeString( dirpath, wdirpath, max_len, ENCODING_UTF8 );
 }
 
+int GetAppDataFolderW( wchar_t *buff, int max_len )
+{
+	// ...
+	return 0;
+}
 #endif

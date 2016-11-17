@@ -53,7 +53,9 @@ enum VersionType {
 	VERSION_ALPHA
 };
 
-#define LCFINDER_CONFIG_HEAD	"LC-Finder Config Data"
+#define LCFINDER_NAME		L"LC's Finder"
+#define LCFINDER_FOLDER_NAME	L"LCFinder"
+#define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
 #define LCFINDER_VER_MAJOR	0
 #define LCFINDER_VER_MINOR	1
 #define LCFINDER_VER_REVISION	0

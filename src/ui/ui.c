@@ -119,7 +119,7 @@ void UI_Init( int argc, char **argv )
 	Widget_Top( box );
 	Widget_Unwrap( box );
 	root = LCUIWidget_GetRoot();
-	Widget_SetTitleW( root, L"LC-Finder" );
+	Widget_SetTitleW( root, LCFINDER_NAME );
 	Widget_UpdateStyle( root, TRUE );
 	UI_SetWindowIcon();
 	if( argc == 1 ) {

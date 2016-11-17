@@ -39,7 +39,9 @@
 
 LCUI_BEGIN_HEADER
 
-LCUI_API int SelectFolder( char *dirpath, int max_len );
+int SelectFolder( char *dirpath, int max_len );
+
+int GetAppDataFolderW( wchar_t *buf, int max_len );
 
 LCUI_END_HEADER
 
