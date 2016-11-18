@@ -35,16 +35,16 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <LCUI_Build.h>
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
+#include "i18n.h"
 #include "dialog.h"
 
-#define BTN_OK_TEXT	L"确定"
-#define BTN_CANCEL_TEXT	L"取消"
+#define KEY_OK		"button.ok"
+#define KEY_CANCEL	"button.cancel"
 
 typedef struct DialogContextRec_ {
 	int result;
@@ -133,7 +133,7 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
-	TextView_SetTextW( dialog_text, BTN_OK_TEXT );
+	TextView_SetTextW( dialog_text, I18n_GetText( KEY_OK ) );
 	Widget_Append( btn_ok, dialog_text );
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
@@ -141,7 +141,7 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
-	TextView_SetTextW( dialog_text, BTN_CANCEL_TEXT );
+	TextView_SetTextW( dialog_text, I18n_GetText( KEY_CANCEL ) );
 	Widget_Append( btn_cancel, dialog_text );
 	Widget_Append( box, btn_cancel );
 	Widget_Append( dialog_footer, box );

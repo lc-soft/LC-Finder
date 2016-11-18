@@ -48,6 +48,14 @@ strings:
             empty: There is nothing to show here
             loading: Loading ...
             unsupport: Cannot read this picture
+        dialog:
+            title:
+                add_tag: Add tags
+                delete_tag: Alert
+            placeholder:
+                input_tag: 'tag name, multiple tag names separated by space.'
+            text:
+                delete_tag: 'Delete the %s tag ?'
         info:
             title: File infomation
             file_name: Name

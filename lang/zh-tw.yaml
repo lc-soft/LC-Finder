@@ -42,12 +42,21 @@ strings:
             saving: '正同步 %d/%d 個文件'
             finished: '已同步 %d 個文件'
     picture:
+        unknown: 未知
         browse_all: 瀏覽全部圖片
         message:
             empty: 此處沒有任何要顯示的內容。
             loading: 圖片載入中...
             unsupport: 無法識別該圖片的內容。
-        unknown: 未知
+        dialog:
+            title:
+                add_tag: 添加標籤
+                edit_tag: 編輯標籤
+                delete_tag: 提示
+            placeholder:
+                input_tag: 標籤名稱，多個標籤用空格隔開
+            text:
+                delete_tag: '確定要移除 %s 標籤？'
         info:
             title: 文件信息
             file_name: 文件名

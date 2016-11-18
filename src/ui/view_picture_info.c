@@ -52,14 +52,13 @@
 #include "dialog.h"
 #include "starrating.h"
 
-#define KEY_UNKNOWN			"picture.unknown"
-#define DIALOG_TITLE_ADDTAG		L"添加标签"
-#define DIALOG_TITLE_EDITTAG		L"编辑标签"
-#define DIALOG_INPUT_PLACEHOLDER	L"标签名称，多个标签用空格隔开"
-#define DIALOG_DELETE_CONFIRM_TEXT	L"确定要移除 %s 标签？"
-#define DIALOG_DELETE_CONFIRM_TITLE	L"提示"
 #define MAX_TAG_LEN			256
 #define XML_PATH			"res/ui-view-picture-info.xml"
+#define KEY_UNKNOWN			"picture.unknown"
+#define KEY_TITLE_ADD_TAG		"picture.dialog.title.add_tag"
+#define KEY_TITLE_DEL_TAG		"picture.dialog.title.delete_tag"
+#define KEY_PLACEHOLDER_INPUT_TAG	"picture.dialog.placeholder.input_tag"
+#define KEY_TEXT_DEL_TAG		"picture.dialog.text.delete_tag"
 
 struct PictureInfoPanel {
 	LCUI_Widget window;
@@ -101,12 +100,16 @@ static LCUI_BOOL CheckTagName( const wchar_t *tagname )
 static void OnBtnDeleteTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	int i;
+	wchar_t buf[256] = {0};
 	TagInfoPack pack = e->data;
-	wchar_t name[256], text[300];
-	LCUI_DecodeString( name, pack->tag->name, 256, ENCODING_UTF8 );
-	swprintf( text, 300, DIALOG_DELETE_CONFIRM_TEXT, name );
-	if( !LCUIDialog_Confirm( this_view.window, 
-				 DIALOG_DELETE_CONFIRM_TITLE, text ) ) {
+	wchar_t *name = DecodeUTF8( pack->tag->name );
+	const wchar_t *text = I18n_GetText( KEY_TEXT_DEL_TAG );
+	const wchar_t *title = I18n_GetText( KEY_TITLE_DEL_TAG );
+
+	swprintf( buf, 255, text, name );
+	free( name );
+
+	if( !LCUIDialog_Confirm( this_view.window, title, buf ) ) {
 		return;
 	}
 	LCFinder_TriggerEvent( EVENT_TAG_UPDATE, pack->tag );
@@ -175,21 +178,18 @@ static void OnBtnOpenDirClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	int i, j;
 	DB_Tag tag;
-	int i, j, len;
-	wchar_t text[256];
-	LCUI_Widget window;
 	char *buf, **tagnames;
-
-	window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADDTAG,
-				    DIALOG_INPUT_PLACEHOLDER, NULL,
-				    text, MAX_TAG_LEN, CheckTagName ) ) {
+	wchar_t text[MAX_TAG_LEN];
+	const wchar_t *title = I18n_GetText( KEY_TITLE_ADD_TAG );
+	const wchar_t *holder = I18n_GetText( KEY_PLACEHOLDER_INPUT_TAG );
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
+	if( 0 != LCUIDialog_Prompt( window, title, holder, NULL, text, 
+				    MAX_TAG_LEN, CheckTagName ) ) {
 		return;
 	}
-	len = LCUI_EncodeString( NULL, text, 0, ENCODING_UTF8 ) + 1;
-	buf = NEW( char, len );
-	LCUI_EncodeString( buf, text, len, ENCODING_UTF8 );
+	buf = EncodeUTF8( text );
 	strsplit( buf, " ", &tagnames );
 	for( i = 0; tagnames[i]; ++i ) {
 		if( strlen( tagnames[i] ) == 0 ) {
