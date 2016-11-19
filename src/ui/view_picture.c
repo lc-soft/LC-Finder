@@ -50,7 +50,7 @@
 #include "dialog.h"
 
 #define MAX_SCALE	5.0
-#define XML_PATH	"res/ui-view-picture.xml"
+#define XML_PATH	"assets/ui-view-picture.xml"
 #define TEXT_DELETE	L"删除此文件？"
 
 #define ClearPositionStyle(W) do { \

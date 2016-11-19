@@ -53,7 +53,7 @@
 #include "starrating.h"
 
 #define MAX_TAG_LEN			256
-#define XML_PATH			"res/ui-view-picture-info.xml"
+#define XML_PATH			"assets/ui-view-picture-info.xml"
 #define KEY_UNKNOWN			"picture.unknown"
 #define KEY_TITLE_ADD_TAG		"picture.dialog.title.add_tag"
 #define KEY_TITLE_DEL_TAG		"picture.dialog.title.delete_tag"

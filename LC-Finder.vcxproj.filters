@@ -112,10 +112,10 @@
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="res\ui.css">
+    <None Include="res\ui-skin.css">
       <Filter>相关资源</Filter>
     </None>
-    <None Include="res\ui-skin.css">
+    <None Include="assets\ui.css">
       <Filter>相关资源</Filter>
     </None>
   </ItemGroup>

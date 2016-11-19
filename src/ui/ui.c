@@ -48,7 +48,7 @@
 #include "textview_i18n.h"
 #include "dropdown.h"
 
-#define XML_PATH "res/ui.xml"
+#define XML_PATH "assets/ui.xml"
 
 static void onTimer( void *arg )
 {

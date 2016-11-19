@@ -40,7 +40,7 @@
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 
-#define SPLASH_IMG_PATH		L"res/splashscreen.png"
+#define SPLASH_IMG_PATH		L"assets/splashscreen.png"
 #define FADEOUT_DURATION	500
 
 static struct SplashScreenModule {

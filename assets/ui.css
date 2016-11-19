@@ -23,6 +23,9 @@
 .text-line .text {
 	display: inline-block;
 }
+.text-paragraph {
+	margin-bottom: 20px;
+}
 .btn {
 	padding: 8px 14px;
 }
@@ -69,6 +72,11 @@
 }
 .btn-basic:acitve {
 	background-color: #d7d7d7;
+}
+.btn-basic:disabled:hover,
+.btn-basic:disabled:active {
+	background-color: #fff;
+	border-color: #eaeaea;
 }
 .btn-dropdown {
 	border: 1px solid #ddd;
@@ -971,4 +979,9 @@ dropdown.checkable dropdown-item .icon {
 }
 dropdown.checkable dropdown-item.active .icon {
 	visible: true;
+}
+
+.setting-group {
+	width: 100%;
+	margin-bottom: 15px;
 }

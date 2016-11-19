@@ -53,10 +53,10 @@
     <ClCompile Include="src\ui\ui.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\ui.css" />
     <None Include="LICENSE" />
     <None Include="README.md" />
     <None Include="res\ui-skin.css" />
-    <None Include="res\ui.css" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="res\ui-view-picture-info.xml" />

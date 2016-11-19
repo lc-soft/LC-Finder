@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <lcui-app>
-  <resource type="text/css" src="res/ui.css"/>
-  <resource type="text/css" src="res/ui-skin.css"/>
-  <resource type="text/css" src="res/materialdesignicons.min.css"/>
-  <resource type="application/font-ttf" src="res/materialdesignicons-webfont.ttf"/>
+  <resource type="text/css" src="assets/ui.css"/>
+  <resource type="text/css" src="assets/ui-skin.css"/>
+  <resource type="text/css" src="assets/materialdesignicons.min.css"/>
+  <resource type="application/font-ttf" src="assets/materialdesignicons-webfont.ttf"/>
   <ui>
     <widget id="main-window" class="window skin-light-green">
       <widget id="main-sidebar" class="sidebar sidebar-mini">
@@ -196,47 +196,60 @@
         <widget class="view-body">
           <widget id="view-settings-content-wrapper" class="view-content-wrapper">
             <widget id="view-settings-content" class="scrolllayer view-content">
-              <widget type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache">缓存</widget>
-              <widget class="item-group">
-                <widget class="text-line">
-                  <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache_stats">当前缩略图缓存共占用 %s 的空间</widget>
-                </widget>
-                <widget id="test-text" class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache_description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
-                <widget id="btn-clear-thumb-db" class="btn btn-default">
-                  <widget type="textview-i18n" class="text" data-i18n-key="button.clear">清除</widget>
-                </widget>
-              </widget>
-              <widget type="textview-i18n" class="title" data-i18n-key="settings.language">语言</widget>
-              <widget class="item-group">
-                <widget class="text-line">
-                  <widget type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</widget>
-                </widget>
-                <widget id="btn-change-language" class="btn btn-dropdown">
-                  <widget id="txt-current-language" type="textview" class="default text">简体中文</widget>
-                  <widget type="textview" class="icon mdi mdi-chevron-down"></widget>
-                </widget>
-              </widget>
-              <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</widget>
-              <widget class="source-list">
-                <widget id="current-source-list"></widget>
-                <widget id="btn-add-source" class="source-list-item">
-                  <widget type="textview" class="text icon mdi mdi-plus"></widget>
-                  <widget type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</widget>
-                </widget>
-              </widget>
-              <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
-              <widget class="item-group">
-                <widget type="textview" class="text">LC-Finder 0.1.0 Beta 1</widget>
-                <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2016 LC's Software，保留所有权利。</widget>
-                <widget class="btn-group">
-                  <widget id="btn-open-license" class="btn btn-link">
-                    <widget type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</widget>
+              <widget class="setting-group">
+                <widget type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache">缓存</widget>
+                <widget class="item-group">
+                  <widget class="text-line">
+                    <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache_stats">当前缩略图缓存共占用 %s 的空间</widget>
                   </widget>
-                  <widget id="btn-open-website" class="btn btn-link">
-                    <widget type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</widget>
+                  <widget id="test-text" class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache_description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
+                  <widget id="btn-clear-thumb-db" class="btn btn-default">
+                    <widget type="textview-i18n" class="text" data-i18n-key="button.clear">清除</widget>
                   </widget>
-                  <widget id="btn-open-feedback" class="btn btn-link">
-                    <widget type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</widget>
+                </widget>
+              </widget>
+              <widget class="setting-group">
+                <widget type="textview-i18n" class="title" data-i18n-key="settings.language">语言</widget>
+                <widget class="item-group">
+                  <widget class="text-line">
+                    <widget type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</widget>
+                  </widget>
+                  <widget id="btn-change-language" class="btn btn-dropdown">
+                    <widget id="txt-current-language" type="textview" class="default text">简体中文</widget>
+                    <widget type="textview" class="icon mdi mdi-chevron-down"></widget>
+                  </widget>
+                </widget>
+              </widget>
+              <widget class="setting-group">
+                <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</widget>
+                <widget class="source-list">
+                  <widget id="current-source-list"></widget>
+                  <widget id="btn-add-source" class="source-list-item">
+                    <widget type="textview" class="text icon mdi mdi-plus"></widget>
+                    <widget type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</widget>
+                  </widget>
+                </widget>
+              </widget>
+              <widget class="setting-group">
+                <widget type="textview-i18n" class="text title" data-i18n-key="settings.private_space">私人空间</widget>
+                <widget id="test-text" class="text text-line text-paragraph" type="textview-i18n" data-i18n-key="settings.personal_zone_description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</widget>
+                <widget id="test-text" class="text text-line" type="textview-i18n" data-i18n-key="settings.personal_zone_switcher_title">开启私人空间</widget>
+              </widget>
+              <widget class="setting-group">
+                <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
+                <widget class="item-group">
+                  <widget type="textview" class="text">LC-Finder 0.1.0 Beta 1</widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2016 LC's Software，保留所有权利。</widget>
+                  <widget class="btn-group">
+                    <widget id="btn-open-license" class="btn btn-link">
+                      <widget type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</widget>
+                    </widget>
+                    <widget id="btn-open-website" class="btn btn-link">
+                      <widget type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</widget>
+                    </widget>
+                    <widget id="btn-open-feedback" class="btn btn-link">
+                      <widget type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</widget>
+                    </widget>
                   </widget>
                 </widget>
               </widget>
