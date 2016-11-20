@@ -232,26 +232,24 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 
 static int FileScanner_LoadSourceDirs( FileScanner scanner )
 {
-	char *path;
-	int i, len, count = 0;
-	for( i = 0; i < finder.n_dirs; ++i ) {
+	int i, n;
+	DB_Dir *dirs;
+	LCUIMutex_Lock( &scanner->mutex );
+	n = LCFinder_GetSourceDirList( &dirs );
+	for( i = 0; i < n; ++i ) {
 		FileEntry entry = NEW( FileEntryRec, 1 );
-		if( !finder.dirs[i] ) {
-			continue;
-		}
-		len = strlen( finder.dirs[i]->path ) + 1;
-		path = malloc( sizeof( char ) * len );
+		int len = strlen( finder.dirs[i]->path ) + 1;
+		char *path = malloc( sizeof( char ) * len );
 		strcpy( path, finder.dirs[i]->path );
 		entry->path = path;
 		entry->is_dir = TRUE;
-		LCUIMutex_Lock( &scanner->mutex );
 		LinkedList_Append( &scanner->files, entry );
-		LCUICond_Signal( &scanner->cond );
 		DEBUG_MSG("dir: %s\n", entry->path);
-		LCUIMutex_Unlock( &scanner->mutex );
-		++count;
 	}
-	return count;
+	LCUICond_Signal( &scanner->cond );
+	LCUIMutex_Unlock( &scanner->mutex );
+	free( dirs );
+	return n;
 }
 
 /** 初始化文件扫描 */

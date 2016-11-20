@@ -137,11 +137,23 @@ static int FileScanner_ScanAll( FileScanner scanner )
 {
 	DB_File file;
 	DB_Query query;
+	DB_QueryTerms terms;
 	int i, total, count;
-	this_view.terms.offset = 0;
-	this_view.terms.limit = 100;
-	this_view.terms.tags = scanner->tags;
-	this_view.terms.n_tags = scanner->n_tags;
+	terms = &this_view.terms;
+	terms->offset = 0;
+	terms->limit = 100;
+	terms->tags = scanner->tags;
+	terms->n_tags = scanner->n_tags;
+	if( terms->dirs ) {
+		int n_dirs;
+		free( terms->dirs );
+		terms->dirs = NULL;
+		n_dirs = LCFinder_GetSourceDirList( &terms->dirs );
+		if( n_dirs == finder.n_dirs ) {
+			free( terms->dirs );
+			terms->dirs = NULL;
+		}
+	}
 	query = DB_NewQuery( &this_view.terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	scanner->total = total, scanner->count = 0;
@@ -149,10 +161,10 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &this_view.terms );
-		if(count < this_view.terms.limit) {
+		if(count < terms->limit) {
 			i = count;
 		} else {
-			i = this_view.terms.limit;
+			i = terms->limit;
 		}
 		for( ; scanner->is_running && i > 0; --i ) {
 			file = DBQuery_FetchFile( query );
@@ -165,8 +177,12 @@ static int FileScanner_ScanAll( FileScanner scanner )
 			LCUIMutex_Unlock( &scanner->mutex );
 			scanner->count += 1;
 		}
-		count -= this_view.terms.limit;
-		this_view.terms.offset += this_view.terms.limit;
+		count -= terms->limit;
+		terms->offset += terms->limit;
+	}
+	if( terms->dirs ) {
+		free( terms->dirs );
+		terms->dirs = NULL;
 	}
 	return total;
 }

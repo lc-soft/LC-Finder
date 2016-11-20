@@ -19,6 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bridge.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+    </ClCompile>
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\common.c" />
     <ClCompile Include="src\lib\file_cache.c" />
@@ -34,10 +38,6 @@
     <ClCompile Include="src\ui\dropdown.c" />
     <ClCompile Include="src\ui\filesync.c" />
     <ClCompile Include="src\ui\progressbar.c" />
-    <ClCompile Include="src\ui\selectfolder.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-    </ClCompile>
     <ClCompile Include="src\ui\splashscreen.c" />
     <ClCompile Include="src\ui\starrating.c" />
     <ClCompile Include="src\ui\textview_i18n.c" />
@@ -59,6 +59,7 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\bridge.h" />
     <ClInclude Include="include\browser.h" />
     <ClInclude Include="include\common.h" />
     <ClInclude Include="include\dialog.h" />
@@ -68,7 +69,6 @@
     <ClInclude Include="include\finder.h" />
     <ClInclude Include="include\i18n.h" />
     <ClInclude Include="include\progressbar.h" />
-    <ClInclude Include="include\selectfolder.h" />
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\starrating.h" />
     <ClInclude Include="include\textview_i18n.h" />

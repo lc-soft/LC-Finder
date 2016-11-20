@@ -102,11 +102,11 @@
     <ClCompile Include="src\ui\dropdown.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\selectfolder.cpp">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\splashscreen.c">
       <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bridge.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -174,7 +174,7 @@
     <ClInclude Include="include\dropdown.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\selectfolder.h">
+    <ClInclude Include="include\bridge.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

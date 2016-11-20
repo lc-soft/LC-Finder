@@ -48,7 +48,7 @@
 #include "dialog.h"
 #include "dropdown.h"
 #include "textview_i18n.h"
-#include "selectfolder.h"
+#include "bridge.h"
 #include "i18n.h"
 
 #define KEY_CLEANING 			"button.cleaning"
@@ -138,7 +138,7 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( LCFinder_GetDir( dirpath ) ) {
 		return;
 	}
-	dir = LCFinder_AddDir( dirpath );
+	dir = LCFinder_AddDir( dirpath, TRUE );
 	if( dir ) {
 		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 	}

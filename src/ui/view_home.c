@@ -176,6 +176,16 @@ static int FileScanner_ScanAll( FileScanner scanner )
 
 	terms.limit = 100;
 	terms.modify_time = DESC;
+	if( terms.dirs ) {
+		int n_dirs;
+		free( terms.dirs );
+		terms.dirs = NULL;
+		n_dirs = LCFinder_GetSourceDirList( &terms.dirs );
+		if( n_dirs == finder.n_dirs ) {
+			free( terms.dirs );
+			terms.dirs = NULL;
+		}
+	}
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
 	scanner->total = total, scanner->count = 0;
@@ -200,6 +210,10 @@ static int FileScanner_ScanAll( FileScanner scanner )
 		}
 		count -= terms.limit;
 		terms.offset += terms.limit;
+	}
+	if( terms.dirs ) {
+		free( terms.dirs );
+		terms.dirs = NULL;
 	}
 	return total;
 }

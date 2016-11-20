@@ -232,8 +232,8 @@
               </widget>
               <widget class="setting-group">
                 <widget type="textview-i18n" class="text title" data-i18n-key="settings.private_space">私人空间</widget>
-                <widget id="test-text" class="text text-line text-paragraph" type="textview-i18n" data-i18n-key="settings.personal_zone_description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</widget>
-                <widget id="test-text" class="text text-line" type="textview-i18n" data-i18n-key="settings.personal_zone_switcher_title">开启私人空间</widget>
+                <widget id="test-text" class="text text-line text-paragraph" type="textview-i18n" data-i18n-key="settings.private_space_description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</widget>
+                <widget id="test-text" class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space_switcher_title">开启私人空间</widget>
               </widget>
               <widget class="setting-group">
                 <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>

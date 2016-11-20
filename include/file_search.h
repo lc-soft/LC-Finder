@@ -52,6 +52,7 @@ typedef struct DB_TagRec_ {
 typedef struct DB_DirRec_ {
 	int id;			/**< 文件夹标识号 */
 	char *path;		/**< 文件夹路径 */
+	int visible;		/**< 是否可见 */
 } DB_DirRec, *DB_Dir;
 
 typedef struct DB_FileRec_ {
@@ -90,7 +91,7 @@ typedef void* DB_Query;
 int DB_Init( const char *dbpath );
 
 /** 添加一个文件夹 */
-DB_Dir DB_AddDir( const char *dirpath );
+DB_Dir DB_AddDir( const char *dirpath, int visible );
 
 /** 删除一个文件夹 */
 void DB_DeleteDir( DB_Dir dir );
@@ -116,9 +117,6 @@ DB_File DB_GetFile( const char *filepath );
 
 /** 获取全部标签记录 */
 int DB_GetTags( DB_Tag **outlist );
-
-/** 移除一个标签记录 */
-void DBTag_Remove( DB_Tag tag );
 
 /** 为文件移除一个标签 */
 int DBFile_RemoveTag( DB_File file, DB_Tag tag );

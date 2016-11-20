@@ -1,5 +1,6 @@
 ﻿/* ***************************************************************************
- * selectfolder.cpp -- select a folder
+ * bridge.cpp -- a bridge, provides a cross-platform implementation for some
+ * interfaces.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -18,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * selectfolder.c -- 文件夹选择功能，封装了各个系统下的文件夹选择对话框的实现
+ * bridge.cpp -- 桥梁，为某些功能提供跨平台实现.
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -37,7 +38,7 @@
 #include "finder.h"
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
-#include "selectfolder.h"
+#include "bridge.h"
 
 #ifdef _WIN32
 #include <Windows.h>

@@ -36,13 +36,14 @@
  * ****************************************************************************/
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
 #include <locale.h>
 #include "finder.h"
 #include "i18n.h"
-#include "selectfolder.h"
+#include "bridge.h"
 #include "ui.h"
 #include <LCUI/font/charset.h>
 
@@ -117,7 +118,7 @@ static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 	return DecodeUTF8( dbpath );
 }
 
-DB_Dir LCFinder_AddDir( const char *dirpath )
+DB_Dir LCFinder_AddDir( const char *dirpath, int visible )
 {
 	int i, len;
 	char *path;
@@ -137,7 +138,7 @@ DB_Dir LCFinder_AddDir( const char *dirpath )
 			return NULL;
 		}
 	}
-	dir = DB_AddDir( dirpath );
+	dir = DB_AddDir( dirpath, visible );
 	if( !dir ) {
 		free( path );
 		return NULL;
@@ -289,6 +290,29 @@ DB_Dir LCFinder_GetSourceDir( const char *filepath )
 		}
 	}
 	return NULL;
+}
+
+int LCFinder_GetSourceDirList( DB_Dir **outdirs )
+{
+	int i, count;
+	DB_Dir *dirs;
+	dirs = malloc( (finder.n_dirs + 1) * sizeof( DB_Dir ) );
+	if( !dirs ) {
+		return -ENOMEM;
+	}
+	for( count = 0, i = 0; i < finder.n_dirs; ++i ) {
+		if( !finder.dirs[i] ) {
+			continue;
+		}
+		if( !finder.open_private_space &&
+		    !finder.dirs[i]->visible ) {
+			continue;
+		}
+		dirs[count++] = finder.dirs[i];
+	}
+	dirs[count] = NULL;
+	*outdirs = dirs;
+	return count;
 }
 
 int64_t LCFinder_GetThumbDBTotalSize( void )
@@ -636,6 +660,34 @@ int LCFinder_SaveConfig( void )
 	return 0;
 }
 
+LCUI_BOOL LCFinder_AuthPassword( const char *password )
+{
+	char pwd[48];
+	EncodeSHA1( pwd, password, strlen( password ) );
+	if( strcmp( pwd, finder.config.encrypted_password ) == 0 ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void LCFinder_SetPassword( const char *password )
+{
+	EncodeSHA1( finder.config.encrypted_password,
+		    password, strlen( password ) );
+}
+
+void LCFinder_OpenPrivateSpace( void )
+{
+	finder.open_private_space = TRUE;
+	LCFinder_TriggerEvent( EVENT_DIRS_CHG, NULL );
+}
+
+void LCFinder_ClosePrivateSpace( void )
+{
+	finder.open_private_space = FALSE;
+	LCFinder_TriggerEvent( EVENT_DIRS_CHG, NULL );
+}
+
 int LCFinder_LoadConfig( void )
 {
 	FILE *file;
@@ -645,6 +697,7 @@ int LCFinder_LoadConfig( void )
 	LCUI_BOOL has_error = TRUE;
 	I18n_GetDefaultLanguage( finder.config.language, 32 );
 	strcpy( finder.config.head, LCFINDER_CONFIG_HEAD );
+	finder.config.encrypted_password[0] = 0;
 	finder.config.version.type = LCFINDER_VER_TYPE;
 	finder.config.version.major = LCFINDER_VER_MAJOR;
 	finder.config.version.minor = LCFINDER_VER_MINOR;
@@ -663,6 +716,7 @@ int LCFinder_LoadConfig( void )
 	if( has_error ) {
 		LCFinder_SaveConfig();
 	}
+	finder.open_private_space = FALSE;
 	free( path );
 	return 0;
 }

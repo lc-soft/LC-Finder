@@ -69,6 +69,7 @@ enum LCFinderEventType {
 	EVENT_SYNC_DONE,
 	EVENT_TAG_ADD,
 	EVENT_TAG_UPDATE,
+	EVENT_DIRS_CHG,
 	EVENT_FILE_DEL,
 	EVENT_THUMBDB_DEL_DONE,
 	EVENT_LANG_CHG
@@ -85,6 +86,7 @@ typedef struct FinderConfigRec_ {
 	} version;			/**< 版本号 */
 	char language[32];		/**< 当前语言 */
 	int files_sort;			/**< 文件的排序方式 */
+	char encrypted_password[48];	/**< 加密后的密码 */
 } FinderConfigRec, *FinderConfig;
 
 /** LCFinder 的主要数据记录 */
@@ -102,6 +104,7 @@ typedef struct Finder_ {
 	Dict *thumb_dbs;		/**< 缩略图数据库记录，以源文件夹路径作为索引 */
 	LCUI_EventTrigger trigger;	/**< 事件触发器 */
 	FinderConfigRec config;		/**< 当前配置 */
+	int open_private_space;		/**< 是否打开了私人空间 */
 } Finder;
 
 typedef void( *EventHandler )(void*, void*);
@@ -129,6 +132,8 @@ int LCFinder_TriggerEvent( int event_id, void *data );
 /** 获取指定文件路径所处的源文件夹 */
 DB_Dir LCFinder_GetSourceDir( const char *filepath );
 
+int LCFinder_GetSourceDirList( DB_Dir **outdirs );
+
 /** 获取缩略图数据库总大小 */
 int64_t LCFinder_GetThumbDBTotalSize( void );
 
@@ -140,7 +145,7 @@ int LCFinder_SyncFiles( FileSyncStatus s );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );
 
-DB_Dir LCFinder_AddDir( const char *dirpath );
+DB_Dir LCFinder_AddDir( const char *dirpath, int visible );
 
 DB_Tag LCFinder_GetTag( const char *tagname );
 
@@ -164,5 +169,17 @@ int LCFinder_SaveConfig( void );
 
 /** 载入配置 */
 int LCFinder_LoadConfig( void );
+
+/** 验证密码 */
+LCUI_BOOL LCFinder_AuthPassword( const char *password );
+
+/** 设置密码 */
+void LCFinder_SetPassword( const char *password );
+
+/** 开启私人空间 */
+void LCFinder_OpenPrivateSpace( void );
+
+/** 关闭私人空间 */
+void LCFinder_ClosePrivateSpace( void );
 
 #endif

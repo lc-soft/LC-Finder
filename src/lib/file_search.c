@@ -92,6 +92,7 @@ STATIC_STR sql_init = "\
 PRAGMA foreign_keys=ON;\
 CREATE TABLE IF NOT EXISTS dir (\
 	id INTEGER PRIMARY KEY AUTOINCREMENT,\
+	visible INTEGER DEFAULT 1,\
 	path TEXT NOT NULL\
 );\
 CREATE TABLE IF NOT EXISTS file (\
@@ -124,7 +125,7 @@ CREATE TABLE IF NOT EXISTS file_tag_relation (\
 
 STATIC_STR sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 STATIC_STR sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
-STATIC_STR sql_add_dir = "INSERT INTO dir(path) VALUES(?);";
+STATIC_STR sql_add_dir = "INSERT INTO dir(path, visible) VALUES(?, ?);";
 STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
@@ -135,7 +136,7 @@ STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
 STATIC_STR sql_count_files = "SELECT COUNT(*) FROM ";
 
 STATIC_STR sql_get_dir_list = "\
-SELECT id, path FROM dir ORDER BY PATH ASC;";
+SELECT id, path, visible FROM dir ORDER BY PATH ASC;";
 
 STATIC_STR sql_get_tag_list = "\
 SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
@@ -171,29 +172,6 @@ WHERE t.id = ftr.tid and ftr.fid = ? GROUP BY t.id ORDER BY count(*) ASC;";
 STATIC_STR sql_search_files = "SELECT f.id, f.did, f.score, f.path, \
 f.width, f.height, f.create_time, f.modify_time FROM file f ";
 
-
-/** 缓存 SQL 代码，等到调用 DB_Commit() 时再一次性处理掉 */
-static int DB_CacheSQL( const char *sql )
-{
-	int len;
-	char *buf, *tail;
-	len = strlen( sql ) + 2;
-	if( self.sql_buf ) {
-		len += self.sql_buf_len;
-		buf = realloc( self.sql_buf, sizeof( char )*(len + 1) );
-		tail = buf + self.sql_buf_len;
-	} else {
-		buf = malloc( sizeof( char )*(len + 1) );
-		tail = buf;
-	}
-	if( !buf ) {
-		return -1;
-	}
-	sprintf( tail, "%s;\n", sql );
-	self.sql_buf = buf;
-	self.sql_buf_len = len;
-	return 0;
-}
 
 /** 检测目录的下一级文件列表中是否有指定文件 */
 static int DirHasFile( const char *dirpath, const char *filepath )
@@ -292,7 +270,7 @@ int DB_Init( const char *dbpath )
 	return 0;
 }
 
-DB_Dir DB_AddDir( const char *dirpath )
+DB_Dir DB_AddDir( const char *dirpath, int visible )
 {
 	int ret;
 	DB_Dir dir;
@@ -300,7 +278,8 @@ DB_Dir DB_AddDir( const char *dirpath )
 	char sql[SQL_BUF_SIZE];
 	stmt = self.stmts[SQL_ADD_DIR];
 	sqlite3_reset( stmt );
-	sqlite3_bind_text( stmt, 1, dirpath, strlen( dirpath ), NULL );
+	sqlite3_bind_text( stmt, 1, dirpath, -1, NULL );
+	sqlite3_bind_int( stmt, 2, visible ? 1 : 0 );
 	ret = sqlite3_step( stmt );
 	if( ret != SQLITE_DONE ) {
 		printf( "[database] error: %s\n", dirpath );
@@ -363,6 +342,7 @@ int DB_GetDirs( DB_Dir **outlist )
 		}
 		dir->id = sqlite3_column_int( stmt, 0 );
 		dir->path = strdup( sqlite3_column_text( stmt, 1 ) );
+		dir->visible = sqlite3_column_int( stmt, 2 );
 		list[i] = dir;
 	}
 	*outlist = list;
@@ -513,13 +493,6 @@ int DB_GetTags( DB_Tag **outlist )
 	sqlite3_finalize( stmt );
 	*outlist = list;
 	return i;
-}
-
-void DBTag_Remove( DB_Tag tag )
-{
-	char sql[SQL_BUF_SIZE];
-	sprintf( sql, sql_del_tag, tag->id );
-	DB_CacheSQL( sql );
 }
 
 int DBFile_RemoveTag( DB_File file, DB_Tag tag )
