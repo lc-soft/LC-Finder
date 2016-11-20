@@ -39,15 +39,19 @@
 .btn:disabled .text {
 	color: #7B7B7B;
 }
-.text.btn-link, .btn-link {
+.btn-link {
 	padding: 0;
 	margin-right: 20px;
 }
-.text.btn-link, .btn-link .text {
+textview.btn-link, 
+textview-i18n.btn-link, 
+.btn-link .text {
 	color: #007acc;
 	padding: 0;
 }
-.text.btn-link:hover, .btn-link:hover .text {
+textview.btn-link:hover,
+textview-i18n.btn-link:hover,
+.btn-link:hover .text {
 	color: #23527c;
 }
 .btn-default {
@@ -980,8 +984,11 @@ dropdown.checkable dropdown-item .icon {
 dropdown.checkable dropdown-item.active .icon {
 	visible: true;
 }
-
+#view-settings-content.view-content {
+	padding-left: 0;
+}
 .setting-group {
 	width: 100%;
 	margin-bottom: 15px;
+	padding-left: 25px;
 }

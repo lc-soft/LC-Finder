@@ -250,6 +250,9 @@
                     <widget id="btn-open-feedback" class="btn btn-link">
                       <widget type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</widget>
                     </widget>
+                    <widget id="btn-open-sourcecode" class="btn btn-link">
+                      <widget type="textview-i18n" class="text" data-i18n-key="settings.sourcecode">源代码</widget>
+                    </widget>
                   </widget>
                 </widget>
               </widget>

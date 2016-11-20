@@ -95,6 +95,7 @@ strings:
         license: 许可协议
         website: 官方网站
         feedback: 问题反馈
+        sourcecode: 源代码
         source_folders:
             title: 源
             add_folder: 添加文件夹

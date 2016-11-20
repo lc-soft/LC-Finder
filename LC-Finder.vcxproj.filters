@@ -112,23 +112,12 @@
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="res\ui-skin.css">
+    <None Include="app\assets\ui.css">
       <Filter>相关资源</Filter>
     </None>
-    <None Include="assets\ui.css">
+    <None Include="app\assets\ui-skin.css">
       <Filter>相关资源</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="res\ui.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-    <Xml Include="res\ui-view-picture.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-    <Xml Include="res\ui-view-picture-info.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\file_search.h">
@@ -198,5 +187,16 @@
     <Image Include="LC-Finder.ico">
       <Filter>资源文件</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="app\assets\ui.xml">
+      <Filter>相关资源</Filter>
+    </Xml>
+    <Xml Include="app\assets\ui-view-picture.xml">
+      <Filter>相关资源</Filter>
+    </Xml>
+    <Xml Include="app\assets\ui-view-picture-info.xml">
+      <Filter>相关资源</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

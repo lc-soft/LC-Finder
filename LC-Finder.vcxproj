@@ -53,17 +53,10 @@
     <ClCompile Include="src\ui\ui.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\ui.css" />
+    <None Include="app\assets\ui-skin.css" />
+    <None Include="app\assets\ui.css" />
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="res\ui-skin.css" />
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="res\ui-view-picture-info.xml" />
-    <Xml Include="res\ui-view-picture.xml" />
-    <Xml Include="res\ui.xml">
-      <SubType>Designer</SubType>
-    </Xml>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\browser.h" />
@@ -91,6 +84,11 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="LC-Finder.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="app\assets\ui-view-picture-info.xml" />
+    <Xml Include="app\assets\ui-view-picture.xml" />
+    <Xml Include="app\assets\ui.xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>

@@ -96,6 +96,7 @@ strings:
         license: License
         website: Website
         feedback: Feedback
+        sourcecode: Source code
         source_folders:
             title: Sources
             add_folder: Add folder

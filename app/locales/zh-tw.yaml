@@ -96,6 +96,7 @@ strings:
         license: 許可協議
         website: 官方網站
         feedback: 問題反饋
+        sourcecode: 源代碼
         source_folders:
             title: 源
             add_folder: 添加文件夾

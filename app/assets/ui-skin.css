@@ -61,16 +61,21 @@
 	color: #727e80;
 }
 .skin-light-green .btn-link .text,
-.skin-light-green .text.btn-link {
+.skin-light-green textview.btn-link,
+.skin-light-green textview-i18n.btn-link {
 	color: #44BB55;
 }
 .skin-light-green .btn-link:hover .text,
-.skin-light-green .text.btn-link:hover {
+.skin-light-green textview.btn-link:hover,
+.skin-light-green textview-i18n.btn-link:hover {
 	color: #2E7D39;
 }
-.skin-light-green .text.btn-link.selected,
-.skin-light-green .text.btn-link.selected:active,
-.skin-light-green .text.btn-link.selected:hover {
+.skin-light-green textview.btn-link.selected,
+.skin-light-green textview-i18n.btn-link.selected,
+.skin-light-green textview.btn-link.selected:active,
+.skin-light-green textview-i18n.btn-link.selected:active,
+.skin-light-green textview.btn-link.selected:hover,
+.skin-light-green textview-i18n.btn-link.selected:hover {
 	color: #333;
 }
 .skin-light-green .file-list .file-list-item-picture.selected .checkbox {

@@ -210,6 +210,12 @@ static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 	wopenbrowser( L"https://github.com/lc-soft/LC-Finder/issues" );
 }
 
+/** 在“源代码”按钮被点击时 */
+static void OnBtnSourceCodeClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
+{
+	wopenbrowser( L"https://github.com/lc-soft/LC-Finder" );
+}
+
 static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	Language lang = arg;
@@ -258,6 +264,8 @@ void UI_InitSettingsView( void )
 	BindEvent( btn, "click", OnBtnWebSiteClick );
 	SelectWidget( btn, ID_BTN_OPEN_FEEDBACK );
 	BindEvent( btn, "click", OnBtnFeedbackClick );
+	SelectWidget( btn, ID_BTN_OPEN_SOURCECODE );
+	BindEvent( btn, "click", OnBtnSourceCodeClick );
 	LCFinder_BindEvent( EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL );
 	TextViewI18n_SetFormater( this_view.thumb_db_stats,
 				  RenderThumbDBSizeText, NULL );
