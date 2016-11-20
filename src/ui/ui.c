@@ -50,6 +50,46 @@
 
 #define XML_PATH "assets/ui.xml"
 
+typedef struct ArgumentsRec_ {
+	const char *filepath;
+	const char *appname;
+	const char *servername;
+} ArgumentsRec, *Arguments;
+
+typedef struct ArgumentMappingRec_ {
+	size_t offset;
+	const char *name;
+} ArgumentMappingRec, *ArgumentMapping;
+
+#define MAPPING_NUM 1
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE)0)->MEMBER)  
+#define setmember(STRUCT, OFFSET, MEMBER, TYPE) \
+	*((TYPE*)(((char*)STRUCT) + OFFSET)) = MEMBER
+
+static void ParseCommandArguments( Arguments args, int argc, char **argv )
+{
+	int i;
+	const char *arg;
+	ArgumentMappingRec mappings[1] = {
+		{ offsetof(Arguments, servername), "-ServerName:" }
+	};
+	for( argc -= 1; argc > 0; -- argc ) {
+		arg = argv[argc];
+		for( i = 0; i < MAPPING_NUM; ++i ) {
+			if( strstr( arg, mappings[i].name ) == arg  ) {
+				arg += strlen( mappings[i].name );
+				setmember( args, mappings[i].offset,
+					   arg, const char* );
+				break;
+			}
+		}
+		if( i >= MAPPING_NUM ) {
+			args->filepath = argv[argc];
+		}
+	}
+	args->appname = argv[0];
+}
+
 static void onTimer( void *arg )
 {
 	//LCUI_Widget w = LCUIWidget_GetById( "debug-widget" );
@@ -101,6 +141,7 @@ static void UI_SetWindowIcon( void )
 void UI_Init( int argc, char **argv )
 {
 	LCUI_Widget box, root;
+	ArgumentsRec args = {0};
 
 	LCUI_Init();
 	LCUIWidget_AddThumbView();
@@ -122,7 +163,8 @@ void UI_Init( int argc, char **argv )
 	Widget_SetTitleW( root, LCFINDER_NAME );
 	Widget_UpdateStyle( root, TRUE );
 	UI_SetWindowIcon();
-	if( argc == 1 ) {
+	ParseCommandArguments( &args, argc, argv );
+	if( !args.filepath ) {
 		UI_InitSplashScreen();
 		UI_InitMainView();
 		UI_InitPictureView( MODE_FULL );
@@ -133,7 +175,7 @@ void UI_Init( int argc, char **argv )
 	{
 		char *filepath;
 		wchar_t *wfilepath;
-		wfilepath = DecodeANSI( argv[1] );
+		wfilepath = DecodeANSI( args.filepath );
 		filepath = EncodeUTF8( wfilepath );
 		strtrim( filepath, filepath, "\"" );
 		UI_OpenPictureView( filepath );
@@ -141,9 +183,8 @@ void UI_Init( int argc, char **argv )
 		free( filepath );
 	}
 #else
-	UI_OpenPictureView( argv[1] );
+	UI_OpenPictureView( args.filepath );
 #endif
-
 	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 }
 
