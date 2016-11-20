@@ -47,11 +47,10 @@
 #include <LCUI/font/charset.h>
 
 #define DEBUG
-#define LANG_DIR	L"lang"
+#define LANG_DIR	L"locales"
 #define LANG_FILE_EXT	L".yaml"
 #define CONFIG_FILE	L"config.bin"
 #define STORAGE_FILE	L"storage.db"
-
 
 #define THUMB_CACHE_SIZE (64*1024*1024)
 
@@ -391,7 +390,7 @@ static void LCFinder_InitWorkDir( void )
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
 	/* 如果要调试此程序，需手动设置程序所在目录 */
 #if defined(_WIN32) && defined(DEBUG)
-	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder" );
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder\\app" );
 #endif
 	len = wgetcurdir( data_dir, PATH_LEN ) + 1;
 	finder.work_dir = NEW( wchar_t, len );
