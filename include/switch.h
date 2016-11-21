@@ -1,6 +1,5 @@
 ﻿/* ***************************************************************************
- * bridge.h -- a bridge, provides a cross-platform implementation for some
- * interfaces.
+ * switch.h --switch widget
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -19,7 +18,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * bridge.h -- 桥梁，为某些功能提供跨平台实现。
+ * switch.h -- 开关部件
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -35,15 +34,11 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_SELECTFOLDER_H
-#define LCFINDER_SELECTFOLDER_H
+#ifndef LCFINDER_SWITCH_H
+#define LCFINDER_SWITCH_H
 
-LCUI_BEGIN_HEADER
+LCUI_BOOL Switch_IsChecked( LCUI_Widget w );
 
-int SelectFolder( char *dirpath, int max_len );
-
-int GetAppDataFolderW( wchar_t *buf, int max_len );
-
-LCUI_END_HEADER
+void LCUIWidget_AddSwitch( void );
 
 #endif

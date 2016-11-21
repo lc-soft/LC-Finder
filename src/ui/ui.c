@@ -47,6 +47,7 @@
 #include "progressbar.h"
 #include "textview_i18n.h"
 #include "dropdown.h"
+#include "switch.h"
 
 #define XML_PATH "assets/ui.xml"
 
@@ -149,6 +150,7 @@ void UI_Init( int argc, char **argv )
 	LCUIWidget_AddProgressBar();
 	LCUIWidget_AddTimeSeparator();
 	LCUIWidget_AddTextViewI18n();
+	LCUIWidget_AddSwitch();
 	LCUIWidget_AddDropdown();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
 	LCUIDisplay_SetSize( 960, 640 );

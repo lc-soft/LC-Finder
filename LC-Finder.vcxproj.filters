@@ -108,6 +108,9 @@
     <ClCompile Include="src\bridge.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\switch.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -175,6 +178,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\bridge.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\switch.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

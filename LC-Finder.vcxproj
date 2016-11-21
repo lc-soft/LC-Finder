@@ -40,6 +40,7 @@
     <ClCompile Include="src\ui\progressbar.c" />
     <ClCompile Include="src\ui\splashscreen.c" />
     <ClCompile Include="src\ui\starrating.c" />
+    <ClCompile Include="src\ui\switch.c" />
     <ClCompile Include="src\ui\textview_i18n.c" />
     <ClCompile Include="src\ui\thumbview.c" />
     <ClCompile Include="src\ui\timeseparator.c" />
@@ -71,6 +72,7 @@
     <ClInclude Include="include\progressbar.h" />
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\starrating.h" />
+    <ClInclude Include="include\switch.h" />
     <ClInclude Include="include\textview_i18n.h" />
     <ClInclude Include="include\thumb_db.h" />
     <ClInclude Include="include\thumb_cache.h" />
