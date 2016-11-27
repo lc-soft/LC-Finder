@@ -1,0 +1,259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="通用">
+      <UniqueIdentifier>a32417aa-ea1c-46b4-ae1c-23f54f41567a</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资产">
+      <UniqueIdentifier>41e048c2-1ce2-453d-a1f3-0d29863d44b1</UniqueIdentifier>
+      <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png;ttf;xml;css;</Extensions>
+    </Filter>
+    <Filter Include="内容">
+      <UniqueIdentifier>341266a4-028a-4f3b-adc2-f90f48136d30</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="Common\DirectXHelper.h">
+      <Filter>通用</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\StepTimer.h">
+      <Filter>通用</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DeviceResources.h">
+      <Filter>通用</Filter>
+    </ClInclude>
+    <ClCompile Include="Common\DeviceResources.cpp">
+      <Filter>通用</Filter>
+    </ClCompile>
+    <ClInclude Include="Content\SampleFpsTextRenderer.h">
+      <Filter>内容</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\ShaderStructures.h">
+      <Filter>内容</Filter>
+    </ClInclude>
+    <ClCompile Include="Content\SampleFpsTextRenderer.cpp">
+      <Filter>内容</Filter>
+    </ClCompile>
+    <Image Include="Assets\LockScreenLogo.scale-200.png">
+      <Filter>资产</Filter>
+    </Image>
+    <Image Include="Assets\SplashScreen.scale-200.png">
+      <Filter>资产</Filter>
+    </Image>
+    <Image Include="Assets\Square150x150Logo.scale-200.png">
+      <Filter>资产</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.scale-200.png">
+      <Filter>资产</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
+      <Filter>资产</Filter>
+    </Image>
+    <Image Include="Assets\Wide310x150Logo.scale-200.png">
+      <Filter>资产</Filter>
+    </Image>
+    <Filter Include="dll">
+      <UniqueIdentifier>{0a2be726-0e6f-4fe3-8e31-15a3a406c98a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Locales">
+      <UniqueIdentifier>{ad8da2bc-20cd-4f80-a0b8-15502e58d890}</UniqueIdentifier>
+      <Extensions>.yaml</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{e7cca30b-9dbc-4916-930c-a9446e906fe1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui">
+      <UniqueIdentifier>{04258b80-248d-46ee-98cc-71f87119ce48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\lib">
+      <UniqueIdentifier>{cd0af9e5-34dd-4e26-b3be-c877b9c5d00b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp" />
+    <ClCompile Include="UWPMain.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Content\LCUIRenderer.cpp">
+      <Filter>内容</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
+      <Filter>内容</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\bridge_uwp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\finder.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\common.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\file_cache.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\file_search.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\i18n.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\sha1.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\thumb_cache.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\thumb_db.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\browser.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\dialog_confirm.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\dialog_progress.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\dialog_prompt.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\dropdown.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\filesync.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\progressbar.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\sidebar.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\splashscreen.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\starrating.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\switch.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\textview_i18n.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\thumbview.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\timeseparator.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\ui.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\view_folders.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\view_home.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\view_picture.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\view_picture_info.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\view_search.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\view_settings.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.h" />
+    <ClInclude Include="UWPMain.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Content\LCUIRenderer.h">
+      <Filter>内容</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Content\Sample3DSceneRenderer.h">
+      <Filter>内容</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\StoreLogo.png">
+      <Filter>资产</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="UWP_TemporaryKey.pfx" />
+    <None Include="Package.StoreAssociation.xml" />
+    <None Include="UWP_StoreKey.pfx" />
+    <None Include="..\vendor\dll\yaml.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\dll\unqlite.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\dll\sqlite3.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\dll\libxml2.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\dll\LCUI_D.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="Locales\en-us.yaml">
+      <Filter>Locales</Filter>
+    </None>
+    <None Include="Locales\ja-jp.yaml">
+      <Filter>Locales</Filter>
+    </None>
+    <None Include="Locales\zh-cn.yaml">
+      <Filter>Locales</Filter>
+    </None>
+    <None Include="Locales\zh-tw.yaml">
+      <Filter>Locales</Filter>
+    </None>
+    <None Include="Assets\materialdesignicons.min.css">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\ui.css">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\ui-skin.css">
+      <Filter>资产</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="UWP.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Content\SamplePixelShader.hlsl">
+      <Filter>内容</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\SampleVertexShader.hlsl">
+      <Filter>内容</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\materialdesignicons-webfont.ttf">
+      <Filter>资产</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="Assets\ui.xml">
+      <Filter>资产</Filter>
+    </Xml>
+    <Xml Include="Assets\ui-view-picture.xml">
+      <Filter>资产</Filter>
+    </Xml>
+    <Xml Include="Assets\ui-view-picture-info.xml">
+      <Filter>资产</Filter>
+    </Xml>
+  </ItemGroup>
+</Project>

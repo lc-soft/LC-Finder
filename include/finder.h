@@ -38,13 +38,24 @@
 #ifndef LCFINDER_H
 #define LCFINDER_H
 
+#ifdef __cplusplus
+#define LCFINDER_BEGIN_HEADER extern "C" {
+#define LCFINDER_END_HEADER }
+#else 
+#define LCFINDER_BEGIN_HEADER
+#define LCFINDER_END_HEADER
+#endif
+
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include "bridge.h"
 #include "common.h"
 #include "file_cache.h"
 #include "file_search.h"
 #include "thumb_db.h" 
 #include "thumb_cache.h" 
+
+LCFINDER_BEGIN_HEADER
 
 enum VersionType {
 	VERSION_RELEASE,
@@ -60,6 +71,8 @@ enum VersionType {
 #define LCFINDER_VER_MINOR	1
 #define LCFINDER_VER_REVISION	0
 #define LCFINDER_VER_TYPE	VERSION_BETA
+
+#define ASSERT(X) if((X) != 0) { _DEBUG_MSG("error\n");return -1;}
 
 /** 事件类型 */
 enum LCFinderEventType {
@@ -107,7 +120,7 @@ typedef struct Finder_ {
 	int open_private_space;		/**< 是否打开了私人空间 */
 } Finder;
 
-typedef void( *EventHandler )(void*, void*);
+typedef void( *LCFinder_EventHandler )(void*, void*);
 
 /** 文件同步状态记录 */
 typedef struct FileSyncStatusRec_ {
@@ -124,7 +137,7 @@ typedef struct FileSyncStatusRec_ {
 extern Finder finder;
 
 /** 绑定事件 */
-int LCFinder_BindEvent( int event_id, EventHandler handler, void *data );
+int LCFinder_BindEvent( int event_id, LCFinder_EventHandler handler, void *data );
 
 /** 触发事件 */
 int LCFinder_TriggerEvent( int event_id, void *data );
@@ -181,5 +194,11 @@ void LCFinder_OpenPrivateSpace( void );
 
 /** 关闭私人空间 */
 void LCFinder_ClosePrivateSpace( void );
+
+int LCFinder_Init( int argc, char *argv[] );
+
+void LCFinder_Exit( void );
+
+LCFINDER_END_HEADER
 
 #endif

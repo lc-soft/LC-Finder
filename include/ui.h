@@ -147,7 +147,7 @@ typedef struct FileIteratorRec_ {
 void UI_InitMainView( void );
 
 /** 初始化用户界面 */
-void UI_Init( int argc, char **argv );
+int UI_Init( int argc, char **argv );
 
 void UI_Exit( void );
 

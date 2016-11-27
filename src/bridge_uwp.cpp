@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * bridge.h -- a bridge, provides a cross-platform implementation for some
+ * bridge.cpp -- a bridge, provides a cross-platform implementation for some
  * interfaces.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
@@ -19,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * bridge.h -- 桥梁，为某些功能提供跨平台实现。
+ * bridge.cpp -- 桥梁，为某些功能提供跨平台实现.
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -35,37 +35,55 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_SELECTFOLDER_H
-#define LCFINDER_SELECTFOLDER_H
+#include "finder.h"
+#include "pch.h"
 
-LCFINDER_BEGIN_HEADER
+using namespace Platform;
+using namespace Windows::System;
+using namespace Windows::Storage;
+using namespace Windows::Foundation;
+using namespace Windows::Foundation::Collections;
+using namespace Windows::ApplicationModel;
 
-#ifdef _WIN32
-#define PLATFORM_WIN32
-#if (WINAPI_PARTITION_DESKTOP == 1)
-#define PLATFORM_WIN32_DESKTOP
-#elif (WINAPI_PARTITION_PC_APP == 1)
-#define PLATFORM_WIN32_PC_APP
-#endif
-//#define PLATFORM_WIN32_DESKTOP_XP
-#else
-#define PLATFORM_LINUX
-#endif
+extern "C" {
 
-int SelectFolder( char *dirpath, int max_len );
+int GetAppDataFolderW( wchar_t *buf, int max_len )
+{
+	StorageFolder^ folder = ApplicationData::Current->LocalFolder;
+	wcsncpy( buf, folder->Path->Data(), max_len );
+	return 0;
+}
 
-int GetAppDataFolderW( wchar_t *buf, int max_len );
+int GetAppInstalledLocationW( wchar_t *buf, int max_len )
+{
+	StorageFolder^ folder = Package::Current->InstalledLocation;
+	wcsncpy( buf, folder->Path->Data(), max_len );
+	return 0;
+}
 
-int GetAppInstalledLocationW( wchar_t *buf, int max_len );
+int SelectFolder( char *dirpath, int max_len )
+{
+	return 0;
+}
 
-void OpenUriW( const wchar_t *uri );
+void OpenUriW( const wchar_t *uri )
+{
 
-void OpenFileManagerW( const wchar_t *filepath );
+}
 
-int MoveFileToTrashW( const wchar_t *filepath );
+void OpenFileManagerW( const wchar_t *filepath )
+{
 
-int MoveFileToTrash( const char *filepath );
+}
 
-LCFINDER_END_HEADER
+int MoveFileToTrashW( const wchar_t *filepath )
+{
+	return -1;
+}
 
-#endif
+int MoveFileToTrash( const char *filepath )
+{
+	return -1;
+}
+
+}

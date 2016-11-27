@@ -35,12 +35,12 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdlib.h>
 #include "finder.h"
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
-#include "bridge.h"
 
-#ifdef _WIN32
+#ifdef PLATFORM_WIN32_DESKTOP
 #include <Windows.h>
 #include <ShlObj.h>
 
@@ -50,11 +50,67 @@ int GetAppDataFolderW( wchar_t *buf, int max_len )
 	LCUI_Surface s;
 	s = LCUIDisplay_GetSurfaceOwner( NULL );
 	hwnd = (HWND)Surface_GetHandle( s );
-	return SHGetSpecialFolderPathW( hwnd, buf, CSIDL_LOCAL_APPDATA, 1 );
+	if( !SHGetSpecialFolderPathW( hwnd, buf, CSIDL_LOCAL_APPDATA, 1 ) ) {
+		return -1;
+	}
+	if( wcslen( buf ) > PATH_LEN - 32 ) {
+		return -2;
+	}
+	wpathjoin( buf, buf, LCFINDER_NAME );
+	wmkdir( buf );
+	return 0;
+}
+
+int GetAppInstalledLocationW( wchar_t *buf, int max_len )
+{
+	if( GetCurrentDirectoryW( max_len, buf ) > 0 ) {
+		return 0;
+	}
+	return -1;
+}
+
+void OpenUriW( const wchar_t *uri )
+{
+	ShellExecuteW( NULL, L"open", uri, NULL, NULL, SW_SHOW );
+}
+
+void OpenFileManagerW( const wchar_t *filepath )
+{
+	wchar_t args[PATH_LEN + 16];
+	swprintf( args, 4095, L"/select,\"%s\"", filepath );
+	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
+}
+
+int MoveFileToTrashW( const wchar_t *filepath )
+{
+	int ret;
+	SHFILEOPSTRUCT sctFileOp = { 0 };
+	size_t len = wcslen( filepath ) + 2;
+	wchar_t *path = (wchar_t*)malloc( sizeof( wchar_t ) * len );
+	wcsncpy( path, filepath, len );
+	path[len - 1] = 0;
+	sctFileOp.pTo = NULL;
+	sctFileOp.pFrom = path;
+	sctFileOp.wFunc = FO_DELETE;
+	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION |
+		FOF_NOERRORUI | FOF_SILENT;
+	ret = SHFileOperationW( &sctFileOp );
+	free( path );
+	return ret;
+}
+
+int MoveFileToTrash( const char *filepath )
+{
+	int ret, len = strlen( filepath ) + 1;
+	wchar_t *wfilepath = (wchar_t*)malloc( sizeof( wchar_t ) * len );
+	LCUI_DecodeString( wfilepath, filepath, len, ENCODING_UTF8 );
+	ret = MoveFileToTrashW( wfilepath );
+	free( wfilepath );
+	return ret;
 }
 
 /* 如果需要兼容 XP 的话 */
-#ifdef _WINXP
+#ifdef PLATFORM_WIN32_WINXP
 
 #define TEXT_SELECT_DIR	L"选择文件夹"
 
@@ -97,12 +153,12 @@ int SelectFolder( char *dirpath, int max_len )
 	IShellItem *pItem;
 	IFileDialog *pFile;
 	HRESULT hr = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED |
-				     COINIT_DISABLE_OLE1DDE );
+					COINIT_DISABLE_OLE1DDE );
 	if( FAILED( hr ) ) {
 		return -1;
 	}
 	hr = CoCreateInstance( CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-			       IID_PPV_ARGS( &pFile ) );
+				IID_PPV_ARGS( &pFile ) );
 	if( FAILED( hr ) ) {
 		CoUninitialize();
 		return -2;
@@ -134,42 +190,4 @@ int SelectFolder( char *dirpath, int max_len )
 }
 
 #endif
-#else
-
-#include "ui.h"
-#include <LCUI/gui/widget.h>
-#include "dialog.h"
-
-#define MAX_DIRPATH_LEN			2048
-#define DIALOG_TITLE_ADD_DIR		L"添加源文件夹"
-#define DIALOG_PLACEHOLDER_ADD_DIR	L"文件夹的位置"
-
-static LCUI_BOOL CheckDir( const wchar_t *dirpath )
-{
-	if( wgetcharcount( dirpath, L":\"\'\\\n\r\t" ) > 0 ) {
-		return FALSE;
-	}
-	if( wcslen( dirpath ) >= MAX_DIRPATH_LEN ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-int SelectFolder( char *dirpath, int max_len )
-{
-	wchar_t wdirpath[MAX_DIRPATH_LEN];
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_DIR,
-				    DIALOG_PLACEHOLDER_ADD_DIR, NULL,
-				    wdirpath, MAX_DIRPATH_LEN, CheckDir ) ) {
-		return -1;
-	}
-	return LCUI_EncodeString( dirpath, wdirpath, max_len, ENCODING_UTF8 );
-}
-
-int GetAppDataFolderW( wchar_t *buff, int max_len )
-{
-	// ...
-	return 0;
-}
 #endif

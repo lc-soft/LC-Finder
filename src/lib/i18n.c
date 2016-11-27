@@ -36,7 +36,7 @@
 
 #include <yaml.h>
 #include <LCUI_Build.h>
-#include <LCUI/util/dict.h>
+#include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
 #include "common.h"
 #include "i18n.h"
@@ -153,21 +153,22 @@ Dict *I18n_LoadFile( const char *path )
 	DictValue value, parent_value;
 	int state = 0;
 
-	printf( "[i18n] load language file: %s\n", path );
+	LOG( "[i18n] load language file: %s\n", path );
 	file = fopen( path, "r" );
 	if( !file ) {
-		fprintf( stderr, "[i18n] failed to open file: %s\n", path );
+		LOG( "[i18n] failed to open file: %s\n", path );
 		return NULL;
 	}
 	parent_value = value = NULL;
 	parent_dict = dict = StrDict_Create( NULL, DeleteDictValue );
 	if( !yaml_parser_initialize( &parser ) ) {
-		fputs( "[i18n] failed to initialize parser!\n", stderr );
+		LOG( "[i18n] failed to initialize parser!\n" );
 		return NULL;
 	}
 	yaml_parser_set_input_file( &parser, file );
 	do {
 		if( !yaml_parser_scan( &parser, &token ) ) {
+			LOG( "[i18n] error: %s\n", parser.problem );
 			Dict_Release( dict );
 			dict = NULL;
 			break;

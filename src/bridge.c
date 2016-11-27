@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * bridge.h -- a bridge, provides a cross-platform implementation for some
+ * bridge.c -- a bridge, provides a cross-platform implementation for some
  * interfaces.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
@@ -19,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * bridge.h -- 桥梁，为某些功能提供跨平台实现。
+ * bridge.c -- 桥梁，为某些功能提供跨平台实现.
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -35,37 +35,66 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_SELECTFOLDER_H
-#define LCFINDER_SELECTFOLDER_H
+#include "finder.h"
+#include <LCUI/display.h>
+#include <LCUI/font/charset.h>
+#include <LCUI/gui/widget.h>
+#include "ui.h"
+#include "dialog.h"
 
-LCFINDER_BEGIN_HEADER
+#define MAX_DIRPATH_LEN			2048
+#define DIALOG_TITLE_ADD_DIR		L"添加源文件夹"
+#define DIALOG_PLACEHOLDER_ADD_DIR	L"文件夹的位置"
 
-#ifdef _WIN32
-#define PLATFORM_WIN32
-#if (WINAPI_PARTITION_DESKTOP == 1)
-#define PLATFORM_WIN32_DESKTOP
-#elif (WINAPI_PARTITION_PC_APP == 1)
-#define PLATFORM_WIN32_PC_APP
-#endif
-//#define PLATFORM_WIN32_DESKTOP_XP
-#else
-#define PLATFORM_LINUX
-#endif
+static LCUI_BOOL CheckDir( const wchar_t *dirpath )
+{
+	if( wgetcharcount( dirpath, L":\"\'\\\n\r\t" ) > 0 ) {
+		return FALSE;
+	}
+	if( wcslen( dirpath ) >= MAX_DIRPATH_LEN ) {
+		return FALSE;
+	}
+	return TRUE;
+}
 
-int SelectFolder( char *dirpath, int max_len );
+int SelectFolder( char *dirpath, int max_len )
+{
+	wchar_t wdirpath[MAX_DIRPATH_LEN];
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_DIR,
+				    DIALOG_PLACEHOLDER_ADD_DIR, NULL,
+				    wdirpath, MAX_DIRPATH_LEN, CheckDir ) ) {
+		return -1;
+	}
+	return LCUI_EncodeString( dirpath, wdirpath, max_len, ENCODING_UTF8 );
+}
 
-int GetAppDataFolderW( wchar_t *buf, int max_len );
+int GetAppDataFolderW( wchar_t *buf, int max_len )
+{
+	return -1;
+}
 
-int GetAppInstalledLocationW( wchar_t *buf, int max_len );
+int GetAppInstalledLocationW( wchar_t *buf, int max_len )
+{
+	return -1;
+}
 
-void OpenUriW( const wchar_t *uri );
+void OpenUriW( const wchar_t *uri )
+{
 
-void OpenFileManagerW( const wchar_t *filepath );
+}
 
-int MoveFileToTrashW( const wchar_t *filepath );
+void OpenFileManagerW( const wchar_t *filepath )
+{
 
-int MoveFileToTrash( const char *filepath );
+}
 
-LCFINDER_END_HEADER
+int MoveFileToTrashW( const wchar_t *filepath )
+{
+	return -1;
+}
 
-#endif
+int MoveFileToTrash( const char *filepath )
+{
+	return -1;
+}

@@ -195,25 +195,25 @@ static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e,
 /** 在“许可协议”按钮被点击时 */
 static void OnBtnLicenseClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	wopenbrowser( L"http://www.gnu.org/licenses/gpl-2.0.html" );
+	OpenUriW( L"http://www.gnu.org/licenses/gpl-2.0.html" );
 }
 
 /** 在“官方网站”按钮被点击时 */
 static void OnBtnWebSiteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	wopenbrowser( L"https://lc-soft.io/" );
+	OpenUriW( L"https://lc-soft.io/" );
 }
 
 /** 在“问题反馈”按钮被点击时 */
 static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 {
-	wopenbrowser( L"https://github.com/lc-soft/LC-Finder/issues" );
+	OpenUriW( L"https://github.com/lc-soft/LC-Finder/issues" );
 }
 
 /** 在“源代码”按钮被点击时 */
 static void OnBtnSourceCodeClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
 {
-	wopenbrowser( L"https://github.com/lc-soft/LC-Finder" );
+	OpenUriW( L"https://github.com/lc-soft/LC-Finder" );
 }
 
 static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

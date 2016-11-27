@@ -44,7 +44,7 @@
 
 #define SQL_BUF_SIZE 1024
 
-#ifdef WIN32
+#ifdef _WIN32
 #define strdup _strdup
 #endif
 

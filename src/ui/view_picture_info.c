@@ -173,7 +173,7 @@ static void OnBtnHideClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnOpenDirClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	wopenfilemanger( this_view.filepath );
+	OpenFileManagerW( this_view.filepath );
 }
 
 static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

@@ -42,6 +42,10 @@
 
 #define WIDGET_NAME "textview-i18n"
 
+#ifdef _WIN32
+#define strdup _strdup
+#endif
+
 typedef struct TextViewI18nRec_ {
 	char *key;
 	wchar_t *text;

@@ -63,6 +63,9 @@ typedef struct ArgumentMappingRec_ {
 } ArgumentMappingRec, *ArgumentMapping;
 
 #define MAPPING_NUM 1
+#ifdef offsetof
+#undef offsetof
+#endif
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE)0)->MEMBER)  
 #define setmember(STRUCT, OFFSET, MEMBER, TYPE) \
 	*((TYPE*)(((char*)STRUCT) + OFFSET)) = MEMBER
@@ -110,7 +113,7 @@ void UI_InitMainView( void )
 	UI_InitSearchView();
 }
 
-#ifdef _WIN32
+#ifdef PLATFORM_WIN32_DESKTOP
 #include "../resource.h"
 
 /** 在 surface 准备好后，设置与 surface 绑定的窗口的图标 */
@@ -134,17 +137,18 @@ static void OnSurfaceReady( LCUI_Event e, void *arg )
 
 static void UI_SetWindowIcon( void )
 {
-#ifdef _WIN32
+#ifdef PLATFORM_WIN32_DESKTOP
 	LCUIDisplay_BindEvent( DET_READY, OnSurfaceReady, NULL, NULL, NULL );
 #endif
 }
 
-void UI_Init( int argc, char **argv )
+int UI_Init( int argc, char **argv )
 {
 	LCUI_Widget box, root;
 	ArgumentsRec args = {0};
-
+#ifndef PLATFORM_WIN32_PC_APP
 	LCUI_Init();
+#endif
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddStarRating();
 	LCUIWidget_AddProgressBar();
@@ -153,11 +157,12 @@ void UI_Init( int argc, char **argv )
 	LCUIWidget_AddSwitch();
 	LCUIWidget_AddDropdown();
 	LCUIDisplay_SetMode( LCDM_WINDOWED );
+#ifndef PLATFORM_WIN32_PC_APP
 	LCUIDisplay_SetSize( 960, 640 );
-	//LCUIDisplay_ShowRectBorder();
+#endif
 	box = LCUIBuilder_LoadFile( XML_PATH );
 	if( !box ) {
-		return;
+		return -1;
 	}
 	Widget_Top( box );
 	Widget_Unwrap( box );
@@ -170,7 +175,7 @@ void UI_Init( int argc, char **argv )
 		UI_InitSplashScreen();
 		UI_InitMainView();
 		UI_InitPictureView( MODE_FULL );
-		return;
+		return 0;
 	}
 	UI_InitPictureView( MODE_SINGLE_PICVIEW );
 #ifdef _WIN32
@@ -188,6 +193,7 @@ void UI_Init( int argc, char **argv )
 	UI_OpenPictureView( args.filepath );
 #endif
 	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
+	return 0;
 }
 
 int UI_Run( void )

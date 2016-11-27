@@ -343,22 +343,6 @@ int wmkdir( wchar_t *wpath )
 #endif
 }
 
-void wopenbrowser( const wchar_t *url )
-{
-#ifdef _WIN32
-	ShellExecuteW( NULL, L"open", url, NULL, NULL, SW_SHOW );
-#endif
-}
-
-void wopenfilemanger( const wchar_t *filepath )
-{
-#ifdef _WIN32
-	wchar_t args[4096];
-	swprintf( args, 4095, L"/select,\"%s\"", filepath );
-	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
-#endif
-}
-
 int wgetnumberstr( wchar_t *str, int max_len, size_t number )
 {
 	int right, j, k, len, buf_len, count;
@@ -470,36 +454,4 @@ int wcscasecmp( const wchar_t *str1, const wchar_t *str2 )
 		++p2;
 	}
 	return ch1 - ch2;
-}
-
-int wmovefiletotrash( const wchar_t *wfilepath )
-{
-#ifdef _WIN32
-	int ret;
-	SHFILEOPSTRUCT sctFileOp = {0};
-	size_t len = wcslen( wfilepath ) + 2;
-	wchar_t *path = malloc( sizeof( wchar_t ) * len );
-	wcsncpy( path, wfilepath, len );
-	path[len - 1] = 0;
-	sctFileOp.pTo = NULL;
-	sctFileOp.pFrom = path;
-	sctFileOp.wFunc = FO_DELETE;
-	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION |
-			   FOF_NOERRORUI | FOF_SILENT;
-	ret = SHFileOperationW( &sctFileOp );
-	free( path );
-	return ret;
-#else
-	return -1;
-#endif
-}
-
-int movefiletotrash( const char *filepath )
-{
-	int ret, len = strlen( filepath ) + 1;
-	wchar_t *wfilepath = malloc( sizeof( wchar_t ) * len );
-	LCUI_DecodeString( wfilepath, filepath, len, ENCODING_UTF8 );
-	ret = wmovefiletotrash( wfilepath );
-	free( wfilepath );
-	return ret;
 }

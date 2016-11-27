@@ -94,11 +94,6 @@ Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
 
 void StrDict_Release( Dict *d );
 
-/** 打开浏览器 */
-void wopenbrowser( const wchar_t *url );
-
-void wopenfilemanger( const wchar_t *filepath );
-
 /** 获取数字字符串，格式为：1,234,567,890 */
 int wgetnumberstr( wchar_t *str, int max_len, size_t number );
 

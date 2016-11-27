@@ -105,11 +105,11 @@
     <ClCompile Include="src\ui\splashscreen.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\bridge.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\switch.c">
       <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bridge_win32.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

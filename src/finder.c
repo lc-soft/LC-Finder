@@ -43,7 +43,6 @@
 #include <locale.h>
 #include "finder.h"
 #include "i18n.h"
-#include "bridge.h"
 #include "ui.h"
 #include <LCUI/font/charset.h>
 
@@ -63,7 +62,7 @@ typedef struct DirStatusDataPackRec_ {
 } DirStatusDataPackRec, *DirStatusDataPack;
 
 typedef struct EventPackRec_ {
-	EventHandler handler;
+	LCFinder_EventHandler handler;
 	void *data;
 } EventPackRec, *EventPack;
 
@@ -73,7 +72,7 @@ static void OnEvent( LCUI_Event e, void *arg )
 	pack->handler( pack->data, arg );
 }
 
-int LCFinder_BindEvent( int event_id, EventHandler handler, void *data )
+int LCFinder_BindEvent( int event_id, LCFinder_EventHandler handler, void *data )
 {
 	EventPack pack = NEW( EventPackRec, 1 );
 	pack->handler = handler;
@@ -232,7 +231,7 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 		LCUI_DecodeString( path, files[i], len, ENCODING_UTF8 );
 		if( 0 == SyncTask_DeleteFileW( task, path ) ) {
 			DB_DeleteFile( files[i] );
-			movefiletotrash( files[i] );
+			MoveFileToTrash( files[i] );
 		}
 		if( onstep ) {
 			if( 0 != onstep( privdata, i, nfiles ) ) {
@@ -365,7 +364,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 	}
 	DB_Begin();
 	s->state = STATE_SAVING;
-	wprintf(L"\n\nstart sync\n");
+	LOG( "\n\nstart sync\n" );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		DirStatusDataPackRec pack;
 		pack.dir = finder.dirs[i];
@@ -382,7 +381,7 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 		s->task = NULL;
 	}
 	DB_Commit();
-	wprintf(L"\n\nend sync\n");
+	LOG("\n\nend sync\n");
 	s->state = STATE_FINISHED;
 	s->task = NULL;
 	free( s->tasks );
@@ -390,40 +389,24 @@ int LCFinder_SyncFiles( FileSyncStatus s )
 	return s->synced_files;
 }
 
-#ifdef _WIN32
-
-static void InitConsoleWindow( void )
-{
-	int hCrt;
-	FILE *hf;
-	AllocConsole();
-	hCrt = _open_osfhandle( (long)GetStdHandle( STD_OUTPUT_HANDLE ), _O_TEXT );
-	hf = _fdopen( hCrt, "w" );
-	*stdout = *hf;
-	setvbuf( stdout, NULL, _IONBF, 0 );
-	printf( "InitConsoleWindow OK!\n" );
-}
-
-#endif
-
 /** 初始化工作目录 */
-static void LCFinder_InitWorkDir( void )
+static int LCFinder_InitWorkDir( void )
 {
 	int len, len1, len2;
 	wchar_t data_dir[PATH_LEN];
 	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
-	/* 如果要调试此程序，需手动设置程序所在目录 */
-#if defined(_WIN32) && defined(DEBUG)
-	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder\\app" );
-#endif
-	len = wgetcurdir( data_dir, PATH_LEN ) + 1;
+
+	if( GetAppInstalledLocationW( data_dir, PATH_LEN ) != 0 ) {
+		LOG( "[workdir] error\n" );
+		return -1;
+	}
+	len = wcslen( data_dir ) + 1;
 	finder.work_dir = NEW( wchar_t, len );
 	wcsncpy( finder.work_dir, data_dir, len );
-	if( !GetAppDataFolderW( data_dir, PATH_LEN ) ) {
-		printf( "[workdir] error\n" );
-		return;
+	if( GetAppDataFolderW( data_dir, PATH_LEN ) != 0 ) {
+		LOG( "[workdir] error\n" );
+		return -1;
 	}
-	wpathjoin( data_dir, data_dir, LCFINDER_FOLDER_NAME );
 	len = wcslen( data_dir ) + 2;
 	len1 = len + wcslen( dirs[0] );
 	len2 = len + wcslen( dirs[1] );
@@ -433,11 +416,11 @@ static void LCFinder_InitWorkDir( void )
 	wcsncpy( finder.data_dir, data_dir, len );
 	wpathjoin( finder.fileset_dir, data_dir, dirs[0] );
 	wpathjoin( finder.thumbs_dir, data_dir, dirs[1] );
-	wmkdir( finder.data_dir );
 	wmkdir( finder.fileset_dir );
 	wmkdir( finder.thumbs_dir );
-	printf( "[workdir] work path: %ls\n", finder.work_dir );
-	printf( "[workdir] data path: %ls\n", finder.data_dir );
+	LOGW( L"[workdir] work path: %s\n", finder.work_dir );
+	LOGW( L"[workdir] data path: %s\n", finder.data_dir );
+	return 0;
 }
 
 DB_Tag LCFinder_GetTag( const char *tagname )
@@ -518,27 +501,31 @@ void LCFinder_ReloadTags( void )
 }
 
 /** 初始化文件数据库 */
-static void LCFinder_InitFileDB( void )
+static int LCFinder_InitFileDB( void )
 {
 	char *path;
 	wchar_t wpath[PATH_LEN];
 	wpathjoin( wpath, finder.data_dir, STORAGE_FILE );
-	_DEBUG_MSG( "data dir: %ls\n", finder.data_dir );
-	_DEBUG_MSG( "dbfile path: %ls\n", wpath );
+	LOGW(L"[filedb] path: %s\n", wpath);
 	path = EncodeUTF8( wpath );
-	DB_Init( path );
+	ASSERT( DB_Init( path ) );
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
 	free( path );
+	return 0;
 }
 
-static void LCFinder_InitThumbCache( void )
+static int LCFinder_InitThumbCache( void )
 {
 	finder.thumb_cache = ThumbCache_New( THUMB_CACHE_SIZE );
+	if( !finder.thumb_cache ) {
+		return -1;
+	}
+	return 0;
 }
 
 /** 初始化语言文件列表 */
-static void LCFinder_InitLanguage( void )
+static int LCFinder_InitLanguage( void )
 {
 	int dir_len;
 	char file[PATH_LEN];
@@ -548,7 +535,7 @@ static void LCFinder_InitLanguage( void )
 
 	dir_len = wpathjoin( lang_path, finder.work_dir, LANG_DIR );
 	if( LCUI_OpenDir( lang_path, &dir ) != 0 ) {
-		return;
+		return -1;
 	}
 	lang_path[dir_len++] = PATH_SEP;
 	wfile = lang_path + dir_len;
@@ -579,7 +566,10 @@ static void LCFinder_InitLanguage( void )
 		file[len] = 0;
 		I18n_LoadLanguage( file );
 	}
-	I18n_SetLanguage( finder.config.language );
+	if( I18n_SetLanguage( finder.config.language ) ) {
+		return 0;
+	}
+	return -1;
 }
 
 static void ThumbDBDict_ValDel( void *privdata, void *val )
@@ -588,28 +578,33 @@ static void ThumbDBDict_ValDel( void *privdata, void *val )
 }
 
 /** 初始化缩略图数据库 */
-static void LCFinder_InitThumbDB( void )
+static int LCFinder_InitThumbDB( void )
 {
 	int i;
 	wchar_t *path;
-	printf("[thumbdb] init ...\n");
+	LOG("[thumbdb] init ...\n");
 	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
 	finder.thumb_paths = malloc( sizeof( wchar_t* )*finder.n_dirs );
+	if( !finder.thumb_dbs || !finder.thumb_paths ) {
+		return -ENOMEM;
+	}
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		if( !finder.dirs[i] ) {
 			continue;
 		}
 		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
 		finder.thumb_paths[i] = path;
+		LOGW(L"[thumbdb] %d: %s\n", path);
 	}
-	printf("[thumbdb] init done\n");
+	LOG("[thumbdb] init done\n");
+	return 0;
 }
 
 /** 退出缩略图数据库 */
 static void LCFinder_ExitThumbDB( void )
 {
 	int i;
-	printf("[thumbdb] exit ..\n");
+	LOG("[thumbdb] exit ..\n");
 	Dict_Release( finder.thumb_dbs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		free( finder.thumb_paths[i] );
@@ -618,7 +613,7 @@ static void LCFinder_ExitThumbDB( void )
 	free( finder.thumb_paths );
 	finder.thumb_paths = NULL;
 	finder.thumb_dbs = NULL;
-	printf("[thumbdb] exit done\n");
+	LOG("[thumbdb] exit done\n");
 }
 
 /** 清除缩略图数据库 */
@@ -651,7 +646,7 @@ int LCFinder_SaveConfig( void )
 	path = EncodeANSI( wpath );
 	file = fopen( path, "wb" );
 	if( !file ) {
-		fprintf( stderr, "[config] cannot open file: %s\n", path );
+		LOG( "[config] cannot open file: %s\n", path );
 		return -1;
 	}
 	fwrite( &finder.config, sizeof( finder.config ), 1, file );
@@ -721,26 +716,38 @@ int LCFinder_LoadConfig( void )
 	return 0;
 }
 
-static void LCFinder_Exit( LCUI_SysEvent e, void *arg )
+static void LCFinder_OnExit( LCUI_SysEvent e, void *arg )
+{
+	LCFinder_Exit();
+}
+
+int LCFinder_Init( int argc, char **argv )
+{
+#if defined (PLATFORM_WIN32) && defined (DEBUG)
+	_wsetlocale( LC_ALL, L"chs" );
+#endif
+	ASSERT( LCFinder_InitWorkDir() );
+	ASSERT( LCFinder_LoadConfig() );
+	ASSERT( LCFinder_InitFileDB() );
+	ASSERT( LCFinder_InitThumbDB() );
+	ASSERT( LCFinder_InitThumbCache() );
+	ASSERT( LCFinder_InitLanguage() );
+	finder.trigger = EventTrigger();
+	ASSERT( UI_Init( argc, argv ) );
+	LCUI_BindEvent( LCUI_QUIT, LCFinder_OnExit, NULL, NULL );
+	return 0;
+}
+
+void LCFinder_Exit( void )
 {
 	UI_Exit();
 	LCFinder_ExitThumbDB();
 }
 
+#ifndef PLATFORM_WIN32_PC_APP
 int main( int argc, char **argv )
 {
-#if defined (_WIN32) && defined (DEBUG)
-	_wsetlocale( LC_ALL, L"chs" );
-	InitConsoleWindow();
-#endif
-	LCFinder_InitWorkDir();
-	LCFinder_LoadConfig();
-	LCFinder_InitFileDB();
-	LCFinder_InitThumbDB();
-	LCFinder_InitThumbCache();
-	LCFinder_InitLanguage();
-	finder.trigger = EventTrigger();
-	UI_Init( argc, argv );
-	LCUI_BindEvent( LCUI_QUIT, LCFinder_Exit, NULL, NULL );
+	ASSERT( LCFinder_Init( argc, argv ) );
 	return UI_Run();
 }
+#endif
