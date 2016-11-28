@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * LCUIRenderer.h -- UWP display support for LCUI
+ * LCUIRenderer.cpp -- UWP input support for LCUI
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -18,7 +18,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * LCUIRenderer.h -- LCUI 的 UWP 版图形输出支持
+ * LCUIRenderer.cpp -- LCUI 的 UWP 版输入支持，包括鼠标、键盘、触屏等的输入处理
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -34,40 +34,67 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#pragma once
-
+#include "pch.h"
+#include "LCUIInput.h"
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
-#include <LCUI/display.h>
+#include <LCUI/cursor.h>
 
-#include <mutex>
-#include "..\Common\DeviceResources.h"
-#include "..\Common\StepTimer.h"
+using namespace UWP;
+using namespace Windows::UI::Core;
+using namespace Windows::UI::Input;
+using namespace Windows::UI;
+using namespace Windows::Foundation;
 
-namespace UWP {
+LCUIInput::LCUIInput()
+{
+	m_actived = false;
+}
 
-class LCUIRenderer {
-public:
-	LCUIRenderer( const std::shared_ptr<DX::DeviceResources>& deviceResources );
-	void CreateDeviceDependentResources();
-	void CreateWindowSizeDependentResources();
-	void ReleaseDeviceDependentResources();
-	void Update( DX::StepTimer const& timer );
-	void Render();
-	void SwapFrames();
-	void LockFrames();
-	void UnlockFrames();
-	bool m_frameSwapable;
-	D2D1_SIZE_U m_frameSize;
-
-private:
-	std::mutex m_frameMutex;
-	std::shared_ptr<DX::DeviceResources> m_deviceResources;
-	Microsoft::WRL::ComPtr<ID2D1DrawingStateBlock1> m_stateBlock;
-	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_bmp;
-	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_backBmp;
-};
+void LCUIInput::OnPointerPressed( CoreWindow^ sender, PointerEventArgs^ args )
+{
 
 }
 
-LCUI_DisplayDriver LCUI_CreateUWPDisplay( void );
+void LCUIInput::OnPointerMoved( CoreWindow^ sender, PointerEventArgs^ args )
+{
+	Point position;
+	LCUI_Pos pos;
+	LCUI_SysEventRec sys_ev;
+
+	position = args->CurrentPoint->Position;
+	if( !m_actived ) {
+		m_actived = true;
+		m_position = position;
+	}
+	sys_ev.type = LCUI_MOUSEMOVE;
+	sys_ev.motion.x = (int)(position.X);
+	sys_ev.motion.y = (int)(position.Y);
+	sys_ev.motion.xrel = (int)(position.X - m_position.Y);
+	sys_ev.motion.yrel = (int)(position.Y - m_position.Y);
+	m_position = position;
+	pos.x = sys_ev.motion.x;
+	pos.y = sys_ev.motion.y;
+	LCUI_TriggerEvent( &sys_ev, NULL );
+	LCUICursor_SetPos( pos );
+}
+
+void LCUIInput::OnPointerReleased( CoreWindow^ sender, PointerEventArgs^ args )
+{
+
+}
+
+void LCUIInput::OnPointerExited( CoreWindow^ sender, PointerEventArgs^ args )
+{
+
+}
+
+void LCUIInput::OnKeyDown( CoreWindow^ sender, KeyEventArgs^ args )
+{
+
+}
+
+void LCUIInput::OnKeyUp( CoreWindow^ sender, KeyEventArgs^ args )
+{
+
+}

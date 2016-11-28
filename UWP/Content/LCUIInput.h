@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * LCUIRenderer.h -- UWP display support for LCUI
+ * LCUIRenderer.h -- UWP input support for LCUI
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -18,7 +18,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * LCUIRenderer.h -- LCUI 的 UWP 版图形输出支持
+ * LCUIRenderer.h -- LCUI 的 UWP 版输入支持，包括鼠标、键盘、触屏等的输入处理
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -36,38 +36,20 @@
 
 #pragma once
 
-#include <LCUI_Build.h>
-#include <LCUI/LCUI.h>
-#include <LCUI/display.h>
-
-#include <mutex>
-#include "..\Common\DeviceResources.h"
-#include "..\Common\StepTimer.h"
-
 namespace UWP {
 
-class LCUIRenderer {
+class LCUIInput {
 public:
-	LCUIRenderer( const std::shared_ptr<DX::DeviceResources>& deviceResources );
-	void CreateDeviceDependentResources();
-	void CreateWindowSizeDependentResources();
-	void ReleaseDeviceDependentResources();
-	void Update( DX::StepTimer const& timer );
-	void Render();
-	void SwapFrames();
-	void LockFrames();
-	void UnlockFrames();
-	bool m_frameSwapable;
-	D2D1_SIZE_U m_frameSize;
-
+	LCUIInput();
+	void OnPointerPressed( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
+	void OnPointerMoved( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
+	void OnPointerReleased( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
+	void OnPointerExited( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
+	void OnKeyDown( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args );
+	void OnKeyUp( Windows::UI::Core::CoreWindow^ sender,Windows::UI::Core:: KeyEventArgs^ args );
 private:
-	std::mutex m_frameMutex;
-	std::shared_ptr<DX::DeviceResources> m_deviceResources;
-	Microsoft::WRL::ComPtr<ID2D1DrawingStateBlock1> m_stateBlock;
-	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_bmp;
-	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_backBmp;
+	Windows::Foundation::Point m_position;
+	bool m_actived;
 };
 
 }
-
-LCUI_DisplayDriver LCUI_CreateUWPDisplay( void );

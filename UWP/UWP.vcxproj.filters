@@ -167,6 +167,9 @@
     <ClCompile Include="..\src\ui\view_settings.c">
       <Filter>src\ui</Filter>
     </ClCompile>
+    <ClCompile Include="Content\LCUIInput.cpp">
+      <Filter>内容</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -177,6 +180,9 @@
     </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="Content\Sample3DSceneRenderer.h">
+      <Filter>内容</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\LCUIInput.h">
       <Filter>内容</Filter>
     </ClInclude>
   </ItemGroup>
@@ -228,6 +234,18 @@
     <None Include="Assets\ui-skin.css">
       <Filter>资产</Filter>
     </None>
+    <None Include="Assets\materialdesignicons-webfont.ttf">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\ui-view-picture-info.xml">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\ui-view-picture.xml">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\ui.xml">
+      <Filter>资产</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UWP.rc" />
@@ -239,21 +257,5 @@
     <FxCompile Include="Content\SampleVertexShader.hlsl">
       <Filter>内容</Filter>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="Assets\materialdesignicons-webfont.ttf">
-      <Filter>资产</Filter>
-    </Font>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="Assets\ui.xml">
-      <Filter>资产</Filter>
-    </Xml>
-    <Xml Include="Assets\ui-view-picture.xml">
-      <Filter>资产</Filter>
-    </Xml>
-    <Xml Include="Assets\ui-view-picture-info.xml">
-      <Filter>资产</Filter>
-    </Xml>
   </ItemGroup>
 </Project>

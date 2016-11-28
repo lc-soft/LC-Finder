@@ -111,10 +111,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\objs\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\objs\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
@@ -231,6 +233,7 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="Common\DeviceResources.h" />
+    <ClInclude Include="Content\LCUIInput.h" />
     <ClInclude Include="Content\LCUIRenderer.h" />
     <ClInclude Include="Content\Sample3DSceneRenderer.h" />
     <ClInclude Include="resource.h" />
@@ -367,6 +370,7 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsWinRT>
     </ClCompile>
+    <ClCompile Include="Content\LCUIInput.cpp" />
     <ClCompile Include="Content\LCUIRenderer.cpp" />
     <ClCompile Include="Content\Sample3DSceneRenderer.cpp" />
     <ClCompile Include="UWPMain.cpp">

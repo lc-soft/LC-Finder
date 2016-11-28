@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "App.h"
 #include "finder.h"
+#include <LCUI/cursor.h>
 #include <ppltasks.h>
 
 using namespace UWP;
@@ -45,7 +46,9 @@ App::App() :
 {
 	Logger_SetHandler( LoggerHandler );
 	Logger_SetHandlerW( LoggerHandlerW );
+	m_input = std::unique_ptr<LCUIInput>( new LCUIInput );
 	m_displayDriver = LCUI_CreateUWPDisplay();
+	LCUI_InitCursor();
 }
 
 // 创建 IFrameworkView 时调用的第一个方法。
@@ -90,7 +93,15 @@ void App::SetWindow(CoreWindow^ window)
 	DisplayInformation::DisplayContentsInvalidated +=
 		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnDisplayContentsInvalidated);
 
+	window->PointerMoved +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerMoved );
+
 	m_deviceResources->SetWindow(window);
+}
+
+void App::OnPointerMoved( CoreWindow^ window, PointerEventArgs^ args )
+{
+	m_input->OnPointerMoved( window, args );
 }
 
 // 初始化场景资源或加载之前保存的应用程序状态。

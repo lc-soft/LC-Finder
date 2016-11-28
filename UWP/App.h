@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "Common\DeviceResources.h"
+#include "Content\LCUIInput.h"
 #include "UWPMain.h"
 
 namespace UWP
@@ -18,7 +19,6 @@ namespace UWP
 		virtual void Load(Platform::String^ entryPoint);
 		virtual void Run();
 		virtual void Uninitialize();
-
 	protected:
 		// 应用程序生命周期事件处理程序。
 		void OnActivated(Windows::ApplicationModel::Core::CoreApplicationView^ applicationView, Windows::ApplicationModel::Activation::IActivatedEventArgs^ args);
@@ -29,6 +29,7 @@ namespace UWP
 		void OnWindowSizeChanged(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::WindowSizeChangedEventArgs^ args);
 		void OnVisibilityChanged(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::VisibilityChangedEventArgs^ args);
 		void OnWindowClosed(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::CoreWindowEventArgs^ args);
+		void OnPointerMoved(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args);
 
 		// DisplayInformation 事件处理程序。
 		void OnDpiChanged(Windows::Graphics::Display::DisplayInformation^ sender, Platform::Object^ args);
@@ -38,6 +39,7 @@ namespace UWP
 	private:
 		LCUI_DisplayDriver m_displayDriver;
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::unique_ptr<LCUIInput> m_input;
 		std::unique_ptr<UWPMain> m_main;
 		bool m_windowClosed;
 		bool m_windowVisible;
