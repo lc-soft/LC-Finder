@@ -93,15 +93,36 @@ void App::SetWindow(CoreWindow^ window)
 	DisplayInformation::DisplayContentsInvalidated +=
 		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnDisplayContentsInvalidated);
 
+	window->PointerPressed +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerPressed );
 	window->PointerMoved +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerMoved );
+	window->PointerReleased +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerReleased );
+	window->PointerWheelChanged +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerWheelChanged );
 
 	m_deviceResources->SetWindow(window);
 }
 
-void App::OnPointerMoved( CoreWindow^ window, PointerEventArgs^ args )
+void App::OnPointerPressed(CoreWindow^ window, PointerEventArgs^ args)
+{
+	m_input->OnPointerPressed( window, args );
+}
+
+void App::OnPointerMoved(CoreWindow^ window, PointerEventArgs^ args)
 {
 	m_input->OnPointerMoved( window, args );
+}
+
+void App::OnPointerReleased(CoreWindow^ window, PointerEventArgs^ args)
+{
+	m_input->OnPointerReleased( window, args );
+}
+
+void App::OnPointerWheelChanged(CoreWindow^ window, PointerEventArgs^ args)
+{
+	m_input->OnPointerWheelChanged( window, args );
 }
 
 // 初始化场景资源或加载之前保存的应用程序状态。

@@ -38,55 +38,120 @@
 #include "LCUIInput.h"
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include <LCUI/input.h>
 #include <LCUI/cursor.h>
 
 using namespace UWP;
 using namespace Windows::UI::Core;
 using namespace Windows::UI::Input;
+using namespace Windows::Devices::Input;
 using namespace Windows::UI;
 using namespace Windows::Foundation;
 
 LCUIInput::LCUIInput()
 {
 	m_actived = false;
+	m_leftButtonPressed = false;
+	m_rightButtonPressed = false;
 }
 
 void LCUIInput::OnPointerPressed( CoreWindow^ sender, PointerEventArgs^ args )
 {
+	LCUI_SysEventRec ev;
+	PointerPoint^ point = args->CurrentPoint;
+	PointerPointProperties^ pointProps = point->Properties;
+	Point position = point->Position;
 
+	switch( point->PointerDevice->PointerDeviceType ) {
+	case PointerDeviceType::Mouse:
+		ev.type = LCUI_MOUSEDOWN;
+		if(pointProps->IsLeftButtonPressed) {
+			ev.button.button = LCUIKEY_LEFTBUTTON;
+			m_leftButtonPressed = true;
+		} else if(pointProps->IsRightButtonPressed) {
+			ev.button.button = LCUIKEY_RIGHTBUTTON;
+			m_rightButtonPressed = true;
+		} else {
+			break;
+		}
+		ev.button.x = (int)(position.X + 0.5);
+		ev.button.y = (int)(position.Y + 0.5);
+		LCUI_TriggerEvent( &ev, NULL );
+		break;
+	case PointerDeviceType::Touch:
+	default:
+		break;
+	}
 }
 
 void LCUIInput::OnPointerMoved( CoreWindow^ sender, PointerEventArgs^ args )
 {
 	Point position;
 	LCUI_Pos pos;
-	LCUI_SysEventRec sys_ev;
+	LCUI_SysEventRec ev;
 
 	position = args->CurrentPoint->Position;
 	if( !m_actived ) {
 		m_actived = true;
 		m_position = position;
 	}
-	sys_ev.type = LCUI_MOUSEMOVE;
-	sys_ev.motion.x = (int)(position.X);
-	sys_ev.motion.y = (int)(position.Y);
-	sys_ev.motion.xrel = (int)(position.X - m_position.Y);
-	sys_ev.motion.yrel = (int)(position.Y - m_position.Y);
+	ev.type = LCUI_MOUSEMOVE;
+	ev.motion.x = (int)(position.X + 0.5);
+	ev.motion.y = (int)(position.Y + 0.5);
+	ev.motion.xrel = (int)(position.X - m_position.Y + 0.5);
+	ev.motion.yrel = (int)(position.Y - m_position.Y + 0.5);
 	m_position = position;
-	pos.x = sys_ev.motion.x;
-	pos.y = sys_ev.motion.y;
-	LCUI_TriggerEvent( &sys_ev, NULL );
+	pos.x = ev.motion.x;
+	pos.y = ev.motion.y;
+	LCUI_TriggerEvent( &ev, NULL );
 	LCUICursor_SetPos( pos );
 }
 
 void LCUIInput::OnPointerReleased( CoreWindow^ sender, PointerEventArgs^ args )
 {
+	LCUI_SysEventRec ev;
+	PointerPoint^ point = args->CurrentPoint;
+	PointerPointProperties^ pointProps = point->Properties;
+	Point position = point->Position;
 
+	switch( point->PointerDevice->PointerDeviceType ) {
+	case PointerDeviceType::Mouse:
+		ev.type = LCUI_MOUSEUP;
+		ev.button.x = (int)(position.X + 0.5);
+		ev.button.y = (int)(position.Y + 0.5);
+		if( !pointProps->IsLeftButtonPressed && m_leftButtonPressed ) {
+			m_leftButtonPressed = false;
+			ev.button.button = LCUIKEY_LEFTBUTTON;
+			LCUI_TriggerEvent( &ev, NULL );
+		}
+		if( pointProps->IsRightButtonPressed && m_rightButtonPressed ) {
+			m_rightButtonPressed = false;
+			ev.button.button = LCUIKEY_RIGHTBUTTON;
+			LCUI_TriggerEvent( &ev, NULL );
+		}
+		break;
+	case PointerDeviceType::Touch:
+	default:
+		break;
+	}
 }
 
 void LCUIInput::OnPointerExited( CoreWindow^ sender, PointerEventArgs^ args )
 {
 
+}
+void LCUIInput::OnPointerWheelChanged( CoreWindow^ sender, PointerEventArgs^ args )
+{
+	LCUI_SysEventRec ev;
+	PointerPoint^ point = args->CurrentPoint;
+	PointerPointProperties^ pointProps = point->Properties;
+	Point position = point->Position;
+	
+	ev.type = LCUI_MOUSEWHEEL;
+	ev.wheel.x = (int)(position.X + 0.5);
+	ev.wheel.y = (int)(position.Y + 0.5);
+	ev.wheel.delta = pointProps->MouseWheelDelta;;
+	LCUI_TriggerEvent( &ev, NULL );
 }
 
 void LCUIInput::OnKeyDown( CoreWindow^ sender, KeyEventArgs^ args )
