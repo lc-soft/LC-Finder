@@ -244,7 +244,6 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 		entry->path = path;
 		entry->is_dir = TRUE;
 		LinkedList_Append( &scanner->files, entry );
-		DEBUG_MSG("dir: %s\n", entry->path);
 	}
 	LCUICond_Signal( &scanner->cond );
 	LCUIMutex_Unlock( &scanner->mutex );
@@ -381,7 +380,7 @@ static void ViewSync_Thread( void *arg )
 						   entry->file );
 			free( node->data );
 		}
-		free( node );
+		LinkedListNode_Delete( node );
 		LCUIMutex_Unlock( &vs->mutex );
 	}
 	LCUIThread_Exit( NULL );

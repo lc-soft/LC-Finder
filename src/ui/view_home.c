@@ -105,7 +105,7 @@ static void DeleteTimeSeparator( LCUI_Widget sep )
 	for( LinkedList_Each( node, &this_view.separators ) ) {
 		if( node->data == sep ) {
 			LinkedList_Unlink( &this_view.separators, node );
-			free( node );
+			LinkedListNode_Delete( node );
 			break;
 		}
 	}
@@ -360,7 +360,7 @@ static void HomeView_SyncThread( void *arg )
 		LCUIMutex_Unlock( &scanner->mutex );
 		HomeView_AppendFile( node->data );
 		LCUIMutex_Unlock( &vs->mutex );
-		free( node );
+		LinkedListNode_Delete( node );
 		ProgressBar_SetValue( this_view.progressbar, 
 				      this_view.browser.files.length );
 	}

@@ -275,7 +275,7 @@ static void ViewSyncThread( void *arg )
 		LCUIMutex_Unlock( &scanner->mutex );
 		FileBrowser_AppendPicture( &this_view.browser, node->data );
 		LCUIMutex_Unlock( &vs->mutex );
-		free( node );
+		LinkedListNode_Delete( node );
 	}
 	LCUIThread_Exit( NULL );
 }

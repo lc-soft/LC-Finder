@@ -1020,7 +1020,7 @@ static void ThumbView_ExecTask( LCUI_Widget w, int task )
 		if( view->thumb_tasks.length > 0 ) {
 			view->tasks[TASK_LOAD_THUMB] = TRUE;
 		}
-		free( node );
+		LinkedListNode_Delete( node );
 		break;
 	case TASK_LAYOUT:
 		ThumbView_ExecUpdateLayout( w );
