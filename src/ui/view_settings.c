@@ -128,20 +128,23 @@ static void UI_InitDirList( LCUI_Widget view )
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
 }
 
-static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnSelectedDirW( const wchar_t *wpath )
 {
 	DB_Dir dir;
-	char dirpath[PATH_LEN] = {0};
-	if( SelectFolder( dirpath, PATH_LEN - 1 ) < 0 ) {
+	char *path = EncodeUTF8( wpath );
+	if( LCFinder_GetDir( path ) ) {
 		return;
 	}
-	if( LCFinder_GetDir( dirpath ) ) {
-		return;
-	}
-	dir = LCFinder_AddDir( dirpath, TRUE );
+	dir = LCFinder_AddDir( path, TRUE );
 	if( dir ) {
 		LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 	}
+	free( path );
+}
+
+static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	SelectFolderW( OnSelectedDirW );
 }
 
 /** 渲染缩略图缓存占用空间文本 */

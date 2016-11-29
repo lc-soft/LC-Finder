@@ -52,7 +52,7 @@ LCFINDER_BEGIN_HEADER
 #define PLATFORM_LINUX
 #endif
 
-int SelectFolder( char *dirpath, int max_len );
+void SelectFolderW( void( *callback )(const wchar_t *) );
 
 int GetAppDataFolderW( wchar_t *buf, int max_len );
 

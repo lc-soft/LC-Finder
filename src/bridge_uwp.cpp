@@ -38,10 +38,13 @@
 #include "finder.h"
 #include "pch.h"
 
+using namespace concurrency;
 using namespace Platform;
 using namespace Windows::System;
 using namespace Windows::Storage;
 using namespace Windows::Foundation;
+using namespace Windows::Storage;
+using namespace Windows::Storage::Pickers;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::ApplicationModel;
 
@@ -61,14 +64,26 @@ int GetAppInstalledLocationW( wchar_t *buf, int max_len )
 	return 0;
 }
 
-int SelectFolder( char *dirpath, int max_len )
+void SelectFolderW( void (*callback)(const wchar_t *) )
 {
-	return 0;
+	FolderPicker^ folderPicker = ref new FolderPicker();
+	folderPicker->SuggestedStartLocation = PickerLocationId::Desktop;
+	folderPicker->FileTypeFilter->Append( ".png" );
+	folderPicker->FileTypeFilter->Append( ".bmp" );
+	folderPicker->FileTypeFilter->Append( ".jpg" );
+	folderPicker->FileTypeFilter->Append( ".jpeg" );
+	create_task( folderPicker->PickSingleFolderAsync() ).then( [callback]( StorageFolder^ folder ) {
+		if( folder ) {
+			callback( folder->Path->Data() );
+		}
+	} );
 }
 
-void OpenUriW( const wchar_t *uri )
+void OpenUriW( const wchar_t *uristr )
 {
-
+	auto str = ref new Platform::String( uristr );
+	auto uri = ref new Uri( str );
+	Launcher::LaunchUriAsync( uri );
 }
 
 void OpenFileManagerW( const wchar_t *filepath )
