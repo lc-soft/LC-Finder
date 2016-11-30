@@ -744,6 +744,12 @@ void LCFinder_Exit( void )
 	LCFinder_ExitThumbDB();
 }
 
+int LCFinder_Run( void )
+{
+	return UI_Run();
+}
+
+
 #ifndef PLATFORM_WIN32_PC_APP
 int main( int argc, char **argv )
 {

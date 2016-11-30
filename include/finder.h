@@ -197,6 +197,8 @@ void LCFinder_ClosePrivateSpace( void );
 
 int LCFinder_Init( int argc, char *argv[] );
 
+int LCFinder_Run( void );
+
 void LCFinder_Exit( void );
 
 LCFINDER_END_HEADER

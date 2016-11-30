@@ -8,9 +8,6 @@
       <UniqueIdentifier>41e048c2-1ce2-453d-a1f3-0d29863d44b1</UniqueIdentifier>
       <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png;ttf;xml;css;</Extensions>
     </Filter>
-    <Filter Include="内容">
-      <UniqueIdentifier>341266a4-028a-4f3b-adc2-f90f48136d30</UniqueIdentifier>
-    </Filter>
     <ClInclude Include="Common\DirectXHelper.h">
       <Filter>通用</Filter>
     </ClInclude>
@@ -22,15 +19,6 @@
     </ClInclude>
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>通用</Filter>
-    </ClCompile>
-    <ClInclude Include="Content\SampleFpsTextRenderer.h">
-      <Filter>内容</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\ShaderStructures.h">
-      <Filter>内容</Filter>
-    </ClInclude>
-    <ClCompile Include="Content\SampleFpsTextRenderer.cpp">
-      <Filter>内容</Filter>
     </ClCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>资产</Filter>
@@ -71,12 +59,6 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="UWPMain.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Content\LCUIRenderer.cpp">
-      <Filter>内容</Filter>
-    </ClCompile>
-    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
-      <Filter>内容</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\bridge_uwp.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -167,24 +149,16 @@
     <ClCompile Include="..\src\ui\view_settings.c">
       <Filter>src\ui</Filter>
     </ClCompile>
-    <ClCompile Include="Content\LCUIInput.cpp">
-      <Filter>内容</Filter>
-    </ClCompile>
+    <ClCompile Include="LCUIInput.cpp" />
+    <ClCompile Include="LCUIRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="UWPMain.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Content\LCUIRenderer.h">
-      <Filter>内容</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Content\Sample3DSceneRenderer.h">
-      <Filter>内容</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\LCUIInput.h">
-      <Filter>内容</Filter>
-    </ClInclude>
+    <ClInclude Include="LCUIInput.h" />
+    <ClInclude Include="LCUIRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -249,13 +223,5 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UWP.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Content\SamplePixelShader.hlsl">
-      <Filter>内容</Filter>
-    </FxCompile>
-    <FxCompile Include="Content\SampleVertexShader.hlsl">
-      <Filter>内容</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

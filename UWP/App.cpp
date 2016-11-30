@@ -16,6 +16,68 @@ using namespace Windows::System;
 using namespace Windows::Foundation;
 using namespace Windows::Graphics::Display;
 
+static App^ UWPApp = nullptr;
+
+static void UWPApp_DispatchEvent( void )
+{
+	UWPApp->ProcessEvents();
+}
+
+static LCUI_BOOL UWPApp_WaitEvent( void )
+{
+	return TRUE;
+}
+
+static LCUI_BOOL UWPApp_PostTask( LCUI_AppTask task )
+{
+	return TRUE;
+}
+
+static int UWPApp_BindSysEvent( int type, LCUI_EventFunc func,
+				void *data, void( *destroy_data )(void*) )
+{
+	return -1;
+}
+
+static int UWPApp_UnbindSysEvent( int type, LCUI_EventFunc func )
+{
+	return -1;
+}
+
+static int UWPApp_UnbindSysEvent2( int handler_id )
+{
+	return -1;
+}
+
+static void *UWPApp_GetData( void )
+{
+	return (void*)UWPApp;
+}
+
+static LCUI_AppDriver LCUI_CreateUWPApp( App^ app )
+{
+	ASSIGN( driver, LCUI_AppDriver );
+	driver->WaitEvent = UWPApp_WaitEvent;
+	driver->BindSysEvent = UWPApp_BindSysEvent;
+	driver->UnbindSysEvent = UWPApp_UnbindSysEvent;
+	driver->UnbindSysEvent2 = UWPApp_UnbindSysEvent2;
+	driver->DispatchEvent = UWPApp_DispatchEvent;
+	driver->PostTask = UWPApp_PostTask;
+	driver->GetData = UWPApp_GetData;
+	UWPApp = app;
+	return driver;
+}
+
+static void LoggerHandler( const char *str )
+{
+	OutputDebugStringA( str );
+}
+
+static void LoggerHandlerW( const wchar_t *str )
+{
+	OutputDebugStringW( str );
+}
+
 // 主函数仅用于初始化我们的 IFrameworkView 类。
 [Platform::MTAThread]
 int main(Platform::Array<Platform::String^>^)
@@ -30,16 +92,6 @@ IFrameworkView^ Direct3DApplicationSource::CreateView()
 	return ref new App();
 }
 
-static void LoggerHandler( const char *str )
-{
-	OutputDebugStringA( str );
-}
-
-static void LoggerHandlerW( const wchar_t *str )
-{
-	OutputDebugStringW( str );
-}
-
 App::App() :
 	m_windowClosed(false),
 	m_windowVisible(true)
@@ -48,7 +100,7 @@ App::App() :
 	Logger_SetHandlerW( LoggerHandlerW );
 	m_input = std::unique_ptr<LCUIInput>( new LCUIInput );
 	m_displayDriver = LCUI_CreateUWPDisplay();
-	LCUI_InitCursor();
+	m_appDriver = LCUI_CreateUWPApp( this );
 }
 
 // 创建 IFrameworkView 时调用的第一个方法。
@@ -134,28 +186,37 @@ void App::Load(Platform::String^ entryPoint)
 	}
 }
 
+void App::ProcessEvents()
+{
+	if( m_windowClosed ) {
+		LCUI_Quit();
+		return;
+	}
+	auto dispathcer = CoreWindow::GetForCurrentThread()->Dispatcher;
+	if( m_windowVisible ) {
+		dispathcer->ProcessEvents( CoreProcessEventsOption::ProcessAllIfPresent );
+
+		m_main->Update();
+		if( m_main->Render() ) {
+			m_deviceResources->Present();
+		}
+	} else {
+		dispathcer->ProcessEvents( CoreProcessEventsOption::ProcessOneAndAllPending );
+	}
+}
+
 // 将在窗口处于活动状态后调用此方法。
 void App::Run()
 {
 	char *argv[] = { "LC-Finder" };
 	LCUI_InitBase();
+	LCUI_InitApp( m_appDriver );
 	LCUI_InitDisplay( m_displayDriver );
-	LCFinder_Init( 1, argv );
-	while( !m_windowClosed && LCUI_IsActive() ) {
-		LCUI_DispatchEvent();
-		if( m_windowVisible ) {
-			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents( CoreProcessEventsOption::ProcessAllIfPresent );
-
-			m_main->Update();
-
-			if( m_main->Render() ) {
-				m_deviceResources->Present();
-			}
-		} else {
-			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents( CoreProcessEventsOption::ProcessOneAndAllPending );
-		}
+	LCUI_InitCursor();
+	LCUI_SetTaskAgent( FALSE );
+	if( LCFinder_Init( 1, argv ) == 0 ) {
+		LCFinder_Run();
 	}
-	LCFinder_Exit();
 }
 
 // IFrameworkView 所必需的。

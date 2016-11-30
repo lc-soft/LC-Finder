@@ -2,7 +2,6 @@
 
 #include "pch.h"
 #include "Common\DeviceResources.h"
-#include "Content\LCUIInput.h"
 #include "UWPMain.h"
 
 namespace UWP
@@ -12,7 +11,7 @@ namespace UWP
 	{
 	public:
 		App();
-
+		void ProcessEvents();
 		// IFrameworkView 方法。
 		virtual void Initialize(Windows::ApplicationModel::Core::CoreApplicationView^ applicationView);
 		virtual void SetWindow(Windows::UI::Core::CoreWindow^ window);
@@ -40,6 +39,7 @@ namespace UWP
 		void OnDisplayContentsInvalidated(Windows::Graphics::Display::DisplayInformation^ sender, Platform::Object^ args);
 
 	private:
+		LCUI_AppDriver m_appDriver;
 		LCUI_DisplayDriver m_displayDriver;
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 		std::unique_ptr<LCUIInput> m_input;
