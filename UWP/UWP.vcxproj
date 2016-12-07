@@ -231,6 +231,25 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\bridge.h" />
+    <ClInclude Include="..\include\browser.h" />
+    <ClInclude Include="..\include\common.h" />
+    <ClInclude Include="..\include\dialog.h" />
+    <ClInclude Include="..\include\dropdown.h" />
+    <ClInclude Include="..\include\file_cache.h" />
+    <ClInclude Include="..\include\file_search.h" />
+    <ClInclude Include="..\include\finder.h" />
+    <ClInclude Include="..\include\i18n.h" />
+    <ClInclude Include="..\include\progressbar.h" />
+    <ClInclude Include="..\include\sha1.h" />
+    <ClInclude Include="..\include\starrating.h" />
+    <ClInclude Include="..\include\switch.h" />
+    <ClInclude Include="..\include\textview_i18n.h" />
+    <ClInclude Include="..\include\thumbview.h" />
+    <ClInclude Include="..\include\thumb_cache.h" />
+    <ClInclude Include="..\include\thumb_db.h" />
+    <ClInclude Include="..\include\timeseparator.h" />
+    <ClInclude Include="..\include\ui.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="LCUIInput.h" />
@@ -388,25 +407,23 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="..\vendor\dll\LCUI_D.dll">
+    <None Include="..\vendor\lib\LCUI_D.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
-    <None Include="..\vendor\dll\libxml2.dll">
-      <FileType>Document</FileType>
+    <None Include="..\vendor\lib\libxml2.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
-    <None Include="..\vendor\dll\sqlite3.dll">
-      <FileType>Document</FileType>
+    <None Include="..\vendor\lib\sqlite3.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
-    <None Include="..\vendor\dll\unqlite.dll">
+    <None Include="..\vendor\lib\unqlite.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
-    <None Include="..\vendor\dll\yaml.dll">
+    <None Include="..\vendor\lib\yaml.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>

@@ -38,9 +38,6 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
       <Filter>资产</Filter>
     </Image>
-    <Filter Include="dll">
-      <UniqueIdentifier>{0a2be726-0e6f-4fe3-8e31-15a3a406c98a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Locales">
       <UniqueIdentifier>{ad8da2bc-20cd-4f80-a0b8-15502e58d890}</UniqueIdentifier>
       <Extensions>.yaml</Extensions>
@@ -53,6 +50,12 @@
     </Filter>
     <Filter Include="src\lib">
       <UniqueIdentifier>{cd0af9e5-34dd-4e26-b3be-c877b9c5d00b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dll">
+      <UniqueIdentifier>{b0981bac-b92a-4023-8fe1-c466cc613dd2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{a90a0144-43d9-4e24-9fc3-813c67256943}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +162,63 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="LCUIInput.h" />
     <ClInclude Include="LCUIRenderer.h" />
+    <ClInclude Include="..\include\bridge.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\browser.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\common.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dialog.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dropdown.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\file_cache.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\file_search.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\finder.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\i18n.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\progressbar.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sha1.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\starrating.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\switch.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\textview_i18n.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\thumb_cache.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\thumb_db.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\thumbview.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\timeseparator.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ui.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -172,21 +232,6 @@
     <None Include="UWP_TemporaryKey.pfx" />
     <None Include="Package.StoreAssociation.xml" />
     <None Include="UWP_StoreKey.pfx" />
-    <None Include="..\vendor\dll\yaml.dll">
-      <Filter>dll</Filter>
-    </None>
-    <None Include="..\vendor\dll\unqlite.dll">
-      <Filter>dll</Filter>
-    </None>
-    <None Include="..\vendor\dll\sqlite3.dll">
-      <Filter>dll</Filter>
-    </None>
-    <None Include="..\vendor\dll\libxml2.dll">
-      <Filter>dll</Filter>
-    </None>
-    <None Include="..\vendor\dll\LCUI_D.dll">
-      <Filter>dll</Filter>
-    </None>
     <None Include="Locales\en-us.yaml">
       <Filter>Locales</Filter>
     </None>
@@ -219,6 +264,21 @@
     </None>
     <None Include="Assets\ui.xml">
       <Filter>资产</Filter>
+    </None>
+    <None Include="..\vendor\lib\LCUI_D.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\lib\libxml2.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\lib\sqlite3.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\lib\unqlite.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="..\vendor\lib\yaml.dll">
+      <Filter>dll</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
