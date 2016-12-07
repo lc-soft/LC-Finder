@@ -35,8 +35,8 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include "finder.h"
 #include "pch.h"
+#include "finder.h"
 
 using namespace concurrency;
 using namespace Platform;
@@ -47,6 +47,8 @@ using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::ApplicationModel;
+
+#define FutureAccessList AccessCache::StorageApplicationPermissions::FutureAccessList
 
 extern "C" {
 
@@ -64,7 +66,7 @@ int GetAppInstalledLocationW( wchar_t *buf, int max_len )
 	return 0;
 }
 
-void SelectFolderW( void (*callback)(const wchar_t *) )
+void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
 {
 	FolderPicker^ folderPicker = ref new FolderPicker();
 	folderPicker->SuggestedStartLocation = PickerLocationId::Desktop;
@@ -72,10 +74,49 @@ void SelectFolderW( void (*callback)(const wchar_t *) )
 	folderPicker->FileTypeFilter->Append( ".bmp" );
 	folderPicker->FileTypeFilter->Append( ".jpg" );
 	folderPicker->FileTypeFilter->Append( ".jpeg" );
-	create_task( folderPicker->PickSingleFolderAsync() ).then( [callback]( StorageFolder^ folder ) {
-		if( folder ) {
-			callback( folder->Path->Data() );
+	create_task( folderPicker->PickSingleFolderAsync() ).then([callback]( StorageFolder^ folder ) {
+		if( !folder ) {
+			return;
 		}
+		auto token = FutureAccessList->Add( folder );
+		callback( folder->Path->Data(), token->Data() );
+	} );
+}
+
+static void ScanImageFilesInFolder( StorageFolder ^folder,
+				    FileHandlerAsync handler,
+				    void (*callback)(void*), void *data )
+{
+	if( !folder ) {
+		return;
+	}
+	auto options = ref new  Windows::Storage::Search::QueryOptions();
+	options->FileTypeFilter->Append( ".png" );
+	options->FileTypeFilter->Append( ".jpg" );
+	options->FileTypeFilter->Append( ".jpeg" );
+	options->FileTypeFilter->Append( ".bmp" );
+	auto query = folder->CreateFileQueryWithOptions( options );
+	auto task = create_task( query->GetFilesAsync() );
+	task.then( [handler, callback, data]( IVectorView<StorageFile^>^ files ) {
+		for( unsigned int i = 0; i < files->Size; i++ ) {
+			StorageFile^ file = files->GetAt( i );
+			FileIO::ReadBufferAsync( file );
+			if( handler( data, file->Path->Data() ) != 0 ) {
+				break;
+			}
+		}
+		callback( data );
+	} );
+}
+
+void ScanImageFilesAsyncW( const wchar_t *wpath, const wchar_t *wtoken,
+			   FileHandlerAsync handler, void( *callback )(void*),
+			   void *data )
+{
+	Platform::String ^token = ref new Platform::String( wtoken );
+	auto task = create_task( FutureAccessList->GetFolderAsync( token ) );
+	task.then( [handler, callback, data]( StorageFolder ^folder ) {
+		ScanImageFilesInFolder( folder, handler, callback, data );
 	} );
 }
 

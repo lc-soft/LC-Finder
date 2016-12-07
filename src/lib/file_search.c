@@ -106,10 +106,6 @@ CREATE TABLE IF NOT EXISTS file (\
 	modify_time INTEGER NOT NULL,\
 	FOREIGN KEY(did) REFERENCES dir(id) ON DELETE CASCADE\
 );\
-CREATE TABLE IF NOT EXISTS tag_group (\
-	id INTEGER PRIMARY KEY AUTOINCREMENT,\
-	name TEXT NOT NULL\
-);\
 CREATE TABLE IF NOT EXISTS tag (\
 	id INTEGER PRIMARY KEY AUTOINCREMENT,\
 	gid INTEGER,\
@@ -125,15 +121,19 @@ CREATE TABLE IF NOT EXISTS file_tag_relation (\
 
 STATIC_STR sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 STATIC_STR sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
-STATIC_STR sql_add_dir = "INSERT INTO dir(path, visible) VALUES(?, ?);";
 STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
 STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
 STATIC_STR sql_del_file = "DELETE FROM file WHERE path = ?;";
 STATIC_STR sql_get_tag = "SELECT id FROM tag WHERE name = ?;";
-STATIC_STR sql_get_dir_id = "SELECT id FROM dir WHERE path = \"%s\";";
 STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
 STATIC_STR sql_count_files = "SELECT COUNT(*) FROM ";
+
+STATIC_STR sql_add_dir = "\
+INSERT INTO dir(path, visible) VALUES(?, ?);";
+
+STATIC_STR sql_get_dir = \
+"SELECT id, path, visible FROM dir WHERE path = \"%s\";";
 
 STATIC_STR sql_get_dir_list = "\
 SELECT id, path, visible FROM dir ORDER BY PATH ASC;";
@@ -286,7 +286,7 @@ DB_Dir DB_AddDir( const char *dirpath, int visible )
 		return NULL;
 	}
 	stmt = NULL;
-	sprintf( sql, sql_get_dir_id, dirpath );
+	sprintf( sql, sql_get_dir, dirpath );
 	sqlite3_prepare_v2( self.db, sql, -1, &stmt, NULL );
 	ret = sqlite3_step( stmt );
 	if( ret != SQLITE_ROW ) {
@@ -294,6 +294,7 @@ DB_Dir DB_AddDir( const char *dirpath, int visible )
 	}
 	dir = malloc( sizeof( DB_DirRec ) );
 	dir->id = sqlite3_column_int( stmt, 0 );
+	dir->visible = sqlite3_column_int( stmt, 2 );
 	dir->path = strdup( dirpath );
 	sqlite3_finalize( stmt );
 	return dir;

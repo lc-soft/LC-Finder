@@ -243,37 +243,36 @@ int LCFinder_DeleteFiles( const char **files, int nfiles,
 	return i;
 }
 
-static void SyncAddedFile( void *data, const wchar_t *wpath,
-			   FileStatus status )
+static void SyncAddedFile( void *data, const FileInfo info )
 {
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
+	int ctime = (int)info->status.ctime;
+	int mtime = (int)info->status.mtime;
 	pack->status->synced_files += 1;
-	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
-	DB_AddFile( pack->dir, path, (int)status->ctime, (int)status->mtime );
+	LCUI_EncodeString( path, info->path, PATH_LEN, ENCODING_UTF8 );
+	DB_AddFile( pack->dir, path, ctime, mtime );
 	//wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
-static void SyncChangedFile( void *data, const wchar_t *wpath,
-			     FileStatus status )
+static void SyncChangedFile( void *data, const FileInfo info )
 {
 	char path[PATH_LEN];
-	int ctime = (int)status->ctime;
-	int mtime = (int)status->mtime;
+	int ctime = (int)info->status.ctime;
+	int mtime = (int)info->status.mtime;
 	DirStatusDataPack pack = data;
 	pack->status->synced_files += 1;
-	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
+	LCUI_EncodeString( path, info->path, PATH_LEN, ENCODING_UTF8 );
 	DB_UpdateFileTime( pack->dir, path, ctime, mtime );
 	DEBUG_MSG( "%ls\n", wpath );
 }
 
-static void SyncDeletedFile( void *data, const wchar_t *wpath,
-			     FileStatus status )
+static void SyncDeletedFile( void *data, const FileInfo info )
 {
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
 	pack->status->synced_files += 1;
-	LCUI_EncodeString( path, wpath, PATH_LEN, ENCODING_UTF8 );
+	LCUI_EncodeString( path, info->path, PATH_LEN, ENCODING_UTF8 );
 	DB_DeleteFile( path );
 	//wprintf(L"sync: delete file: %s\n", wpath);
 }
@@ -330,6 +329,96 @@ int64_t LCFinder_GetThumbDBTotalSize( void )
 	}
 	return sum_size;
 }
+
+#ifdef PLATFORM_WIN32_PC_APP
+
+static int LCFinder_OnScanFile( void *data, const wchar_t *path )
+{
+	FileSyncStatus s = data;
+	LOGW(L"scan file: %s\n", path);
+	return SyncTask_ScanFileW( s->task, path );
+}
+
+void LCFinder_SwitchTask( FileSyncStatus s );
+
+static void LCFinder_OnTaskDone( void *data )
+{
+	int i;
+	FileSyncStatus s = data;
+	if( s->task_i < finder.n_dirs - 1 ) {
+		s->task_i += 1;
+		SyncTask_Finish( s->task );
+		LCFinder_SwitchTask( s );
+		return;
+	}
+	DB_Begin();
+	s->state = STATE_SAVING;
+	LOG( "\n\nstart sync\n" );
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		DirStatusDataPackRec pack;
+		pack.dir = finder.dirs[i];
+		if( !pack.dir ) {
+			continue;
+		}
+		pack.status = s;
+		s->task = s->tasks[i];
+		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
+		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
+		SyncTask_InChangedFiles( s->task, SyncChangedFile, &pack );
+		SyncTask_Commit( s->task );
+		SyncTask_Delete( s->task );
+		s->task = NULL;
+	}
+	DB_Commit();
+	LOG( "\n\nend sync\n" );
+	s->state = STATE_FINISHED;
+	s->task = NULL;
+	s->task_i = 0;
+	free( s->tasks );
+	s->tasks = NULL;
+	if( s->callback ) {
+		s->callback( s->data );
+	}
+}
+
+static void LCFinder_SwitchTask( FileSyncStatus s )
+{
+	DB_Dir dir;
+	wchar_t *path, *token = NULL;
+	s->task = s->tasks[s->task_i];
+	SyncTask_Start( s->task );
+	dir = finder.dirs[s->task_i];
+	path = DecodeUTF8( dir->path );
+	ScanImageFilesAsyncW( path, token, LCFinder_OnScanFile, 
+			      LCFinder_OnTaskDone, s );
+	free( path );
+}
+
+void LCFinder_SyncFilesAsync( FileSyncStatus s )
+{
+	int i;
+	wchar_t *path;
+	s->task = NULL;
+	s->tasks = NULL;
+	s->added_files = 0;
+	s->synced_files = 0;
+	s->scaned_files = 0;
+	s->deleted_files = 0;
+	s->state = STATE_STARTED;
+	s->tasks = NEW( SyncTask, finder.n_dirs );
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		DB_Dir dir = finder.dirs[i];
+		if( !dir ) {
+			continue;
+		}
+		path = DecodeUTF8( dir->path );
+		s->tasks[i] = SyncTask_NewW( finder.fileset_dir, path );
+		free( path );
+	}
+	LCFinder_SwitchTask( s );
+}
+
+#endif
 
 int LCFinder_SyncFiles( FileSyncStatus s )
 {

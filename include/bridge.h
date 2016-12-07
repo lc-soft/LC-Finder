@@ -52,11 +52,19 @@ LCFINDER_BEGIN_HEADER
 #define PLATFORM_LINUX
 #endif
 
-void SelectFolderW( void( *callback )(const wchar_t *) );
+typedef int(*FileHandlerAsync)(void*, const wchar_t*);
+
+int SelectFolder( char *dirpath, int max_len );
+
+void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
 
 int GetAppDataFolderW( wchar_t *buf, int max_len );
 
 int GetAppInstalledLocationW( wchar_t *buf, int max_len );
+
+void ScanImageFilesAsyncW( const wchar_t *wpath, const wchar_t *wtoken,
+			   FileHandlerAsync handler, void( *callback )(void*),
+			   void *data );
 
 void OpenUriW( const wchar_t *uri );
 

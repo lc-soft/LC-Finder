@@ -124,6 +124,7 @@ typedef void( *LCFinder_EventHandler )(void*, void*);
 
 /** 文件同步状态记录 */
 typedef struct FileSyncStatusRec_ {
+	int task_i;
 	int state;		/**< 当前状态 */
 	int added_files;	/**< 增加的文件数量 */
 	int changed_files;	/**< 改变的文件数量 */
@@ -132,6 +133,8 @@ typedef struct FileSyncStatusRec_ {
 	int synced_files;	/**< 已同步的文件数量 */
 	SyncTask task;		/**< 当前正执行的任务 */
 	SyncTask *tasks;	/**< 所有任务 */
+	void *data;
+	void( *callback )(void*);
 } FileSyncStatusRec, *FileSyncStatus;
 
 extern Finder finder;
@@ -155,6 +158,8 @@ void LCFinder_ClearThumbDB( void );
 
 /** 同步文件 */
 int LCFinder_SyncFiles( FileSyncStatus s );
+
+void LCFinder_SyncFilesAsync( FileSyncStatus s );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );
 
