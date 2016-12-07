@@ -44,6 +44,7 @@
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
 #include <LCUI/graph.h>
+#include <LCUI/input.h>
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
@@ -1267,6 +1268,65 @@ static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	UI_ShowPictureInfoView();
 }
 
+static void OnMouseWheel( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	if( this_view.is_zoom_mode ) {
+		double scale;
+		ResetOffsetPosition();
+		if( e->wheel.delta < 0 ) {
+			scale = this_view.picture->scale - 0.5;
+		} else {
+			scale = this_view.picture->scale + 0.5;
+		}
+		SetPictureScale( this_view.picture, scale );
+	} else {
+		if( e->wheel.delta < 0 ) {
+			OpenNextPicture();
+		} else {
+			OpenPrevPicture();
+		}
+	}
+}
+
+static void OnKeyDown( LCUI_SysEvent e, void *data )
+{
+	if( this_view.is_zoom_mode ) {
+		switch( e->key.code ) {
+		case LCUIKEY_MINUS:
+			SetPictureScale( this_view.picture, 
+					 this_view.picture->scale - 0.5 );
+			break;
+		case LCUIKEY_EQUAL:
+			SetPictureScale( this_view.picture, 
+					 this_view.picture->scale + 0.5 );
+			break;
+		case LCUIKEY_LEFT:
+		case LCUIKEY_RIGHT:
+		case LCUIKEY_UP:
+		case LCUIKEY_DOWN:
+		default: break;
+		}
+	} else {
+		switch( e->key.code ) {
+		case LCUIKEY_MINUS:
+			SetPictureScale( this_view.picture, 
+					 this_view.picture->scale - 0.5 );
+			break;
+		case LCUIKEY_EQUAL:
+			SetPictureScale( this_view.picture, 
+					 this_view.picture->scale + 0.5 );
+			break;
+		case LCUIKEY_LEFT:
+			OpenPrevPicture();
+			break;
+		case LCUIKEY_RIGHT:
+			OpenNextPicture();
+		default:
+			break;
+		}
+	}
+}
+
 void UI_InitPictureView( int mode )
 {
 	LCUI_Widget box, btn_back, btn_back2, btn_info, btn_del;
@@ -1304,6 +1364,8 @@ void UI_InitPictureView( int mode )
 	BindEvent( this_view.btn_reset, "click", OnBtnResetClick );
 	BindEvent( this_view.btn_zoomin, "click", OnBtnZoomInClick );
 	BindEvent( this_view.btn_zoomout, "click", OnBtnZoomOutClick );
+	BindEvent( this_view.view_pictures, "mousewheel", OnMouseWheel );
+	LCUI_BindEvent( LCUI_KEYDOWN, OnKeyDown, NULL, NULL );
 	InitSlideTransition();
 	LCUICond_Init( &this_view.cond );
 	LCUIMutex_Init( &this_view.mutex );

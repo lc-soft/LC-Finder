@@ -838,10 +838,22 @@ int LCFinder_Run( void )
 	return UI_Run();
 }
 
-
 #ifndef PLATFORM_WIN32_PC_APP
+
+static void LoggerHandler( const char *str )
+{
+	OutputDebugStringA( str );
+}
+
+static void LoggerHandlerW( const wchar_t *str )
+{
+	OutputDebugStringW( str );
+}
+
 int main( int argc, char **argv )
 {
+	Logger_SetHandler( LoggerHandler );
+	Logger_SetHandlerW( LoggerHandlerW );
 	ASSERT( LCFinder_Init( argc, argv ) );
 	return UI_Run();
 }
