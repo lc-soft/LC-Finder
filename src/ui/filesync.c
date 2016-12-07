@@ -57,19 +57,12 @@ static struct SyncContextRec_ {
 	LCUI_Widget title;		/**< 提示框中显示的标题 */
 	LCUI_Thread thread;		/**< 用于进行文件同步的线程 */
 	int timer;			/**< 用于动态更新提示框内容的定时器 */
-} self;
+} self = { 0 };
 
 static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 {
 	int count, total;
 	switch( self.status.state ) {
-	case STATE_STARTED:
-		count = self.status.scaned_files;
-		if( self.status.task ) {
-			count += self.status.task->total_files;
-		}
-		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
-		break;
 	case STATE_SAVING:
 		count = self.status.synced_files;
 		total = self.status.added_files;
@@ -81,23 +74,30 @@ static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 		count = self.status.synced_files;
 		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
 		break;
-	default:return;
+	case STATE_STARTED:
+	default:
+		count = self.status.scaned_files;
+		if( self.status.task ) {
+			count += self.status.task->total_files;
+		}
+		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
+		break;
 	}
 }
 
 static void OnUpdateStats( void *arg )
 {
 	switch( self.status.state ) {
-	case STATE_STARTED:
-		TextViewI18n_SetKey( self.text, KEY_TEXT_SCANING );
-		break;
 	case STATE_SAVING:
 		TextViewI18n_SetKey( self.text, KEY_TEXT_SAVING );
 		break;
 	case STATE_FINISHED:
 		TextViewI18n_SetKey( self.text, KEY_TEXT_FINISHED );
 		break;
-	default:return;
+	case STATE_STARTED:
+	default:
+		TextViewI18n_SetKey( self.text, KEY_TEXT_SCANING );
+		break;
 	}
 }
 
@@ -111,7 +111,7 @@ static void OnHideTip( void *arg )
 static void FileSyncThread( void *arg )
 {
 	LCUI_Widget alert = self.text->parent;
-	TextViewI18n_SetFormater( self.text, RenderStatusText, NULL );
+	TextViewI18n_Refresh( self.text );
 	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
 	Widget_RemoveClass( alert, "hide" );
 	LCFinder_SyncFiles( &self.status );
@@ -132,13 +132,14 @@ static void OnStartSyncFiles( void *privdata, void *data )
 	}
 	self.is_syncing = TRUE;
 	self.timer = LCUITimer_Set( 200, OnUpdateStats, NULL, TRUE );
+	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
 	LCUIThread_Create( &self.thread, FileSyncThread, NULL );
 }
 
 void UI_InitFileSyncTip( void )
 {
-	memset( &self, 0, sizeof( self ) );
 	self.text = LCUIWidget_GetById( ID_TXT_FILE_SYNC_STATS );
 	self.title = LCUIWidget_GetById( ID_TXT_FILE_SYNC_TITLE );
 	LCFinder_BindEvent( EVENT_SYNC, OnStartSyncFiles, NULL );
+	TextViewI18n_SetFormater( self.text, RenderStatusText, NULL );
 }
