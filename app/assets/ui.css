@@ -487,9 +487,9 @@ time-separator:first-child {
 }
 .dialog-content {
 	width: 100%;
-	padding: 25px;
 	max-width: 450px;
 	margin: 0 auto;
+	padding: 10px;
 	vertical-align: middle;
 	background-color: #fff;
 	box-sizing: border-box;
@@ -497,13 +497,23 @@ time-separator:first-child {
 textedit.dialog-input {
 	box-sizing: border-box;
 }
+.dialog-content .text-block {
+	margin-bottom: 15px;
+}
 .dialog-content .dialog-header {
-	margin-bottom: 20px;
 	width: 100%;
+	padding: 15px 15px 5px 15px;
+	box-sizing: border-box;
 }
 .dialog-content .dialog-body {
-	margin-bottom: 20px;
+	padding: 15px;
 	width: 100%;
+	box-sizing: border-box;
+}
+.dialog-content .dialog-footer {
+	width: 100%;
+	padding: 5px 15px 15px 15px;
+	box-sizing: border-box;
 }
 .dialog-content .dialog-header .text,
 .dialog-content .dialog-header textview {
@@ -521,9 +531,6 @@ textedit.dialog-input {
 	background-color: #ddd;
 	box-sizing: border-box;
 	border: 2px solid #ddd;
-}
-.dialog-content .dialog-footer {
-	width: 100%;
 }
 .dialog-content .dialog-btn-group {
 	width: 50%;

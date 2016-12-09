@@ -59,7 +59,8 @@ LCUI_API LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent,
 				       const wchar_t* title,
 				       const wchar_t *text );
 
-/** 显示“文本输入”对话框
+/**
+ * 显示“文本输入”对话框
  * @param[in] parent 用于容纳对话框的父部件
  * @param[in] title 对话框标题
  * @param[in] placeholder 文本编辑框的占位符
@@ -74,6 +75,19 @@ LCUI_API int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 				const wchar_t *placeholder, const wchar_t *val,
 				wchar_t *newval, size_t max_len,
 				LCUI_BOOL( *checker )(const wchar_t*) );
+
+/** 
+ * 显示密码验证对话框
+ * @param[in] parent 用于容纳对话框的父部件
+ * @param[in] title 对话框标题
+ * @param[in] text 对话框内的说明文本
+ * @param[in] check 回调函数，验证密码
+ * @param[in] data 传递给回调函数的附加数据
+ */
+LCUI_API int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
+				       const wchar_t *text,
+				       LCUI_BOOL( *check )(const char*, const char*),
+				       const char *data );
 
 /** 新建一个“进度”对话框，返回值为该对话框的数据 */
 LCUI_API LCUI_ProgressDialog NewProgressDialog( void );

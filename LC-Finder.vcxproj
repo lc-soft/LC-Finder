@@ -33,6 +33,7 @@
     <ClCompile Include="src\lib\thumb_cache.c" />
     <ClCompile Include="src\ui\browser.c" />
     <ClCompile Include="src\ui\dialog_confirm.c" />
+    <ClCompile Include="src\ui\dialog_password.c" />
     <ClCompile Include="src\ui\dialog_progress.c" />
     <ClCompile Include="src\ui\dialog_prompt.c" />
     <ClCompile Include="src\ui\dropdown.c" />
