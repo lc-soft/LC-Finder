@@ -15,6 +15,8 @@ strings:
         mtime_asc: 最早更新
         score_desc: 評分最高
         score_asc: 評分最低
+    message:
+        password_error: 密碼錯誤，請重新輸入正確的密碼
     home:
         title: 集錦
         message:
@@ -86,11 +88,21 @@ strings:
             placeholder: '標籤名稱，多個標籤用空格隔開'
     settings:
         title: 設置
-        thumb_cache: 緩存
-        thumb_cache_stats: 當前縮略圖緩存共佔用 %s 的空間
-        thumb_cache_description: >-
-            本應用會在你瀏覽圖片列表的時候自動緩存縮略圖，
-            以便在下次瀏覽圖片時能夠快速呈現縮略圖。
+        thumb_cache:
+            title: 緩存
+            stats: '當前縮略圖緩存共佔用 %s 的空間'
+            description: >-
+                本應用會在你瀏覽圖片列表的時候自動緩存縮略圖，
+                以便在下次瀏覽圖片時能夠快速呈現縮略圖。
+        private_space:
+            title: 私人空間
+            description: >-
+                私人空間可用於存放一些非公開的資源，
+                該空間內的資源不會在資源列表中顯示，
+                並且不會出現在搜索結果中。
+            verify_dialog:
+                title: 密碼驗證
+                text: 請輸入私人空間的開啓密碼
         language: 語言
         language_description: 更改界面的顯示語言
         license: 許可協議

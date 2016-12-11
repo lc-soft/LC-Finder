@@ -7,6 +7,9 @@ strings:
         search: 搜索
         clear: 清除
         cleaning: 正在清除...
+    switch:
+        on: 开
+        off: 关
     sort:
         header: 排序方式
         ctime_desc: 最近创建
@@ -15,6 +18,8 @@ strings:
         mtime_asc: 最早更新
         score_desc: 评分最高
         score_asc: 评分最低
+    message:
+        password_error: 密码错误，请重新输入正确的密码
     home:
         title: 集锦
         message:
@@ -85,11 +90,21 @@ strings:
             placeholder: '标签名称，多个标签用空格隔开'
     settings:
         title: 设置
-        thumb_cache: 缓存
-        thumb_cache_stats: 当前缩略图缓存共占用 %s 的空间
-        thumb_cache_description: >-
-            本应用会在你浏览图片列表的时候自动缓存缩略图，
-            以便在下次浏览图片时能够快速呈现缩略图。
+        thumb_cache:
+            title: 缓存
+            stats: '当前缩略图缓存共占用 %s 的空间'
+            description: >-
+                本应用会在你浏览图片列表的时候自动缓存缩略图，
+                以便在下次浏览图片时能够快速呈现缩略图。
+        private_space:
+            title: 私人空间
+            description: >-
+                私人空间可用于存放一些非公开的资源，
+                该空间内的资源不会在资源列表中显示，
+                并且不会出现在搜索结果中。
+            verify_dialog:
+                title: 密码验证
+                text: 请输入私人空间的开启密码
         language: 语言
         language_description: 更改界面的显示语言
         license: 许可协议

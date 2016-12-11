@@ -15,6 +15,8 @@ strings:
         mtime_asc: Least recently updated
         score_desc: Most score
         score_asc: Fewest score
+    message:
+        password_error: 'Invalid password, please re-enter the correct password'
     home:
         title: Collection
         message:
@@ -85,12 +87,22 @@ strings:
             placeholder: 'tag name, multiple tag names separated by space.'
     settings:
         title: Settings
-        thumb_cache: Cache
-        thumb_cache_stats: current thumbnail cache has used %s space.
-        thumb_cache_description: >-
-            This application will automatically cache the thumbnail
-            when you browse the list of pictures, so that you can quickly
-            render thumbnail images in the next time you browse the pictures.
+        thumb_cache:
+            title: Cache
+            stats: 'Current thumbnail cache has used %s space.'
+            description: >-
+                This application will automatically cache the thumbnail
+                when you browse the list of pictures, so that you can quickly
+                render thumbnail images in the next time you browse the pictures.
+        private_space:
+            title: Private space
+            description: >-
+                Private space can be used to store some non-public resources,
+                The resources in it will not be displayed in the resource browser view,
+                And will not be included in the search results.
+            verify_dialog:
+                title: Verfiy password
+                text: Please enter the password for private space
         language: Language
         language_description: Change language
         license: License
