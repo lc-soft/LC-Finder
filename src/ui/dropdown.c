@@ -59,15 +59,15 @@ static struct DropdwonModule {
 static char *dropdown_css = ToString(
 
 dropdown {
+	z-index: 1000;
 	position: absolute;
 	margin-top: 4px;
 	padding: 10px 0;
 	min-width: 140px;
+	max-width: 256px;
 	background-color: #fff;
 	border: 1px solid #ccc;
 	box-shadow: 0 6px 12px rgba(0,0,0,.175);
-	z-index: 1000;
-	max-width: 256px;
 }
 dropdown dropdown-item {
 	width: 100%;

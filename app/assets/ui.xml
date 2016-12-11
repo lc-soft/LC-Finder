@@ -197,12 +197,12 @@
           <widget id="view-settings-content-wrapper" class="view-content-wrapper">
             <widget id="view-settings-content" class="scrolllayer view-content">
               <widget class="setting-group">
-                <widget type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache">缓存</widget>
+                <widget type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache.title">缓存</widget>
                 <widget class="item-group">
                   <widget class="text-line">
-                    <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache_stats">当前缩略图缓存共占用 %s 的空间</widget>
+                    <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache.stats">当前缩略图缓存共占用 %s 的空间</widget>
                   </widget>
-                  <widget class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache_description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
+                  <widget class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache.description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
                   <widget id="btn-clear-thumb-db" class="btn btn-default">
                     <widget type="textview-i18n" class="text" data-i18n-key="button.clear">清除</widget>
                   </widget>
@@ -231,9 +231,8 @@
                 </widget>
               </widget>
               <widget class="setting-group">
-                <widget type="textview-i18n" class="text title" data-i18n-key="settings.private_space">私人空间</widget>
-                <widget class="text text-line text-paragraph" type="textview-i18n" data-i18n-key="settings.private_space_description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</widget>
-                <widget class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space_switcher_title">开启私人空间</widget>
+                <widget type="textview-i18n" class="text title" data-i18n-key="settings.private_space.title">私人空间</widget>
+                <widget class="text text-line text-paragraph" type="textview-i18n" data-i18n-key="settings.private_space.description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</widget>
                 <widget id="switch-private-space-open" type="switch"></widget>
               </widget>
               <widget class="setting-group">

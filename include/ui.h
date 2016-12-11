@@ -122,6 +122,7 @@
 #define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
 #define ID_DROPDOWN_FOLDER_FILES_SORT	"dropdown-folder-files-sort"
 #define ID_DROPDOWN_SEARCH_FILES_SORT	"dropdown-search-files-sort"
+#define ID_SWITCH_PRIVATE_SPACE		"switch-private-space-open"
 
 #define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )

@@ -59,6 +59,7 @@ static const char *switch_css = ToString(
 .switch {
 	height: 20px;
 	width: 44px;
+	display: inline-block;
 	border: 2px solid #c8d3d9;
 	background-color: #c8d3d9;
 }

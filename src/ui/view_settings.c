@@ -45,6 +45,7 @@
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "switch.h"
 #include "dialog.h"
 #include "dropdown.h"
 #include "textview_i18n.h"
@@ -55,6 +56,8 @@
 #define KEY_CLEAR			"button.clear" 
 #define KEY_DIALOG_TITLE_DEL_DIR	"settings.source_folders.removing_dialog.title"
 #define KEY_DIALOG_TEXT_DEL_DIR		"settings.source_folders.removing_dialog.content"
+#define KEY_VERIFY_PASSWORD_TITLE	"settings.private_space.verify_dialog.title"
+#define KEY_VERIFY_PASSWORD_TEXT	"settings.private_space.verify_dialog.text"
 
 static struct SettingsViewData {
 	LCUI_Widget source_dirs;
@@ -245,11 +248,31 @@ static void UI_InitLanguages( void )
 	BindEvent( menu, "change.dropdown", OnSelectLanguage );
 }
 
+static LCUI_BOOL OnCheckPassword( const char *password, const char *data )
+{
+	return FALSE;
+}
+
+static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w, 
+					LCUI_WidgetEvent e, void *arg )
+{
+	const wchar_t *title, *text;
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	if( Switch_IsChecked( w ) ) {
+		title = I18n_GetText( KEY_VERIFY_PASSWORD_TITLE );
+		text = I18n_GetText( KEY_VERIFY_PASSWORD_TEXT );
+		LCUIDialog_CheckPassword( window, title, text, 
+					  OnCheckPassword, NULL );
+	}
+}
+
 void UI_InitSettingsView( void )
 {
-	LCUI_Widget btn;
+	LCUI_Widget btn, switcher;
 	SelectWidget( this_view.source_dirs, ID_VIEW_SOURCE_LIST );
 	SelectWidget( this_view.thumb_db_stats, ID_TXT_THUMB_DB_SIZE );
+	SelectWidget( switcher, ID_SWITCH_PRIVATE_SPACE );
+	BindEvent( switcher, "change.switch", OnPrivateSpaceSwitchCahnge );
 	SelectWidget( btn, ID_BTN_ADD_SOURCE );
 	BindEvent( btn, "click", OnSelectDir );
 	SelectWidget( btn, ID_BTN_SIDEBAR_SETTINGS );

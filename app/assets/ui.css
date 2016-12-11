@@ -27,6 +27,7 @@
 	margin-bottom: 20px;
 }
 .btn {
+	display: inline-block;
 	padding: 8px 14px;
 }
 .btn .text {
@@ -514,6 +515,35 @@ textedit.dialog-input {
 	width: 100%;
 	padding: 5px 15px 15px 15px;
 	box-sizing: border-box;
+}
+.dialog-content .input-group {
+	padding: 5px 15px;
+	box-sizing: border-box;
+	margin: -5px -15px 10px -15px;
+}
+.dialog-content .input-group:last-child {
+	margin-bottom: 0;
+}
+.dialog-content .input-group .message {
+	padding-top: 5px;
+}
+.dialog-content .input-group .error.message {
+	color: #fff;
+	padding: 4px 10px;
+	font-size: 13px;
+	background-color: #FD4C4C;
+	box-sizing: border-box;
+	display: none;
+}
+.dialog-content .input-group.error textedit,
+.dialog-content .input-group.error textedit:active,
+.dialog-content .input-group.error textedit:focus,
+.dialog-content .input-group.error textedit:hover {
+	border-color: #FD4C4C;
+	box-shadow: none;
+}
+.dialog-content .input-group.error .error.message {
+	display: block;
 }
 .dialog-content .dialog-header .text,
 .dialog-content .dialog-header textview {
