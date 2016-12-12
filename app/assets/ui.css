@@ -962,6 +962,7 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
 }
 .view-time-range .time-range {
 	font-size: 18px;
+	display: block;
 	margin-bottom: 15px;
 }
 

@@ -58,6 +58,8 @@
 #define KEY_DIALOG_TEXT_DEL_DIR		"settings.source_folders.removing_dialog.content"
 #define KEY_VERIFY_PASSWORD_TITLE	"settings.private_space.verify_dialog.title"
 #define KEY_VERIFY_PASSWORD_TEXT	"settings.private_space.verify_dialog.text"
+#define KEY_NEW_PASSWORD_TITLE		"settings.private_space.new_dialog.title"
+#define KEY_NEW_PASSWORD_TEXT		"settings.private_space.new_dialog.text"
 
 static struct SettingsViewData {
 	LCUI_Widget source_dirs;
@@ -256,6 +258,7 @@ static LCUI_BOOL OnCheckPassword( const char *password, const char *data )
 static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w, 
 					LCUI_WidgetEvent e, void *arg )
 {
+	wchar_t pwd[64];
 	const wchar_t *title, *text;
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	if( Switch_IsChecked( w ) ) {
@@ -263,6 +266,11 @@ static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 		text = I18n_GetText( KEY_VERIFY_PASSWORD_TEXT );
 		LCUIDialog_CheckPassword( window, title, text, 
 					  OnCheckPassword, NULL );
+	} else {
+		title = I18n_GetText( KEY_NEW_PASSWORD_TITLE );
+		text = I18n_GetText( KEY_NEW_PASSWORD_TEXT );
+		LCUIDialog_NewPassword( window, title, text, pwd );
+		LOGW( L"new password: %s\n", pwd );
 	}
 }
 

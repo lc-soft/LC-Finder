@@ -17,6 +17,9 @@ strings:
         score_asc: Fewest score
     message:
         password_error: 'Invalid password, please re-enter the correct password'
+        password_too_long: Password is too long
+        password_empty: Password can not be empty
+        passwords_not_match: Passwords not match
     home:
         title: Collection
         message:
@@ -103,6 +106,9 @@ strings:
             verify_dialog:
                 title: Verfiy password
                 text: Please enter the password for private space
+            new_dialog:
+                title: Set password
+                text: You need to set a password for private space
         language: Language
         language_description: Change language
         license: License

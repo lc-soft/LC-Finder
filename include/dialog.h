@@ -88,6 +88,15 @@ LCUI_API int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 				       const wchar_t *text,
 				       LCUI_BOOL( *check )(const char*, const char*),
 				       const char *data );
+/** 
+ * 显示密码验证对话框
+ * @param[in] parent 用于容纳对话框的父部件
+ * @param[in] title 对话框标题
+ * @param[in] text 对话框内的说明文本
+ * @param[out] password 设定的密码
+ */
+LCUI_API int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
+				     const wchar_t *text, wchar_t *password );
 
 /** 新建一个“进度”对话框，返回值为该对话框的数据 */
 LCUI_API LCUI_ProgressDialog NewProgressDialog( void );

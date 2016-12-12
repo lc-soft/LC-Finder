@@ -20,6 +20,9 @@ strings:
         score_asc: 评分最低
     message:
         password_error: 密码错误，请重新输入正确的密码
+        password_too_long: 密码太长
+        password_empty: 密码不能为空
+        passwords_not_match: 两次输入的密码不一致
     home:
         title: 集锦
         message:
@@ -105,6 +108,9 @@ strings:
             verify_dialog:
                 title: 密码验证
                 text: 请输入私人空间的开启密码
+            new_dialog:
+                title: 设置密码
+                text: 使用私人空间前，你需要先为设置开启密码
         language: 语言
         language_description: 更改界面的显示语言
         license: 许可协议

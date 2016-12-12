@@ -17,6 +17,9 @@ strings:
         score_asc: 評分最低
     message:
         password_error: 密碼錯誤，請重新輸入正確的密碼
+        password_too_long: 密碼太長
+        password_empty: 密碼不能爲空
+        passwords_not_match: 兩次輸入的密碼不一致
     home:
         title: 集錦
         message:
@@ -103,6 +106,9 @@ strings:
             verify_dialog:
                 title: 密碼驗證
                 text: 請輸入私人空間的開啓密碼
+            new_dialog:
+                title: 設置密碼
+                text: 使用私人空間前，你需要先爲設置開啓密碼
         language: 語言
         language_description: 更改界面的顯示語言
         license: 許可協議
