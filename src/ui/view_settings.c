@@ -252,26 +252,51 @@ static void UI_InitLanguages( void )
 
 static LCUI_BOOL OnCheckPassword( const char *password, const char *data )
 {
-	return FALSE;
+	char buf[48];
+	const char *pwd = data;
+	EncodeSHA1( buf, password, strlen( password ) );
+	return strcmp( pwd, buf ) == 0;
 }
 
-static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w, 
+static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 					LCUI_WidgetEvent e, void *arg )
 {
-	wchar_t pwd[64];
+	int ret;
 	const wchar_t *title, *text;
+	char *pwd = finder.config.encrypted_password;
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( Switch_IsChecked( w ) ) {
+	if( !Switch_IsChecked( w ) ) {
+		finder.open_private_space = FALSE;
+		LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
+		return;
+	}
+	if( strlen( pwd ) > 0 ) {
 		title = I18n_GetText( KEY_VERIFY_PASSWORD_TITLE );
 		text = I18n_GetText( KEY_VERIFY_PASSWORD_TEXT );
-		LCUIDialog_CheckPassword( window, title, text, 
-					  OnCheckPassword, NULL );
+		ret = LCUIDialog_CheckPassword( window, title, text,
+						OnCheckPassword, pwd );
+		if( ret != 0 ) {
+			Switch_SetChecked( w, FALSE );
+			return;
+		}
 	} else {
+		char *buf;
+		wchar_t wbuf[64];
 		title = I18n_GetText( KEY_NEW_PASSWORD_TITLE );
 		text = I18n_GetText( KEY_NEW_PASSWORD_TEXT );
-		LCUIDialog_NewPassword( window, title, text, pwd );
-		LOGW( L"new password: %s\n", pwd );
+		ret = LCUIDialog_NewPassword( window, title, text, wbuf );
+		if( ret != 0 ) {
+			Switch_SetChecked( w, FALSE );
+			return;
+		}
+		buf = EncodeUTF8( wbuf );
+		LOGW( L"new password: %s\n", wbuf );
+		EncodeSHA1( pwd, buf, strlen( buf ) );
+		LCFinder_SaveConfig();
+		free( buf );
 	}
+	finder.open_private_space = TRUE;
+	LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
 }
 
 void UI_InitSettingsView( void )

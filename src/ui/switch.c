@@ -142,6 +142,17 @@ LCUI_BOOL Switch_IsChecked( LCUI_Widget w )
 	return data->checked;
 }
 
+void Switch_SetChecked( LCUI_Widget w, LCUI_BOOL checked )
+{
+	Switch data = Widget_GetData( w, self.prototype );
+	data->checked = checked;
+	if( data->checked ) {
+		Widget_AddClass( w, "checked" );
+	} else {
+		Widget_RemoveClass( w, "checked" );
+	}
+}
+
 void LCUIWidget_AddSwitch( void )
 {
 	self.prototype = LCUIWidget_NewPrototype( "switch", NULL );

@@ -89,7 +89,7 @@ LCUI_API int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 				       LCUI_BOOL( *check )(const char*, const char*),
 				       const char *data );
 /** 
- * 显示密码验证对话框
+ * 显示新建密码对话框
  * @param[in] parent 用于容纳对话框的父部件
  * @param[in] title 对话框标题
  * @param[in] text 对话框内的说明文本

@@ -39,6 +39,8 @@
 
 LCUI_BOOL Switch_IsChecked( LCUI_Widget w );
 
+void Switch_SetChecked( LCUI_Widget w, LCUI_BOOL checked );
+
 void LCUIWidget_AddSwitch( void );
 
 #endif

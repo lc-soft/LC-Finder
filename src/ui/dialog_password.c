@@ -161,6 +161,7 @@ int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
 
 	ctx.btn = btn_ok;
+	ctx.data = data;
 	ctx.check = check;
 	ctx.type = TYPE_VERIFY_PASSWORD;
 	ctx.loop = LCUI_MainLoop_New();
