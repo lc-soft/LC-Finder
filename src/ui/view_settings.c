@@ -36,10 +36,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifdef _WIN32
-#include <Windows.h>
-#include <ShlObj.h>
-#endif
 #include "finder.h"
 #include "ui.h"
 #include <LCUI/display.h>
@@ -67,6 +63,13 @@ static struct SettingsViewData {
 	LCUI_Widget language;
 	Dict *dirpaths;
 } this_view;
+
+static struct PrivateSpaceViewData {
+	LCUI_Widget view;
+	LCUI_Widget source_dirs;
+	LCUI_BOOL is_loaded;
+	Dict *dirpaths;
+} private_space_view;
 
 static void OnBtnRemoveClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
@@ -101,11 +104,17 @@ static LCUI_Widget NewDirListItem( DB_Dir dir )
 
 static void OnDelDir( void *privdata, void *arg )
 {
+	Dict *dirpaths;
 	DB_Dir dir = arg;
-	LCUI_Widget item = Dict_FetchValue( this_view.dirpaths, dir->path );
+	LCUI_Widget item;
+	if( dir->visible ) {
+		dirpaths = this_view.dirpaths;
+	} else {
+		dirpaths = private_space_view.dirpaths;
+	}
+	item = Dict_FetchValue( dirpaths, dir->path );
 	if( item ) {
-		DEBUG_MSG("destroy item: %p\n", item);
-		Dict_Delete( this_view.dirpaths, dir->path );
+		Dict_Delete( dirpaths, dir->path );
 		Widget_Destroy( item );
 	}
 }
@@ -114,23 +123,45 @@ static void OnAddDir( void *privdata, void *arg )
 {
 	DB_Dir dir = arg;
 	LCUI_Widget item = NewDirListItem( dir );
-	Widget_Append( this_view.source_dirs, item );
-	Dict_Add( this_view.dirpaths, dir->path, item );
+	if( dir->visible ) {
+		Widget_Append( this_view.source_dirs, item );
+		Dict_Add( this_view.dirpaths, dir->path, item );
+	} else {
+		Widget_Append( private_space_view.source_dirs, item );
+		Dict_Add( private_space_view.dirpaths, dir->path, item );
+	}
 }
 
 /** 初始化文件夹目录控件 */
-static void UI_InitDirList( LCUI_Widget view )
+static void UI_InitDirList( void )
 {
 	int i;
 	LCUI_Widget item;
 	this_view.dirpaths = StrDict_Create( NULL, NULL );
 	for( i = 0; i < finder.n_dirs; ++i ) {
+		if( !finder.dirs[i]->visible ) {
+			continue;
+		}
 		item = NewDirListItem( finder.dirs[i] );
-		Widget_Append( view, item );
+		Widget_Append( this_view.source_dirs, item );
 		Dict_Add( this_view.dirpaths, finder.dirs[i]->path, item );
 	}
-	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
-	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+}
+
+static void UI_InitPrivateDirList( void )
+{
+	int i;
+	LCUI_Widget item;
+	struct PrivateSpaceViewData *self = &private_space_view;
+	self->dirpaths = StrDict_Create( NULL, NULL );
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		if( finder.dirs[i]->visible ) {
+			continue;
+		}
+		item = NewDirListItem( finder.dirs[i] );
+		Widget_Append( private_space_view.source_dirs, item );
+		Dict_Add( self->dirpaths, finder.dirs[i]->path, item );
+	}
 }
 
 static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -141,6 +172,20 @@ static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 	if( !LCFinder_GetDir( path ) ) {
 		DB_Dir dir = LCFinder_AddDir( path, TRUE );
+		if( dir ) {
+			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
+		}
+	}
+}
+
+static void OnSelectPrivateDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	char path[PATH_LEN] = { 0 };
+	if( SelectFolder( path, PATH_LEN - 1 ) != 0 ) {
+		return;
+	}
+	if( !LCFinder_GetDir( path ) ) {
+		DB_Dir dir = LCFinder_AddDir( path, FALSE );
 		if( dir ) {
 			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 		}
@@ -267,6 +312,7 @@ static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	if( !Switch_IsChecked( w ) ) {
 		finder.open_private_space = FALSE;
+		Widget_AddClass( private_space_view.view, "hide" );
 		LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
 		return;
 	}
@@ -277,6 +323,7 @@ static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 						OnCheckPassword, pwd );
 		if( ret != 0 ) {
 			Switch_SetChecked( w, FALSE );
+			Widget_AddClass( private_space_view.view, "hide" );
 			return;
 		}
 	} else {
@@ -287,6 +334,7 @@ static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 		ret = LCUIDialog_NewPassword( window, title, text, wbuf );
 		if( ret != 0 ) {
 			Switch_SetChecked( w, FALSE );
+			Widget_AddClass( private_space_view.view, "hide" );
 			return;
 		}
 		buf = EncodeUTF8( wbuf );
@@ -295,8 +343,24 @@ static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 		LCFinder_SaveConfig();
 		free( buf );
 	}
+	if( !private_space_view.is_loaded ) {
+		UI_InitPrivateDirList();
+		private_space_view.is_loaded = TRUE;
+	}
 	finder.open_private_space = TRUE;
+	Widget_RemoveClass( private_space_view.view, "hide" );
 	LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
+}
+
+void UI_InitPrivateSpaceView( void )
+{
+	LCUI_Widget btn;
+	struct PrivateSpaceViewData *self = &private_space_view;
+	SelectWidget( self->source_dirs, ID_VIEW_PRIVATE_SOURCE_LIST );
+	SelectWidget( self->view, ID_VIEW_PRIVATE_SPACE );
+	SelectWidget( btn, ID_BTN_ADD_PRIVATE_SOURCE );
+	BindEvent( btn, "click", OnSelectPrivateDir );
+	self->is_loaded = FALSE;
 }
 
 void UI_InitSettingsView( void )
@@ -324,6 +388,9 @@ void UI_InitSettingsView( void )
 	TextViewI18n_SetFormater( this_view.thumb_db_stats,
 				  RenderThumbDBSizeText, NULL );
 	TextViewI18n_Refresh( this_view.thumb_db_stats );
-	UI_InitDirList( this_view.source_dirs );
+	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
+	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+	UI_InitPrivateSpaceView();
 	UI_InitLanguages();
+	UI_InitDirList();
 }

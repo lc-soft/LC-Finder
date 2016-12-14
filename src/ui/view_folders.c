@@ -238,9 +238,9 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 	n = LCFinder_GetSourceDirList( &dirs );
 	for( i = 0; i < n; ++i ) {
 		FileEntry entry = NEW( FileEntryRec, 1 );
-		int len = strlen( finder.dirs[i]->path ) + 1;
+		int len = strlen( dirs[i]->path ) + 1;
 		char *path = malloc( sizeof( char ) * len );
-		strcpy( path, finder.dirs[i]->path );
+		strcpy( path, dirs[i]->path );
 		entry->path = path;
 		entry->is_dir = TRUE;
 		LinkedList_Append( &scanner->files, entry );

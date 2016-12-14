@@ -7,6 +7,9 @@ strings:
         search: 搜索
         clear: 清除
         cleaning: 正在清除...
+    switch:
+        on: 開
+        off: 關
     sort:
         header: 排序方式
         ctime_desc: 最近創建
@@ -99,6 +102,7 @@ strings:
                 以便在下次瀏覽圖片時能夠快速呈現縮略圖。
         private_space:
             title: 私人空間
+            sources_title: 私密源
             description: >-
                 私人空間可用於存放一些非公開的資源，
                 該空間內的資源不會在資源列表中顯示，

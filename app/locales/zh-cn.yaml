@@ -101,6 +101,7 @@ strings:
                 以便在下次浏览图片时能够快速呈现缩略图。
         private_space:
             title: 私人空间
+            sources_title: 私密源
             description: >-
                 私人空间可用于存放一些非公开的资源，
                 该空间内的资源不会在资源列表中显示，

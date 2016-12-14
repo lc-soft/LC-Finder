@@ -7,6 +7,9 @@ strings:
         search: Search
         clear: Clear
         cleaning: Cleaning...
+    switch:
+        on: On
+        off: Off
     sort:
         header: Sort options
         ctime_desc: Recently created
@@ -99,6 +102,7 @@ strings:
                 render thumbnail images in the next time you browse the pictures.
         private_space:
             title: Private space
+            sources_title: Private Sources
             description: >-
                 Private space can be used to store some non-public resources,
                 The resources in it will not be displayed in the resource browser view,
