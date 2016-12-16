@@ -7,6 +7,7 @@ strings:
         search: Search
         clear: Clear
         cleaning: Cleaning...
+        reset_password: Reset password
     switch:
         on: On
         off: Off
@@ -103,6 +104,7 @@ strings:
         private_space:
             title: Private space
             sources_title: Private Sources
+            password_title: Password
             description: >-
                 Private space can be used to store some non-public resources,
                 The resources in it will not be displayed in the resource browser view,
@@ -111,8 +113,11 @@ strings:
                 title: Verfiy password
                 text: Please enter the password for private space
             new_dialog:
-                title: Set password
-                text: You need to set a password for private space
+                title: Create password
+                text: You need to set a new password for private space
+            reset_dialog:
+                title: Reset password
+                text: Reset the password for private space
         language: Language
         language_description: Change language
         license: License

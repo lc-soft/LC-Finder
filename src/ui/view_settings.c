@@ -56,6 +56,8 @@
 #define KEY_VERIFY_PASSWORD_TEXT	"settings.private_space.verify_dialog.text"
 #define KEY_NEW_PASSWORD_TITLE		"settings.private_space.new_dialog.title"
 #define KEY_NEW_PASSWORD_TEXT		"settings.private_space.new_dialog.text"
+#define KEY_RESET_PASSWORD_TITLE	"settings.private_space.reset_dialog.title"
+#define KEY_RESET_PASSWORD_TEXT		"settings.private_space.reset_dialog.text"
 
 static struct SettingsViewData {
 	LCUI_Widget source_dirs;
@@ -346,20 +348,43 @@ static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
 	if( !private_space_view.is_loaded ) {
 		UI_InitPrivateDirList();
 		private_space_view.is_loaded = TRUE;
+		
 	}
 	finder.open_private_space = TRUE;
 	Widget_RemoveClass( private_space_view.view, "hide" );
 	LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
 }
 
+static void OnBtnResetPasswordClick( LCUI_Widget w, 
+				     LCUI_WidgetEvent e, void *arg )
+{
+	char *buf;
+	wchar_t wbuf[64];
+	char *pwd = finder.config.encrypted_password;
+	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
+	const wchar_t *title = I18n_GetText( KEY_RESET_PASSWORD_TITLE );
+	const wchar_t *text = I18n_GetText( KEY_RESET_PASSWORD_TEXT );
+	int ret = LCUIDialog_NewPassword( window, title, text, wbuf );
+	if( ret != 0 ) {
+		return;
+	}
+	buf = EncodeUTF8( wbuf );
+	LOGW( L"new password: %s\n", wbuf );
+	EncodeSHA1( pwd, buf, strlen( buf ) );
+	LCFinder_SaveConfig();
+	free( buf );
+}
+
 void UI_InitPrivateSpaceView( void )
 {
-	LCUI_Widget btn;
+	LCUI_Widget btn, btn_reset;
 	struct PrivateSpaceViewData *self = &private_space_view;
 	SelectWidget( self->source_dirs, ID_VIEW_PRIVATE_SOURCE_LIST );
 	SelectWidget( self->view, ID_VIEW_PRIVATE_SPACE );
 	SelectWidget( btn, ID_BTN_ADD_PRIVATE_SOURCE );
+	SelectWidget( btn_reset, ID_BTN_RESET_PASSWORD );
 	BindEvent( btn, "click", OnSelectPrivateDir );
+	BindEvent( btn_reset, "click", OnBtnResetPasswordClick );
 	self->is_loaded = FALSE;
 }
 

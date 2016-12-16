@@ -7,6 +7,7 @@ strings:
         search: 搜索
         clear: 清除
         cleaning: 正在清除...
+        reset_password: 重置密碼
     switch:
         on: 開
         off: 關
@@ -103,6 +104,7 @@ strings:
         private_space:
             title: 私人空間
             sources_title: 私密源
+            password_title: 密碼
             description: >-
                 私人空間可用於存放一些非公開的資源，
                 該空間內的資源不會在資源列表中顯示，
@@ -113,6 +115,9 @@ strings:
             new_dialog:
                 title: 設置密碼
                 text: 使用私人空間前，你需要先爲設置開啓密碼
+            reset_dialog:
+                title: 重置密碼
+                text: 重置私人空間的開啓密碼
         language: 語言
         language_description: 更改界面的顯示語言
         license: 許可協議

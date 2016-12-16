@@ -246,6 +246,10 @@
                     <widget type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</widget>
                   </widget>
                 </widget>
+                <widget class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.password_title">密码</widget>
+                <widget id="btn-reset-password" class="btn btn-default">
+                  <widget type="textview-i18n" class="text" data-i18n-key="button.reset_password">重置密码</widget>
+                </widget>
               </widget>
               <widget class="setting-group">
                 <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
