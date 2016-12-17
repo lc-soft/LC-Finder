@@ -64,6 +64,8 @@
 	Widget_Hide( this_view.btn_next ); \
 } while(0);
 
+#define OnMouseDblClick OnBtnResetClick
+
 enum SliderDirection {
 	LEFT,
 	RIGHT
@@ -1365,6 +1367,7 @@ void UI_InitPictureView( int mode )
 	BindEvent( this_view.btn_zoomin, "click", OnBtnZoomInClick );
 	BindEvent( this_view.btn_zoomout, "click", OnBtnZoomOutClick );
 	BindEvent( this_view.view_pictures, "mousewheel", OnMouseWheel );
+	BindEvent( this_view.view_pictures, "dblclick", OnMouseDblClick );
 	LCUI_BindEvent( LCUI_KEYDOWN, OnKeyDown, NULL, NULL );
 	InitSlideTransition();
 	LCUICond_Init( &this_view.cond );
