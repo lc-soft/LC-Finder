@@ -83,6 +83,7 @@ static struct HomeCollectionView {
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_Widget progressbar;
+	LCUI_BOOL show_private_files;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	LinkedList separators;
@@ -172,19 +173,20 @@ static int FileScanner_ScanAll( FileScanner scanner )
 	DB_File file;
 	DB_Query query;
 	int i, total, count;
-	DB_QueryTermsRec terms = {0};
+	DB_QueryTermsRec terms = { 0 };
 
 	terms.limit = 100;
 	terms.modify_time = DESC;
 	if( terms.dirs ) {
-		int n_dirs;
 		free( terms.dirs );
 		terms.dirs = NULL;
-		n_dirs = LCFinder_GetSourceDirList( &terms.dirs );
-		if( n_dirs == finder.n_dirs ) {
-			free( terms.dirs );
-			terms.dirs = NULL;
-		}
+		terms.n_dirs = 0;
+	}
+	terms.n_dirs = LCFinder_GetSourceDirList( &terms.dirs );
+	if( terms.n_dirs == finder.n_dirs ) {
+		free( terms.dirs );
+		terms.dirs = NULL;
+		terms.n_dirs = 0;
 	}
 	query = DB_NewQuery( &terms );
 	count = total = DBQuery_GetTotalFiles( query );
@@ -385,6 +387,15 @@ static void OnThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	LCUICond_Signal( &this_view.viewsync.ready );
 }
 
+static void OnViewShow( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	if( this_view.show_private_files == finder.open_private_space ) {
+		return;
+	}
+	this_view.show_private_files = finder.open_private_space;
+	LoadCollectionFiles();
+}
+
 static void OnSyncDone( void *privdata, void *arg )
 {
 	LoadCollectionFiles();
@@ -423,6 +434,7 @@ void UI_InitHomeView( void )
 	Widget_AddClass( this_view.time_ranges, "time-range-list" );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCUIThread_Create( &tid, HomeView_SyncThread, NULL );
+	BindEvent( this_view.view, "show.view", OnViewShow );
 	BindEvent( btn[0], "click", OnBtnSyncClick );
 	this_view.viewsync.tid = tid;
 	LoadCollectionFiles();

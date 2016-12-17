@@ -667,7 +667,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	if( terms->n_dirs > 0 && terms->dirs ) {
 		strcpy( q->sql_terms, buf_terms );
 		strcat( q->sql_tables, ", dir d" );
-		strcat( q->sql_terms, "f.did = d.did " );
+		strcat( q->sql_terms, "f.did = d.id " );
 		strcat( q->sql_terms, "AND f.did IN (" );
 		for( i = 0; i < terms->n_dirs; ++i ) {
 			sprintf( buf_terms, "%d", terms->dirs[i]->id );
@@ -766,7 +766,6 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 	strcat( sql, q->sql_having );
 	strcat( sql, q->sql_orderby );
 	strcat( sql, q->sql_limit );
-	//printf("sql: %s\n", sql);
 	i = sqlite3_prepare_v2( self.db, sql, -1, &q->stmt, NULL );
 	if( i == SQLITE_OK ) {
 		return q;

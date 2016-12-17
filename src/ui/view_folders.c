@@ -86,12 +86,14 @@ static struct FoldersViewData {
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_Widget selected_sort;
+	LCUI_BOOL show_private_folders;
+	LCUI_BOOL folders_changed;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
 	DB_QueryTermsRec terms;
 	char *dirpath;
-} this_view = {0};
+} this_view = { 0 };
 
 #define SORT_METHODS_LEN 6
 
@@ -111,12 +113,23 @@ static void OnAddDir( void *privdata, void *data )
 	DB_Dir dir = data;
 	_DEBUG_MSG("add dir: %s\n", dir->path);
 	if( !this_view.dir ) {
-		OpenFolder( NULL );
+		this_view.folders_changed = TRUE;
 	}
 }
 
-static void OnDelDir( void *privdata, void *data )
+static void OnFolderChange( void *privdata, void *data )
 {
+	this_view.folders_changed = TRUE;
+}
+
+static void OnViewShow( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	if( this_view.show_private_folders == finder.open_private_space &&
+	    !this_view.folders_changed ) {
+		return;
+	}
+	this_view.show_private_folders = finder.open_private_space;
+	this_view.folders_changed = FALSE;
 	OpenFolder( NULL );
 }
 
@@ -388,20 +401,20 @@ static void ViewSync_Thread( void *arg )
 
 static void OpenFolder( const char *dirpath )
 {
-	int i, len;
-	DB_Dir dir = NULL;
+	DB_Dir dir = NULL, *dirs = NULL;
 	char *path = NULL, *scan_path = NULL;
 
 	if( dirpath ) {
-		len = strlen( dirpath );
+		int i;
+		int len = strlen( dirpath );
+		int n = LCFinder_GetSourceDirList( &dirs );
 		path = malloc( sizeof( char )*(len + 1) );
 		scan_path = malloc( sizeof( char )*(len + 2) );
 		strcpy( scan_path, dirpath );
 		strcpy( path, dirpath );
-		for( i = 0; i < finder.n_dirs; ++i ) {
-			if( finder.dirs[i] && 
-			    strstr( finder.dirs[i]->path, path ) ) {
-				dir = finder.dirs[i];
+		for( i = 0; i < n; ++i ) {
+			if( dirs[i] && strstr( dirs[i]->path, path ) ) {
+				dir = dirs[i];
 				break;
 			}
 		}
@@ -414,6 +427,7 @@ static void OpenFolder( const char *dirpath )
 		TextView_SetText( this_view.info_name, getfilename( path ) );
 		TextView_SetText( this_view.info_path, path );
 		Widget_AddClass( this_view.view, "show-folder-info-box" );
+		free( dirs );
 	} else {
 		Widget_RemoveClass( this_view.view, "show-folder-info-box" );
 	}
@@ -551,11 +565,12 @@ void UI_InitFoldersView( void )
 	BindEvent( btn[0], "click", OnBtnSyncClick );
 	BindEvent( btn_return, "click", OnBtnReturnClick );
 	BindEvent( this_view.items, "ready", OnThumbViewReady );
+	BindEvent( this_view.view, "show.view", OnViewShow );
 	ThumbView_SetCache( this_view.items, finder.thumb_cache );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
-	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+	LCFinder_BindEvent( EVENT_DIR_DEL, OnFolderChange, NULL );
 	LCFinder_BindEvent( EVENT_LANG_CHG, OnLanguageChanged, NULL );
 	FileBrowser_Create( &this_view.browser );
 	InitFolderFilesSort();
