@@ -34,12 +34,14 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <LCUI_Build.h>
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
-#include <LCUI/gui/widget/textview.h>
+#include "textview_i18n.h"
 #include "switch.h"
+
+#define KEY_OFF	"switch.off"
+#define KEY_ON	"switch.on"
 
 typedef struct SwitchRec_ {
 	LCUI_Widget txt_off;
@@ -96,6 +98,10 @@ static const char *switch_css = ToString(
 .switch .switch-slider {
 	display: inline-block;
 }
+.switch-text {
+	margin-left: 10px;
+	line-height: 24px;
+}
 
 );
 
@@ -103,12 +109,7 @@ static void Switch_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUI_WidgetEventRec ev = {0};
 	Switch data = Widget_GetData( w, self.prototype );
-	data->checked = !data->checked;
-	if( data->checked ) {
-		Widget_AddClass( w, "checked" );
-	} else {
-		Widget_RemoveClass( w, "checked" );
-	}
+	Switch_SetChecked( w, !data->checked );
 	ev.cancel_bubble = TRUE;
 	ev.type = self.event_change;
 	Widget_TriggerEvent( w, &ev, NULL );
@@ -144,12 +145,29 @@ LCUI_BOOL Switch_IsChecked( LCUI_Widget w )
 
 void Switch_SetChecked( LCUI_Widget w, LCUI_BOOL checked )
 {
+	LCUI_Widget textview;
 	Switch data = Widget_GetData( w, self.prototype );
 	data->checked = checked;
+	textview = Widget_GetNext( w );
+	if( Widget_CheckType( textview, "textview-i18n" ) ) {
+		const char *value;
+		value = Widget_GetAttribute( textview, "data-bind" );
+		if( !value || strcmp( value, "switch" ) != 0 ) {
+			textview = NULL;
+		}
+	} else {
+		textview = NULL;
+	}
 	if( data->checked ) {
 		Widget_AddClass( w, "checked" );
+		if( textview ) {
+			TextViewI18n_SetKey( textview, KEY_ON );
+		}
 	} else {
 		Widget_RemoveClass( w, "checked" );
+		if( textview ) {
+			TextViewI18n_SetKey( textview, KEY_OFF );
+		}
 	}
 }
 

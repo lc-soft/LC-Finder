@@ -94,6 +94,7 @@ void TextViewI18n_Refresh( LCUI_Widget w )
 			textview->key_valid = TRUE;
 		} else {
 			textview->key_valid = FALSE;
+			text = textview->text;
 		}
 	} else {
 		text = textview->text;

@@ -35,7 +35,6 @@
  * ****************************************************************************/
 
 #include <stdio.h>
-#include <LCUI_Build.h>
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>

@@ -103,7 +103,7 @@ strings:
                 render thumbnail images in the next time you browse the pictures.
         private_space:
             title: Private space
-            sources_title: Private Sources
+            sources_title: Private sources
             password_title: Password
             description: >-
                 Private space can be used to store some non-public resources,
