@@ -701,7 +701,7 @@ static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 			++limit;
 			continue;
 		}
-		if( child->type && !strcmp(child->type, "thumbviewitem") ) {
+		if( Widget_CheckType( child, "thumbviewitem" ) ) {
 			++count;
 			view->layout.current = child;
 			item->updatesize( child );
@@ -967,8 +967,9 @@ void ThumbView_Append( LCUI_Widget w, LCUI_Widget child )
 	ThumbView view = Widget_GetData( w, self.thumbview );
 	ScrollLoading_Update( view->scrollload );
 	Widget_Append( w, child );
-	if( child->type && strcmp( child->type, "thumbviewitem" ) == 0 ) {
-		ThumbViewItem item = Widget_GetData( child, self.thumbviewitem );
+	if( Widget_CheckType( child, "thumbviewitem" ) ) {
+		ThumbViewItem item;
+		item = Widget_GetData( child, self.thumbviewitem );
 		item->view = view;
 		if( item->updatesize && !view->layout.is_running ) {
 			item->updatesize( child );

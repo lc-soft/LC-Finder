@@ -409,6 +409,7 @@ static void UpdateTagSize( LCUI_Widget w )
 	if( this_view.layout.count == 1 ) {
 		UpdateLayoutContext();
 	}
+	_DEBUG_MSG( "max_width: %d\n", this_view.layout.max_width );
 	if( this_view.layout.max_width < TAG_MAX_WIDTH ) {
 		return;
 	}
@@ -417,11 +418,12 @@ static void UpdateTagSize( LCUI_Widget w )
 	width = (width - TAG_MARGIN_RIGHT*(n - 1)) / n;
 	/* 设置每行最后一个文件夹的右边距为 0px */
 	if( this_view.layout.count % n == 0 ) {
-		SetStyle( w->custom_style, key_margin_right, 0, px );
+		Widget_SetStyle( w, key_margin_right, 0, px );
 	} else {
-		w->custom_style->sheet[key_margin_right].is_valid = FALSE;
+		Widget_UnsetStyle( w, key_margin_right );
 	}
-	SetStyle( w->custom_style, key_width, width, px );
+	_DEBUG_MSG("width: %d\n", width);
+	Widget_SetStyle( w, key_width, width, px );
 	Widget_UpdateStyle( w, FALSE );
 }
 
@@ -602,6 +604,7 @@ void UI_UpdateSearchView( void )
 		item = NEW( TagItemRec, 1 );
 		item->tag = finder.tags[i];
 		item->widget = CreateTagWidget( finder.tags[i] );
+		_DEBUG_MSG("append child\n");
 		ThumbView_Append( this_view.view_tags, item->widget );
 		LinkedList_Append( &this_view.tags, item );
 		++count;
@@ -708,6 +711,11 @@ static void OnLanguageChanged( void *privdata, void *data )
 	UpdateSearchInput();
 }
 
+static void OnTagThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	UI_UpdateSearchView();
+}
+
 void UI_InitSearchView( void )
 {
 	LCUI_Widget btn[6], title, btn_hide;
@@ -746,13 +754,13 @@ void UI_InitSearchView( void )
 	BindEvent( btn_hide, "click", OnBtnHideReusltClick );
 	BindEvent( this_view.btn_search, "click", OnBtnSearchClick );
 	BindEvent( this_view.btn_search, "resize", OnBtnSearchResize );
+	BindEvent( this_view.view_tags, "ready", OnTagThumbViewReady );
 	LCFinder_BindEvent( EVENT_TAG_UPDATE, OnTagUpdate, NULL );
 	LCFinder_BindEvent( EVENT_LANG_CHG, OnLanguageChanged, NULL );
 	ThumbView_OnLayout( this_view.view_tags, OnTagViewStartLayout );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSyncThread, NULL );
 	FileBrowser_Create( &this_view.browser );
 	InitSearchResultsSort();
-	UI_UpdateSearchView();
 	UpdateSearchInput();
 }
 
