@@ -27,6 +27,7 @@
     <ClCompile Include="src\lib\common.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
+    <ClCompile Include="src\lib\file_service.c" />
     <ClCompile Include="src\lib\i18n.c" />
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
