@@ -34,13 +34,17 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#define LCFINDER_FILE_SERVICE_C
 #include <stdio.h>
 #include <errno.h>
-#include "build.h"
+#include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/thread.h>
+#include <LCUI/graph.h>
+#include "build.h"
 #include "bridge.h"
 #include "common.h"
+#include "file_service.h"
 
 #ifdef _WIN32
 #define _S_ISTYPE(mode, mask)	(((mode) & _S_IFMT) == (mask))
@@ -48,114 +52,42 @@
 #define S_ISREG(mode)		_S_ISTYPE((mode), _S_IFREG)
 #endif
 
-enum FileResponseStatus {
-	RESPONSE_STATUS_OK = 200,
-	RESPONSE_STATUS_BAD_REQUEST = 400,
-	RESPONSE_STATUS_FORBIDDEN = 403,
-	RESPONSE_STATUS_NOT_FOUND = 404,
-	RESPONSE_STATUS_ERROR = 500,
-	RESPONSE_STATUS_NOT_IMPLEMENTED = 501
-};
-
-enum FileType {
-	FILE_TYPE_ARCHIVE,
-	FILE_TYPE_DIRECTORY
-};
-
-enum FileRequestMethod {
-	REQUEST_METHOD_HEAD,
-	REQUEST_METHOD_GET,
-	REQUEST_METHOD_POST,
-	REQUEST_METHOD_PUT,
-	REQUEST_METHOD_DELETE
-};
-
-typedef struct FileProperties_ {
-	int type;
-	size_t size;
-	time_t ctime;
-	time_t mtime;
-} FileProperties;
-
-enum FileStreamChunkType {
-	DATA_CHUNK_REQUEST,
-	DATA_CHUNK_RESPONSE,
-	DATA_CHUNK_BUFFER,
-	DATA_CHUNK_THUMB,
-	DATA_CHUNK_FILE,
-	DATA_CHUNK_END
-};
-
-typedef struct FileStream_ FileStream;
-
-typedef struct FileRequest_ {
-	int method;
-	wchar_t path[256];
-	FileProperties file;
-	FileStream *stream;
-} FileRequest;
-
-typedef struct FileResponse_ {
-	int status;
-	FileProperties file;
-	FileStream *stream;
-} FileResponse;
-
-/** 文件流中的数据块 */
-typedef struct FileStreamChunk_ {
-	int type;			/**< 数据块类型 */
-	union {
-		FileRequest request;	/**< 文件请求 */
-		FileResponse response;	/**< 文件请求的响应结果 */
-		LCUI_Graph thumb;	/**< 缩略图 */
-		FILE *file;		/**< C 标准库的文件流 */
-		char *data;		/**< 数据块 */
-	};
-	size_t cur;			/**< 当前游标位置 */
-	size_t size;			/**< 数据总大小 */
-} FileStreamChunk;
-
-typedef struct FileStream_ {
+typedef struct FileStreamRec_ {
 	LCUI_BOOL active;
 	LCUI_BOOL closed;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
 	LinkedList data;		/**< 数据块列表 */
 	FileStreamChunk *chunk;		/**< 当前操作的数据块 */
-} FileStream;
-
-typedef struct FileRequestHandler_ {
-	void( *callback )(FileResponse*, void *);
-	void *data;
-} FileRequestHandler;
+} FileStreamRec;
 
 typedef struct ConnectionRecord_ {
 	FileStream streams[2];
 	LinkedListNode node;
 } ConnectionRecord;
 
-typedef struct Connection_ {
+typedef struct ConnectionRec_ {
 	LCUI_BOOL closed;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
 	LCUI_Thread thread;
-	FileStream *input;
-	FileStream *output;
-} Connection;
+	FileStream input;
+	FileStream output;
+} ConnectionRec;
 
 typedef struct FileClientTask_ {
 	FileRequest request;
 	FileRequestHandler handler;
 } FileClientTask;
 
-typedef struct FileClient_ {
+typedef struct FileClientRec_ {
 	LCUI_BOOL active;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
 	LCUI_Thread thread;
-	Connection *connection;
+	Connection connection;
 	LinkedList tasks;
-} FileClient;
+} FileClientRec, *FileClient;
 
 static struct FileService {
 	LCUI_BOOL active;
@@ -181,16 +113,19 @@ void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 	free( chunk );
 }
 
-void FileStream_Init( FileStream *stream )
+FileStream FileStream_Create( void )
 {
+	FileStream stream;
+	stream = NEW( FileStreamRec, 1 );
 	stream->closed = FALSE;
 	stream->active = TRUE;
 	LinkedList_Init( &stream->data );
 	LCUICond_Init( &stream->cond );
 	LCUIMutex_Init( &stream->mutex );
+	return stream;
 }
 
-void FileStream_Close( FileStream *stream )
+void FileStream_Close( FileStream stream )
 {
 	if( stream->active ) {
 		LCUIMutex_Lock( &stream->mutex );
@@ -200,7 +135,7 @@ void FileStream_Close( FileStream *stream )
 	}
 }
 
-LCUI_BOOL FileStream_Useable( FileStream *stream )
+LCUI_BOOL FileStream_Useable( FileStream stream )
 {
 	if( stream->active ) {
 		if( stream->chunk || stream->data.length > 0 ) {
@@ -213,7 +148,7 @@ LCUI_BOOL FileStream_Useable( FileStream *stream )
 	return TRUE;
 }
 
-void FileStream_Destroy( FileStream *stream )
+void FileStream_Destroy( FileStream stream )
 {
 	if( !stream->active ) {
 		return;
@@ -224,7 +159,7 @@ void FileStream_Destroy( FileStream *stream )
 	LCUICond_Destroy( &stream->cond );
 }
 
-size_t FileStream_ReadChunk( FileStream *stream, FileStreamChunk *chunk )
+size_t FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
 {
 	LinkedListNode *node;
 	if( !FileStream_Useable( stream ) ) {
@@ -247,7 +182,7 @@ size_t FileStream_ReadChunk( FileStream *stream, FileStreamChunk *chunk )
 	return 0;
 }
 
-size_t FileStream_WriteChunk( FileStream *stream, FileStreamChunk *chunk )
+size_t FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk )
 {
 	FileStreamChunk *buf;
 	if( !FileStream_Useable( stream ) ) {
@@ -272,11 +207,11 @@ size_t FileStream_WriteChunk( FileStream *stream, FileStreamChunk *chunk )
 	return 1;
 }
 
-size_t FileStream_Read( FileStream *stream, char *buf,
+size_t FileStream_Read( FileStream stream, char *buf,
 			size_t size, size_t count )
 {
-	FileStreamChunk *chunk;
 	LinkedListNode *node;
+	FileStreamChunk *chunk;
 	size_t read_count = 0, cur = 0;
 	if( !FileStream_Useable( stream ) ) {
 		FileStream_Destroy( stream );
@@ -335,7 +270,7 @@ size_t FileStream_Read( FileStream *stream, char *buf,
 	return read_count;
 }
 
-size_t FileStream_Write( FileStream *stream, char *buf,
+size_t FileStream_Write( FileStream stream, char *buf,
 			 size_t size, size_t count )
 {
 	FileStreamChunk *chunk;
@@ -359,10 +294,10 @@ size_t FileStream_Write( FileStream *stream, char *buf,
 	return count;
 }
 
-Connection *Connection_Create( void )
+Connection Connection_Create( void )
 {
-	Connection *conn;
-	conn = NEW( Connection, 1 );
+	Connection conn;
+	conn = NEW( ConnectionRec, 1 );
 	conn->closed = TRUE;
 	LCUICond_Init( &conn->cond );
 	LCUIMutex_Init( &conn->mutex );
@@ -370,7 +305,7 @@ Connection *Connection_Create( void )
 	return conn;
 }
 
-size_t Connection_Read( Connection *conn, char *buf, 
+size_t Connection_Read( Connection conn, char *buf, 
 			size_t size, size_t count )
 {
 	if( conn->closed ) {
@@ -379,7 +314,7 @@ size_t Connection_Read( Connection *conn, char *buf,
 	return FileStream_Read( conn->input, buf, size, count );
 }
 
-size_t Connection_Write( Connection *conn, char *buf,
+size_t Connection_Write( Connection conn, char *buf,
 			 size_t size, size_t count )
 {
 	if( conn->closed ) {
@@ -388,7 +323,7 @@ size_t Connection_Write( Connection *conn, char *buf,
 	return FileStream_Write( conn->output, buf, size, count );
 }
 
-int Connection_ReadChunk( Connection *conn, FileStreamChunk *chunk )
+int Connection_ReadChunk( Connection conn, FileStreamChunk *chunk )
 {
 	if( conn->closed ) {
 		return -1;
@@ -396,7 +331,7 @@ int Connection_ReadChunk( Connection *conn, FileStreamChunk *chunk )
 	return FileStream_ReadChunk( conn->input, chunk );
 }
 
-int Connection_WriteChunk( Connection *conn, FileStreamChunk *chunk )
+int Connection_WriteChunk( Connection conn, FileStreamChunk *chunk )
 {
 	if( conn->closed ) {
 		return -1;
@@ -404,7 +339,7 @@ int Connection_WriteChunk( Connection *conn, FileStreamChunk *chunk )
 	return FileStream_WriteChunk( conn->output, chunk );
 }
 
-void Connection_Close( Connection *conn )
+void Connection_Close( Connection conn )
 {
 	LCUIMutex_Lock( &conn->output->mutex );
 	conn->closed = TRUE;
@@ -412,12 +347,13 @@ void Connection_Close( Connection *conn )
 	LCUIMutex_Unlock( &conn->output->mutex );
 }
 
-void Connection_Destroy( Connection *conn )
+void Connection_Destroy( Connection conn )
 {
 
 }
 
-static int Service_GetFileProperties( wchar_t *path, FileResponse *response )
+static int FileService_GetFileProperties( const wchar_t *path, 
+					  FileResponse *response )
 {
 	int ret;
 	struct stat buf;
@@ -451,7 +387,8 @@ static int Service_GetFileProperties( wchar_t *path, FileResponse *response )
 	return ret;
 }
 
-static int Service_RemoveFile( wchar_t *path, FileResponse *response )
+static int FileService_RemoveFile( const wchar_t *path, 
+				   FileResponse *response )
 {
 	int ret = MoveFileToTrashW( path );
 	switch( ret ) {
@@ -468,27 +405,56 @@ static int Service_RemoveFile( wchar_t *path, FileResponse *response )
 	return ret;
 }
 
-void Service_HandleRequest( Connection *conn, FileRequest *request )
+static int FileService_GetFile( Connection conn,
+				FileRequest *request,
+				FileStreamChunk *chunk )
+{
+	int ret;
+	char *path;
+	LCUI_Graph img;
+	FileResponse *response = &chunk->response;
+	FileRequestParams *params = &request->params;
+	ret = FileService_GetFileProperties( request->path, response );
+	if( response->status != RESPONSE_STATUS_OK ) {
+		return ret;
+	}
+	path = EncodeANSI( request->path );
+	if( !params->get_thumbnail ) {
+		Connection_WriteChunk( conn, chunk );
+		chunk->type = DATA_CHUNK_FILE;
+		chunk->file = fopen( path, "rb" );
+		free( path );
+		return 0;
+	}
+	Graph_Init( &img );
+	if( Graph_LoadImage( path, &img ) != 0 ) {
+		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
+		return -1;
+	}
+	Graph_Init( &chunk->thumb );
+	Connection_WriteChunk( conn, chunk );
+	Graph_Zoom( &img, &chunk->thumb, TRUE, params->width, params->height );
+	chunk->type = DATA_CHUNK_THUMB;
+	Graph_Free( &img );
+	return 0;
+}
+
+static void FileService_HandleRequest( Connection conn, 
+				       FileRequest *request )
 {
 	FileStreamChunk chunk = { 0 };
+	const wchar_t *path = request->path;
 	chunk.type = DATA_CHUNK_RESPONSE;
 	switch( request->method ) {
 	case REQUEST_METHOD_HEAD:
-		Service_GetFileProperties( request->path, &chunk.response );
+		FileService_GetFileProperties( path, &chunk.response );
 		break;
 	case REQUEST_METHOD_POST:
 	case REQUEST_METHOD_GET:
-		Service_GetFileProperties( request->path, &chunk.response );
-		if( chunk.response.status == RESPONSE_STATUS_OK ) {
-			char *path = EncodeANSI( request->path );
-			FILE *fp = fopen( path, "rb" );
-			Connection_WriteChunk( conn, &chunk );
-			chunk.type = DATA_CHUNK_FILE;
-			chunk.file = fp;
-		}
+		FileService_GetFile( conn, request, &chunk );
 		break;
 	case REQUEST_METHOD_DELETE:
-		Service_RemoveFile( request->path, &chunk.response );
+		FileService_RemoveFile( path, &chunk.response );
 		break;
 	case REQUEST_METHOD_PUT:
 		chunk.response.status = RESPONSE_STATUS_NOT_IMPLEMENTED;
@@ -504,11 +470,11 @@ void Service_HandleRequest( Connection *conn, FileRequest *request )
 	Connection_WriteChunk( conn, &chunk );
 }
 
-void Service_Handler( void *arg )
+void FileService_Handler( void *arg )
 {
 	int n;
 	FileStreamChunk chunk;
-	Connection *conn = arg;
+	Connection conn = arg;
 	while( 1 ) {
 		n = Connection_ReadChunk( conn, &chunk );
 		if( n == -1 ) {
@@ -517,13 +483,13 @@ void Service_Handler( void *arg )
 			continue;
 		}
 		chunk.request.stream = conn->input;
-		Service_HandleRequest( conn, &chunk.request );
+		FileService_HandleRequest( conn, &chunk.request );
 	}
 	Connection_Destroy( conn );
 	LCUIThread_Exit( NULL );
 }
 
-int Service_Listen( int backlog )
+int FileService_Listen( int backlog )
 {
 	LCUIMutex_Lock( &service.mutex );
 	service.backlog = backlog;
@@ -534,11 +500,11 @@ int Service_Listen( int backlog )
 	return service.requests.length;
 }
 
-Connection *Service_Accept( void )
+Connection FileService_Accept( void )
 {
 	LinkedListNode *node;
 	ConnectionRecord *conn;
-	Connection *conn_client, *conn_service;
+	Connection conn_client, conn_service;
 	if( !service.active ) {
 		return NULL;
 	}
@@ -550,50 +516,50 @@ Connection *Service_Accept( void )
 	conn_client = node->data;
 	conn = NEW( ConnectionRecord, 1 );
 	conn_service = Connection_Create();
-	FileStream_Init( &conn->streams[0] );
-	FileStream_Init( &conn->streams[1] );
+	conn->streams[0] = FileStream_Create();
+	conn->streams[1] = FileStream_Create();
 	LCUIMutex_Lock( &conn_client->mutex );
 	conn->node.data = conn;
 	conn_client->closed = FALSE;
 	conn_service->closed = FALSE;
-	conn_client->input = &conn->streams[0];
-	conn_client->output = &conn->streams[1];
-	conn_service->input = &conn->streams[1];
-	conn_service->output = &conn->streams[0];
+	conn_client->input = conn->streams[0];
+	conn_client->output = conn->streams[1];
+	conn_service->input = conn->streams[1];
+	conn_service->output = conn->streams[0];
 	LinkedList_AppendNode( &service.connections, &conn->node );
 	LCUICond_Signal( &conn_client->cond );
 	LCUIMutex_Unlock( &conn_client->mutex );
 	return conn_service;
 }
 
-void Service_Run( void )
+void FileService_Run( void )
 {
-	Connection *conn;
+	Connection conn;
 	service.active = TRUE;
 	while( service.active ) {
-		if( Service_Listen( 5 ) == 0 ) {
+		if( FileService_Listen( 5 ) == 0 ) {
 			continue;
 		}
-		conn = Service_Accept();
+		conn = FileService_Accept();
 		if( !conn ) {
 			continue;
 		}
-		LCUIThread_Create( &conn->thread, Service_Handler, conn );
+		LCUIThread_Create( &conn->thread, FileService_Handler, conn );
 	}
 }
 
-static void Service_Thread( void *arg )
+static void FileService_Thread( void *arg )
 {
-	Service_Run();
+	FileService_Run();
 	LCUIThread_Exit( NULL );
 }
 
-void Service_RunAsnyc( void )
+void FileService_RunAsync( void )
 {
-	LCUIThread_Create( &service.thread, Service_Thread, NULL );
+	LCUIThread_Create( &service.thread, FileService_Thread, NULL );
 }
 
-void Service_Close( void )
+void FileService_Close( void )
 {
 	LCUIMutex_Lock( &service.mutex );
 	service.active = FALSE;
@@ -601,14 +567,14 @@ void Service_Close( void )
 	LCUIMutex_Unlock( &service.mutex );
 }
 
-void Service_Init( void )
+void FileService_Init( void )
 {
 	service.active = FALSE;
 	LCUICond_Init( &service.cond );
 	LCUIMutex_Init( &service.mutex );
 }
 
-int Connection_SendRequest( Connection *conn, 
+int Connection_SendRequest( Connection conn, 
 			    const FileRequest *request )
 {
 	FileStreamChunk chunk;
@@ -620,7 +586,7 @@ int Connection_SendRequest( Connection *conn,
 	return 0;
 }
 
-int Connection_ReceiveRequest( Connection *conn,
+int Connection_ReceiveRequest( Connection conn,
 			       FileRequest *request )
 {
 	size_t ret;
@@ -636,7 +602,7 @@ int Connection_ReceiveRequest( Connection *conn,
 	return 0;
 }
 
-int Connection_SendResponse( Connection *conn, 
+int Connection_SendResponse( Connection conn, 
 			     const FileResponse *response )
 {
 	FileStreamChunk chunk;
@@ -648,7 +614,7 @@ int Connection_SendResponse( Connection *conn,
 	return 0;
 }
 
-int Connection_ReceiveResponse( Connection *conn, 
+int Connection_ReceiveResponse( Connection conn, 
 				FileResponse *response )
 {
 	size_t ret;
@@ -664,17 +630,30 @@ int Connection_ReceiveResponse( Connection *conn,
 	return 0;
 }
 
-Connection *Client_Connect( void )
+FileClient FileClient_Create( void )
+{
+	FileClient client;
+	client = NEW( FileClientRec, 1 );
+	client->thread = 0;
+	client->active = FALSE;
+	client->connection = NULL;
+	LCUICond_Init( &client->cond );
+	LCUIMutex_Init( &client->mutex );
+	LinkedList_Init( &client->tasks );
+	return client;
+}
+
+int FileClient_Connect( FileClient client )
 {
 	int timeout = 0;
-	Connection *conn;
+	Connection conn;
 	LCUIMutex_Lock( &service.mutex );
 	while( service.requests.length > service.backlog && timeout++ < 5 ) {
 		LCUICond_TimedWait( &service.cond, &service.mutex, 1000 );
 	}
 	if( timeout >= 5 ) {
 		LCUIMutex_Unlock( &service.mutex );
-		return NULL;
+		return -1;
 	}
 	conn = Connection_Create();
 	LinkedList_Append( &service.requests, conn );
@@ -686,31 +665,24 @@ Connection *Client_Connect( void )
 	if( timeout >= 5 ) {
 		Connection_Destroy( conn );
 		LCUIMutex_Unlock( &service.mutex );
-		return NULL;
+		return -2;
 	}
-	return conn;
+	client->connection = conn;
+	return 0;
 }
 
-void Client_Init( FileClient *client )
-{
-	client->active = FALSE;
-	LCUICond_Init( &client->cond );
-	LCUIMutex_Init( &client->mutex );
-	client->connection = Client_Connect();
-}
-
-void Client_Destroy( FileClient *client )
+void FileClient_Destroy( FileClient client )
 {
 	
 }
 
-void Client_Run( FileClient *client )
+void FileClient_Run( FileClient client )
 {
 	int n;
 	LinkedListNode *node;
 	FileClientTask *task;
 	FileResponse response;
-	Connection *conn = client->connection;
+	Connection conn = client->connection;
 
 	client->active = TRUE;
 	while( client->active ) {
@@ -721,12 +693,14 @@ void Client_Run( FileClient *client )
 		node = LinkedList_GetNode( &client->tasks, 0 );
 		LinkedList_Unlink( &client->tasks, node );
 		LCUIMutex_Unlock( &client->mutex );
+		if( !node ) {
+			continue;
+		}
 		task = node->data;
 		n = Connection_SendRequest( conn, &task->request );
 		if( n == 0 ) {
 			continue;
 		}
-
 		while( client->active ) {
 			n = Connection_ReceiveResponse( conn, &response );
 			if( n == 0 ) {
@@ -738,28 +712,35 @@ void Client_Run( FileClient *client )
 	}
 }
 
-void Client_Thread( void *arg )
+static void FileClient_Thread( void *arg )
 {
-	Client_Run( arg );
+	FileClient_Run( arg );
+	FileClient_Destroy( arg );
 	LCUIThread_Exit( NULL );
 }
 
-void Client_Close( FileClient *client )
+void FileClient_Close( FileClient client )
 {
+	LCUIMutex_Lock( &client->mutex );
 	client->active = FALSE;
+	LCUICond_Signal( &client->cond );
+	LCUIMutex_Unlock( &client->mutex );
+	LCUIThread_Join( client->thread, NULL );
 }
 
-void Client_RunAsync( FileClient *client )
+void FileClient_RunAsync( FileClient client )
 {
-	LCUIThread_Create( &client->thread, Client_Thread, client );
+	LCUIThread_Create( &client->thread, FileClient_Thread, client );
 }
 
-void Client_SendRequest( FileClient *client,
-			 FileRequest *request,
-			 FileRequestHandler handler )
+void FileClient_SendRequest( FileClient client,
+			     const FileRequest *request,
+			     const FileRequestHandler *handler )
 {
 	FileClientTask *task;
 	task = NEW( FileClientTask, 1 );
+	task->handler = *handler;
+	task->request = *request;
 	LCUIMutex_Lock( &client->mutex );
 	LinkedList_Append( &client->tasks, task );
 	LCUICond_Signal( &client->cond );

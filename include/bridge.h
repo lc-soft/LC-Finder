@@ -40,18 +40,6 @@
 
 LCFINDER_BEGIN_HEADER
 
-#ifdef _WIN32
-#define PLATFORM_WIN32
-#if (WINAPI_PARTITION_DESKTOP == 1)
-#define PLATFORM_WIN32_DESKTOP
-#elif (WINAPI_PARTITION_PC_APP == 1)
-#define PLATFORM_WIN32_PC_APP
-#endif
-//#define PLATFORM_WIN32_DESKTOP_XP
-#else
-#define PLATFORM_LINUX
-#endif
-
 int SelectFolder( char *dirpath, int max_len );
 
 void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );

@@ -1,6 +1,6 @@
 ﻿/* ***************************************************************************
- * build.h -- Configuration and macro definitions related to the build 
- * environment.
+ * file_storage.c -- File related operating interface, based on file storage
+ * service.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -19,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * build.h -- 与构建环境相关的配置和宏定义
+ * file_storage.c -- 基于文件存储服务而实现的文件相关操作接口
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -35,44 +35,55 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_BUILD_H
-#define LCFINDER_BUILD_H
+#include <stdio.h>
+#include <LCUI_Build.h>
+#include <LCUI/LCUI.h>
+#include <LCUI/graph.h>
+#include "build.h"
+#include "bridge.h"
+#include "file_storage.h"
 
-#ifdef __cplusplus
-#define LCFINDER_BEGIN_HEADER extern "C" {
-#define LCFINDER_END_HEADER }
-#else 
-#define LCFINDER_BEGIN_HEADER
-#define LCFINDER_END_HEADER
+static struct FileStorageModule {
+	FileClient client;
+	int client_active;
+} self;
+
+int FileStorage_Init( void )
+{
+	int ret;
+/* 非 UWP 应用则运行线程版的本地文件服务 */
+#ifndef PLATFORM_WIN32_PC_APP
+	FileService_Init();
+	FileService_RunAsync();
 #endif
+	self.client_active = 0;
+	self.client = FileClient_Create();
+	ret = FileClient_Connect( self.client );
+	if( ret == 0 ) {
+		self.client_active = 1;
+		FileClient_RunAsync( self.client );
+	}
+	return ret;
+}
 
-#define LCFINDER_NAME		L"LC's Finder"
-#define LCFINDER_FOLDER_NAME	L"LCFinder"
-#define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
-#define LCFINDER_VER_MAJOR	0
-#define LCFINDER_VER_MINOR	1
-#define LCFINDER_VER_REVISION	0
-#define LCFINDER_VER_TYPE	VERSION_BETA
-
-#ifdef _WIN32
-#define PLATFORM_WIN32
-#if (WINAPI_PARTITION_DESKTOP == 1)
-#define PLATFORM_WIN32_DESKTOP
-#elif (WINAPI_PARTITION_PC_APP == 1)
-#define PLATFORM_WIN32_PC_APP
+void FileStorage_Exit( void )
+{
+	FileClient_Close( self.client );
+#ifndef PLATFORM_WIN32_PC_APP
+	FileService_Close();
 #endif
-//#define PLATFORM_WIN32_DESKTOP_XP
-#else
-#define PLATFORM_LINUX
-#endif
+}
 
-#define ASSERT(X) if((X) != 0) { _DEBUG_MSG("error\n");return -1;}
+int FileStorage_Open( const wchar_t *filename,
+		      void( *callback )(FileProperties*, FileStream, void*),
+		      void *data )
+{
+	return -1;
+}
 
-enum VersionType {
-	VERSION_RELEASE,
-	VERSION_RC,
-	VERSION_BETA,
-	VERSION_ALPHA
-};
-
-#endif
+int FileStorage_GetProperties( const wchar_t *filename,
+			       void( *callback )(FileProperties*, void*),
+			       void *data )
+{
+	return -1;
+}

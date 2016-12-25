@@ -38,16 +38,9 @@
 #ifndef LCFINDER_H
 #define LCFINDER_H
 
-#ifdef __cplusplus
-#define LCFINDER_BEGIN_HEADER extern "C" {
-#define LCFINDER_END_HEADER }
-#else 
-#define LCFINDER_BEGIN_HEADER
-#define LCFINDER_END_HEADER
-#endif
-
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include "build.h"
 #include "bridge.h"
 #include "common.h"
 #include "file_cache.h"
@@ -56,23 +49,6 @@
 #include "thumb_cache.h" 
 
 LCFINDER_BEGIN_HEADER
-
-enum VersionType {
-	VERSION_RELEASE,
-	VERSION_RC,
-	VERSION_BETA,
-	VERSION_ALPHA
-};
-
-#define LCFINDER_NAME		L"LC's Finder"
-#define LCFINDER_FOLDER_NAME	L"LCFinder"
-#define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
-#define LCFINDER_VER_MAJOR	0
-#define LCFINDER_VER_MINOR	1
-#define LCFINDER_VER_REVISION	0
-#define LCFINDER_VER_TYPE	VERSION_BETA
-
-#define ASSERT(X) if((X) != 0) { _DEBUG_MSG("error\n");return -1;}
 
 /** 事件类型 */
 enum LCFinderEventType {

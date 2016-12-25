@@ -28,6 +28,7 @@
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
     <ClCompile Include="src\lib\file_service.c" />
+    <ClCompile Include="src\lib\file_storage.c" />
     <ClCompile Include="src\lib\i18n.c" />
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
@@ -70,6 +71,8 @@
     <ClInclude Include="include\dropdown.h" />
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
+    <ClInclude Include="include\file_service.h" />
+    <ClInclude Include="include\file_storage.h" />
     <ClInclude Include="include\finder.h" />
     <ClInclude Include="include\i18n.h" />
     <ClInclude Include="include\progressbar.h" />
