@@ -35,6 +35,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <errno.h>
 #include <stdlib.h>
 #include "finder.h"
 #include <LCUI/display.h>
@@ -81,6 +82,10 @@ void OpenFileManagerW( const wchar_t *filepath )
 	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
 }
 
+/* see: https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164%28v=vs.85%29.aspx */
+#define DE_ACCESSDENIEDSRC	0x78
+#define DE_INVALIDFILES		0x7C
+
 int MoveFileToTrashW( const wchar_t *filepath )
 {
 	int ret;
@@ -95,6 +100,17 @@ int MoveFileToTrashW( const wchar_t *filepath )
 	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION |
 		FOF_NOERRORUI | FOF_SILENT;
 	ret = SHFileOperationW( &sctFileOp );
+	switch( ret ) {
+	case DE_ACCESSDENIEDSRC:
+		ret = EACCES;
+		break;
+	case DE_INVALIDFILES:
+		ret = ENOENT;
+		break;
+	default:
+		ret = EINVAL;
+		break;
+	}
 	free( path );
 	return ret;
 }

@@ -265,6 +265,8 @@ int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 	if( fd > 0 ) {
 		ret = fstat( fd, buf );
 		_close( fd );
+	} else {
+		ret = fd;
 	}
 #else
 	char *path;
@@ -273,6 +275,8 @@ int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 	if( fd > 0 ) {
 		ret = fstat( fd, buf );
 		close( fd );
+	} else {
+		ret = fd;
 	}
 	free( path );
 #endif

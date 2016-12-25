@@ -34,16 +34,27 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include <LCUI_Build.h>
+#include <stdio.h>
+#include <errno.h>
+#include "build.h"
 #include <LCUI/LCUI.h>
 #include <LCUI/thread.h>
-#include <stdio.h>
+#include "bridge.h"
+#include "common.h"
+
+#ifdef _WIN32
+#define _S_ISTYPE(mode, mask)	(((mode) & _S_IFMT) == (mask))
+#define S_ISDIR(mode)		_S_ISTYPE((mode), _S_IFDIR)
+#define S_ISREG(mode)		_S_ISTYPE((mode), _S_IFREG)
+#endif
 
 enum FileResponseStatus {
-	FS_STATUS_OK = 200,
-	FS_STATUS_BAD_REQUEST = 400,
-	FS_STATUS_FORBIDDEN = 403,
-	FS_STATUS_NOT_FOUND = 404
+	RESPONSE_STATUS_OK = 200,
+	RESPONSE_STATUS_BAD_REQUEST = 400,
+	RESPONSE_STATUS_FORBIDDEN = 403,
+	RESPONSE_STATUS_NOT_FOUND = 404,
+	RESPONSE_STATUS_ERROR = 500,
+	RESPONSE_STATUS_NOT_IMPLEMENTED = 501
 };
 
 enum FileType {
@@ -52,11 +63,11 @@ enum FileType {
 };
 
 enum FileRequestMethod {
-	FS_METHOD_HEAD,
-	FS_METHOD_GET,
-	FS_METHOD_POST,
-	FS_METHOD_PUT,
-	FS_METHOD_DELETE
+	REQUEST_METHOD_HEAD,
+	REQUEST_METHOD_GET,
+	REQUEST_METHOD_POST,
+	REQUEST_METHOD_PUT,
+	REQUEST_METHOD_DELETE
 };
 
 typedef struct FileProperties_ {
@@ -66,17 +77,20 @@ typedef struct FileProperties_ {
 	time_t mtime;
 } FileProperties;
 
-typedef struct FileStream_ {
-	LCUI_BOOL active;
-	LCUI_BOOL closed;
-	LCUI_Cond cond;
-	LCUI_Mutex mutex;
-	LinkedList data;
-} FileStream;
+enum FileStreamChunkType {
+	DATA_CHUNK_REQUEST,
+	DATA_CHUNK_RESPONSE,
+	DATA_CHUNK_BUFFER,
+	DATA_CHUNK_THUMB,
+	DATA_CHUNK_FILE,
+	DATA_CHUNK_END
+};
+
+typedef struct FileStream_ FileStream;
 
 typedef struct FileRequest_ {
 	int method;
-	char path[256];
+	wchar_t path[256];
 	FileProperties file;
 	FileStream *stream;
 } FileRequest;
@@ -87,28 +101,33 @@ typedef struct FileResponse_ {
 	FileStream *stream;
 } FileResponse;
 
+/** 文件流中的数据块 */
+typedef struct FileStreamChunk_ {
+	int type;			/**< 数据块类型 */
+	union {
+		FileRequest request;	/**< 文件请求 */
+		FileResponse response;	/**< 文件请求的响应结果 */
+		LCUI_Graph thumb;	/**< 缩略图 */
+		FILE *file;		/**< C 标准库的文件流 */
+		char *data;		/**< 数据块 */
+	};
+	size_t cur;			/**< 当前游标位置 */
+	size_t size;			/**< 数据总大小 */
+} FileStreamChunk;
+
+typedef struct FileStream_ {
+	LCUI_BOOL active;
+	LCUI_BOOL closed;
+	LCUI_Cond cond;
+	LCUI_Mutex mutex;
+	LinkedList data;		/**< 数据块列表 */
+	FileStreamChunk *chunk;		/**< 当前操作的数据块 */
+} FileStream;
+
 typedef struct FileRequestHandler_ {
 	void( *callback )(FileResponse*, void *);
 	void *data;
 } FileRequestHandler;
-
-enum FileStreamChunkType {
-	DATA_CHUNK_REQUEST,
-	DATA_CHUNK_RESPONSE,
-	DATA_CHUNK_BUFFER,
-	DATA_CHUNK_END
-};
-
-typedef struct FileStreamChunk_ {
-	int type;
-	union {
-		FileRequest request;
-		FileResponse response;
-		char *data;
-	};
-	size_t cur;
-	size_t size;
-} FileStreamChunk;
 
 typedef struct ConnectionRecord_ {
 	FileStream streams[2];
@@ -148,6 +167,20 @@ static struct FileService {
 	LinkedList connections;
 } service;
 
+void FileStreamChunk_Destroy( FileStreamChunk *chunk )
+{
+	switch( chunk->type ) {
+	case DATA_CHUNK_BUFFER:
+		free( chunk->data );
+		break;
+	case DATA_CHUNK_FILE:
+		fclose( chunk->file );
+		break;
+	default: break;
+	}
+	free( chunk );
+}
+
 void FileStream_Init( FileStream *stream )
 {
 	stream->closed = FALSE;
@@ -170,7 +203,7 @@ void FileStream_Close( FileStream *stream )
 LCUI_BOOL FileStream_Useable( FileStream *stream )
 {
 	if( stream->active ) {
-		if( stream->data.length > 0 ) {
+		if( stream->chunk || stream->data.length > 0 ) {
 			return TRUE;
 		}
 		if( stream->closed ) {
@@ -186,7 +219,7 @@ void FileStream_Destroy( FileStream *stream )
 		return;
 	}
 	stream->active = FALSE;
-	LinkedList_Clear( &stream->data, free );
+	LinkedList_Clear( &stream->data, FileStreamChunk_Destroy );
 	LCUIMutex_Destroy( &stream->mutex );
 	LCUICond_Destroy( &stream->cond );
 }
@@ -251,24 +284,39 @@ size_t FileStream_Read( FileStream *stream, char *buf,
 	}
 	while( 1 ) {
 		size_t n, read_size;
-		LCUIMutex_Lock( &stream->mutex );
-		while( stream->data.length < 1 && !stream->closed ) {
-			LCUICond_Wait( &stream->cond, &stream->mutex );
-		}
-		if( stream->data.length < 1 ) {
+		if( stream->chunk ) {
+			chunk = stream->chunk;
+		} else {
+			LCUIMutex_Lock( &stream->mutex );
+			while( stream->data.length < 1 && !stream->closed ) {
+				LCUICond_Wait( &stream->cond, &stream->mutex );
+			}
+			if( stream->data.length < 1 ) {
+				LCUIMutex_Unlock( &stream->mutex );
+				return read_count;
+			}
+			node = LinkedList_GetNode( &stream->data, 0 );
+			chunk = node->data;
+			LinkedList_Unlink( &stream->data, node );
+			LinkedListNode_Delete( node );
 			LCUIMutex_Unlock( &stream->mutex );
+			if( chunk->type != DATA_CHUNK_BUFFER ||
+			    chunk->type != DATA_CHUNK_FILE ) {
+				FileStreamChunk_Destroy( stream->chunk );
+				break;
+			}
+			stream->chunk = chunk;
+		}
+		if( chunk->type == DATA_CHUNK_FILE ) {
+			read_count = fread( buf, size, count, chunk->file );
+			if( feof(chunk->file) ) {
+				FileStreamChunk_Destroy( stream->chunk );
+				stream->chunk = NULL;
+			}
 			return read_count;
-		}
-		node = LinkedList_GetNode( &stream->data, 0 );
-		chunk = node->data;
-		if( chunk->type != DATA_CHUNK_BUFFER ) {
-			LCUIMutex_Unlock( &stream->mutex );
-			break;
 		}
 		n = (chunk->size - chunk->cur) / size;
 		if( n < count ) {
-			LinkedList_Unlink( &stream->data, node );
-			LinkedListNode_Delete( node );
 			read_count += n;
 			count -= n;
 		} else {
@@ -279,7 +327,10 @@ size_t FileStream_Read( FileStream *stream, char *buf,
 		memcpy( buf + cur, chunk->data + chunk->cur, read_size );
 		chunk->cur += read_size;
 		cur += read_size;
-		LCUIMutex_Unlock( &stream->mutex );
+		if( chunk->cur >= chunk->size - 1 ) {
+			FileStreamChunk_Destroy( stream->chunk );
+			stream->chunk = NULL;
+		}
 	}
 	return read_count;
 }
@@ -366,16 +417,91 @@ void Connection_Destroy( Connection *conn )
 
 }
 
-void Service_HandleRequest( FileRequest *request )
+static int Service_GetFileProperties( wchar_t *path, FileResponse *response )
 {
-	switch( request->method ) {
-	case FS_METHOD_HEAD:
-	case FS_METHOD_POST:
-	case FS_METHOD_GET:
-	case FS_METHOD_DELETE:
-	case FS_METHOD_PUT:
-	default: break;
+	int ret;
+	struct stat buf;
+	ret = wgetfilestat( path, &buf );
+	if( ret == 0 ) {
+		response->status = RESPONSE_STATUS_OK;
+		response->file.ctime = buf.st_ctime;
+		response->file.mtime = buf.st_mtime;
+		response->file.size = buf.st_size;
+		if( S_ISDIR( buf.st_mode ) ) {
+			response->file.type = FILE_TYPE_DIRECTORY;
+		} else {
+			response->file.type = FILE_TYPE_ARCHIVE;
+		}
+		return 0;
 	}
+	switch( ret ) {
+	case EACCES:
+		response->status = RESPONSE_STATUS_FORBIDDEN;
+		break;
+	case ENOENT:
+		response->status = RESPONSE_STATUS_NOT_FOUND;
+		break;
+	case EINVAL:
+	case EEXIST:
+	case EMFILE:
+	default:
+		response->status = RESPONSE_STATUS_ERROR;
+		break;
+	}
+	return ret;
+}
+
+static int Service_RemoveFile( wchar_t *path, FileResponse *response )
+{
+	int ret = MoveFileToTrashW( path );
+	switch( ret ) {
+	case EACCES:
+		response->status = RESPONSE_STATUS_FORBIDDEN;
+		break;
+	case ENOENT:
+		response->status = RESPONSE_STATUS_NOT_FOUND;
+		break;
+	default: 
+		response->status = RESPONSE_STATUS_ERROR;
+		break;
+	}
+	return ret;
+}
+
+void Service_HandleRequest( Connection *conn, FileRequest *request )
+{
+	FileStreamChunk chunk = { 0 };
+	chunk.type = DATA_CHUNK_RESPONSE;
+	switch( request->method ) {
+	case REQUEST_METHOD_HEAD:
+		Service_GetFileProperties( request->path, &chunk.response );
+		break;
+	case REQUEST_METHOD_POST:
+	case REQUEST_METHOD_GET:
+		Service_GetFileProperties( request->path, &chunk.response );
+		if( chunk.response.status == RESPONSE_STATUS_OK ) {
+			char *path = EncodeANSI( request->path );
+			FILE *fp = fopen( path, "rb" );
+			Connection_WriteChunk( conn, &chunk );
+			chunk.type = DATA_CHUNK_FILE;
+			chunk.file = fp;
+		}
+		break;
+	case REQUEST_METHOD_DELETE:
+		Service_RemoveFile( request->path, &chunk.response );
+		break;
+	case REQUEST_METHOD_PUT:
+		chunk.response.status = RESPONSE_STATUS_NOT_IMPLEMENTED;
+		break;
+	default: 
+		chunk.response.status = RESPONSE_STATUS_BAD_REQUEST;
+		break;
+	}
+	Connection_WriteChunk( conn, &chunk );
+	chunk.type = DATA_CHUNK_END;
+	chunk.size = chunk.cur = 0;
+	chunk.data = NULL;
+	Connection_WriteChunk( conn, &chunk );
 }
 
 void Service_Handler( void *arg )
@@ -391,7 +517,7 @@ void Service_Handler( void *arg )
 			continue;
 		}
 		chunk.request.stream = conn->input;
-		Service_HandleRequest( &chunk.request );
+		Service_HandleRequest( conn, &chunk.request );
 	}
 	Connection_Destroy( conn );
 	LCUIThread_Exit( NULL );

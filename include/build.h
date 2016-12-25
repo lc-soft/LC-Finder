@@ -1,6 +1,6 @@
 ﻿/* ***************************************************************************
- * bridge.h -- a bridge, provides a cross-platform implementation for some
- * interfaces.
+ * build.h -- Configuration and macro definitions related to the build 
+ * environment.
  *
  * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
  *
@@ -19,7 +19,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * bridge.h -- 桥梁，为某些功能提供跨平台实现。
+ * build.h -- 与构建环境相关的配置和宏定义
  *
  * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
  *
@@ -35,39 +35,36 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_SELECTFOLDER_H
-#define LCFINDER_SELECTFOLDER_H
+#ifndef LCFINDER_BUILD_H
+#define LCFINDER_BUILD_H
+
+#ifdef __cplusplus
+#define LCFINDER_BEGIN_HEADER extern "C" {
+#define LCFINDER_END_HEADER }
+#else 
+#define LCFINDER_BEGIN_HEADER
+#define LCFINDER_END_HEADER
+#endif
 
 LCFINDER_BEGIN_HEADER
 
-#ifdef _WIN32
-#define PLATFORM_WIN32
-#if (WINAPI_PARTITION_DESKTOP == 1)
-#define PLATFORM_WIN32_DESKTOP
-#elif (WINAPI_PARTITION_PC_APP == 1)
-#define PLATFORM_WIN32_PC_APP
-#endif
-//#define PLATFORM_WIN32_DESKTOP_XP
-#else
-#define PLATFORM_LINUX
-#endif
+enum VersionType {
+	VERSION_RELEASE,
+	VERSION_RC,
+	VERSION_BETA,
+	VERSION_ALPHA
+};
 
-int SelectFolder( char *dirpath, int max_len );
+#define LCFINDER_NAME		L"LC's Finder"
+#define LCFINDER_FOLDER_NAME	L"LCFinder"
+#define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
+#define LCFINDER_VER_MAJOR	0
+#define LCFINDER_VER_MINOR	1
+#define LCFINDER_VER_REVISION	0
+#define LCFINDER_VER_TYPE	VERSION_BETA
 
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
+#define ASSERT(X) if((X) != 0) { _DEBUG_MSG("error\n");return -1;}
 
-int GetAppDataFolderW( wchar_t *buf, int max_len );
-
-int GetAppInstalledLocationW( wchar_t *buf, int max_len );
-
-void OpenUriW( const wchar_t *uri );
-
-void OpenFileManagerW( const wchar_t *filepath );
-
-int MoveFileToTrashW( const wchar_t *filepath );
-
-int MoveFileToTrash( const char *filepath );
-
-LCFINDER_END_HEADER
+#include <LCUI_Build.h>
 
 #endif

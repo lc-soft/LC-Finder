@@ -189,6 +189,9 @@
     <ClInclude Include="include\switch.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\build.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LC-Finder.rc">

@@ -64,6 +64,7 @@
   <ItemGroup>
     <ClInclude Include="include\bridge.h" />
     <ClInclude Include="include\browser.h" />
+    <ClInclude Include="include\build.h" />
     <ClInclude Include="include\common.h" />
     <ClInclude Include="include\dialog.h" />
     <ClInclude Include="include\dropdown.h" />
