@@ -43,14 +43,29 @@
 #include "bridge.h"
 #include "file_storage.h"
 
+enum HandlerDataType {
+	HANDLER_ON_OPEN,
+	HANDLER_ON_GET_PROPS
+};
+
+typedef struct HandlerDataPackRec_ {
+	int type;
+	union {
+		void( *on_get_props )(FileProperties*, void*);
+		void( *on_open )(FileProperties*, FileStream, void*);
+	};
+	void *data;
+} HandlerDataPackRec, *HandlerDataPack;
+
 static struct FileStorageModule {
 	FileClient client;
-	int client_active;
+	LCUI_BOOL client_active;
 } self;
 
 int FileStorage_Init( void )
 {
 	int ret;
+	LOG( "[file storage] init...\n" );
 /* 非 UWP 应用则运行线程版的本地文件服务 */
 #ifndef PLATFORM_WIN32_PC_APP
 	FileService_Init();
@@ -60,8 +75,10 @@ int FileStorage_Init( void )
 	self.client = FileClient_Create();
 	ret = FileClient_Connect( self.client );
 	if( ret == 0 ) {
-		self.client_active = 1;
+		self.client_active = TRUE;
 		FileClient_RunAsync( self.client );
+	} else {
+		LOG( "[file storage] error, code: %d\n", ret );
 	}
 	return ret;
 }
@@ -81,9 +98,41 @@ int FileStorage_Open( const wchar_t *filename,
 	return -1;
 }
 
+static void OnResponse( FileResponse *response, void *data )
+{
+	HandlerDataPack pack = data;
+	switch( pack->type ) {
+	case HANDLER_ON_OPEN:
+	case HANDLER_ON_GET_PROPS:
+		if( response->status != RESPONSE_STATUS_OK ) {
+			pack->on_get_props( NULL, pack->data );
+			break;
+		}
+		pack->on_get_props( &response->file, pack->data );
+		break;
+	default: break;
+	}
+	free( pack );
+}
+
 int FileStorage_GetProperties( const wchar_t *filename,
 			       void( *callback )(FileProperties*, void*),
 			       void *data )
 {
-	return -1;
+	HandlerDataPack pack;
+	FileRequestHandler handler;
+	FileRequest request = { 0 };
+	if( !self.client_active ) {
+		return -1;
+	}
+	pack = NEW( HandlerDataPackRec, 1 );
+	pack->type = HANDLER_ON_GET_PROPS;
+	pack->on_get_props = callback;
+	pack->data = data;
+	request.method = REQUEST_METHOD_GET;
+	wcsncpy( request.path, filename, 255 );
+	handler.callback = OnResponse;
+	handler.data = pack;
+	FileClient_SendRequest( self.client, &request, &handler );
+	return 0;
 }

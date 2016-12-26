@@ -44,6 +44,7 @@
 #include "finder.h"
 #include "i18n.h"
 #include "ui.h"
+#include "file_storage.h"
 #include <LCUI/font/charset.h>
 
 #define DEBUG
@@ -483,8 +484,10 @@ static int LCFinder_InitWorkDir( void )
 {
 	int len, len1, len2;
 	wchar_t data_dir[PATH_LEN];
-	wchar_t *dirs[2] = {L"fileset", L"thumbs"};
-
+	wchar_t *dirs[2] = { L"fileset", L"thumbs" };
+#if defined(_WIN32) && defined(DEBUG)
+	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder\\app" );
+#endif
 	if( GetAppInstalledLocationW( data_dir, PATH_LEN ) != 0 ) {
 		LOG( "[workdir] error\n" );
 		return -1;
@@ -822,6 +825,7 @@ int LCFinder_Init( int argc, char **argv )
 	ASSERT( LCFinder_InitThumbCache() );
 	ASSERT( LCFinder_InitLanguage() );
 	finder.trigger = EventTrigger();
+	ASSERT( FileStorage_Init() );
 	ASSERT( UI_Init( argc, argv ) );
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_OnExit, NULL, NULL );
 	return 0;
@@ -831,6 +835,7 @@ void LCFinder_Exit( void )
 {
 	UI_Exit();
 	LCFinder_ExitThumbDB();
+	FileStorage_Exit();
 }
 
 int LCFinder_Run( void )

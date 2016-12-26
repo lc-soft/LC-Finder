@@ -301,7 +301,6 @@ Connection Connection_Create( void )
 	conn->closed = TRUE;
 	LCUICond_Init( &conn->cond );
 	LCUIMutex_Init( &conn->mutex );
-	LCUIMutex_Lock( &service.mutex );
 	return conn;
 }
 
@@ -493,7 +492,7 @@ int FileService_Listen( int backlog )
 {
 	LCUIMutex_Lock( &service.mutex );
 	service.backlog = backlog;
-	while( service.active && service.requests.length == 0 ) {
+	while( service.active && service.requests.length < 1 ) {
 		LCUICond_Wait( &service.cond, &service.mutex );
 	}
 	LCUIMutex_Unlock( &service.mutex );
@@ -535,17 +534,24 @@ Connection FileService_Accept( void )
 void FileService_Run( void )
 {
 	Connection conn;
+	LCUIMutex_Lock( &service.mutex );
 	service.active = TRUE;
+	LCUICond_Signal( &service.cond );
+	LCUIMutex_Unlock( &service.mutex );
+	LOG( "[file service] file service started\n" );
 	while( service.active ) {
+		LOG( "[file service] listen...\n" );
 		if( FileService_Listen( 5 ) == 0 ) {
 			continue;
 		}
 		conn = FileService_Accept();
+		LOG( "[file service] accept connection\n" );
 		if( !conn ) {
 			continue;
 		}
 		LCUIThread_Create( &conn->thread, FileService_Handler, conn );
 	}
+	LOG( "[file service] file service stopped\n" );
 }
 
 static void FileService_Thread( void *arg )
@@ -569,7 +575,10 @@ void FileService_Close( void )
 
 void FileService_Init( void )
 {
+	service.backlog = 1;
 	service.active = FALSE;
+	LinkedList_Init( &service.connections );
+	LinkedList_Init( &service.requests );
 	LCUICond_Init( &service.cond );
 	LCUIMutex_Init( &service.mutex );
 }
@@ -647,27 +656,48 @@ int FileClient_Connect( FileClient client )
 {
 	int timeout = 0;
 	Connection conn;
+	LOG( "[file client] connecting file service...\n" );
 	LCUIMutex_Lock( &service.mutex );
-	while( service.requests.length > service.backlog && timeout++ < 5 ) {
+	while( !service.active ) {
+		LOG( "[file client] wait...\n" );
 		LCUICond_TimedWait( &service.cond, &service.mutex, 1000 );
+		if( timeout++ >= 5 ) {
+			LCUIMutex_Unlock( &service.mutex );
+			LOG( "[file client] timeout\n" );
+			return -1;
+		}
 	}
-	if( timeout >= 5 ) {
+	timeout = 0;
+	while( service.active && service.requests.length > service.backlog ) {
+		LCUICond_TimedWait( &service.cond, &service.mutex, 1000 );
+		if( timeout++ >= 5 ) {
+			LCUIMutex_Unlock( &service.mutex );
+			LOG( "[file client] timeout\n" );
+			return -1;
+		}
+	}
+	if( !service.active ) {
 		LCUIMutex_Unlock( &service.mutex );
-		return -1;
+		LOG( "[file client] service stopped\n" );
+		return -2;
 	}
 	conn = Connection_Create();
 	LinkedList_Append( &service.requests, conn );
 	LCUICond_Signal( &service.cond );
 	LCUIMutex_Unlock( &service.mutex );
+	LCUIMutex_Lock( &conn->mutex );
+	LOG( "[file client] wait file service accept connection...\n" );
 	for( timeout = 0; conn->closed && timeout < 5; ++timeout ) {
 		LCUICond_TimedWait( &conn->cond, &conn->mutex, 1000 );
 	}
+	LCUIMutex_Unlock( &conn->mutex );
 	if( timeout >= 5 ) {
 		Connection_Destroy( conn );
-		LCUIMutex_Unlock( &service.mutex );
-		return -2;
+		LOG( "[file client] timeout\n" );
+		return -1;
 	}
 	client->connection = conn;
+	LOG( "[file client] connected file service\n" );
 	return 0;
 }
 
@@ -691,11 +721,12 @@ void FileClient_Run( FileClient client )
 			LCUICond_Wait( &client->cond, &client->mutex );
 		}
 		node = LinkedList_GetNode( &client->tasks, 0 );
-		LinkedList_Unlink( &client->tasks, node );
-		LCUIMutex_Unlock( &client->mutex );
 		if( !node ) {
+			LCUIMutex_Unlock( &client->mutex );
 			continue;
 		}
+		LinkedList_Unlink( &client->tasks, node );
+		LCUIMutex_Unlock( &client->mutex );
 		task = node->data;
 		n = Connection_SendRequest( conn, &task->request );
 		if( n == 0 ) {
