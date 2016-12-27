@@ -42,6 +42,7 @@
 #include "finder.h"
 #include "ui.h"
 #include "i18n.h"
+#include "file_storage.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
@@ -244,10 +245,26 @@ void UI_InitPictureInfoView( void )
 	Widget_Hide( this_view.panel );
 }
 
+static void OnGetFileProperties( FileProperties *props, void *data )
+{
+	wchar_t mtime_str[256], fsize_str[256];
+	if( !props ) {
+		const wchar_t *unknown = I18n_GetText( KEY_UNKNOWN );
+		TextView_SetTextW( this_view.txt_time, unknown );
+		TextView_SetTextW( this_view.txt_fsize, unknown );
+		return;
+	}
+	this_view.size = props->size;
+	this_view.mtime = props->mtime;
+	wgetsizestr( fsize_str, 256, this_view.size );
+	wgettimestr( mtime_str, 256, this_view.mtime );
+	TextView_SetTextW( this_view.txt_time, mtime_str );
+	TextView_SetTextW( this_view.txt_fsize, fsize_str );
+}
+
 void UI_SetPictureInfoView( const char *filepath )
 {
 	DB_Tag *tags;
-	struct stat buf;
 	int i, n, width, height;
 	LCUI_BOOL is_picture = FALSE;
 	wchar_t *path, *dirpath;
@@ -269,18 +286,7 @@ void UI_SetPictureInfoView( const char *filepath )
 	}
 #endif
 	unknown = I18n_GetText( KEY_UNKNOWN );
-	if( wgetfilestat( path, &buf ) == 0 ) {
-		wchar_t mtime_str[256], fsize_str[256];
-		this_view.size = buf.st_size;
-		this_view.mtime = buf.st_mtime;
-		wgetsizestr( fsize_str, 256, this_view.size );
-		wgettimestr( mtime_str, 256, this_view.mtime );
-		TextView_SetTextW( this_view.txt_time, mtime_str );
-		TextView_SetTextW( this_view.txt_fsize, fsize_str );
-	} else {
-		TextView_SetTextW( this_view.txt_time, unknown );
-		TextView_SetTextW( this_view.txt_fsize, unknown );
-	}
+	FileStorage_GetProperties( path, OnGetFileProperties, NULL );
 	if( is_picture ) {
 		wchar_t str[256];
 		this_view.width = width;

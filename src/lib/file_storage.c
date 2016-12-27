@@ -71,7 +71,7 @@ int FileStorage_Init( void )
 	FileService_Init();
 	FileService_RunAsync();
 #endif
-	self.client_active = 0;
+	self.client_active = FALSE;
 	self.client = FileClient_Create();
 	ret = FileClient_Connect( self.client );
 	if( ret == 0 ) {
@@ -129,7 +129,7 @@ int FileStorage_GetProperties( const wchar_t *filename,
 	pack->type = HANDLER_ON_GET_PROPS;
 	pack->on_get_props = callback;
 	pack->data = data;
-	request.method = REQUEST_METHOD_GET;
+	request.method = REQUEST_METHOD_HEAD;
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;

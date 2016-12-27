@@ -62,11 +62,13 @@ typedef struct FileStreamRec_ {
 } FileStreamRec;
 
 typedef struct ConnectionRecord_ {
+	unsigned int id;
 	FileStream streams[2];
 	LinkedListNode node;
 } ConnectionRecord;
 
 typedef struct ConnectionRec_ {
+	unsigned int id;
 	LCUI_BOOL closed;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
@@ -190,9 +192,6 @@ size_t FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk )
 		return -1;
 	}
 	LCUIMutex_Lock( &stream->mutex );
-	while( !stream->closed ) {
-		LCUICond_Wait( &stream->cond, &stream->mutex );
-	}
 	buf = NEW( FileStreamChunk, 1 );
 	*buf = *chunk;
 	buf->cur = 0;
@@ -299,6 +298,7 @@ Connection Connection_Create( void )
 	Connection conn;
 	conn = NEW( ConnectionRec, 1 );
 	conn->closed = TRUE;
+	conn->id = 0;
 	LCUICond_Init( &conn->cond );
 	LCUIMutex_Init( &conn->mutex );
 	return conn;
@@ -474,6 +474,8 @@ void FileService_Handler( void *arg )
 	int n;
 	FileStreamChunk chunk;
 	Connection conn = arg;
+	LOG( "[file service][thread %d] started, connection: %d\n",
+	     LCUIThread_SelfID(), conn->id );
 	while( 1 ) {
 		n = Connection_ReadChunk( conn, &chunk );
 		if( n == -1 ) {
@@ -484,6 +486,8 @@ void FileService_Handler( void *arg )
 		chunk.request.stream = conn->input;
 		FileService_HandleRequest( conn, &chunk.request );
 	}
+	LOG( "[file service][thread %d] stopped, connection: %d\n",
+	     LCUIThread_SelfID(), conn->id );
 	Connection_Destroy( conn );
 	LCUIThread_Exit( NULL );
 }
@@ -503,6 +507,7 @@ Connection FileService_Accept( void )
 {
 	LinkedListNode *node;
 	ConnectionRecord *conn;
+	static unsigned base_id = 0;
 	Connection conn_client, conn_service;
 	if( !service.active ) {
 		return NULL;
@@ -518,8 +523,11 @@ Connection FileService_Accept( void )
 	conn->streams[0] = FileStream_Create();
 	conn->streams[1] = FileStream_Create();
 	LCUIMutex_Lock( &conn_client->mutex );
+	conn->id = ++base_id;
 	conn->node.data = conn;
+	conn_client->id = conn->id;
 	conn_client->closed = FALSE;
+	conn_service->id = conn->id;
 	conn_service->closed = FALSE;
 	conn_client->input = conn->streams[0];
 	conn_client->output = conn->streams[1];
@@ -545,7 +553,7 @@ void FileService_Run( void )
 			continue;
 		}
 		conn = FileService_Accept();
-		LOG( "[file service] accept connection\n" );
+		LOG( "[file service] accept connection %d\n", conn->id );
 		if( !conn ) {
 			continue;
 		}
@@ -686,7 +694,7 @@ int FileClient_Connect( FileClient client )
 	LCUICond_Signal( &service.cond );
 	LCUIMutex_Unlock( &service.mutex );
 	LCUIMutex_Lock( &conn->mutex );
-	LOG( "[file client] wait file service accept connection...\n" );
+	LOG( "[file client] waitting file service accept connection...\n" );
 	for( timeout = 0; conn->closed && timeout < 5; ++timeout ) {
 		LCUICond_TimedWait( &conn->cond, &conn->mutex, 1000 );
 	}
@@ -697,7 +705,7 @@ int FileClient_Connect( FileClient client )
 		return -1;
 	}
 	client->connection = conn;
-	LOG( "[file client] connected file service\n" );
+	LOG( "[file client][connection %d] created\n", conn->id );
 	return 0;
 }
 
@@ -714,9 +722,11 @@ void FileClient_Run( FileClient client )
 	FileResponse response;
 	Connection conn = client->connection;
 
+	LOG( "[file client] work started\n" );
 	client->active = TRUE;
 	while( client->active ) {
 		LCUIMutex_Lock( &client->mutex );
+		LOG( "[file client] waitting task...\n" );
 		while( client->tasks.length < 1 && client->active ) {
 			LCUICond_Wait( &client->cond, &client->mutex );
 		}
@@ -728,19 +738,23 @@ void FileClient_Run( FileClient client )
 		LinkedList_Unlink( &client->tasks, node );
 		LCUIMutex_Unlock( &client->mutex );
 		task = node->data;
+		LOGW( L"[file client][connection %d] send request, "
+		      L"method: %d, path: %s\n",
+		      conn->id, task->request.method, task->request.path );
 		n = Connection_SendRequest( conn, &task->request );
 		if( n == 0 ) {
 			continue;
 		}
 		while( client->active ) {
 			n = Connection_ReceiveResponse( conn, &response );
-			if( n == 0 ) {
-				continue;
+			if( n != 0 ) {
+				break;
 			}
 		}
 		response.stream = conn->input;
 		task->handler.callback( &response, task->handler.data );
 	}
+	LOG( "[file client] work stopped\n" );
 }
 
 static void FileClient_Thread( void *arg )
