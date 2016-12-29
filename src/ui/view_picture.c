@@ -490,6 +490,16 @@ static void UpdatePicturePosition( Picture pic )
 	sheet = pic->view->custom_style;
 	width = (int)(pic->data->width * pic->scale);
 	height = (int)(pic->data->height * pic->scale);
+	if( width <= pic->view->width ) {
+		SetStyle( sheet, key_background_position_x, 0.5, scale );
+	}
+	if( height <= pic->view->height ) {
+		SetStyle( sheet, key_background_position_y, 0.5, scale );
+	}
+	if( pic != this_view.picture ) {
+		Widget_UpdateStyle( pic->view, FALSE );
+		return;
+	}
 	/* 若缩放后的图片宽度小于图片查看器的宽度 */
 	if( width <= pic->view->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
