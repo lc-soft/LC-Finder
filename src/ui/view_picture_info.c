@@ -248,11 +248,22 @@ void UI_InitPictureInfoView( void )
 static void OnGetFileProperties( FileProperties *props, void *data )
 {
 	wchar_t mtime_str[256], fsize_str[256];
+	const wchar_t *unknown = I18n_GetText( KEY_UNKNOWN );
 	if( !props ) {
-		const wchar_t *unknown = I18n_GetText( KEY_UNKNOWN );
 		TextView_SetTextW( this_view.txt_time, unknown );
 		TextView_SetTextW( this_view.txt_fsize, unknown );
+		TextView_SetTextW( this_view.txt_size, unknown );
 		return;
+	}
+	if( props->image ) {
+		wchar_t str[256];
+		this_view.width = props->image->width;
+		this_view.height = props->image->height;
+		swprintf( str, 256, L"%dx%d", 
+			  props->image->width, props->image->height );
+		TextView_SetTextW( this_view.txt_size, str );
+	} else {
+		TextView_SetTextW( this_view.txt_size, unknown );
 	}
 	this_view.size = props->size;
 	this_view.mtime = props->mtime;
@@ -264,38 +275,13 @@ static void OnGetFileProperties( FileProperties *props, void *data )
 
 void UI_SetPictureInfoView( const char *filepath )
 {
+	int i, n;
 	DB_Tag *tags;
-	int i, n, width, height;
-	LCUI_BOOL is_picture = FALSE;
 	wchar_t *path, *dirpath;
-	const wchar_t *unknown;
 
 	path = DecodeUTF8( filepath );
 	dirpath = wgetdirname( path );
-#ifdef _WIN32
-	{
-		char *apath = EncodeANSI( path );
-		if( Graph_GetImageSize( apath, &width, &height ) == 0 ) {
-			is_picture = TRUE;
-		}
-		free( apath );
-	}
-#else
-	if( Graph_GetImageSize( filepath, &width, &height ) == 0 ) {
-		is_picture = TRUE;
-	}
-#endif
-	unknown = I18n_GetText( KEY_UNKNOWN );
-	FileStorage_GetProperties( path, OnGetFileProperties, NULL );
-	if( is_picture ) {
-		wchar_t str[256];
-		this_view.width = width;
-		this_view.height = height;
-		swprintf( str, 256, L"%dx%d", width, height );
-		TextView_SetTextW( this_view.txt_size, str );
-	} else {
-		TextView_SetTextW( this_view.txt_size, unknown );
-	}
+	FileStorage_GetProperties( path, TRUE, OnGetFileProperties, NULL );
 	TextView_SetTextW( this_view.txt_dirpath, dirpath );
 	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );
 	if( this_view.filepath ) {

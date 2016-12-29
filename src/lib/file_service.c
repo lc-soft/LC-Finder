@@ -104,6 +104,11 @@ static struct FileService {
 void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 {
 	switch( chunk->type ) {
+	case DATA_CHUNK_RESPONSE:
+		if( chunk->response.file.image ) {
+			free( chunk->response.file.image );
+		}
+		break;
 	case DATA_CHUNK_BUFFER:
 		free( chunk->data );
 		break;
@@ -351,12 +356,35 @@ void Connection_Destroy( Connection conn )
 
 }
 
-static int FileService_GetFileProperties( const wchar_t *path, 
-					  FileResponse *response )
+static int FileService_GetFileImageProperties( FileRequest *request,
+					       FileStreamChunk *chunk )
+{
+	int width, height;
+	FileResponse *response = &chunk->response;
+#ifdef _WIN32
+	char *path = EncodeANSI( request->path );
+#else
+	char *path = EncodeUTF8( request->path );
+#endif
+	if( Graph_GetImageSize( path, &width, &height ) == 0 ) {
+		response->file.image = NEW( FileImageProperties, 1 );
+		response->file.image->width = width;
+		response->file.image->height = height;
+		free( path );
+		return 0;
+	}
+	response->file.image = NULL;
+	free( path );
+	return -1;
+}
+
+static int FileService_GetFileProperties( FileRequest *request,
+					  FileStreamChunk *chunk )
 {
 	int ret;
 	struct stat buf;
-	ret = wgetfilestat( path, &buf );
+	FileResponse *response = &chunk->response;
+	ret = wgetfilestat( request->path, &buf );
 	if( ret == 0 ) {
 		response->status = RESPONSE_STATUS_OK;
 		response->file.ctime = buf.st_ctime;
@@ -366,6 +394,9 @@ static int FileService_GetFileProperties( const wchar_t *path,
 			response->file.type = FILE_TYPE_DIRECTORY;
 		} else {
 			response->file.type = FILE_TYPE_ARCHIVE;
+		}
+		if( request->params.with_image_props ) {
+			FileService_GetFileImageProperties( request, chunk );
 		}
 		return 0;
 	}
@@ -413,7 +444,7 @@ static int FileService_GetFile( Connection conn,
 	LCUI_Graph img;
 	FileResponse *response = &chunk->response;
 	FileRequestParams *params = &request->params;
-	ret = FileService_GetFileProperties( request->path, response );
+	ret = FileService_GetFileProperties( request, chunk );
 	if( response->status != RESPONSE_STATUS_OK ) {
 		return ret;
 	}
@@ -446,7 +477,7 @@ static void FileService_HandleRequest( Connection conn,
 	chunk.type = DATA_CHUNK_RESPONSE;
 	switch( request->method ) {
 	case REQUEST_METHOD_HEAD:
-		FileService_GetFileProperties( path, &chunk.response );
+		FileService_GetFileProperties( request, &chunk );
 		break;
 	case REQUEST_METHOD_POST:
 	case REQUEST_METHOD_GET:

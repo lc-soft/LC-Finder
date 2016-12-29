@@ -72,16 +72,23 @@ enum FileType {
 	FILE_TYPE_DIRECTORY
 };
 
+typedef struct FileImageProperties_ {
+	int width;
+	int height;
+} FileImageProperties;
+
 typedef struct FileProperties_ {
 	int type;
 	size_t size;
 	time_t ctime;
 	time_t mtime;
+	FileImageProperties *image;
 } FileProperties;
 
 /** 文件请求参数 */
 typedef struct FileRequestParams_ {
 	LCUI_BOOL get_thumbnail;
+	LCUI_BOOL with_image_props;
 	unsigned int width;
 	unsigned int height;
 } FileRequestParams;

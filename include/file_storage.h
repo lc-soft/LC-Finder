@@ -48,7 +48,7 @@ int FileStorage_Open( const wchar_t *filename,
 		      void( *callback )(FileProperties*, FileStream, void*),
 		      void *data );
 
-int FileStorage_GetProperties( const wchar_t *filename,
+int FileStorage_GetProperties( const wchar_t *filename, LCUI_BOOL with_extra,
 			       void( *callback )(FileProperties*, void*),
 			       void *data );
 

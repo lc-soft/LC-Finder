@@ -115,7 +115,7 @@ static void OnResponse( FileResponse *response, void *data )
 	free( pack );
 }
 
-int FileStorage_GetProperties( const wchar_t *filename,
+int FileStorage_GetProperties( const wchar_t *filename, LCUI_BOOL with_extra,
 			       void( *callback )(FileProperties*, void*),
 			       void *data )
 {
@@ -130,6 +130,7 @@ int FileStorage_GetProperties( const wchar_t *filename,
 	pack->on_get_props = callback;
 	pack->data = data;
 	request.method = REQUEST_METHOD_HEAD;
+	request.params.with_image_props = with_extra;
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;
