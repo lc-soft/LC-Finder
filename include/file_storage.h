@@ -40,16 +40,21 @@
 
 #include "file_service.h"
 
+typedef void( *HandlerOnOpen )(FileProperties*, FileStream, void*);
+typedef void( *HandlerOnGetProperties )(FileProperties*, void*);
+typedef void( *HandlerOnGetThumbnail )(FileProperties*, LCUI_Graph*, void*);
+
 int FileStorage_Init( void );
 
 void FileStorage_Exit( void );
 
 int FileStorage_Open( const wchar_t *filename,
-		      void( *callback )(FileProperties*, FileStream, void*),
-		      void *data );
+		      HandlerOnOpen callback, void *data );
+
+int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
+			      HandlerOnGetThumbnail callback, void *data );
 
 int FileStorage_GetProperties( const wchar_t *filename, LCUI_BOOL with_extra,
-			       void( *callback )(FileProperties*, void*),
-			       void *data );
+			       HandlerOnGetProperties callback, void *data );
 
 #endif

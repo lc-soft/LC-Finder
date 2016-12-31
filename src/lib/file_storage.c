@@ -45,14 +45,16 @@
 
 enum HandlerDataType {
 	HANDLER_ON_OPEN,
+	HANDLER_ON_GET_THUMB,
 	HANDLER_ON_GET_PROPS
 };
 
 typedef struct HandlerDataPackRec_ {
 	int type;
 	union {
-		void( *on_get_props )(FileProperties*, void*);
-		void( *on_open )(FileProperties*, FileStream, void*);
+		HandlerOnGetThumbnail on_get_thumb;
+		HandlerOnGetProperties on_get_props;
+		HandlerOnOpen on_open;
 	};
 	void *data;
 } HandlerDataPackRec, *HandlerDataPack;
@@ -91,18 +93,34 @@ void FileStorage_Exit( void )
 #endif
 }
 
-int FileStorage_Open( const wchar_t *filename,
-		      void( *callback )(FileProperties*, FileStream, void*),
-		      void *data )
-{
-	return -1;
-}
-
 static void OnResponse( FileResponse *response, void *data )
 {
+	int n;
+	FileStreamChunk chunk;
 	HandlerDataPack pack = data;
+
 	switch( pack->type ) {
+	case HANDLER_ON_GET_THUMB:
+		if( response->status != RESPONSE_STATUS_OK ) {
+			pack->on_get_thumb( NULL, NULL, pack->data );
+			break;
+		}
+		n = FileStream_ReadChunk( response->stream, &chunk );
+		if( n < 0 || chunk.type != DATA_CHUNK_THUMB ) {
+			pack->on_get_thumb( NULL, NULL, pack->data );
+			break;
+		}
+		pack->on_get_thumb( &response->file,
+				    &chunk.thumb, pack->data );
+		break;
 	case HANDLER_ON_OPEN:
+		if( response->status != RESPONSE_STATUS_OK ) {
+			pack->on_open( NULL, NULL, pack->data );
+			break;
+		}
+		pack->on_open( &response->file, 
+			       &response->stream, pack->data );
+		break;
 	case HANDLER_ON_GET_PROPS:
 		if( response->status != RESPONSE_STATUS_OK ) {
 			pack->on_get_props( NULL, pack->data );
@@ -115,9 +133,38 @@ static void OnResponse( FileResponse *response, void *data )
 	free( pack );
 }
 
+int FileStorage_Open( const wchar_t *filename,
+		      HandlerOnOpen callback, void *data )
+{
+	return -1;
+}
+
+int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
+			      HandlerOnGetThumbnail callback, void *data )
+{
+	HandlerDataPack pack;
+	FileRequestHandler handler;
+	FileRequest request = { 0 };
+	if( !self.client_active ) {
+		return -1;
+	}
+	pack = NEW( HandlerDataPackRec, 1 );
+	pack->type = HANDLER_ON_GET_THUMB;
+	pack->on_open = callback;
+	pack->data = data;
+	request.method = REQUEST_METHOD_GET;
+	request.params.get_thumbnail = TRUE;
+	request.params.width = width;
+	request.params.height = height;
+	wcsncpy( request.path, filename, 255 );
+	handler.callback = OnResponse;
+	handler.data = pack;
+	FileClient_SendRequest( self.client, &request, &handler );
+	return 0;
+}
+
 int FileStorage_GetProperties( const wchar_t *filename, LCUI_BOOL with_extra,
-			       void( *callback )(FileProperties*, void*),
-			       void *data )
+			       HandlerOnGetProperties callback, void *data )
 {
 	HandlerDataPack pack;
 	FileRequestHandler handler;

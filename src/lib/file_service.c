@@ -457,15 +457,30 @@ static int FileService_GetFile( Connection conn,
 		return 0;
 	}
 	Graph_Init( &img );
+	LOG( "load image: %s\n", path );
 	if( Graph_LoadImage( path, &img ) != 0 ) {
+		LOG( "load image failed\n", path );
 		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
+		free( path );
 		return -1;
 	}
-	Graph_Init( &chunk->thumb );
+	LOG( "load image success, size: %d,%d\n", img.width, img.height );
+	response->file.image = NEW( FileImageProperties, 1 );
+	response->file.image->width = img.width;
+	response->file.image->height = img.height;
+	LOG( "write response, status: %d\n", response->status );
 	Connection_WriteChunk( conn, chunk );
-	Graph_Zoom( &img, &chunk->thumb, TRUE, params->width, params->height );
+	Graph_Init( &chunk->thumb );
+	if( (params->width > 0 && img.width > (int)params->width)
+	    || (params->height > 0 && img.height > (int)params->height) ) {
+	    Graph_Zoom( &img, &chunk->thumb, TRUE,
+			params->width, params->height );
+	    Graph_Free( &img );
+	} else {
+		chunk->thumb = img;
+	}
 	chunk->type = DATA_CHUNK_THUMB;
-	Graph_Free( &img );
+	free( path );
 	return 0;
 }
 
@@ -778,6 +793,8 @@ void FileClient_Run( FileClient client )
 		}
 		while( client->active ) {
 			n = Connection_ReceiveResponse( conn, &response );
+			LOG( "receive count: %d, response status: %d\n",
+			     n, response.status );
 			if( n != 0 ) {
 				break;
 			}

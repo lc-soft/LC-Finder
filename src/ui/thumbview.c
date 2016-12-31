@@ -38,6 +38,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "finder.h"
+#include "file_storage.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/graph.h>
@@ -144,6 +145,15 @@ typedef struct ThumbViewItemRec_ {
 	void (*setthumb)(LCUI_Widget, LCUI_Graph*);	/**< 设置缩略图 */
 	void(*updatesize)(LCUI_Widget);			/**< 更新自身尺寸 */
 } ThumbViewItemRec, *ThumbViewItem;
+
+typedef struct ThumbLoaderDataRec_ {
+	ThumbDB db;			/**< 缩略图缓存数据库 */
+	ThumbView view;			/**< 所属缩略图视图 */
+	LCUI_Widget target;		/**< 需要缩略图的部件 */
+	char path[PATH_LEN];		/**< 图片文件路径 */
+	const char *filename;		/**< 图片文件名称 */
+	wchar_t *wpath;			/**< 图片文件路径（宽字符版） */
+} ThumbLoaderDataRec, *ThumbLoaderData;
 
 static struct ThumbViewModule {
 	LCUI_WidgetPrototype thumbview;
@@ -375,129 +385,160 @@ static void OnRemoveThumb( void *data )
 	}
 }
 
-/** 载入缩略图 */
-static LCUI_Graph *LoadThumb( ThumbView view, LCUI_Widget target )
+static void ThumbLoaderData_Destroy( ThumbLoaderData pack )
 {
-	Dict *dbs;
-	DB_Dir dir;
-	ThumbDB db;
-	int len, ret;
-	struct stat buf;
+	if( pack->wpath ) {
+		free( pack->wpath );
+	}
+	free( pack );
+}
+
+static void OnThumbLoadError( ThumbLoaderData pack )
+{
+	LCUI_Widget icon;
+	ThumbViewItem item;
+	item = Widget_GetData( pack->target, self.thumbviewitem );
+	if( !item->is_valid || item->is_dir ) {
+		ThumbLoaderData_Destroy( pack );
+		return;
+	}
+	item->is_valid = FALSE;
+	icon = LCUIWidget_New( "textview" );
+	Widget_AddClass( icon, "tip icon mdi mdi-help" );
+	Widget_AddClass( icon, "floating center middle aligned" );
+	Widget_Append( item->cover, icon );
+	ThumbLoaderData_Destroy( pack );
+}
+
+static void OnThumbLoadDone( ThumbLoaderData pack,
+			     ThumbData data, FileProperties *props )
+{
+	LCUI_Graph *thumb;
+	ThumbViewItem item;
+	item = Widget_GetData( pack->target, self.thumbviewitem );
+	if( !item->is_dir ) {
+		if( item->file->modify_time != (uint_t)props->mtime ) {
+			int ctime = (int)props->ctime;
+			int mtime = (int)props->mtime;
+			DBFile_SetTime( item->file, ctime, mtime );
+		}
+		if( data->origin_width > 0 && data->origin_height > 0
+		    && (item->file->width != data->origin_width ||
+			 item->file->height != data->origin_height) ) {
+			DBFile_SetSize( item->file, data->origin_width,
+					data->origin_height );
+		}
+	}
+	ThumbCache_Add( pack->view->cache, item->path, &data->graph );
+	thumb = ThumbCache_Link( pack->view->cache, item->path,
+				 pack->view->linker, pack->target );
+	if( thumb ) {
+		if( item->setthumb ) {
+			item->setthumb( pack->target, thumb );
+		}
+		ThumbLoaderData_Destroy( pack );
+		return;
+	}
+	OnThumbLoadError( pack );
+}
+
+static void OnGetThumbnail( FileProperties *props,
+			    LCUI_Graph *thumb, void *data )
+{
+	ThumbDataRec tdata;
+	ThumbLoaderData pack = data;
+	if( !props || !props->image || !thumb ) {
+		OnThumbLoadError( pack );
+		return;
+	}
+	tdata.origin_width = props->image->width;
+	tdata.origin_height = props->image->height;
+	tdata.modify_time = (uint_t)props->mtime;
+	tdata.graph = *thumb;
+	ThumbDB_Save( pack->db, pack->filename, &tdata );
+	OnThumbLoadDone( pack, &tdata, props );
+}
+
+static void OnGetFileProperties( FileProperties *props, void *data )
+{
+	int ret;
 	ThumbDataRec tdata;
 	ThumbViewItem item;
-	const char *filename;
-	wchar_t wpath[PATH_LEN];
-	char apath[PATH_LEN], path[PATH_LEN];
+	ThumbLoaderData pack = data;
 
+	if( !props ) {
+		OnThumbLoadError( pack );
+		return;
+	}
+	ret = ThumbDB_Load( pack->db, pack->filename, &tdata );
+	item = Widget_GetData( pack->target, self.thumbviewitem );
+	if( ret == 0 && tdata.modify_time == props->mtime ) {
+		OnThumbLoadDone( pack, &tdata, props );
+		return;
+	}
+	if( item->is_dir ) {
+		FileStorage_GetThumbnail( pack->wpath, FOLDER_MAX_WIDTH, 0,
+					  OnGetThumbnail, pack );
+		return;
+	}
+	FileStorage_GetThumbnail( pack->wpath, 0, THUMB_MAX_WIDTH,
+				  OnGetThumbnail, pack );
+}
+
+/** 载入缩略图 */
+static void StartLoadThumb( ThumbView view, LCUI_Widget target )
+{
+	size_t len;
+	DB_Dir dir;
+	ThumbViewItem item;
+	ThumbLoaderData pack;
+	pack = NEW( ThumbLoaderDataRec, 1 );
 	item = Widget_GetData( target, self.thumbviewitem );
 	dir = LCFinder_GetSourceDir( item->path );
 	if( !dir ) {
-		return NULL;
+		OnThumbLoadError( pack );
+		return;
 	}
-	dbs = *view->dbs;
-	db = Dict_FetchValue( dbs, dir->path );
-	if( !db ) {
-		return NULL;
+	pack->db = Dict_FetchValue( *view->dbs, dir->path );
+	if( !pack->db ) {
+		OnThumbLoadError( pack );
+		return;
 	}
 	len = strlen( dir->path );
+	pathjoin( pack->path, item->path, "" );
 	if( item->is_dir ) {
-		pathjoin( path, item->path, "" );
-		if( GetDirThumbFilePath( path, path ) == 0 ) {
-			return NULL;
+		if( GetDirThumbFilePath( pack->path, pack->path ) == 0 ) {
+			OnThumbLoadError( pack );
+			return;
 		}
-		/* 将路径的编码由 UTF-8 解码成 Unicode */
-		LCUI_DecodeString( wpath, path, PATH_LEN, ENCODING_UTF8 );
-		pathjoin( path, path, DIR_COVER_THUMB );
-		filename = path + len;
-	} else {
-		filename = item->path + len;
-		if( filename[0] == PATH_SEP ) {
-			++filename;
-		}
-		LCUI_DecodeString( wpath, item->path, 
-				   PATH_LEN, ENCODING_UTF8 );
+		pathjoin( pack->path, pack->path, DIR_COVER_THUMB );
 	}
-	if( wgetfilestat( wpath, &buf ) != 0 ) {
-		return NULL;
+	pack->view = view;
+	pack->target = target;
+	pack->wpath = DecodeUTF8( pack->path );
+	pack->filename = pack->path + len;
+	if( pack->filename[0] == PATH_SEP ) {
+		++pack->filename;
 	}
-	LCUI_EncodeString( apath, wpath, PATH_LEN, ENCODING_ANSI );
-	ret = ThumbDB_Load( db, filename, &tdata );
-	DEBUG_MSG( "load thumb from: %s\n", filename );
-	if( ret != 0 || tdata.modify_time != buf.st_mtime ) {
-		LCUI_Graph img;
-		Graph_Init( &img );
-		Graph_Init( &tdata.graph );
-		if( Graph_LoadImage( apath, &img ) != 0 ) {
-			return NULL;
-		}
-		tdata.origin_width = img.width;
-		tdata.origin_height = img.height;
-		tdata.modify_time = (uint_t)buf.st_mtime;
-		if( item->is_dir && img.width > FOLDER_MAX_WIDTH ) {
-			Graph_Zoom( &img, &tdata.graph, TRUE,
-				    FOLDER_MAX_WIDTH, 0 );
-			Graph_Free( &img );
-		}
-		else if( !item->is_dir && img.height > THUMB_MAX_WIDTH ) {
-			Graph_Zoom( &img, &tdata.graph, TRUE,
-				    0, THUMB_MAX_WIDTH );
-			Graph_Free( &img );
-		} else {
-			tdata.graph = img;
-		}
-		DEBUG_MSG( "save thumb, size: (%d,%d), name: %s, db: %p\n",
-			   tdata.graph.width, tdata.graph.height, 
-			   filename, db );
-		ThumbDB_Save( db, filename, &tdata );
-	}
-	if( !item->is_dir ) {
-		if( item->file->modify_time != (uint_t)buf.st_mtime ) {
-			int ctime = (int)buf.st_ctime;
-			int mtime = (int)buf.st_mtime;
-			DBFile_SetTime( item->file, ctime, mtime );
-		}
-		if( tdata.origin_width > 0 && tdata.origin_height > 0 &&
-			(item->file->width != tdata.origin_width ||
-			  item->file->height != tdata.origin_height) ) {
-			DBFile_SetSize( item->file, tdata.origin_width,
-					tdata.origin_height );
-		}
-	}
-	ThumbCache_Add( view->cache, item->path, &tdata.graph );
-	return ThumbCache_Link( view->cache, item->path, 
-				view->linker, target );
+	FileStorage_GetProperties( pack->wpath, FALSE, 
+				   OnGetFileProperties, pack );
 }
 
 /** 执行加载缩略图的任务 */
 static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 {
-	LCUI_Widget icon;
 	LCUI_Graph *thumb;
 	ThumbView view = Widget_GetData( w, self.thumbview );
-	ThumbViewItem data = Widget_GetData( target, self.thumbviewitem );
-	thumb = ThumbCache_Link( view->cache, data->path,
+	ThumbViewItem item = Widget_GetData( target, self.thumbviewitem );
+	thumb = ThumbCache_Link( view->cache, item->path,
 				 view->linker, target );
-	while( !thumb ) {
-		thumb = LoadThumb( view, target );
-		if( thumb ) {
-			break;
+	if( thumb ) {
+		if( item->setthumb ) {
+			item->setthumb( target, thumb );
 		}
-		if( !data->is_valid ) {
-			return;
-		}
-		if( data->is_dir ) {
-			return;
-		}
-		icon = LCUIWidget_New( "textview" );
-		Widget_AddClass( icon, "tip icon mdi mdi-help" );
-		Widget_AddClass( icon, "floating center middle aligned" );
-		Widget_Append( data->cover, icon );
-		data->is_valid = FALSE;
 		return;
 	}
-	if( data->setthumb ) {
-		data->setthumb( target, thumb );
-	}
+	StartLoadThumb( view, target );
 }
 
 void ThumbView_Lock( LCUI_Widget w )
