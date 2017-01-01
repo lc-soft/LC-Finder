@@ -117,6 +117,7 @@ enum FileStreamChunkType {
 	DATA_CHUNK_RESPONSE,
 	DATA_CHUNK_BUFFER,
 	DATA_CHUNK_THUMB,
+	DATA_CHUNK_IMAGE,
 	DATA_CHUNK_FILE,
 	DATA_CHUNK_END
 };
@@ -128,6 +129,7 @@ typedef struct FileStreamChunk_ {
 		FileRequest request;	/**< 文件请求 */
 		FileResponse response;	/**< 文件请求的响应结果 */
 		LCUI_Graph thumb;	/**< 缩略图 */
+		LCUI_Graph image;	/**< 图像 */
 		FILE *file;		/**< C 标准库的文件流 */
 		char *data;		/**< 数据块 */
 	};

@@ -40,6 +40,7 @@
 #include <string.h>
 #include "finder.h"
 #include "ui.h"
+#include "file_storage.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
@@ -134,7 +135,9 @@ static struct PictureViewer {
 	int picture_i;				/**< 当前需加载的图片的序号（下标） */
 	Picture picture;			/**< 当前焦点图片 */
 	LCUI_Cond cond;				/**< 条件变量 */
+	LCUI_Cond cond_load;			/**< 条件变量，用于图片加载 */
 	LCUI_Mutex mutex;			/**< 互斥锁 */
+	LCUI_Mutex mutex_load;			/**< 互斥锁，用于图片加载 */
 	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
 	LCUI_Thread th_scanner;			/**< 图片文件扫描器线程 */
 	FileIterator iterator;			/**< 图片文件列表迭代器 */
@@ -1034,12 +1037,27 @@ static void SetPicturePreloadList( void )
 	}
 }
 
+static void OnPictureLoadDone( LCUI_Graph *img, void *data )
+{
+	Picture pic = data;
+	LCUIMutex_Lock( &this_view.mutex_load );
+	if( img ) {
+		pic->data = Graph_New();	
+		*pic->data = *img;
+		Graph_Init( img );
+		pic->is_valid = TRUE;
+	} else {
+		pic->is_valid = FALSE;
+	}
+	pic->is_loading = FALSE;
+	LCUICond_Signal( &this_view.cond_load );
+	LCUIMutex_Unlock( &this_view.mutex_load );
+}
+
 /** 加载图片数据 */
 static int LoadPicture( Picture pic )
 {
-	int len;
 	wchar_t *wpath;
-	char *path = NULL;
 #ifdef _WIN32
 	int encoding = ENCODING_ANSI;
 #else
@@ -1074,18 +1092,20 @@ static int LoadPicture( Picture pic )
 	pic->file = wpath;
 	pic->is_valid = FALSE;
 	pic->is_loading = TRUE;
-	len = LCUI_EncodeString( NULL, wpath, 0, encoding ) + 1;
-	path = malloc( sizeof( char ) * len );
-	LCUI_EncodeString( path, wpath, len, encoding );
-	if( Graph_LoadImage( path, pic->data ) == 0 ) {
-		pic->is_valid = TRUE;
+	LCUIMutex_Lock( &this_view.mutex_load );
+	/* 异步请求加载图像内容，并阻塞等待加载完成 */
+	FileStorage_GetImage( pic->file, OnPictureLoadDone, pic );
+	while( pic->is_loading && this_view.is_working ) {
+		LCUICond_Wait( &this_view.cond_load, &this_view.mutex_load );
 	}
+	LCUIMutex_Unlock( &this_view.mutex_load );
 	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
 	if( pic->is_valid && !pic->file_for_load ) {
 		SetStyle( sheet, key_background_image, pic->data, image );
 		Widget_UpdateStyle( pic->view, FALSE );
 		ResetPictureSize( pic );
 	}
+
 load_finished:
 	pic->is_loading = FALSE;
 	if( this_view.picture->view == pic->view ) {
@@ -1097,9 +1117,6 @@ load_finished:
 		}
 		UpdateResetSizeButton();
 		UpdateZoomButtons();
-	}
-	if( path ) {
-		free( path );
 	}
 	return 0;
 }
@@ -1381,7 +1398,9 @@ void UI_InitPictureView( int mode )
 	LCUI_BindEvent( LCUI_KEYDOWN, OnKeyDown, NULL, NULL );
 	InitSlideTransition();
 	LCUICond_Init( &this_view.cond );
+	LCUICond_Init( &this_view.cond_load );
 	LCUIMutex_Init( &this_view.mutex );
+	LCUIMutex_Init( &this_view.mutex_load );
 	this_view.pictures[0] = CreatePicture();
 	this_view.pictures[1] = CreatePicture();
 	this_view.pictures[2] = CreatePicture();
@@ -1467,7 +1486,9 @@ void UI_ExitPictureView( void )
 	LCUIMutex_Unlock( &this_view.mutex );
 	LCUIThread_Join( this_view.th_picloader, NULL );
 	LCUIMutex_Destroy( &this_view.mutex );
+	LCUIMutex_Destroy( &this_view.mutex_load );
 	LCUICond_Destroy( &this_view.cond );
+	LCUICond_Destroy( &this_view.cond_load );
 	DeletePicture( this_view.pictures[0] );
 	DeletePicture( this_view.pictures[1] );
 	DeletePicture( this_view.pictures[2] );

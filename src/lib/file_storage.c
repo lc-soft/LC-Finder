@@ -44,7 +44,7 @@
 #include "file_storage.h"
 
 enum HandlerDataType {
-	HANDLER_ON_OPEN,
+	HANDLER_ON_GET_IMAGE,
 	HANDLER_ON_GET_THUMB,
 	HANDLER_ON_GET_PROPS
 };
@@ -52,9 +52,10 @@ enum HandlerDataType {
 typedef struct HandlerDataPackRec_ {
 	int type;
 	union {
+		HandlerOnOpen on_open;
 		HandlerOnGetThumbnail on_get_thumb;
 		HandlerOnGetProperties on_get_props;
-		HandlerOnOpen on_open;
+		HandlerOnGetImage on_get_image;
 	};
 	void *data;
 } HandlerDataPackRec, *HandlerDataPack;
@@ -113,13 +114,17 @@ static void OnResponse( FileResponse *response, void *data )
 		pack->on_get_thumb( &response->file,
 				    &chunk.thumb, pack->data );
 		break;
-	case HANDLER_ON_OPEN:
+	case HANDLER_ON_GET_IMAGE:
 		if( response->status != RESPONSE_STATUS_OK ) {
-			pack->on_open( NULL, NULL, pack->data );
+			pack->on_get_image( NULL, pack->data );
 			break;
 		}
-		pack->on_open( &response->file, 
-			       &response->stream, pack->data );
+		n = FileStream_ReadChunk( response->stream, &chunk );
+		if( n < 0 || chunk.type != DATA_CHUNK_IMAGE ) {
+			pack->on_get_image( NULL, pack->data );
+			break;
+		}
+		pack->on_get_image( &chunk.image, pack->data );
 		break;
 	case HANDLER_ON_GET_PROPS:
 		if( response->status != RESPONSE_STATUS_OK ) {
@@ -136,7 +141,28 @@ static void OnResponse( FileResponse *response, void *data )
 int FileStorage_Open( const wchar_t *filename,
 		      HandlerOnOpen callback, void *data )
 {
-	return -1;
+	return 0;
+}
+
+int FileStorage_GetImage( const wchar_t *filename, 
+			  HandlerOnGetImage callback, void *data )
+{
+	HandlerDataPack pack;
+	FileRequestHandler handler;
+	FileRequest request = { 0 };
+	if( !self.client_active ) {
+		return -1;
+	}
+	pack = NEW( HandlerDataPackRec, 1 );
+	pack->type = HANDLER_ON_GET_IMAGE;
+	pack->on_get_image = callback;
+	pack->data = data;
+	request.method = REQUEST_METHOD_GET;
+	wcsncpy( request.path, filename, 255 );
+	handler.callback = OnResponse;
+	handler.data = pack;
+	FileClient_SendRequest( self.client, &request, &handler );
+	return 0;
 }
 
 int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
@@ -150,7 +176,7 @@ int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
 	}
 	pack = NEW( HandlerDataPackRec, 1 );
 	pack->type = HANDLER_ON_GET_THUMB;
-	pack->on_open = callback;
+	pack->on_get_thumb = callback;
 	pack->data = data;
 	request.method = REQUEST_METHOD_GET;
 	request.params.get_thumbnail = TRUE;

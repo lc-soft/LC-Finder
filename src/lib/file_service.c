@@ -109,6 +109,12 @@ void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 			free( chunk->response.file.image );
 		}
 		break;
+	case DATA_CHUNK_IMAGE:
+		Graph_Free( &chunk->image );
+		break;
+	case DATA_CHUNK_THUMB:
+		Graph_Free( &chunk->thumb );
+		break;
 	case DATA_CHUNK_BUFFER:
 		free( chunk->data );
 		break;
@@ -435,6 +441,13 @@ static int FileService_RemoveFile( const wchar_t *path,
 	return ret;
 }
 
+static int FileService_GetFiles( Connection conn,
+				 FileRequest *request,
+				 FileStreamChunk *chunk )
+{
+	return 0;
+}
+
 static int FileService_GetFile( Connection conn,
 				FileRequest *request,
 				FileStreamChunk *chunk )
@@ -448,14 +461,10 @@ static int FileService_GetFile( Connection conn,
 	if( response->status != RESPONSE_STATUS_OK ) {
 		return ret;
 	}
-	path = EncodeANSI( request->path );
-	if( !params->get_thumbnail ) {
-		Connection_WriteChunk( conn, chunk );
-		chunk->type = DATA_CHUNK_FILE;
-		chunk->file = fopen( path, "rb" );
-		free( path );
-		return 0;
+	if( response->file.type == FILE_TYPE_DIRECTORY ) {
+		return FileService_GetFiles( conn, request, chunk );
 	}
+	path = EncodeANSI( request->path );
 	Graph_Init( &img );
 	LOG( "load image: %s\n", path );
 	if( Graph_LoadImage( path, &img ) != 0 ) {
@@ -464,12 +473,18 @@ static int FileService_GetFile( Connection conn,
 		free( path );
 		return -1;
 	}
+	free( path );
 	LOG( "load image success, size: %d,%d\n", img.width, img.height );
 	response->file.image = NEW( FileImageProperties, 1 );
 	response->file.image->width = img.width;
 	response->file.image->height = img.height;
 	LOG( "write response, status: %d\n", response->status );
 	Connection_WriteChunk( conn, chunk );
+	if( !params->get_thumbnail ) {
+		chunk->type = DATA_CHUNK_IMAGE;
+		chunk->image = img;
+		return 0;
+	}
 	Graph_Init( &chunk->thumb );
 	if( (params->width > 0 && img.width > (int)params->width)
 	    || (params->height > 0 && img.height > (int)params->height) ) {
@@ -480,7 +495,6 @@ static int FileService_GetFile( Connection conn,
 		chunk->thumb = img;
 	}
 	chunk->type = DATA_CHUNK_THUMB;
-	free( path );
 	return 0;
 }
 

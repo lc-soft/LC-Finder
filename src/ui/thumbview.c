@@ -457,6 +457,8 @@ static void OnGetThumbnail( FileProperties *props,
 	tdata.graph = *thumb;
 	ThumbDB_Save( pack->db, pack->filename, &tdata );
 	OnThumbLoadDone( pack, &tdata, props );
+	/** 重置数据，避免被释放 */
+	Graph_Init( thumb );
 }
 
 static void OnGetFileProperties( FileProperties *props, void *data )
