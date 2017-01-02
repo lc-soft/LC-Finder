@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * view_picture_info.c -- picture info view
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * view_picture_info.c -- "图片信息" 视图
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -79,7 +79,8 @@ struct PictureInfoPanel {
 	DB_File file;
 	DB_Tag *tags;
 	int n_tags;
-} this_view;
+	int storage;
+} this_view = { 0 };
 
 typedef struct TagInfoPackRec_ {
 	LCUI_Widget widget;
@@ -224,6 +225,7 @@ void UI_InitPictureInfoView( void )
 	this_view.n_tags = 0;
 	this_view.tags = NULL;
 	this_view.filepath = NULL;
+	this_view.storage = FileStorage_Connect();
 	parent = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
 	btn_open = LCUIWidget_GetById( ID_BTN_OPEN_PICTURE_DIR );
@@ -245,28 +247,28 @@ void UI_InitPictureInfoView( void )
 	Widget_Hide( this_view.panel );
 }
 
-static void OnGetFileProperties( FileProperties *props, void *data )
+static void OnGetFileStatus( FileStatus *status, void *data )
 {
 	wchar_t mtime_str[256], fsize_str[256];
 	const wchar_t *unknown = I18n_GetText( KEY_UNKNOWN );
-	if( !props ) {
+	if( !status ) {
 		TextView_SetTextW( this_view.txt_time, unknown );
 		TextView_SetTextW( this_view.txt_fsize, unknown );
 		TextView_SetTextW( this_view.txt_size, unknown );
 		return;
 	}
-	if( props->image ) {
+	if( status->image ) {
 		wchar_t str[256];
-		this_view.width = props->image->width;
-		this_view.height = props->image->height;
+		this_view.width = status->image->width;
+		this_view.height = status->image->height;
 		swprintf( str, 256, L"%dx%d", 
-			  props->image->width, props->image->height );
+			  status->image->width, status->image->height );
 		TextView_SetTextW( this_view.txt_size, str );
 	} else {
 		TextView_SetTextW( this_view.txt_size, unknown );
 	}
-	this_view.size = props->size;
-	this_view.mtime = props->mtime;
+	this_view.size = status->size;
+	this_view.mtime = status->mtime;
 	wgetsizestr( fsize_str, 256, this_view.size );
 	wgettimestr( mtime_str, 256, this_view.mtime );
 	TextView_SetTextW( this_view.txt_time, mtime_str );
@@ -278,10 +280,11 @@ void UI_SetPictureInfoView( const char *filepath )
 	int i, n;
 	DB_Tag *tags;
 	wchar_t *path, *dirpath;
+	int storage = this_view.storage;
 
 	path = DecodeUTF8( filepath );
 	dirpath = wgetdirname( path );
-	FileStorage_GetProperties( path, TRUE, OnGetFileProperties, NULL );
+	FileStorage_GetStatus( storage, path, TRUE, OnGetFileStatus, NULL );
 	TextView_SetTextW( this_view.txt_dirpath, dirpath );
 	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );
 	if( this_view.filepath ) {

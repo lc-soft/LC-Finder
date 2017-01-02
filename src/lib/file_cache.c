@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_cache.c -- file list cache, it used for file list changes detection.
  *
- * Copyright (C) 2015-2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2015-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_cache.c -- 文件列表的缓存，方便检测文件列表的增删状态。
  *
- * 版权所有 (C) 2015-2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2015-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -47,6 +47,12 @@
 #define FILE_HEAD_TAG	"[LC-Finder Files Cache]"
 #define WCSLEN(STR)	(sizeof( STR ) / sizeof( wchar_t ))
 #define GetDirStats(T)	(DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
+
+ /** 文件状态信息 */
+typedef struct FileStatusRec_ {
+	unsigned int ctime;	/**< 创建时间 */
+	unsigned int mtime;	/**< 修改时间 */
+} FileStatusRec, *FileStatus;
 
 /** 文件夹内的文件变更状态统计 */
 typedef struct DirStatsRec_ {
@@ -263,6 +269,7 @@ static int SyncTask_LoadCache( SyncTask t )
 	int rc, count;
 	wchar_t buf[MAX_PATH_LEN];
 	unqlite_kv_cursor *cur;
+	FileStatusRec status;
 	DirStats ds;
 
 	ds = GetDirStats( t );
@@ -284,9 +291,11 @@ static int SyncTask_LoadCache( SyncTask t )
 		FileInfo info = NEW( FileInfoRec, 1 );
 		unqlite_int64 data_size = sizeof( FileStatusRec );
 		unqlite_kv_cursor_key( cur, buf, &key_size );
-		unqlite_kv_cursor_data( cur, &info->status, &data_size );
+		unqlite_kv_cursor_data( cur, &status, &data_size );
 		unqlite_kv_cursor_next_entry( cur );
 		info->path = malloc( key_size + sizeof( wchar_t ) );
+		info->mtime = status.mtime;
+		info->ctime = status.ctime;
 		key_size /= sizeof( wchar_t );
 		buf[(int)key_size] = 0;
 		wcsncpy( info->path, buf, key_size + 1 );
@@ -305,6 +314,7 @@ int SyncTask_ScanFileW( SyncTask t, const wchar_t *path )
 	int rc, len;
 	struct stat buf;
 	FileInfo info;
+	FileStatusRec status;
 	DirStats ds = GetDirStats( t );
 	if( t->state != STATE_STARTED ) {
 		return -1;
@@ -319,10 +329,10 @@ int SyncTask_ScanFileW( SyncTask t, const wchar_t *path )
 	 */
 	info = Dict_FetchValue( ds->files, path );
 	if( info ) {
-		if( buf.st_ctime != (time_t)info->status.ctime ||
-		    buf.st_mtime != (time_t)info->status.mtime ) {
-			info->status.ctime = (uint32_t)buf.st_ctime;
-			info->status.mtime = (uint32_t)buf.st_mtime;
+		if( buf.st_ctime != (time_t)info->ctime ||
+		    buf.st_mtime != (time_t)info->mtime ) {
+			info->ctime = (uint32_t)buf.st_ctime;
+			info->mtime = (uint32_t)buf.st_mtime;
 			Dict_Add( ds->changed_files, info->path, info );
 			DEBUG_MSG( "changed file: %ls\n", path );
 			++t->changed_files;
@@ -335,14 +345,16 @@ int SyncTask_ScanFileW( SyncTask t, const wchar_t *path )
 		info = NEW( FileInfoRec, 1 );
 		info->path = NEW( wchar_t, len + 1 );
 		wcsncpy( info->path, path, len + 1 );
-		info->status.ctime = (uint32_t)buf.st_ctime;
-		info->status.mtime = (uint32_t)buf.st_mtime;
+		info->ctime = (uint32_t)buf.st_ctime;
+		info->mtime = (uint32_t)buf.st_mtime;
 		Dict_Add( ds->added_files, info->path, info );
 		DEBUG_MSG( "added file: %ls\n", path );
 		++t->added_files;
 	}
+	status.ctime = info->ctime;
+	status.mtime = info->mtime;
 	len = sizeof( wchar_t ) / sizeof( char ) * len;
-	unqlite_kv_store( ds->db, path, len, &info->status,
+	unqlite_kv_store( ds->db, path, len, &status,
 			  sizeof( FileStatusRec ) );
 	++t->total_files;
 	return 0;

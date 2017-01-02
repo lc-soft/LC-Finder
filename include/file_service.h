@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_service.c -- file service
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_service.c -- 文件服务
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -72,23 +72,23 @@ enum FileType {
 	FILE_TYPE_DIRECTORY
 };
 
-typedef struct FileImageProperties_ {
+typedef struct FileImageStatus_ {
 	int width;
 	int height;
-} FileImageProperties;
+} FileImageStatus;
 
-typedef struct FileProperties_ {
+typedef struct FileStatus_ {
 	int type;
 	size_t size;
 	time_t ctime;
 	time_t mtime;
-	FileImageProperties *image;
-} FileProperties;
+	FileImageStatus *image;
+} FileStatus;
 
 /** 文件请求参数 */
 typedef struct FileRequestParams_ {
 	LCUI_BOOL get_thumbnail;
-	LCUI_BOOL with_image_props;
+	LCUI_BOOL with_image_status;
 	unsigned int width;
 	unsigned int height;
 } FileRequestParams;
@@ -96,14 +96,14 @@ typedef struct FileRequestParams_ {
 typedef struct FileRequest_ {
 	int method;
 	wchar_t path[256];
-	FileProperties file;
+	FileStatus file;
 	FileRequestParams params;
 	FileStream stream;
 } FileRequest;
 
 typedef struct FileResponse_ {
 	int status;
-	FileProperties file;
+	FileStatus file;
 	FileStream stream;
 } FileResponse;
 
@@ -156,6 +156,8 @@ size_t FileStream_Read( FileStream stream, char *buf,
 
 size_t FileStream_Write( FileStream stream, char *buf,
 			 size_t size, size_t count );
+
+char *FileStream_ReadLine( FileStream stream, char *buf, size_t size );
 
 Connection Connection_Create( void );
 

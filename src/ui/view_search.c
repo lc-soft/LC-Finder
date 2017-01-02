@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * view_search.c -- search view
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * view_search.c -- “搜索”视图
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "finder.h"
+#include "file_storage.h"
 #include "ui.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
@@ -77,6 +78,7 @@ typedef struct ViewSyncRec_ {
 } ViewSyncRec, *ViewSync;
 
 static struct SearchView {
+	int storage;
 	LCUI_Widget input;
 	LCUI_Widget view_tags;
 	LCUI_Widget view_result;
@@ -748,8 +750,11 @@ void UI_InitSearchView( void )
 	this_view.browser.txt_title = title;
 	this_view.browser.items = this_view.view_files;
 	this_view.browser.view = this_view.view_result;
+	this_view.storage = FileStorage_Connect();
 	ThumbView_SetCache( this_view.view_tags, finder.thumb_cache );
 	ThumbView_SetCache( this_view.view_files, finder.thumb_cache );
+	ThumbView_SetStorage( this_view.view_tags, this_view.storage );
+	ThumbView_SetStorage( this_view.view_tags, this_view.storage );
 	BindEvent( btn[0], "click", OnBtnClick );
 	BindEvent( btn_hide, "click", OnBtnHideReusltClick );
 	BindEvent( this_view.btn_search, "click", OnBtnSearchClick );
@@ -766,5 +771,5 @@ void UI_InitSearchView( void )
 
 void UI_ExitSearchView( void )
 {
-
+	FileStorage_Close( this_view.storage );
 }

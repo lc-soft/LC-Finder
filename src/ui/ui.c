@@ -47,6 +47,7 @@
 #include "progressbar.h"
 #include "textview_i18n.h"
 #include "dropdown.h"
+#include "dialog.h"
 #include "switch.h"
 
 #define XML_PATH "assets/ui.xml"
@@ -171,6 +172,7 @@ int UI_Init( int argc, char **argv )
 	Widget_UpdateStyle( root, TRUE );
 	UI_SetWindowIcon();
 	ParseCommandArguments( &args, argc, argv );
+	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 	if( !args.filepath ) {
 		UI_InitSplashScreen();
 		UI_InitMainView();
@@ -192,7 +194,6 @@ int UI_Init( int argc, char **argv )
 #else
 	UI_OpenPictureView( args.filepath );
 #endif
-	//LCUITimer_Set( 5000, onTimer, NULL, FALSE );
 	return 0;
 }
 

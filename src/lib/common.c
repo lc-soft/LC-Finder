@@ -259,27 +259,11 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 
 int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 {
-	int fd, ret = -1;
-#ifdef _WIN32
-	fd = _wopen( wpath, _O_RDONLY );
-	if( fd > 0 ) {
-		ret = fstat( fd, buf );
-		_close( fd );
-	} else {
-		ret = fd;
-	}
-#else
+	int ret;
 	char *path;
-	path = EncodeUTF8( wpath );
-	fd = open( path, O_RDONLY );
-	if( fd > 0 ) {
-		ret = fstat( fd, buf );
-		close( fd );
-	} else {
-		ret = fd;
-	}
+	path = EncodeANSI( wpath );
+	ret = stat( path, buf );
 	free( path );
-#endif
 	return ret;
 }
 

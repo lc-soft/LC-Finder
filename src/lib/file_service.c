@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_service.c -- file service
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_service.c -- 文件服务
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -39,6 +39,7 @@
 #include <errno.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
+#include <LCUI/font/charset.h>
 #include <LCUI/thread.h>
 #include <LCUI/graph.h>
 #include "build.h"
@@ -289,8 +290,8 @@ size_t FileStream_Write( FileStream stream, char *buf,
 		return 0;
 	}
 	LCUIMutex_Lock( &stream->mutex );
-	while( !stream->closed ) {
-		LCUICond_Wait( &stream->cond, &stream->mutex );
+	if( stream->closed ) {
+		return 0;
 	}
 	chunk = NEW( FileStreamChunk, 1 );
 	chunk->cur = 0;
@@ -302,6 +303,74 @@ size_t FileStream_Write( FileStream stream, char *buf,
 	LCUICond_Signal( &stream->cond );
 	LCUIMutex_Unlock( &stream->mutex );
 	return count;
+}
+
+char *FileStream_ReadLine( FileStream stream, char *buf, size_t size )
+{
+	char *p = buf;
+	char *end = buf + size - 1;
+	size_t count = 0;
+	LinkedListNode *node;
+	FileStreamChunk *chunk;
+
+	if( !FileStream_Useable( stream ) ) {
+		FileStream_Destroy( stream );
+		return 0;
+	}
+	do {
+		if( stream->chunk ) {
+			chunk = stream->chunk;
+		} else {
+			LCUIMutex_Lock( &stream->mutex );
+			while( stream->data.length < 1 && !stream->closed ) {
+				LCUICond_Wait( &stream->cond, &stream->mutex );
+			}
+			if( stream->data.length < 1 ) {
+				LCUIMutex_Unlock( &stream->mutex );
+				return NULL;
+			}
+			node = LinkedList_GetNode( &stream->data, 0 );
+			chunk = node->data;
+			LinkedList_Unlink( &stream->data, node );
+			LinkedListNode_Delete( node );
+			LCUIMutex_Unlock( &stream->mutex );
+			if( chunk->type != DATA_CHUNK_BUFFER &&
+			    chunk->type != DATA_CHUNK_FILE ) {
+				if( count == 0 ) {
+					return NULL;
+				}
+				break;
+			}
+			stream->chunk = chunk;
+		}
+		if( chunk->type == DATA_CHUNK_FILE ) {
+			p = fgets( buf, size, chunk->file );
+			if( !p || feof(chunk->file) ) {
+				FileStreamChunk_Destroy( chunk );
+				stream->chunk = NULL;
+			}
+			return p;
+		}
+		while( chunk->cur < chunk->size && p < end ) {
+			*p = *(chunk->data + chunk->cur);
+			++chunk->cur;
+			if( *p == '\n' ) {
+				break;
+			}
+			p++;
+		}
+		if( chunk->cur >= chunk->size ) {
+			FileStreamChunk_Destroy( chunk );
+			stream->chunk = NULL;
+		}
+		count += 1;
+	} while( *p != '\n' && p < end );
+	if( *p == '\n' ) {
+		*(p + 1) = 0;
+	} else {
+		*p = 0;
+	}
+	return buf;
 }
 
 Connection Connection_Create( void )
@@ -362,7 +431,7 @@ void Connection_Destroy( Connection conn )
 
 }
 
-static int FileService_GetFileImageProperties( FileRequest *request,
+static int FileService_GetFileImageStatus( FileRequest *request,
 					       FileStreamChunk *chunk )
 {
 	int width, height;
@@ -373,7 +442,7 @@ static int FileService_GetFileImageProperties( FileRequest *request,
 	char *path = EncodeUTF8( request->path );
 #endif
 	if( Graph_GetImageSize( path, &width, &height ) == 0 ) {
-		response->file.image = NEW( FileImageProperties, 1 );
+		response->file.image = NEW( FileImageStatus, 1 );
 		response->file.image->width = width;
 		response->file.image->height = height;
 		free( path );
@@ -384,8 +453,22 @@ static int FileService_GetFileImageProperties( FileRequest *request,
 	return -1;
 }
 
-static int FileService_GetFileProperties( FileRequest *request,
-					  FileStreamChunk *chunk )
+static int GetStatusByErrorCode( int code )
+{
+	switch( abs( code ) ) {
+	case 0: return RESPONSE_STATUS_OK;
+	case EACCES: return RESPONSE_STATUS_FORBIDDEN;
+	case ENOENT: return RESPONSE_STATUS_NOT_FOUND;
+	case EINVAL:
+	case EEXIST:
+	case EMFILE:
+	default: break;
+	}
+	return RESPONSE_STATUS_ERROR;
+}
+
+static int FileService_GetFileStatus( FileRequest *request,
+				      FileStreamChunk *chunk )
 {
 	int ret;
 	struct stat buf;
@@ -401,25 +484,12 @@ static int FileService_GetFileProperties( FileRequest *request,
 		} else {
 			response->file.type = FILE_TYPE_ARCHIVE;
 		}
-		if( request->params.with_image_props ) {
-			FileService_GetFileImageProperties( request, chunk );
+		if( request->params.with_image_status ) {
+			FileService_GetFileImageStatus( request, chunk );
 		}
 		return 0;
 	}
-	switch( ret ) {
-	case EACCES:
-		response->status = RESPONSE_STATUS_FORBIDDEN;
-		break;
-	case ENOENT:
-		response->status = RESPONSE_STATUS_NOT_FOUND;
-		break;
-	case EINVAL:
-	case EEXIST:
-	case EMFILE:
-	default:
-		response->status = RESPONSE_STATUS_ERROR;
-		break;
-	}
+	response->status = GetStatusByErrorCode( ret );
 	return ret;
 }
 
@@ -427,17 +497,7 @@ static int FileService_RemoveFile( const wchar_t *path,
 				   FileResponse *response )
 {
 	int ret = MoveFileToTrashW( path );
-	switch( ret ) {
-	case EACCES:
-		response->status = RESPONSE_STATUS_FORBIDDEN;
-		break;
-	case ENOENT:
-		response->status = RESPONSE_STATUS_NOT_FOUND;
-		break;
-	default: 
-		response->status = RESPONSE_STATUS_ERROR;
-		break;
-	}
+	response->status = GetStatusByErrorCode( ret );
 	return ret;
 }
 
@@ -445,6 +505,45 @@ static int FileService_GetFiles( Connection conn,
 				 FileRequest *request,
 				 FileStreamChunk *chunk )
 {
+	int ret;
+	LCUI_Dir dir;
+	LCUI_DirEntry *entry;
+	char buf[PATH_LEN];
+
+	ret = LCUI_OpenDirW( request->path, &dir );
+	chunk->response.status = GetStatusByErrorCode( ret );
+	if( ret != 0 ) {
+		return ret;
+	}
+	while( !conn->closed && (entry = LCUI_ReadDirW( &dir )) ) {
+		int size;
+		wchar_t *name = LCUI_GetFileNameW( entry );
+		/* 忽略 . 和 .. 文件夹 */
+		if( name[0] == '.' ) {
+			if( name[1] == 0 ) {
+				continue;
+			}
+			if( name[1] == '.' && name[2] == 0 ) {
+				continue;
+			}
+		}
+		if( LCUI_FileIsArchive( entry ) ) {
+			if( !IsImageFile( name ) ) {
+				continue;
+			}
+			buf[0] = '-';
+		} else if( LCUI_FileIsDirectory( entry ) ) {
+			buf[0] = 'd';
+		} else {
+			continue;
+		}
+		size = LCUI_EncodeString( buf + 1, name, PATH_LEN - 2,
+					 ENCODING_UTF8 );
+		buf[size++] = '\n';
+		buf[size] = 0;
+		LOG( "write: %s", buf );
+		Connection_Write( conn, buf, sizeof( char ), size );
+	}
 	return 0;
 }
 
@@ -457,11 +556,12 @@ static int FileService_GetFile( Connection conn,
 	LCUI_Graph img;
 	FileResponse *response = &chunk->response;
 	FileRequestParams *params = &request->params;
-	ret = FileService_GetFileProperties( request, chunk );
+	ret = FileService_GetFileStatus( request, chunk );
 	if( response->status != RESPONSE_STATUS_OK ) {
 		return ret;
 	}
 	if( response->file.type == FILE_TYPE_DIRECTORY ) {
+		Connection_WriteChunk( conn, chunk );
 		return FileService_GetFiles( conn, request, chunk );
 	}
 	path = EncodeANSI( request->path );
@@ -475,7 +575,7 @@ static int FileService_GetFile( Connection conn,
 	}
 	free( path );
 	LOG( "load image success, size: %d,%d\n", img.width, img.height );
-	response->file.image = NEW( FileImageProperties, 1 );
+	response->file.image = NEW( FileImageStatus, 1 );
 	response->file.image->width = img.width;
 	response->file.image->height = img.height;
 	LOG( "write response, status: %d\n", response->status );
@@ -506,7 +606,7 @@ static void FileService_HandleRequest( Connection conn,
 	chunk.type = DATA_CHUNK_RESPONSE;
 	switch( request->method ) {
 	case REQUEST_METHOD_HEAD:
-		FileService_GetFileProperties( request, &chunk );
+		FileService_GetFileStatus( request, &chunk );
 		break;
 	case REQUEST_METHOD_POST:
 	case REQUEST_METHOD_GET:

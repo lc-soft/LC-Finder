@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * thumbview.h -- thumbnail list view
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * thumbview.h -- 缩略图列表视图部件，主要用于以缩略图形式显示文件夹和文件列表
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -63,6 +63,9 @@ void ThumbView_OnLayout( LCUI_Widget w, void( *func )(LCUI_Widget) );
 
 /** 设置缩略图缓存 */
 void ThumbView_SetCache( LCUI_Widget w, ThumbCache cache );
+
+/** 设置文件存储服务的连接标识符 */
+void ThumbView_SetStorage( LCUI_Widget w, int storage );
 
 /** 启用缩略图滚动加载功能 */
 void ThumbView_EnableScrollLoading( LCUI_Widget w );

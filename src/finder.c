@@ -2,7 +2,7 @@
  * finder.c -- main code of LC-Finder, responsible for the initialization of 
  * the LC-Finder and the scheduling of other functions.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * finder.c -- LC-Finder 主程序代码，负责整个程序的初始化和其它功能的调度。
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -248,8 +248,8 @@ static void SyncAddedFile( void *data, const FileInfo info )
 {
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
-	int ctime = (int)info->status.ctime;
-	int mtime = (int)info->status.mtime;
+	int ctime = (int)info->ctime;
+	int mtime = (int)info->mtime;
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, info->path, PATH_LEN, ENCODING_UTF8 );
 	DB_AddFile( pack->dir, path, ctime, mtime );
@@ -259,8 +259,8 @@ static void SyncAddedFile( void *data, const FileInfo info )
 static void SyncChangedFile( void *data, const FileInfo info )
 {
 	char path[PATH_LEN];
-	int ctime = (int)info->status.ctime;
-	int mtime = (int)info->status.mtime;
+	int ctime = (int)info->ctime;
+	int mtime = (int)info->mtime;
 	DirStatusDataPack pack = data;
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, info->path, PATH_LEN, ENCODING_UTF8 );
@@ -825,7 +825,7 @@ int LCFinder_Init( int argc, char **argv )
 	ASSERT( LCFinder_InitThumbCache() );
 	ASSERT( LCFinder_InitLanguage() );
 	finder.trigger = EventTrigger();
-	ASSERT( FileStorage_Init() );
+	FileStorage_Init();
 	ASSERT( UI_Init( argc, argv ) );
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_OnExit, NULL, NULL );
 	return 0;

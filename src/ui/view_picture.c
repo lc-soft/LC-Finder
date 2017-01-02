@@ -98,11 +98,8 @@ typedef struct FileIndexRec_ {
 
 /** 文件扫描器数据结构 */
 typedef struct FileScannerRec_ {
+	LCUI_BOOL is_ready;	/**< 是否已经准备好 */
 	LCUI_BOOL is_running;	/**< 是否正在运行 */
-	LCUI_BOOL is_ready;	/**< 是否已准备好开始扫描 */
-	LCUI_Thread thread;	/**< 扫描线程 */
-	LCUI_Mutex mutex;	/**< 互斥锁 */
-	LCUI_Cond cond;		/**< 条件变量 */
 	wchar_t *dirpath;	/**< 扫描目录 */
 	wchar_t *file;		/**< 目标文件，当扫描到该文件后会创建文件迭代器 */
 	LinkedList files;	/**< 已扫描到的文件列表 */
@@ -116,6 +113,7 @@ typedef struct FileDataPackRTec_ {
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
+	int storage;				/**< 文件存储服务的连接标识符 */
 	LCUI_Widget window;			/**< 图片查看器窗口 */
 	LCUI_Widget tip_loading;		/**< 图片载入提示框，当图片正在载入时显示 */
 	LCUI_Widget tip_empty;			/**< 提示，当无内容时显示 */
@@ -1058,11 +1056,7 @@ static void OnPictureLoadDone( LCUI_Graph *img, void *data )
 static int LoadPicture( Picture pic )
 {
 	wchar_t *wpath;
-#ifdef _WIN32
-	int encoding = ENCODING_ANSI;
-#else
-	int encoding = ENCODING_UTF8;
-#endif
+	int storage = this_view.storage;
 	LCUI_StyleSheet sheet = pic->view->custom_style;
 	if( !pic->file_for_load || !this_view.is_working ) {
 		return -1;
@@ -1094,7 +1088,7 @@ static int LoadPicture( Picture pic )
 	pic->is_loading = TRUE;
 	LCUIMutex_Lock( &this_view.mutex_load );
 	/* 异步请求加载图像内容，并阻塞等待加载完成 */
-	FileStorage_GetImage( pic->file, OnPictureLoadDone, pic );
+	FileStorage_GetImage( storage, pic->file, OnPictureLoadDone, pic );
 	while( pic->is_loading && this_view.is_working ) {
 		LCUICond_Wait( &this_view.cond_load, &this_view.mutex_load );
 	}
@@ -1178,76 +1172,70 @@ static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	SetPictureScale( this_view.picture, scale );
 }
 
-/** 文件扫描器 */
-static void FileScanner_Thread( void *arg )
+static void OnOpenDir( FileStatus *status, FileStream *stream, void *data )
 {
 	size_t len;
-	LCUI_Dir dir;
-	LCUI_DirEntry *entry;
-	FileIndex fidx;
-	FileScanner scanner = &this_view.scanner;
 	int i = 0, pos = -1;
+	char buf[PATH_LEN + 2];
+	FileScanner fs = &this_view.scanner;
 
-	while( !scanner->is_ready ) {
-		LCUICond_Wait( &scanner->cond, &scanner->mutex );
-	}
-	scanner->is_ready = FALSE;
-	if( LCUI_OpenDirW( scanner->dirpath, &dir ) != 0 ) {
-		LCUIThread_Exit( NULL );
+	if( !status || status->type != FILE_TYPE_DIRECTORY || !stream ) {
 		return;
 	}
-	while( scanner->is_running && (entry = LCUI_ReadDirW( &dir )) ) {
-		wchar_t *name = LCUI_GetFileNameW( entry );
-		/* 忽略 . 和 .. 文件夹 */
-		if( name[0] == '.' ) {
-			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {
-				continue;
-			}
+	while( fs->is_running ) {
+		char *p;
+		FileIndex fidx;
+
+		buf[0] = 0;
+		p = FileStream_ReadLine( stream, buf, PATH_LEN + 2 );
+		if( p == NULL ) {
+			break;
 		}
-		if( !LCUI_FileIsArchive( entry ) || !IsImageFile( name ) ) {
+		/* 忽略文件夹 */
+		if( buf[0] == 'd' ) {
 			continue;
 		}
-		len = wcslen( name ) + 1;
+		len = strlen( buf );
+		if( len < 2 ) {
+			continue;
+		}
+		buf[len - 1] = 0;
 		fidx = NEW( FileIndexRec, 1 );
-		fidx->name = malloc( sizeof( wchar_t ) * len );
-		wcscpy( fidx->name, name );
+		fidx->name = DecodeUTF8( buf + 1 );
 		fidx->node.data = fidx;
-		LinkedList_AppendNode( &scanner->files, &fidx->node );
-		if( wcscmp( name, scanner->file ) == 0 && !scanner->iterator ) {
-			scanner->iterator = FileIterator_Create( scanner, fidx );
+		LinkedList_AppendNode( &fs->files, &fidx->node );
+		if( wcscmp( fidx->name, fs->file ) == 0 && !fs->iterator ) {
+			fs->iterator = FileIterator_Create( fs, fidx );
 			pos = i;
 		}
 		if( pos >= 0 && i - pos > 2 ) {
-			UI_SetPictureView( scanner->iterator );
+			UI_SetPictureView( fs->iterator );
 			SetPicturePreloadList();
 			pos = -1;
 		}
 		++i;
 	}
-	if( pos > 0 && scanner->iterator ) {
-		UI_SetPictureView( scanner->iterator );
+	if( pos > 0 && fs->iterator ) {
+		UI_SetPictureView( fs->iterator );
 		SetPicturePreloadList();
 	}
-	scanner->is_running = FALSE;
-	LCUIThread_Exit( NULL );
+	fs->is_running = FALSE;
 }
 
 static void FileScanner_Init( FileScanner scanner )
 {
 	scanner->iterator = NULL;
-	scanner->is_ready = FALSE;
-	scanner->is_running = TRUE;
-	LCUICond_Init( &scanner->cond );
-	LCUIMutex_Init( &scanner->mutex );
-	LCUIMutex_Lock( &scanner->mutex );
+	scanner->is_running = FALSE;
+	scanner->is_ready = TRUE;
 	LinkedList_Init( &scanner->files );
-	LCUIThread_Create( &scanner->thread, FileScanner_Thread, NULL );
 }
 
 static void FileScanner_Start( FileScanner scanner, const wchar_t *filepath )
 {
 	size_t len;
 	const wchar_t *name;
+	scanner->is_ready = FALSE;
+	scanner->is_running = TRUE;
 	if( scanner->dirpath ) {
 		free( scanner->dirpath );
 	}
@@ -1259,15 +1247,14 @@ static void FileScanner_Start( FileScanner scanner, const wchar_t *filepath )
 	scanner->dirpath = wgetdirname( filepath );
 	scanner->file = malloc( sizeof( wchar_t ) * len );
 	wcscpy( scanner->file, name );
-	scanner->is_ready = TRUE;
-	LCUICond_Signal( &scanner->cond );
-	LCUIMutex_Unlock( &scanner->mutex );
+	FileStorage_GetFile( this_view.storage, scanner->dirpath,
+			     OnOpenDir, scanner );
 }
 
 static void FileScanner_Exit( FileScanner scanner )
 {
 	scanner->is_running = FALSE;
-	LCUIThread_Join( scanner->thread, NULL );
+	// ...
 }
 
 /** 图片加载器 */
@@ -1370,6 +1357,7 @@ void UI_InitPictureView( int mode )
 	this_view.zoom.point_ids[0] = -1;
 	this_view.zoom.point_ids[1] = -1;
 	this_view.zoom.is_running = FALSE;
+	this_view.storage = FileStorage_Connect();
 	SelectWidget( btn_back, ID_BTN_BROWSE_ALL );
 	SelectWidget( btn_del, ID_BTN_DELETE_PICTURE );
 	SelectWidget( btn_info, ID_BTN_SHOW_PICTURE_INFO );
@@ -1445,9 +1433,10 @@ void UI_OpenPictureView( const char *filepath )
 	UI_SetPictureInfoView( filepath );
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
-	if( this_view.mode == MODE_SINGLE_PICVIEW && 
-	    !this_view.scanner.is_ready ) {
-		FileScanner_Start( &this_view.scanner, wpath );
+	if( this_view.mode == MODE_SINGLE_PICVIEW ) {
+		if( this_view.scanner.is_ready ) {
+			FileScanner_Start( &this_view.scanner, wpath );
+		}
 	}
 	free( wpath );
 }

@@ -114,6 +114,7 @@ typedef struct LayoutContextRec_ {
 } LayoutContextRec, *LayoutContext;
 
 typedef struct ThumbViewRec_ {
+	int storage;			/**< 文件存储服务的连接标识符 */
 	Dict **dbs;			/**< 缩略图数据库字典，以目录路径进行索引 */
 	ThumbCache cache;		/**< 缩略图缓存 */
 	ThumbLinker linker;		/**< 缩略图链接器 */
@@ -150,9 +151,9 @@ typedef struct ThumbLoaderDataRec_ {
 	ThumbDB db;			/**< 缩略图缓存数据库 */
 	ThumbView view;			/**< 所属缩略图视图 */
 	LCUI_Widget target;		/**< 需要缩略图的部件 */
-	char path[PATH_LEN];		/**< 图片文件路径 */
-	const char *filename;		/**< 图片文件名称 */
-	wchar_t *wpath;			/**< 图片文件路径（宽字符版） */
+	char path[PATH_LEN];		/**< 图片文件路径，相对于源文件夹 */
+	char fullpath[PATH_LEN];	/**< 图片文件的完整路径 */
+	wchar_t *wfullpath;		/**< 图片文件路径（宽字符版） */
 } ThumbLoaderDataRec, *ThumbLoaderData;
 
 static struct ThumbViewModule {
@@ -387,8 +388,8 @@ static void OnRemoveThumb( void *data )
 
 static void ThumbLoaderData_Destroy( ThumbLoaderData pack )
 {
-	if( pack->wpath ) {
-		free( pack->wpath );
+	if( pack->wfullpath ) {
+		free( pack->wfullpath );
 	}
 	free( pack );
 }
@@ -411,15 +412,15 @@ static void OnThumbLoadError( ThumbLoaderData pack )
 }
 
 static void OnThumbLoadDone( ThumbLoaderData pack,
-			     ThumbData data, FileProperties *props )
+			     ThumbData data, FileStatus *status )
 {
 	LCUI_Graph *thumb;
 	ThumbViewItem item;
 	item = Widget_GetData( pack->target, self.thumbviewitem );
 	if( !item->is_dir ) {
-		if( item->file->modify_time != (uint_t)props->mtime ) {
-			int ctime = (int)props->ctime;
-			int mtime = (int)props->mtime;
+		if( item->file->modify_time != (uint_t)status->mtime ) {
+			int ctime = (int)status->ctime;
+			int mtime = (int)status->mtime;
 			DBFile_SetTime( item->file, ctime, mtime );
 		}
 		if( data->origin_width > 0 && data->origin_height > 0
@@ -442,49 +443,51 @@ static void OnThumbLoadDone( ThumbLoaderData pack,
 	OnThumbLoadError( pack );
 }
 
-static void OnGetThumbnail( FileProperties *props,
+static void OnGetThumbnail( FileStatus *status,
 			    LCUI_Graph *thumb, void *data )
 {
 	ThumbDataRec tdata;
 	ThumbLoaderData pack = data;
-	if( !props || !props->image || !thumb ) {
+	if( !status || !status->image || !thumb ) {
 		OnThumbLoadError( pack );
 		return;
 	}
-	tdata.origin_width = props->image->width;
-	tdata.origin_height = props->image->height;
-	tdata.modify_time = (uint_t)props->mtime;
+	tdata.origin_width = status->image->width;
+	tdata.origin_height = status->image->height;
+	tdata.modify_time = (uint_t)status->mtime;
 	tdata.graph = *thumb;
-	ThumbDB_Save( pack->db, pack->filename, &tdata );
-	OnThumbLoadDone( pack, &tdata, props );
+	ThumbDB_Save( pack->db, pack->path, &tdata );
+	OnThumbLoadDone( pack, &tdata, status );
 	/** 重置数据，避免被释放 */
 	Graph_Init( thumb );
 }
 
-static void OnGetFileProperties( FileProperties *props, void *data )
+static void OnGetFileStatus( FileStatus *status, void *data )
 {
 	int ret;
 	ThumbDataRec tdata;
 	ThumbViewItem item;
 	ThumbLoaderData pack = data;
 
-	if( !props ) {
+	if( !status ) {
 		OnThumbLoadError( pack );
 		return;
 	}
-	ret = ThumbDB_Load( pack->db, pack->filename, &tdata );
+	ret = ThumbDB_Load( pack->db, pack->path, &tdata );
 	item = Widget_GetData( pack->target, self.thumbviewitem );
-	if( ret == 0 && tdata.modify_time == props->mtime ) {
-		OnThumbLoadDone( pack, &tdata, props );
+	if( ret == 0 && tdata.modify_time == status->mtime ) {
+		OnThumbLoadDone( pack, &tdata, status );
 		return;
 	}
 	if( item->is_dir ) {
-		FileStorage_GetThumbnail( pack->wpath, FOLDER_MAX_WIDTH, 0,
+		FileStorage_GetThumbnail( pack->view->storage,
+					  pack->wfullpath,
+					  FOLDER_MAX_WIDTH, 0,
 					  OnGetThumbnail, pack );
 		return;
 	}
-	FileStorage_GetThumbnail( pack->wpath, 0, THUMB_MAX_WIDTH,
-				  OnGetThumbnail, pack );
+	FileStorage_GetThumbnail( pack->view->storage, pack->wfullpath, 0, 
+				  THUMB_MAX_WIDTH, OnGetThumbnail, pack );
 }
 
 /** 载入缩略图 */
@@ -507,23 +510,28 @@ static void StartLoadThumb( ThumbView view, LCUI_Widget target )
 		return;
 	}
 	len = strlen( dir->path );
-	pathjoin( pack->path, item->path, "" );
 	if( item->is_dir ) {
-		if( GetDirThumbFilePath( pack->path, pack->path ) == 0 ) {
+		pathjoin( pack->fullpath, item->path, "" );
+		if( GetDirThumbFilePath( pack->fullpath, pack->fullpath ) == 0 ) {
 			OnThumbLoadError( pack );
 			return;
 		}
-		pathjoin( pack->path, pack->path, DIR_COVER_THUMB );
+		if( pack->fullpath[len] == PATH_SEP ) {
+			len += 1;
+		}
+		pathjoin( pack->path, item->path + len, DIR_COVER_THUMB );
+	} else {
+		pathjoin( pack->fullpath, item->path, "" );
+		if( pack->fullpath[len] == PATH_SEP ) {
+			len += 1;
+		}
+		pathjoin( pack->path, item->path + len , "" );
 	}
 	pack->view = view;
 	pack->target = target;
-	pack->wpath = DecodeUTF8( pack->path );
-	pack->filename = pack->path + len;
-	if( pack->filename[0] == PATH_SEP ) {
-		++pack->filename;
-	}
-	FileStorage_GetProperties( pack->wpath, FALSE, 
-				   OnGetFileProperties, pack );
+	pack->wfullpath = DecodeUTF8( pack->fullpath );
+	FileStorage_GetStatus( pack->view->storage, pack->wfullpath, FALSE,
+			       OnGetFileStatus, pack );
 }
 
 /** 执行加载缩略图的任务 */
@@ -1030,6 +1038,12 @@ void ThumbView_SetCache( LCUI_Widget w, ThumbCache cache )
 	}
 	view->linker = ThumbCache_AddLinker( cache, OnRemoveThumb );
 	view->cache = cache;
+}
+
+void ThumbView_SetStorage( LCUI_Widget w, int storage )
+{
+	ThumbView view = Widget_GetData( w, self.thumbview );
+	view->storage = storage;
 }
 
 static int OnCompareTaskTarget( void *data, const void *keydata )

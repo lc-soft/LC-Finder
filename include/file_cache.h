@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_cache.h -- file list cache, it used for file list changes detection.
  *
- * Copyright (C) 2015-2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2015-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_cache.h -- 文件列表的缓存，方便检测文件列表的增删状态。
  *
- * 版权所有 (C) 2015-2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2015-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -44,15 +44,10 @@ typedef enum {
 	STATE_FINISHED
 } SyncTaskState;
 
-/** 文件状态信息 */
-typedef struct FileStatusRec_ {
-	unsigned int ctime;	/**< 创建时间 */
-	unsigned int mtime;	/**< 修改时间 */
-} FileStatusRec, *FileStatus;
-
 typedef struct FileInfoRec_ {
 	wchar_t *path;		/**< 文件路径 */
-	FileStatusRec status;
+	unsigned int ctime;	/**< 创建时间 */
+	unsigned int mtime;	/**< 修改时间 */
 } FileInfoRec, *FileInfo;
 
 /** 文件列表同步任务 */

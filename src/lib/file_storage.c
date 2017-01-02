@@ -2,7 +2,7 @@
  * file_storage.c -- File related operating interface, based on file storage
  * service.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * file_storage.c -- 基于文件存储服务而实现的文件相关操作接口
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -44,6 +44,7 @@
 #include "file_storage.h"
 
 enum HandlerDataType {
+	HANDLER_ON_GET_FILE,
 	HANDLER_ON_GET_IMAGE,
 	HANDLER_ON_GET_THUMB,
 	HANDLER_ON_GET_PROPS
@@ -52,46 +53,80 @@ enum HandlerDataType {
 typedef struct HandlerDataPackRec_ {
 	int type;
 	union {
-		HandlerOnOpen on_open;
+		HandlerOnGetFile on_get_file;
 		HandlerOnGetThumbnail on_get_thumb;
-		HandlerOnGetProperties on_get_props;
+		HandlerOnGetStatus on_get_status;
 		HandlerOnGetImage on_get_image;
 	};
 	void *data;
 } HandlerDataPackRec, *HandlerDataPack;
 
-static struct FileStorageModule {
+typedef struct FileStorageConnectionRec_ {
+	int id;
 	FileClient client;
-	LCUI_BOOL client_active;
+	LCUI_BOOL active;
+	LinkedListNode node;
+} FileStorageConnectionRec, *FileStorageConnection;
+
+static struct FileStorageModule {
+	int base_id;
+	LinkedList clients;
 } self;
 
-int FileStorage_Init( void )
+void FileStorage_Init( void )
 {
-	int ret;
-	LOG( "[file storage] init...\n" );
-/* 非 UWP 应用则运行线程版的本地文件服务 */
-#ifndef PLATFORM_WIN32_PC_APP
+	self.base_id = 1;
 	FileService_Init();
 	FileService_RunAsync();
-#endif
-	self.client_active = FALSE;
-	self.client = FileClient_Create();
-	ret = FileClient_Connect( self.client );
-	if( ret == 0 ) {
-		self.client_active = TRUE;
-		FileClient_RunAsync( self.client );
-	} else {
-		LOG( "[file storage] error, code: %d\n", ret );
+	LinkedList_Init( &self.clients );
+}
+
+static FileStorageConnection FileStorage_GetConnection( int id )
+{
+	LinkedListNode *node;
+	for( LinkedList_Each(node, &self.clients) ) {
+		FileStorageConnection conn = node->data;
+		if( conn && conn->id == id ) {
+			return conn;
+		}
 	}
-	return ret;
+	return NULL;
+}
+
+int FileStorage_Connect( void )
+{
+	int ret;
+	ASSIGN( conn, FileStorageConnection );
+	conn->active = FALSE;
+	conn->client = FileClient_Create();
+	ret = FileClient_Connect( conn->client );
+	if( ret == 0 ) {
+		conn->active = TRUE;
+		FileClient_RunAsync( conn->client );
+	} else {
+		free( conn );
+		LOG( "[file storage] connect failed, code: %d\n", ret );
+		return -1;
+	}
+	conn->node.data = conn;
+	conn->id = self.base_id++;
+	LinkedList_AppendNode( &self.clients, &conn->node );
+	return conn->id;
+}
+
+void FileStorage_Close( int id )
+{
+	FileStorageConnection conn = FileStorage_GetConnection( id );
+	if( conn ) {
+		FileClient_Close( conn->client );
+		conn->client = NULL;
+		conn->active = FALSE;
+	}
 }
 
 void FileStorage_Exit( void )
 {
-	FileClient_Close( self.client );
-#ifndef PLATFORM_WIN32_PC_APP
 	FileService_Close();
-#endif
 }
 
 static void OnResponse( FileResponse *response, void *data )
@@ -101,6 +136,14 @@ static void OnResponse( FileResponse *response, void *data )
 	HandlerDataPack pack = data;
 
 	switch( pack->type ) {
+	case HANDLER_ON_GET_FILE:
+		if( response->status != RESPONSE_STATUS_OK ) {
+			pack->on_get_file( NULL, NULL, pack->data );
+			break;
+		}
+		pack->on_get_file( &response->file, 
+				   response->stream, pack->data );
+		break;
 	case HANDLER_ON_GET_THUMB:
 		if( response->status != RESPONSE_STATUS_OK ) {
 			pack->on_get_thumb( NULL, NULL, pack->data );
@@ -128,29 +171,50 @@ static void OnResponse( FileResponse *response, void *data )
 		break;
 	case HANDLER_ON_GET_PROPS:
 		if( response->status != RESPONSE_STATUS_OK ) {
-			pack->on_get_props( NULL, pack->data );
+			pack->on_get_status( NULL, pack->data );
 			break;
 		}
-		pack->on_get_props( &response->file, pack->data );
+		pack->on_get_status( &response->file, pack->data );
 		break;
 	default: break;
 	}
 	free( pack );
 }
 
-int FileStorage_Open( const wchar_t *filename,
-		      HandlerOnOpen callback, void *data )
+int FileStorage_GetFile( int conn_id, const wchar_t *filename,
+			  HandlerOnGetFile callback, void *data )
 {
+	HandlerDataPack pack;
+	FileRequestHandler handler;
+	FileStorageConnection conn;
+	FileRequest request = { 0 };
+
+	conn = FileStorage_GetConnection( conn_id );
+	if( !conn || !conn->active ) {
+		return -1;
+	}
+	pack = NEW( HandlerDataPackRec, 1 );
+	pack->type = HANDLER_ON_GET_FILE;
+	pack->on_get_file = callback;
+	pack->data = data;
+	request.method = REQUEST_METHOD_GET;
+	wcsncpy( request.path, filename, 255 );
+	handler.callback = OnResponse;
+	handler.data = pack;
+	FileClient_SendRequest( conn->client, &request, &handler );
 	return 0;
 }
 
-int FileStorage_GetImage( const wchar_t *filename, 
+int FileStorage_GetImage( int conn_id, const wchar_t *filename, 
 			  HandlerOnGetImage callback, void *data )
 {
 	HandlerDataPack pack;
 	FileRequestHandler handler;
+	FileStorageConnection conn;
 	FileRequest request = { 0 };
-	if( !self.client_active ) {
+
+	conn = FileStorage_GetConnection( conn_id );
+	if( !conn || !conn->active ) {
 		return -1;
 	}
 	pack = NEW( HandlerDataPackRec, 1 );
@@ -161,17 +225,21 @@ int FileStorage_GetImage( const wchar_t *filename,
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;
-	FileClient_SendRequest( self.client, &request, &handler );
+	FileClient_SendRequest( conn->client, &request, &handler );
 	return 0;
 }
 
-int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
+int FileStorage_GetThumbnail( int conn_id, const wchar_t *filename,
+			      int width, int height,
 			      HandlerOnGetThumbnail callback, void *data )
 {
 	HandlerDataPack pack;
 	FileRequestHandler handler;
+	FileStorageConnection conn;
 	FileRequest request = { 0 };
-	if( !self.client_active ) {
+
+	conn = FileStorage_GetConnection( conn_id );
+	if( !conn || !conn->active ) {
 		return -1;
 	}
 	pack = NEW( HandlerDataPackRec, 1 );
@@ -185,28 +253,32 @@ int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;
-	FileClient_SendRequest( self.client, &request, &handler );
+	FileClient_SendRequest( conn->client, &request, &handler );
 	return 0;
 }
 
-int FileStorage_GetProperties( const wchar_t *filename, LCUI_BOOL with_extra,
-			       HandlerOnGetProperties callback, void *data )
+int FileStorage_GetStatus( int conn_id, const wchar_t *filename,
+			   LCUI_BOOL with_extra,
+			   HandlerOnGetStatus callback, void *data )
 {
 	HandlerDataPack pack;
 	FileRequestHandler handler;
+	FileStorageConnection conn;
 	FileRequest request = { 0 };
-	if( !self.client_active ) {
+
+	conn = FileStorage_GetConnection( conn_id );
+	if( !conn || !conn->active ) {
 		return -1;
 	}
 	pack = NEW( HandlerDataPackRec, 1 );
 	pack->type = HANDLER_ON_GET_PROPS;
-	pack->on_get_props = callback;
+	pack->on_get_status = callback;
 	pack->data = data;
 	request.method = REQUEST_METHOD_HEAD;
-	request.params.with_image_props = with_extra;
+	request.params.with_image_status = with_extra;
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;
-	FileClient_SendRequest( self.client, &request, &handler );
+	FileClient_SendRequest( conn->client, &request, &handler );
 	return 0;
 }

@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * view_home.c -- home view
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * view_home.c -- 主页"集锦"视图
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -76,6 +76,7 @@ typedef struct ViewSyncRec_ {
 
 /** 主页集锦视图的相关数据 */
 static struct HomeCollectionView {
+	int storage;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget time_ranges;
@@ -419,6 +420,7 @@ void UI_InitHomeView( void )
 	SelectWidget( btn[2], ID_BTN_CANCEL_HOME_SELECT );
 	SelectWidget( btn[3], ID_BTN_TAG_HOME_FILES );
 	SelectWidget( btn[4], ID_BTN_DELETE_HOME_FILES );
+	this_view.storage = FileStorage_Connect();
 	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
@@ -430,6 +432,7 @@ void UI_InitHomeView( void )
 	this_view.browser.after_deleted = OnAfterDeleted;
 	FileBrowser_Create( &this_view.browser );
 	ThumbView_SetCache( this_view.items, finder.thumb_cache );
+	ThumbView_SetStorage( this_view.items, this_view.storage );
 	Widget_Hide( this_view.time_ranges->parent->parent );
 	Widget_AddClass( this_view.time_ranges, "time-range-list" );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
@@ -442,6 +445,7 @@ void UI_InitHomeView( void )
 
 void UI_ExitHomeView( void )
 {
+	FileStorage_Close( this_view.storage );
 	this_view.viewsync.is_running = FALSE;
 	FileScanner_Destroy( &this_view.scanner );
 	LCUIThread_Join( this_view.viewsync.tid, NULL );

@@ -2,7 +2,7 @@
  * file_storage.h -- File related operating interface, based on file storage
  * service.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * file_storage.h -- 基于文件存储服务而实现的文件相关操作接口
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -41,24 +41,32 @@
 #include "file_service.h"
 
 typedef void( *HandlerOnGetImage )(LCUI_Graph*, void*);
-typedef void( *HandlerOnGetProperties )(FileProperties*, void*);
-typedef void( *HandlerOnOpen )(FileProperties*, FileStream, void*);
-typedef void( *HandlerOnGetThumbnail )(FileProperties*, LCUI_Graph*, void*);
+typedef void( *HandlerOnGetStatus )(FileStatus*, void*);
+typedef void( *HandlerOnGetFile )(FileStatus*, FileStream, void*);
+typedef void( *HandlerOnGetThumbnail )(FileStatus*, LCUI_Graph*, void*);
 
-int FileStorage_Init( void );
+void FileStorage_Init( void );
+
+int FileStorage_Connect( void );
+
+void FileStorage_Close( int id );
 
 void FileStorage_Exit( void );
 
-int FileStorage_Open( const wchar_t *filename,
-		      HandlerOnOpen callback, void *data );
+static void OnResponse( FileResponse *response, void *data );
 
-int FileStorage_GetImage( const wchar_t *filename,
+int FileStorage_GetFile( int conn_id, const wchar_t *filename,
+			 HandlerOnGetFile callback, void *data );
+
+int FileStorage_GetImage( int conn_id, const wchar_t *filename,
 			  HandlerOnGetImage callback, void *data );
 
-int FileStorage_GetThumbnail( const wchar_t *filename, int width, int height,
+int FileStorage_GetThumbnail( int conn_id, const wchar_t *filename,
+			      int width, int height,
 			      HandlerOnGetThumbnail callback, void *data );
 
-int FileStorage_GetProperties( const wchar_t *filename, LCUI_BOOL with_extra,
-			       HandlerOnGetProperties callback, void *data );
+int FileStorage_GetStatus( int conn_id, const wchar_t *filename,
+			   LCUI_BOOL with_extra,
+			   HandlerOnGetStatus callback, void *data );
 
 #endif
