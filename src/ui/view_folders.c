@@ -67,9 +67,13 @@ typedef struct ViewSyncRec_ {
 typedef struct FileScannerRec_ {
 	LCUI_Thread tid;
 	LCUI_Cond cond;
+	LCUI_Cond cond_scan;
 	LCUI_Mutex mutex;
+	LCUI_Mutex mutex_scan;
 	LCUI_BOOL is_running;
+	LCUI_BOOL is_async_scaning;
 	LinkedList files;
+	wchar_t *dirpath;
 } FileScannerRec, *FileScanner;
 
 typedef struct FileEntryRec_ {
@@ -157,65 +161,76 @@ static void OnDeleteFileEntry( void *arg )
 	free( entry );
 }
 
-static int FileScanner_ScanDirs( FileScanner scanner, char *path )
+static void FileScanner_OnGetDirs( FileStatus *status,
+				   FileStream stream, void *data )
 {
-	char *name;
-	LCUI_Dir dir;
-	wchar_t *wpath;
+	char *dirpath;
+	size_t len, dirpath_len;
+	FileScanner scanner = data;
 	FileEntry file_entry;
-	LCUI_DirEntry *dir_entry;
-	int count, len, dirpath_len;
 
-	count = 0;
-	len = strlen( path );
-	dirpath_len = len;
-	wpath = malloc( sizeof(wchar_t) * (len + 1) );
-	LCUI_DecodeString( wpath, path, len + 1, ENCODING_UTF8 );
-	if( LCUI_OpenDirW( wpath, &dir ) != 0 ) {
-		return 0;
+	LCUIMutex_Lock( &scanner->mutex_scan );
+	if( !status || !stream ) {
+		scanner->is_async_scaning = FALSE;
+		LCUICond_Signal( &scanner->cond_scan );
+		LCUIMutex_Unlock( &scanner->mutex_scan );
+		return;
 	}
-	while( (dir_entry = LCUI_ReadDir( &dir )) && scanner->is_running ) {
-		wchar_t *wname = LCUI_GetFileNameW( dir_entry );
-		/* 忽略 . 和 .. 文件夹 */
-		if( wname[0] == L'.' ) {
-			if( wname[1] == 0 || 
-			    (wname[1] == L'.' && wname[2] == 0) ) {
-				continue;
-			}
+	dirpath = EncodeUTF8( scanner->dirpath );
+	dirpath_len = strlen( dirpath );
+	while( 1 ) {
+		char *p, buf[PATH_LEN];
+		p = FileStream_ReadLine( stream, buf, PATH_LEN );
+		if( !p ) {
+			break;
 		}
-		if( !LCUI_FileIsDirectory( dir_entry ) ) {
+		if( buf[0] != 'd' ) {
 			continue;
 		}
+		len = strlen( buf );
+		if( len < 2 ) {
+			continue;
+		}
+		buf[len - 1] = 0;
 		file_entry = NEW( FileEntryRec, 1 );
 		file_entry->is_dir = TRUE;
 		file_entry->file = NULL;
-		len = LCUI_EncodeString( NULL, wname, 0, ENCODING_UTF8 ) + 1;
-		name = malloc( sizeof(char) * len );
-		LCUI_EncodeString( name, wname, len, ENCODING_UTF8 );
 		len = len + dirpath_len;
 		file_entry->path = malloc( sizeof( char ) * len );
-		pathjoin( file_entry->path, path, name );
+		pathjoin( file_entry->path, dirpath, buf + 1 );
 		LCUIMutex_Lock( &scanner->mutex );
 		LinkedList_Append( &scanner->files, file_entry );
 		LCUICond_Signal( &scanner->cond );
 		LCUIMutex_Unlock( &scanner->mutex );
-		++count;
 	}
-	LCUI_CloseDir( &dir );
-	return count;
+	scanner->is_async_scaning = FALSE;
+	LCUICond_Signal( &scanner->cond_scan );
+	LCUIMutex_Unlock( &scanner->mutex_scan );
 }
 
-static int FileScanner_ScanFiles( FileScanner scanner, char *path )
+static void FileScanner_ScanDirs( FileScanner scanner )
+{
+	LCUIMutex_Lock( &scanner->mutex_scan );
+	scanner->is_async_scaning = TRUE;
+	FileStorage_GetFolders( this_view.storage, scanner->dirpath,
+				FileScanner_OnGetDirs, scanner );
+	while( scanner->is_async_scaning ) {
+		LCUICond_Wait( &scanner->cond_scan, &scanner->mutex_scan );
+	}
+	LCUIMutex_Unlock( &scanner->mutex_scan );
+}
+
+static void FileScanner_ScanFiles( FileScanner scanner )
 {
 	DB_File file;
 	DB_Query query;
 	FileEntry entry;
-	int i, total, count;
+	int i, count;
 	this_view.terms.limit = 50;
 	this_view.terms.offset = 0;
-	this_view.terms.dirpath = path;
+	this_view.terms.dirpath = EncodeUTF8( scanner->dirpath );
 	query = DB_NewQuery( &this_view.terms );
-	count = total = DBQuery_GetTotalFiles( query );
+	count = DBQuery_GetTotalFiles( query );
 	while( scanner->is_running && count > 0 ) {
 		DB_DeleteQuery( query );
 		query = DB_NewQuery( &this_view.terms );
@@ -242,7 +257,7 @@ static int FileScanner_ScanFiles( FileScanner scanner, char *path )
 		count -= this_view.terms.limit;
 		this_view.terms.offset += this_view.terms.limit;
 	}
-	return total;
+	free( this_view.terms.dirpath );
 }
 
 static int FileScanner_LoadSourceDirs( FileScanner scanner )
@@ -270,8 +285,13 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 static void FileScanner_Init( FileScanner scanner )
 {
 	LCUICond_Init( &scanner->cond );
+	LCUICond_Init( &scanner->cond_scan );
 	LCUIMutex_Init( &scanner->mutex );
+	LCUIMutex_Init( &scanner->mutex_scan );
 	LinkedList_Init( &scanner->files );
+	scanner->is_async_scaning = FALSE;
+	scanner->is_running = FALSE;
+	scanner->dirpath = NULL;
 }
 
 /** 重置文件扫描 */
@@ -291,23 +311,23 @@ static void FileScanner_Destroy( FileScanner scanner )
 {
 	FileScanner_Reset( scanner );
 	LCUICond_Destroy( &scanner->cond );
+	LCUICond_Destroy( &scanner->cond_scan );
 	LCUIMutex_Destroy( &scanner->mutex );
+	LCUIMutex_Destroy( &scanner->mutex_scan );
 }
 
 static void FileScanner_Thread( void *arg )
 {
-	int count;
-	FileScanner scanner;
-	scanner = &this_view.scanner;
+	FileScanner scanner = arg;
 	scanner->is_running = TRUE;
-	if( arg ) {
-		count = FileScanner_ScanDirs( scanner, arg );
-		count += FileScanner_ScanFiles( scanner, arg );
+	if( scanner->dirpath ) {
+		FileScanner_ScanDirs( scanner );
+		FileScanner_ScanFiles( scanner );
 	} else {
-		count = FileScanner_LoadSourceDirs( scanner );
+		FileScanner_LoadSourceDirs( scanner );
 	}
 	DEBUG_MSG("scan files: %d\n", count);
-	if( count > 0 ) {
+	if( scanner->files.length > 0 ) {
 		Widget_AddClass( this_view.tip_empty, "hide" );
 		Widget_Hide( this_view.tip_empty );
 	} else {
@@ -321,7 +341,15 @@ static void FileScanner_Thread( void *arg )
 /** 开始扫描 */
 static void FileScanner_Start( FileScanner scanner, char *path )
 {
-	LCUIThread_Create( &scanner->tid, FileScanner_Thread, path );
+	if( scanner->dirpath ) {
+		free( scanner->dirpath );
+	}
+	if( path ) {
+		scanner->dirpath = DecodeUTF8( path );
+	} else {
+		scanner->dirpath = NULL;
+	}
+	LCUIThread_Create( &scanner->tid, FileScanner_Thread, scanner );
 }
 
 static void OnItemClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

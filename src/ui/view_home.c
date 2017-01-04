@@ -39,6 +39,7 @@
 #include <string.h>
 #include "ui.h"
 #include "finder.h"
+#include "file_storage.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>

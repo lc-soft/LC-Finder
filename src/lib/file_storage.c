@@ -182,6 +182,30 @@ static void OnResponse( FileResponse *response, void *data )
 }
 
 int FileStorage_GetFile( int conn_id, const wchar_t *filename,
+			 HandlerOnGetFile callback, void *data )
+{
+	HandlerDataPack pack;
+	FileRequestHandler handler;
+	FileStorageConnection conn;
+	FileRequest request = { 0 };
+
+	conn = FileStorage_GetConnection( conn_id );
+	if( !conn || !conn->active ) {
+		return -1;
+	}
+	pack = NEW( HandlerDataPackRec, 1 );
+	pack->type = HANDLER_ON_GET_FILE;
+	pack->on_get_file = callback;
+	pack->data = data;
+	request.method = REQUEST_METHOD_GET;
+	wcsncpy( request.path, filename, 255 );
+	handler.callback = OnResponse;
+	handler.data = pack;
+	FileClient_SendRequest( conn->client, &request, &handler );
+	return 0;
+}
+
+int FileStorage_GetFiles( int conn_id, const wchar_t *filename,
 			  HandlerOnGetFile callback, void *data )
 {
 	HandlerDataPack pack;
@@ -198,6 +222,32 @@ int FileStorage_GetFile( int conn_id, const wchar_t *filename,
 	pack->on_get_file = callback;
 	pack->data = data;
 	request.method = REQUEST_METHOD_GET;
+	request.params.filter = FILE_FILTER_FILE;
+	wcsncpy( request.path, filename, 255 );
+	handler.callback = OnResponse;
+	handler.data = pack;
+	FileClient_SendRequest( conn->client, &request, &handler );
+	return 0;
+}
+
+int FileStorage_GetFolders( int conn_id, const wchar_t *filename,
+			    HandlerOnGetFile callback, void *data )
+{
+	HandlerDataPack pack;
+	FileRequestHandler handler;
+	FileStorageConnection conn;
+	FileRequest request = { 0 };
+
+	conn = FileStorage_GetConnection( conn_id );
+	if( !conn || !conn->active ) {
+		return -1;
+	}
+	pack = NEW( HandlerDataPackRec, 1 );
+	pack->type = HANDLER_ON_GET_FILE;
+	pack->on_get_file = callback;
+	pack->data = data;
+	request.method = REQUEST_METHOD_GET;
+	request.params.filter = FILE_FILTER_FOLDER;
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;

@@ -58,6 +58,12 @@ static void OnResponse( FileResponse *response, void *data );
 int FileStorage_GetFile( int conn_id, const wchar_t *filename,
 			 HandlerOnGetFile callback, void *data );
 
+int FileStorage_GetFiles( int conn_id, const wchar_t *filename,
+			  HandlerOnGetFile callback, void *data );
+
+int FileStorage_GetFolders( int conn_id, const wchar_t *filename,
+			    HandlerOnGetFile callback, void *data );
+
 int FileStorage_GetImage( int conn_id, const wchar_t *filename,
 			  HandlerOnGetImage callback, void *data );
 

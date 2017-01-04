@@ -85,8 +85,15 @@ typedef struct FileStatus_ {
 	FileImageStatus *image;
 } FileStatus;
 
+enum FileFilter {
+	FILE_FILTER_NONE,
+	FILE_FILTER_FILE,
+	FILE_FILTER_FOLDER
+};
+
 /** 文件请求参数 */
 typedef struct FileRequestParams_ {
+	int filter;
 	LCUI_BOOL get_thumbnail;
 	LCUI_BOOL with_image_status;
 	unsigned int width;

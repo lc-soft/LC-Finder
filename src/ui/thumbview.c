@@ -498,6 +498,8 @@ static void StartLoadThumb( ThumbView view, LCUI_Widget target )
 	ThumbViewItem item;
 	ThumbLoaderData pack;
 	pack = NEW( ThumbLoaderDataRec, 1 );
+	pack->view = view;
+	pack->target = target;
 	item = Widget_GetData( target, self.thumbviewitem );
 	dir = LCFinder_GetSourceDir( item->path );
 	if( !dir ) {
@@ -527,8 +529,6 @@ static void StartLoadThumb( ThumbView view, LCUI_Widget target )
 		}
 		pathjoin( pack->path, item->path + len , "" );
 	}
-	pack->view = view;
-	pack->target = target;
 	pack->wfullpath = DecodeUTF8( pack->fullpath );
 	FileStorage_GetStatus( pack->view->storage, pack->wfullpath, FALSE,
 			       OnGetFileStatus, pack );

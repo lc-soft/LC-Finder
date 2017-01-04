@@ -527,21 +527,39 @@ static int FileService_GetFiles( Connection conn,
 				continue;
 			}
 		}
-		if( LCUI_FileIsArchive( entry ) ) {
+		switch( request->params.filter ) {
+		case FILE_FILTER_FILE:
+			if( !LCUI_FileIsArchive( entry ) ) {
+				continue;
+			}
 			if( !IsImageFile( name ) ) {
 				continue;
 			}
 			buf[0] = '-';
-		} else if( LCUI_FileIsDirectory( entry ) ) {
+			break;
+		case FILE_FILTER_FOLDER:
+			if( ! LCUI_FileIsDirectory( entry ) ) {
+				continue;
+			}
 			buf[0] = 'd';
-		} else {
-			continue;
+			break;
+		default:
+			if( LCUI_FileIsArchive( entry ) ) {
+				if( !IsImageFile( name ) ) {
+					continue;
+				}
+				buf[0] = '-';
+			} else if( LCUI_FileIsDirectory( entry ) ) {
+				buf[0] = 'd';
+			} else {
+				continue;
+			}
+			break;
 		}
 		size = LCUI_EncodeString( buf + 1, name, PATH_LEN - 2,
 					 ENCODING_UTF8 );
 		buf[size++] = '\n';
 		buf[size] = 0;
-		LOG( "write: %s", buf );
 		Connection_Write( conn, buf, sizeof( char ), size );
 	}
 	return 0;
