@@ -77,7 +77,6 @@ typedef struct ViewSyncRec_ {
 
 /** 主页集锦视图的相关数据 */
 static struct HomeCollectionView {
-	int storage;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget time_ranges;
@@ -421,7 +420,6 @@ void UI_InitHomeView( void )
 	SelectWidget( btn[2], ID_BTN_CANCEL_HOME_SELECT );
 	SelectWidget( btn[3], ID_BTN_TAG_HOME_FILES );
 	SelectWidget( btn[4], ID_BTN_DELETE_HOME_FILES );
-	this_view.storage = FileStorage_Connect();
 	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
@@ -433,7 +431,7 @@ void UI_InitHomeView( void )
 	this_view.browser.after_deleted = OnAfterDeleted;
 	FileBrowser_Create( &this_view.browser );
 	ThumbView_SetCache( this_view.items, finder.thumb_cache );
-	ThumbView_SetStorage( this_view.items, this_view.storage );
+	ThumbView_SetStorage( this_view.items, finder.storage_for_thumb );
 	Widget_Hide( this_view.time_ranges->parent->parent );
 	Widget_AddClass( this_view.time_ranges, "time-range-list" );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
@@ -446,7 +444,6 @@ void UI_InitHomeView( void )
 
 void UI_ExitHomeView( void )
 {
-	FileStorage_Close( this_view.storage );
 	this_view.viewsync.is_running = FALSE;
 	FileScanner_Destroy( &this_view.scanner );
 	LCUIThread_Join( this_view.viewsync.tid, NULL );

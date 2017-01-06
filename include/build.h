@@ -66,7 +66,11 @@
 #define PLATFORM_LINUX
 #endif
 
-#define ASSERT(X) if((X) != 0) { _DEBUG_MSG("error\n");return -1;}
+#ifdef ASSERT
+#undef ASSERT
+#endif
+
+#define ASSERT(X) if(!(X)) { _DEBUG_MSG("error\n");return -1;}
 
 enum VersionType {
 	VERSION_RELEASE,

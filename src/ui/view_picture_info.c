@@ -79,7 +79,6 @@ struct PictureInfoPanel {
 	DB_File file;
 	DB_Tag *tags;
 	int n_tags;
-	int storage;
 } this_view = { 0 };
 
 typedef struct TagInfoPackRec_ {
@@ -225,7 +224,6 @@ void UI_InitPictureInfoView( void )
 	this_view.n_tags = 0;
 	this_view.tags = NULL;
 	this_view.filepath = NULL;
-	this_view.storage = FileStorage_Connect();
 	parent = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
 	btn_open = LCUIWidget_GetById( ID_BTN_OPEN_PICTURE_DIR );
@@ -280,7 +278,7 @@ void UI_SetPictureInfoView( const char *filepath )
 	int i, n;
 	DB_Tag *tags;
 	wchar_t *path, *dirpath;
-	int storage = this_view.storage;
+	int storage = finder.storage;
 
 	path = DecodeUTF8( filepath );
 	dirpath = wgetdirname( path );

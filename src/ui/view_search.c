@@ -78,7 +78,6 @@ typedef struct ViewSyncRec_ {
 } ViewSyncRec, *ViewSync;
 
 static struct SearchView {
-	int storage;
 	LCUI_Widget input;
 	LCUI_Widget view_tags;
 	LCUI_Widget view_result;
@@ -750,11 +749,10 @@ void UI_InitSearchView( void )
 	this_view.browser.txt_title = title;
 	this_view.browser.items = this_view.view_files;
 	this_view.browser.view = this_view.view_result;
-	this_view.storage = FileStorage_Connect();
 	ThumbView_SetCache( this_view.view_tags, finder.thumb_cache );
 	ThumbView_SetCache( this_view.view_files, finder.thumb_cache );
-	ThumbView_SetStorage( this_view.view_tags, this_view.storage );
-	ThumbView_SetStorage( this_view.view_tags, this_view.storage );
+	ThumbView_SetStorage( this_view.view_tags, finder.storage_for_thumb );
+	ThumbView_SetStorage( this_view.view_files, finder.storage_for_thumb );
 	BindEvent( btn[0], "click", OnBtnClick );
 	BindEvent( btn_hide, "click", OnBtnHideReusltClick );
 	BindEvent( this_view.btn_search, "click", OnBtnSearchClick );
@@ -771,5 +769,5 @@ void UI_InitSearchView( void )
 
 void UI_ExitSearchView( void )
 {
-	FileStorage_Close( this_view.storage );
+	// ...
 }

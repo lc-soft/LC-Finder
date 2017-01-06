@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * view_picture.c -- picture view
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * view_picture.c -- "图片" 视图，用于显示单张图片，并提供缩放、切换等功能
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -113,7 +113,6 @@ typedef struct FileDataPackRTec_ {
 
 /** 图片查看器相关数据 */
 static struct PictureViewer {
-	int storage;				/**< 文件存储服务的连接标识符 */
 	LCUI_Widget window;			/**< 图片查看器窗口 */
 	LCUI_Widget tip_loading;		/**< 图片载入提示框，当图片正在载入时显示 */
 	LCUI_Widget tip_empty;			/**< 提示，当无内容时显示 */
@@ -1056,7 +1055,7 @@ static void OnPictureLoadDone( LCUI_Graph *img, void *data )
 static int LoadPicture( Picture pic )
 {
 	wchar_t *wpath;
-	int storage = this_view.storage;
+	int storage = finder.storage_for_image;
 	LCUI_StyleSheet sheet = pic->view->custom_style;
 	if( !pic->file_for_load || !this_view.is_working ) {
 		return -1;
@@ -1247,8 +1246,8 @@ static void FileScanner_Start( FileScanner scanner, const wchar_t *filepath )
 	scanner->dirpath = wgetdirname( filepath );
 	scanner->file = malloc( sizeof( wchar_t ) * len );
 	wcscpy( scanner->file, name );
-	FileStorage_GetFile( this_view.storage, scanner->dirpath,
-			     OnOpenDir, scanner );
+	FileStorage_GetFile( finder.storage_for_scan,
+			     scanner->dirpath, OnOpenDir, scanner );
 }
 
 static void FileScanner_Exit( FileScanner scanner )
@@ -1357,7 +1356,6 @@ void UI_InitPictureView( int mode )
 	this_view.zoom.point_ids[0] = -1;
 	this_view.zoom.point_ids[1] = -1;
 	this_view.zoom.is_running = FALSE;
-	this_view.storage = FileStorage_Connect();
 	SelectWidget( btn_back, ID_BTN_BROWSE_ALL );
 	SelectWidget( btn_del, ID_BTN_DELETE_PICTURE );
 	SelectWidget( btn_info, ID_BTN_SHOW_PICTURE_INFO );

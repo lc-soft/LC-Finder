@@ -333,13 +333,6 @@ int64_t LCFinder_GetThumbDBTotalSize( void )
 
 #ifdef PLATFORM_WIN32_PC_APP
 
-static int LCFinder_OnScanFile( void *data, const wchar_t *path )
-{
-	FileSyncStatus s = data;
-	LOGW(L"scan file: %s\n", path);
-	return SyncTask_ScanFileW( s->task, path );
-}
-
 void LCFinder_SwitchTask( FileSyncStatus s );
 
 static void LCFinder_OnTaskDone( void *data )
@@ -382,6 +375,24 @@ static void LCFinder_OnTaskDone( void *data )
 	}
 }
 
+static void LCFinder_OnReadDir( FileStatus *status,
+				FileStream stream, void *data )
+{
+	char *p;
+	char buf[PATH_LEN];
+	wchar_t name[PATH_LEN];
+	FileSyncStatus s = data;
+	while( 1 ) {
+		p = FileStream_ReadLine( stream, buf, PATH_LEN );
+		if( !p ) {
+			break;
+		}
+		
+		LCUI_DecodeString( name, buf, PATH_LEN, ENCODING_UTF8 );
+		
+	}
+}
+
 static void LCFinder_SwitchTask( FileSyncStatus s )
 {
 	DB_Dir dir;
@@ -390,8 +401,7 @@ static void LCFinder_SwitchTask( FileSyncStatus s )
 	SyncTask_Start( s->task );
 	dir = finder.dirs[s->task_i];
 	path = DecodeUTF8( dir->path );
-	ScanImageFilesAsyncW( path, token, LCFinder_OnScanFile, 
-			      LCFinder_OnTaskDone, s );
+	FileStorage_GetFile( finder.storage, path, LCFinder_OnReadDir, s );
 	free( path );
 }
 
@@ -600,7 +610,7 @@ static int LCFinder_InitFileDB( void )
 	wpathjoin( wpath, finder.data_dir, STORAGE_FILE );
 	LOGW(L"[filedb] path: %s\n", wpath);
 	path = EncodeUTF8( wpath );
-	ASSERT( DB_Init( path ) );
+	ASSERT( DB_Init( path ) == 0 );
 	finder.n_dirs = DB_GetDirs( &finder.dirs );
 	finder.n_tags = DB_GetTags( &finder.tags );
 	free( path );
@@ -729,6 +739,29 @@ void LCFinder_ClearThumbDB( void )
 	LCFinder_TriggerEvent( EVENT_THUMBDB_DEL_DONE, NULL );
 }
 
+static int LCFinder_InitFileStorage( void )
+{
+	FileStorage_Init();
+	finder.storage = FileStorage_Connect();
+	finder.storage_for_image = FileStorage_Connect();
+	finder.storage_for_thumb = FileStorage_Connect();
+	finder.storage_for_scan = FileStorage_Connect();
+	ASSERT( finder.storage > 0 );
+	ASSERT( finder.storage_for_image > 0 );
+	ASSERT( finder.storage_for_thumb > 0 );
+	ASSERT( finder.storage_for_scan > 0 );
+	return 0;
+}
+
+static void LCFinder_ExitFileStorage( void )
+{
+	FileStorage_Close( finder.storage );
+	FileStorage_Close( finder.storage_for_image );
+	FileStorage_Close( finder.storage_for_thumb );
+	FileStorage_Close( finder.storage_for_scan );
+	FileStorage_Exit();
+}
+
 int LCFinder_SaveConfig( void )
 {
 	FILE *file;
@@ -818,15 +851,15 @@ int LCFinder_Init( int argc, char **argv )
 #if defined (PLATFORM_WIN32) && defined (DEBUG)
 	_wsetlocale( LC_ALL, L"chs" );
 #endif
-	ASSERT( LCFinder_InitWorkDir() );
-	ASSERT( LCFinder_LoadConfig() );
-	ASSERT( LCFinder_InitFileDB() );
-	ASSERT( LCFinder_InitThumbDB() );
-	ASSERT( LCFinder_InitThumbCache() );
-	ASSERT( LCFinder_InitLanguage() );
 	finder.trigger = EventTrigger();
-	FileStorage_Init();
-	ASSERT( UI_Init( argc, argv ) );
+	ASSERT( LCFinder_InitWorkDir() == 0 );
+	ASSERT( LCFinder_LoadConfig() == 0 );
+	ASSERT( LCFinder_InitFileDB() == 0 );
+	ASSERT( LCFinder_InitThumbDB() == 0 );
+	ASSERT( LCFinder_InitThumbCache() == 0 );
+	ASSERT( LCFinder_InitLanguage() == 0 );
+	ASSERT( LCFinder_InitFileStorage() == 0 );
+	ASSERT( UI_Init( argc, argv ) == 0 );
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_OnExit, NULL, NULL );
 	return 0;
 }
@@ -835,7 +868,7 @@ void LCFinder_Exit( void )
 {
 	UI_Exit();
 	LCFinder_ExitThumbDB();
-	FileStorage_Exit();
+	LCFinder_ExitFileStorage();
 }
 
 int LCFinder_Run( void )
@@ -859,7 +892,7 @@ int main( int argc, char **argv )
 {
 	Logger_SetHandler( LoggerHandler );
 	Logger_SetHandlerW( LoggerHandlerW );
-	ASSERT( LCFinder_Init( argc, argv ) );
+	ASSERT( LCFinder_Init( argc, argv ) == 0 );
 	return UI_Run();
 }
 #endif

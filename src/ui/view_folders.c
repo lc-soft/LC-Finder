@@ -83,7 +83,6 @@ typedef struct FileEntryRec_ {
 } FileEntryRec, *FileEntry;
 
 static struct FoldersViewData {
-	int storage;
 	DB_Dir dir;
 	LCUI_Widget view;
 	LCUI_Widget items;
@@ -212,7 +211,7 @@ static void FileScanner_ScanDirs( FileScanner scanner )
 {
 	LCUIMutex_Lock( &scanner->mutex_scan );
 	scanner->is_async_scaning = TRUE;
-	FileStorage_GetFolders( this_view.storage, scanner->dirpath,
+	FileStorage_GetFolders( finder.storage_for_scan, scanner->dirpath,
 				FileScanner_OnGetDirs, scanner );
 	while( scanner->is_async_scaning ) {
 		LCUICond_Wait( &scanner->cond_scan, &scanner->mutex_scan );
@@ -592,13 +591,12 @@ void UI_InitFoldersView( void )
 	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.view = this_view.view;
 	this_view.browser.items = this_view.items;
-	this_view.storage = FileStorage_Connect();
 	BindEvent( btn[0], "click", OnBtnSyncClick );
 	BindEvent( btn_return, "click", OnBtnReturnClick );
 	BindEvent( this_view.items, "ready", OnThumbViewReady );
 	BindEvent( this_view.view, "show.view", OnViewShow );
 	ThumbView_SetCache( this_view.items, finder.thumb_cache );
-	ThumbView_SetStorage( this_view.items, this_view.storage );
+	ThumbView_SetStorage( this_view.items, finder.storage_for_thumb );
 	LCUIThread_Create( &this_view.viewsync.tid, ViewSync_Thread, NULL );
 	LCFinder_BindEvent( EVENT_SYNC_DONE, OnSyncDone, NULL );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
@@ -611,7 +609,6 @@ void UI_InitFoldersView( void )
 
 void UI_ExitFolderView( void )
 {
-	FileStorage_Close( this_view.storage );
 	this_view.viewsync.is_running = FALSE;
 	FileScanner_Destroy( &this_view.scanner );
 	LCUIThread_Join( this_view.viewsync.tid, NULL );

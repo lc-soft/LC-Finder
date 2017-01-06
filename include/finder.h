@@ -95,7 +95,10 @@ typedef struct Finder_ {
 	LCUI_EventTrigger trigger;	/**< 事件触发器 */
 	FinderConfigRec config;		/**< 当前配置 */
 	int open_private_space;		/**< 是否打开了私人空间 */
-	int storage;			/**< 文件服务的连接标识符 */
+	int storage;			/**< 文件服务连接标识符，主要用于获取文件基本信息 */
+	int storage_for_image;		/**< 文件服务连接标识符，主要用于读取图片内容 */
+	int storage_for_thumb;		/**< 文件服务连接标识符，主要用于获取图片缩略图 */
+	int storage_for_scan;		/**< 文件服务连接标识符，主要用于扫描文件列表 */
 } Finder;
 
 typedef void( *LCFinder_EventHandler )(void*, void*);
