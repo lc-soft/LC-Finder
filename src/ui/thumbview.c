@@ -818,11 +818,12 @@ static int ThumbView_OnUpdateLayout( LCUI_Widget w, int limit )
 }
 
 /** 在布局完成后 */
-static void OnAfterLayout( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void ThumbView_OnAfterLayout( LCUI_Widget w,
+				     LCUI_WidgetEvent e, void *arg )
 {
 	ThumbView view = Widget_GetData( w, self.main );
 	ScrollLoading_Update( view->scrollload );
-	Widget_UnbindEvent( w, "afterlayout", OnAfterLayout );
+	Widget_UnbindEvent( w, "afterlayout", ThumbView_OnAfterLayout );
 }
 
 /** 执行缩略图列表的布局任务 */
@@ -842,8 +843,8 @@ static void ThumbView_ExecUpdateLayout( LCUI_Widget w )
 		UpdateThumbRow( view );
 		view->layout.current = NULL;
 		view->layout.is_running = FALSE;
-		Widget_BindEvent( w, "afterlayout", 
-				  OnAfterLayout, NULL, NULL );
+		Widget_BindEvent( w, "afterlayout",
+				  ThumbView_OnAfterLayout, NULL, NULL );
 	}
 }
 
@@ -1199,6 +1200,22 @@ static void ThumbViewItem_OnInit( LCUI_Widget w )
 	Widget_BindEvent( w, "scrollload", OnScrollLoad, NULL, NULL );
 }
 
+static void ThumbView_OnRemove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	ThumbViewItem item;
+	e->cancel_bubble = TRUE;
+	if( !Widget_CheckPrototype( e->target, self.item ) ) {
+		return;
+	}
+	item = Widget_GetData( e->target, self.item );
+	if( item->loader ) {
+		item->loader->active = FALSE;
+		item->loader->target = NULL;
+		item->loader->view = NULL;
+		item->loader = NULL;
+	}
+}
+
 static void ThumbViewItem_OnDestroy( LCUI_Widget w )
 {
 	ThumbViewItem item;
@@ -1231,7 +1248,7 @@ void ThumbView_OnLayout( LCUI_Widget w, void (*func)(LCUI_Widget) )
 	view->onlayout = func;
 }
 
-static void OnReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void ThumbView_OnReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ThumbView_UpdateLayoutContext( w );
 	Widget_BindEvent( w->parent, "resize", OnResize, w, NULL );
@@ -1273,7 +1290,8 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	RBTree_OnCompare( &view->task_targets, OnCompareTaskTarget );
 	LCUIMutex_Init( &view->layout.row_mutex );
 	view->scrollload = ScrollLoading_New( w );
-	Widget_BindEvent( w, "ready", OnReady, NULL, NULL );
+	Widget_BindEvent( w, "ready", ThumbView_OnReady, NULL, NULL );
+	Widget_BindEvent( w, "remove", ThumbView_OnRemove, NULL, NULL );
 	LCUIThread_Create( &view->thread, ThumbView_TaskThread, w );
 }
 
