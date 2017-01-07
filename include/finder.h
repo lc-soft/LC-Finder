@@ -107,11 +107,14 @@ typedef void( *LCFinder_EventHandler )(void*, void*);
 typedef struct FileSyncStatusRec_ {
 	int task_i;
 	int state;		/**< 当前状态 */
-	int added_files;	/**< 增加的文件数量 */
-	int changed_files;	/**< 改变的文件数量 */
-	int deleted_files;	/**< 删除的文件数量 */
-	int scaned_files;	/**< 已扫描的文件数量 */
-	int synced_files;	/**< 已同步的文件数量 */
+	size_t files;		/**< 文件总数 */
+	size_t dirs;		/**< 目录总数 */
+	size_t added_files;	/**< 增加的文件数量 */
+	size_t changed_files;	/**< 改变的文件数量 */
+	size_t deleted_files;	/**< 删除的文件数量 */
+	size_t scaned_files;	/**< 已扫描的文件数量 */
+	size_t synced_files;	/**< 已同步的文件数量 */
+	size_t scaned_dirs;	/**< 已扫描的目录数量 */
 	SyncTask task;		/**< 当前正执行的任务 */
 	SyncTask *tasks;	/**< 所有任务 */
 	void *data;
@@ -136,9 +139,6 @@ int64_t LCFinder_GetThumbDBTotalSize( void );
 
 /** 清除缩略图数据库 */
 void LCFinder_ClearThumbDB( void );
-
-/** 同步文件 */
-int LCFinder_SyncFiles( FileSyncStatus s );
 
 void LCFinder_SyncFilesAsync( FileSyncStatus s );
 

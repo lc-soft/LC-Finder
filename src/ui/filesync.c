@@ -103,17 +103,14 @@ static void OnUpdateStats( void *arg )
 static void OnHideTip( void *arg )
 {
 	LCUI_Widget alert = self.text->parent;
+	if( self.is_syncing ) {
+		return;
+	}
 	Widget_AddClass( alert, "hide" );
 }
 
-/** 文件同步线程 */
-static void FileSyncThread( void *arg )
+static void OnFinishSyncFiles( void *data )
 {
-	LCUI_Widget alert = self.text->parent;
-	TextViewI18n_Refresh( self.text );
-	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
-	Widget_RemoveClass( alert, "hide" );
-	LCFinder_SyncFiles( &self.status );
 	OnUpdateStats( NULL );
 	LCUITimer_Free( self.timer );
 	TextViewI18n_Refresh( self.text );
@@ -126,17 +123,21 @@ static void FileSyncThread( void *arg )
 
 static void OnStartSyncFiles( void *privdata, void *data )
 {
+	LCUI_Widget alert = self.text->parent;
 	if( self.is_syncing ) {
 		return;
 	}
 	self.is_syncing = TRUE;
 	self.timer = LCUITimer_Set( 200, OnUpdateStats, NULL, TRUE );
+	LCFinder_SyncFilesAsync( &self.status );
 	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
-	LCUIThread_Create( &self.thread, FileSyncThread, NULL );
+	Widget_RemoveClass( alert, "hide" );
 }
 
 void UI_InitFileSyncTip( void )
 {
+	self.status.data = NULL;
+	self.status.callback = OnFinishSyncFiles;
 	self.text = LCUIWidget_GetById( ID_TXT_FILE_SYNC_STATS );
 	self.title = LCUIWidget_GetById( ID_TXT_FILE_SYNC_TITLE );
 	LCFinder_BindEvent( EVENT_SYNC, OnStartSyncFiles, NULL );

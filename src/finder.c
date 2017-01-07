@@ -67,6 +67,12 @@ typedef struct EventPackRec_ {
 	void *data;
 } EventPackRec, *EventPack;
 
+typedef struct FileSyncDataPackRec_ {
+	FileSyncStatus status;
+	wchar_t *path;
+	size_t path_len;
+} FileSyncDataPackRec, *FileSyncDataPack;
+
 static void OnEvent( LCUI_Event e, void *arg )
 {
 	EventPack pack = e->data;
@@ -331,14 +337,12 @@ int64_t LCFinder_GetThumbDBTotalSize( void )
 	return sum_size;
 }
 
-#ifdef PLATFORM_WIN32_PC_APP
-
 void LCFinder_SwitchTask( FileSyncStatus s );
+void LCFinder_ScanDir( FileSyncStatus s, const wchar_t *path );
 
-static void LCFinder_OnTaskDone( void *data )
+static void LCFinder_OnScanFinished( FileSyncStatus s )
 {
 	int i;
-	FileSyncStatus s = data;
 	if( s->task_i < finder.n_dirs - 1 ) {
 		s->task_i += 1;
 		SyncTask_Finish( s->task );
@@ -375,45 +379,136 @@ static void LCFinder_OnTaskDone( void *data )
 	}
 }
 
-static void LCFinder_OnReadDir( FileStatus *status,
+static void LCFinder_OnScanFile( FileStatus *status, void *data )
+{
+	unsigned int ctime, mtime;
+	FileSyncDataPack pack = data;
+
+	if( !status ) {
+		goto finish;
+	}
+	ctime = (unsigned int)status->ctime;
+	mtime = (unsigned int)status->mtime;
+	SyncTask_AddFileW( pack->status->task, pack->path, ctime, mtime );
+finish:
+	pack->status->scaned_files += 1;
+	if( pack->status->scaned_dirs == pack->status->dirs &&
+	    pack->status->scaned_files == pack->status->files ) {
+		LCFinder_OnScanFinished( pack->status );
+	}
+	free( pack->path );
+	free( pack );
+}
+
+static void LCFinder_ScanFile( FileSyncStatus s, const wchar_t *path )
+{
+	FileSyncDataPack pack;
+	size_t len = wcslen( path );
+	pack = NEW( FileSyncDataPackRec, 1 );
+	pack->path = malloc( sizeof( wchar_t ) * (len + 1) );
+	wcsncpy( pack->path, path, len );
+	if( path[len - 1] == PATH_SEP ) {
+		len -= 1;
+	}
+	pack->status = s;
+	pack->path[len] = 0;
+	pack->path_len = len;
+	pack->status->files += 1;
+	FileStorage_GetStatus( finder.storage, path, FALSE,
+			       LCFinder_OnScanFile, pack );
+}
+
+static void LCFinder_OnScanDir( FileStatus *status,
 				FileStream stream, void *data )
 {
 	char *p;
 	char buf[PATH_LEN];
-	wchar_t name[PATH_LEN];
-	FileSyncStatus s = data;
+	size_t max_len;
+	wchar_t *name;
+	wchar_t path[PATH_LEN];
+	FileSyncDataPack pack = data;
+	
+	if( !status || !stream ) {
+		goto finish;
+	}
+	path[PATH_LEN - 1] = 0;
+	name = path + pack->path_len;
+	max_len = PATH_LEN - pack->path_len - 1;
+	wcsncpy( path, pack->path, PATH_LEN - 1 );
+	if( path[pack->path_len - 1] != PATH_SEP ) {
+		path[pack->path_len] = PATH_SEP;
+		path[pack->path_len + 1] = 0;
+		name += 1;
+	}
 	while( 1 ) {
-		p = FileStream_ReadLine( stream, buf, PATH_LEN );
+		p = FileStream_ReadLine( stream, buf, PATH_LEN - 1 );
 		if( !p ) {
 			break;
 		}
-		
-		LCUI_DecodeString( name, buf, PATH_LEN, ENCODING_UTF8 );
-		
+		buf[PATH_LEN - 1] = 0;
+		buf[strlen( buf ) - 1] = 0;
+		LCUI_DecodeString( name, buf + 1, max_len, ENCODING_UTF8 );
+		if( buf[0] == 'd' ) {
+			LCFinder_ScanDir( pack->status, path );
+			continue;
+		}
+		LCFinder_ScanFile( pack->status, path );
 	}
+
+finish:
+	pack->status->scaned_dirs += 1;
+	if( pack->status->scaned_dirs == pack->status->dirs &&
+	    pack->status->scaned_files == pack->status->files ) {
+		LCFinder_OnScanFinished( pack->status );
+	}
+	free( pack->path );
+	free( pack );
+}
+
+static void LCFinder_ScanDir( FileSyncStatus s, const wchar_t *path )
+{
+	FileSyncDataPack pack;
+	size_t len = wcslen( path );
+	pack = NEW( FileSyncDataPackRec, 1 );
+	pack->path = malloc( sizeof( wchar_t ) * (len + 1) );
+	wcsncpy( pack->path, path, len );
+	if( path[len - 1] == PATH_SEP ) {
+		len -= 1;
+	}
+	pack->status = s;
+	pack->path[len] = 0;
+	pack->path_len = len;
+	pack->status->dirs += 1;
+	FileStorage_GetFile( finder.storage_for_scan,
+			     path, LCFinder_OnScanDir, pack );
 }
 
 static void LCFinder_SwitchTask( FileSyncStatus s )
 {
 	DB_Dir dir;
-	wchar_t *path, *token = NULL;
+	wchar_t *path;
 	s->task = s->tasks[s->task_i];
 	SyncTask_Start( s->task );
 	dir = finder.dirs[s->task_i];
 	path = DecodeUTF8( dir->path );
-	FileStorage_GetFile( finder.storage, path, LCFinder_OnReadDir, s );
+	LCFinder_ScanDir( s, path );
 	free( path );
 }
 
 void LCFinder_SyncFilesAsync( FileSyncStatus s )
 {
 	int i;
-	wchar_t *path;
+	wchar_t path[PATH_LEN];
+	path[PATH_LEN - 1] = 0;
+	s->task_i = 0;
 	s->task = NULL;
 	s->tasks = NULL;
+	s->files = 0;
+	s->dirs = 0;
 	s->added_files = 0;
 	s->synced_files = 0;
 	s->scaned_files = 0;
+	s->scaned_dirs = 0;
 	s->deleted_files = 0;
 	s->state = STATE_STARTED;
 	s->tasks = NEW( SyncTask, finder.n_dirs );
@@ -422,71 +517,11 @@ void LCFinder_SyncFilesAsync( FileSyncStatus s )
 		if( !dir ) {
 			continue;
 		}
-		path = DecodeUTF8( dir->path );
+		LCUI_DecodeString( path, dir->path,
+				   PATH_LEN - 1, ENCODING_UTF8 );
 		s->tasks[i] = SyncTask_NewW( finder.fileset_dir, path );
-		free( path );
 	}
 	LCFinder_SwitchTask( s );
-}
-
-#endif
-
-int LCFinder_SyncFiles( FileSyncStatus s )
-{
-	int i, len;
-	DB_Dir dir;
-	wchar_t *path;
-	s->task = NULL;
-	s->tasks = NULL;
-	s->added_files = 0;
-	s->synced_files = 0;
-	s->scaned_files = 0;
-	s->deleted_files = 0;
-	s->state = STATE_STARTED;
-	s->tasks = NEW( SyncTask, finder.n_dirs );
-	for( i = 0; i < finder.n_dirs; ++i ) {
-		dir = finder.dirs[i];
-		if( !dir ) {
-			continue;
-		}
-		len = strlen( dir->path ) + 1;
-		path = malloc( sizeof( wchar_t )*len );
-		len = LCUI_DecodeString( path, dir->path, len, ENCODING_UTF8 );
-		path[len] = 0;
-		s->task = SyncTask_NewW( finder.fileset_dir, path );
-		SyncTask_Start( s->task );
-		s->added_files += s->task->added_files;
-		s->scaned_files += s->task->total_files;
-		s->deleted_files += s->task->deleted_files;
-		s->changed_files += s->task->changed_files;
-		s->tasks[i] = s->task;
-		free( path );
-	}
-	DB_Begin();
-	s->state = STATE_SAVING;
-	LOG( "\n\nstart sync\n" );
-	for( i = 0; i < finder.n_dirs; ++i ) {
-		DirStatusDataPackRec pack;
-		pack.dir = finder.dirs[i];
-		if( !pack.dir ) {
-			continue;
-		}
-		pack.status = s;
-		s->task = s->tasks[i];
-		SyncTask_InAddedFiles( s->task, SyncAddedFile, &pack );
-		SyncTask_InDeletedFiles( s->task, SyncDeletedFile, &pack );
-		SyncTask_InChangedFiles( s->task, SyncChangedFile, &pack );
-		SyncTask_Commit( s->task );
-		SyncTask_Delete( s->task );
-		s->task = NULL;
-	}
-	DB_Commit();
-	LOG("\n\nend sync\n");
-	s->state = STATE_FINISHED;
-	s->task = NULL;
-	free( s->tasks );
-	s->tasks = NULL;
-	return s->synced_files;
 }
 
 /** 初始化工作目录 */

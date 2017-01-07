@@ -172,7 +172,7 @@ int UI_Init( int argc, char **argv )
 	Widget_UpdateStyle( root, TRUE );
 	UI_SetWindowIcon();
 	ParseCommandArguments( &args, argc, argv );
-	LCUITimer_Set( 2000, onTimer, NULL, FALSE );
+	//LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 	if( !args.filepath ) {
 		UI_InitSplashScreen();
 		UI_InitMainView();

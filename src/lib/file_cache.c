@@ -44,7 +44,6 @@
 #include "file_cache.h"
 
 #define MAX_PATH_LEN	2048
-#define FILE_HEAD_TAG	"[LC-Finder Files Cache]"
 #define WCSLEN(STR)	(sizeof( STR ) / sizeof( wchar_t ))
 #define GetDirStats(T)	(DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
 
@@ -309,6 +308,52 @@ static int SyncTask_LoadCache( SyncTask t )
 	return count;
 }
 
+int SyncTask_AddFileW( SyncTask t, const wchar_t *path,
+		       unsigned int ctime, unsigned int mtime )
+{
+	size_t len;
+	FileInfo info;
+	FileStatusRec status;
+	DirStats ds = GetDirStats( t );
+	if( t->state != STATE_STARTED ) {
+		return -1;
+	}
+	len = wcslen( path );
+	/* 若该文件路径存在于之前的缓存中，说明未被删除，否则将之
+	 * 视为新增的文件。
+	 */
+	info = Dict_FetchValue( ds->files, path );
+	if( info ) {
+		if( ctime != info->ctime || mtime != info->mtime ) {
+			info->ctime = ctime;
+			info->mtime = mtime;
+			Dict_Add( ds->changed_files, info->path, info );
+			DEBUG_MSG( "changed file: %ls\n", path );
+			++t->changed_files;
+		} else {
+			DEBUG_MSG( "unchanged file: %ls\n", path );
+		}
+		Dict_Delete( ds->deleted_files, path );
+		--t->deleted_files;
+	} else {
+		info = NEW( FileInfoRec, 1 );
+		info->path = NEW( wchar_t, len + 1 );
+		wcsncpy( info->path, path, len + 1 );
+		info->ctime = ctime;
+		info->mtime = mtime;
+		Dict_Add( ds->added_files, info->path, info );
+		DEBUG_MSG( "added file: %ls\n", path );
+		++t->added_files;
+	}
+	status.ctime = info->ctime;
+	status.mtime = info->mtime;
+	len = sizeof( wchar_t ) / sizeof( char ) * len;
+	unqlite_kv_store( ds->db, path, len, &status,
+			  sizeof( FileStatusRec ) );
+	++t->total_files;
+	return 0;
+}
+
 int SyncTask_ScanFileW( SyncTask t, const wchar_t *path )
 {
 	int rc, len;
@@ -377,10 +422,6 @@ static int SyncTask_ScanFilesW( SyncTask t, const wchar_t *dirpath )
 		path[dir_len] = 0;
 	}
 	if( LCUI_OpenDirW( path, &dir ) != 0 ) {
-		wchar_t buf[256];
-		FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), 
-				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, 256, NULL);
-		_DEBUG_MSG( "FindFirstFile failed: %s\n", buf );
 		return 0;
 	}
 	while( (entry = LCUI_ReadDirW( &dir )) && t->state == STATE_STARTED ) {
@@ -423,16 +464,18 @@ int SyncTask_DeleteFileW( SyncTask t, const wchar_t *filepath )
 
 int SyncTask_Start( SyncTask t )
 {
-	int n;
 	SyncTask_LoadCache( t );
 	if( 0 != SyncTask_OpenCacheW( t, t->tmpfile ) ) {
 		return -1;
 	}
 	t->state = STATE_STARTED;
-	n = SyncTask_ScanFilesW( t, t->scan_dir );
+	return 0;
+}
+
+void SyncTask_Finish( SyncTask t )
+{
 	t->state = STATE_FINISHED;
 	SyncTask_CloseCache( t );
-	return n;
 }
 
 void SyncTask_Commit( SyncTask t )
@@ -448,9 +491,4 @@ void SyncTask_Commit( SyncTask t )
 	free( file );
 	free( tmpfile );
 #endif
-}
-
-void SyncTask_Stop( SyncTask t )
-{
-	t->state = STATE_NONE;
 }

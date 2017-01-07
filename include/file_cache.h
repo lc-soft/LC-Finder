@@ -70,6 +70,10 @@ SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
 /** 新建同步任务 */
 SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir );
 
+/** 添加文件至缓存 */
+int SyncTask_AddFileW( SyncTask t, const wchar_t *path,
+		       unsigned int ctime, unsigned int mtime );
+
 int SyncTask_ScanFileW( SyncTask t, const wchar_t *path );
 
 /** 打开缓存 */
@@ -99,10 +103,10 @@ int SyncTask_InDeletedFiles( SyncTask t, FileInfoHanlder func, void *func_data )
 /** 开始同步文件列表 */
 int SyncTask_Start( SyncTask t );
 
-/** 提交文件列表的变更 */
-void SyncTask_Commit( SyncTask t );
+/** 结束同步文件列表 */
+void SyncTask_Finish( SyncTask t );
 
-/** 终止同步文件列表 */
-void SyncTask_Stop( SyncTask t );
+/** 提交变更后文件列表至缓存数据库中 */
+void SyncTask_Commit( SyncTask t );
 
 #endif
