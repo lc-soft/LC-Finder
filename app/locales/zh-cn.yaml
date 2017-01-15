@@ -113,7 +113,7 @@ strings:
                 text: 请输入私人空间的开启密码
             new_dialog:
                 title: 设置密码
-                text: 使用私人空间前，你需要先为设置开启密码
+                text: 使用私人空间前，你需要先它为设置开启密码
             reset_dialog:
                 title: 重置密码
                 text: 重置私人空间的开启密码

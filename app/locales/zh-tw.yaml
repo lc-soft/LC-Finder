@@ -114,7 +114,7 @@ strings:
                 text: 請輸入私人空間的開啓密碼
             new_dialog:
                 title: 設置密碼
-                text: 使用私人空間前，你需要先爲設置開啓密碼
+                text: 使用私人空間前，你需要先爲它設置開啓密碼
             reset_dialog:
                 title: 重置密碼
                 text: 重置私人空間的開啓密碼
