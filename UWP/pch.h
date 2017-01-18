@@ -14,3 +14,4 @@
 #include <agile.h>
 #include <concrt.h>
 #include <ppltasks.h>
+#include <collection.h>

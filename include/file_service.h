@@ -73,8 +73,8 @@ enum FileType {
 };
 
 typedef struct FileImageStatus_ {
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 } FileImageStatus;
 
 typedef struct FileStatus_ {
@@ -144,13 +144,9 @@ typedef struct FileStreamChunk_ {
 	size_t size;			/**< 数据总大小 */
 } FileStreamChunk;
 
-void FileStreamChunk_Destroy( FileStreamChunk *chunk );
-
 FileStream FileStream_Create( void );
 
 void FileStream_Close( FileStream stream );
-
-LCUI_BOOL FileStream_Useable( FileStream stream );
 
 void FileStream_Destroy( FileStream stream );
 
@@ -181,10 +177,6 @@ int Connection_WriteChunk( Connection conn, FileStreamChunk *chunk );
 void Connection_Close( Connection conn );
 
 void Connection_Destroy( Connection conn );
-
-int FileService_Listen( int backlog );
-
-Connection FileService_Accept( void );
 
 void FileService_Run( void );
 

@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
- * file_service.c -- file service
+ * FileService.cpp -- file service for UWP
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * file_service.c -- 文件服务
+ * FileService.cpp -- 面向 Windows 通用应用平台的文件服务
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,24 +34,27 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#define LCFINDER_FILE_SERVICE_C
+#include "pch.h"
+#include "build.h"
 #include <stdio.h>
-#include <errno.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
-#include <LCUI/font/charset.h>
-#include <LCUI/thread.h>
 #include <LCUI/graph.h>
-#include "build.h"
-#include "bridge.h"
+#include <LCUI/thread.h>
+#include <LCUI/font/charset.h>
+#define LCFINDER_FILE_SERVICE_C
 #include "common.h"
 #include "file_service.h"
 
-#ifdef _WIN32
-#define _S_ISTYPE(mode, mask)	(((mode) & _S_IFMT) == (mask))
-#define S_ISDIR(mode)		_S_ISTYPE((mode), _S_IFDIR)
-#define S_ISREG(mode)		_S_ISTYPE((mode), _S_IFREG)
-#endif
+#define TIME_SHIFT 116444736000000000ULL
+
+using namespace concurrency;
+using namespace Platform;
+using namespace Windows::Foundation::Collections;
+using namespace Windows::ApplicationModel::AppService;
+using namespace Windows::ApplicationModel::DataTransfer;
+using namespace Windows::Foundation;
+using namespace Windows::Storage;
 
 typedef struct FileStreamRec_ {
 	LCUI_BOOL active;
@@ -127,6 +130,11 @@ static void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 	free( chunk );
 }
 
+static void FileStreamChunk_OnDestroy( void *data )
+{
+	FileStreamChunk_Destroy( (FileStreamChunk*)data );
+}
+
 FileStream FileStream_Create( void )
 {
 	FileStream stream;
@@ -168,7 +176,7 @@ void FileStream_Destroy( FileStream stream )
 		return;
 	}
 	stream->active = FALSE;
-	LinkedList_Clear( &stream->data, FileStreamChunk_Destroy );
+	LinkedList_Clear( &stream->data, FileStreamChunk_OnDestroy );
 	LCUIMutex_Destroy( &stream->mutex );
 	LCUICond_Destroy( &stream->cond );
 }
@@ -242,7 +250,7 @@ size_t FileStream_Read( FileStream stream, char *buf,
 				return read_count;
 			}
 			node = LinkedList_GetNode( &stream->data, 0 );
-			chunk = node->data;
+			chunk = (FileStreamChunk*)node->data;
 			LinkedList_Unlink( &stream->data, node );
 			LinkedListNode_Delete( node );
 			LCUIMutex_Unlock( &stream->mutex );
@@ -297,7 +305,7 @@ size_t FileStream_Write( FileStream stream, char *buf,
 	chunk->cur = 0;
 	chunk->size = count * size;
 	chunk->type = DATA_CHUNK_BUFFER;
-	chunk->data = malloc( chunk->size );
+	chunk->data = (char*)malloc( chunk->size );
 	memcpy(chunk->data, buf, chunk->size );
 	LinkedList_Append( &stream->data, chunk );
 	LCUICond_Signal( &stream->cond );
@@ -330,7 +338,7 @@ char *FileStream_ReadLine( FileStream stream, char *buf, size_t size )
 				return NULL;
 			}
 			node = LinkedList_GetNode( &stream->data, 0 );
-			chunk = node->data;
+			chunk = (FileStreamChunk*)node->data;
 			LinkedList_Unlink( &stream->data, node );
 			LinkedListNode_Delete( node );
 			LCUIMutex_Unlock( &stream->mutex );
@@ -432,7 +440,7 @@ void Connection_Destroy( Connection conn )
 }
 
 static int FileService_GetFileImageStatus( FileRequest *request,
-					       FileStreamChunk *chunk )
+					   FileStreamChunk *chunk )
 {
 	int width, height;
 	FileResponse *response = &chunk->response;
@@ -467,152 +475,158 @@ static int GetStatusByErrorCode( int code )
 	return RESPONSE_STATUS_ERROR;
 }
 
+static task<int> GetFileStatus( StorageFile ^file,
+				FileRequestParams *params,
+				FileStatus *status )
+{
+	status->ctime = file->DateCreated.UniversalTime + TIME_SHIFT;
+	auto t = create_task( file->GetBasicPropertiesAsync() )
+		.then( [status]( FileProperties::BasicProperties ^props ) {
+		status->mtime = props->DateModified.UniversalTime + TIME_SHIFT;
+		return 0;
+	} );
+	if(file->IsOfType( StorageItemTypes::Folder )) {
+		status->type = FILE_TYPE_DIRECTORY;
+	} else {
+		status->type = FILE_TYPE_ARCHIVE;
+	}
+	if( !params->with_image_status ) {
+		return t;
+	}
+	return t.then( [file]( int ret ) {
+		return file->Properties->GetImagePropertiesAsync();
+	} ).then( [file, status]( task<FileProperties::ImageProperties^> t ) {
+		try {
+			FileProperties::ImageProperties ^props = t.get();
+			status->image = NEW( FileImageStatus, 1 );
+			status->image->width = props->Width;
+			status->image->height = props->Height;
+		} catch( COMException^ ex ) {
+			status->image = NULL;
+		}
+		return 0;
+	} );
+}
+
 static int FileService_GetFileStatus( FileRequest *request,
 				      FileStreamChunk *chunk )
 {
-	int ret;
-	struct stat buf;
 	FileResponse *response = &chunk->response;
-	ret = wgetfilestat( request->path, &buf );
-	if( ret == 0 ) {
-		response->status = RESPONSE_STATUS_OK;
-		response->file.ctime = buf.st_ctime;
-		response->file.mtime = buf.st_mtime;
-		response->file.size = buf.st_size;
-		if( S_ISDIR( buf.st_mode ) ) {
-			response->file.type = FILE_TYPE_DIRECTORY;
-		} else {
-			response->file.type = FILE_TYPE_ARCHIVE;
+	FileRequestParams *params = &request->params;
+	String ^path = ref new String( request->path );
+	auto action = StorageFile::GetFileFromPathAsync( path );
+	return create_task( action ).then( [params, response]( task<StorageFile ^> t ) {
+		try {
+			StorageFile ^file = t.get();
+			response->status = RESPONSE_STATUS_OK;
+			return GetFileStatus( file, params, &response->file );
+		} catch( COMException ^ex ) {
+			response->status = RESPONSE_STATUS_NOT_FOUND;
+			return create_task( []() -> int {
+				return -ENOENT;
+			} );
 		}
-		if( request->params.with_image_status ) {
-			FileService_GetFileImageStatus( request, chunk );
-		}
-		return 0;
-	}
-	response->status = GetStatusByErrorCode( ret );
-	return ret;
+	} ).get();
 }
 
 static int FileService_RemoveFile( const wchar_t *path, 
 				   FileResponse *response )
 {
-	int ret = MoveFileToTrashW( path );
-	response->status = GetStatusByErrorCode( ret );
-	return ret;
+	return 400;
 }
 
 static int FileService_GetFiles( Connection conn,
 				 FileRequest *request,
 				 FileStreamChunk *chunk )
 {
-	int ret;
-	LCUI_Dir dir;
-	LCUI_DirEntry *entry;
-	char buf[PATH_LEN];
-
-	ret = LCUI_OpenDirW( request->path, &dir );
-	chunk->response.status = GetStatusByErrorCode( ret );
-	if( ret != 0 ) {
-		return ret;
-	}
-	while( !conn->closed && (entry = LCUI_ReadDirW( &dir )) ) {
-		int size;
-		wchar_t *name = LCUI_GetFileNameW( entry );
-		/* 忽略 . 和 .. 文件夹 */
-		if( name[0] == '.' ) {
-			if( name[1] == 0 ) {
-				continue;
-			}
-			if( name[1] == '.' && name[2] == 0 ) {
-				continue;
-			}
+	FileResponse *response = &chunk->response;
+	FileRequestParams *params = &request->params;
+	String ^path = ref new String( request->path );
+	auto action = StorageFolder::GetFolderFromPathAsync( path );
+	return create_task( action ).then( [response]( task<StorageFolder^> fileTask ) {
+		StorageFolder ^folder = nullptr;
+		try {
+			folder = fileTask.get();
+		} catch( COMException ^ex ) {
+			response->status = RESPONSE_STATUS_NOT_FOUND;
 		}
-		switch( request->params.filter ) {
-		case FILE_FILTER_FILE:
-			if( !LCUI_FileIsArchive( entry ) ) {
-				continue;
-			}
-			if( !IsImageFile( name ) ) {
-				continue;
-			}
-			buf[0] = '-';
-			break;
-		case FILE_FILTER_FOLDER:
-			if( ! LCUI_FileIsDirectory( entry ) ) {
-				continue;
-			}
-			buf[0] = 'd';
-			break;
-		default:
-			if( LCUI_FileIsArchive( entry ) ) {
-				if( !IsImageFile( name ) ) {
-					continue;
-				}
-				buf[0] = '-';
-			} else if( LCUI_FileIsDirectory( entry ) ) {
-				buf[0] = 'd';
-			} else {
-				continue;
-			}
-			break;
+		return folder;
+	} ).then( [conn, params, response]( StorageFolder ^folder ) {
+		auto t = create_task( [folder]() {
+			return folder;
+		} );
+		if( !folder || params->filter == FILE_FILTER_FILE ) {
+			return t;
 		}
-		size = LCUI_EncodeString( buf + 1, name, PATH_LEN - 2,
-					 ENCODING_UTF8 );
-		buf[size++] = '\n';
-		buf[size] = 0;
-		Connection_Write( conn, buf, sizeof( char ), size );
-	}
-	return 0;
+		return t.then( [](StorageFolder ^folder) {
+			return folder->GetFoldersAsync();
+		}).then( [conn, folder]( IVectorView<StorageFolder^>^ folders ) {
+			char buf[PATH_LEN] = "d";
+			std::for_each( begin( folders ), end( folders ),
+				       [conn, &buf]( StorageFolder^ f ) {
+				size_t size;
+				const wchar_t *name;
+				name = f->Name->Data();
+				size = LCUI_EncodeString( buf + 1, name,
+							  PATH_LEN - 2, ENCODING_UTF8 );
+				buf[size++] = '\n';
+				buf[size] = 0;
+				Connection_Write( conn, buf, sizeof( char ), size );
+			} );
+			return folder;
+		} );
+	} ).then( [conn, params, response]( StorageFolder ^folder ) {
+		auto t = create_task( [folder]() {
+			return folder ? 0 : -ENOENT;
+		} );
+		if( !folder || params->filter == FILE_FILTER_FOLDER ) {
+			return t;
+		}
+		return t.then( [folder]( int ) {
+			return folder->GetFilesAsync();
+		} ).then( [conn, folder]( IVectorView<StorageFile^> ^files ) {
+			char buf[PATH_LEN] = "-";
+			std::for_each( begin( files ), end( files ),
+				       [conn, &buf]( StorageFile ^file ) {
+				size_t size;
+				const wchar_t *name;
+				name = file->Name->Data();
+				size = LCUI_EncodeString( buf + 1, name,
+							  PATH_LEN - 2, ENCODING_UTF8 );
+				buf[size++] = '\n';
+				buf[size] = 0;
+				Connection_Write( conn, buf, sizeof( char ), size );
+			} );
+			return 0;
+		} );
+	} ).get();
 }
 
 static int FileService_GetFile( Connection conn,
 				FileRequest *request,
 				FileStreamChunk *chunk )
 {
-	int ret;
-	char *path;
-	LCUI_Graph img;
+	StorageFile ^file;
 	FileResponse *response = &chunk->response;
 	FileRequestParams *params = &request->params;
-	ret = FileService_GetFileStatus( request, chunk );
+	String ^path = ref new String( request->path );
+	auto action = StorageFile::GetFileFromPathAsync( path );
+	int ret = create_task( action ).then( [&file, params, response]( task<StorageFile ^> t ) {
+		try {
+			file = t.get();
+			response->status = RESPONSE_STATUS_OK;
+			return GetFileStatus( file, params, &response->file );
+		} catch( COMException ^ex ) {
+			response->status = RESPONSE_STATUS_NOT_FOUND;
+			return create_task( []() -> int {
+				return -ENOMEM;
+			} );
+		}
+	} ).get();
 	if( response->status != RESPONSE_STATUS_OK ) {
 		return ret;
 	}
-	if( response->file.type == FILE_TYPE_DIRECTORY ) {
-		Connection_WriteChunk( conn, chunk );
-		return FileService_GetFiles( conn, request, chunk );
-	}
-	path = EncodeANSI( request->path );
-	Graph_Init( &img );
-	LOG( "load image: %s\n", path );
-	if( Graph_LoadImage( path, &img ) != 0 ) {
-		LOG( "load image failed\n", path );
-		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
-		free( path );
-		return -1;
-	}
-	free( path );
-	LOG( "load image success, size: %d,%d\n", img.width, img.height );
-	response->file.image = NEW( FileImageStatus, 1 );
-	response->file.image->width = img.width;
-	response->file.image->height = img.height;
-	LOG( "write response, status: %d\n", response->status );
-	Connection_WriteChunk( conn, chunk );
-	if( !params->get_thumbnail ) {
-		chunk->type = DATA_CHUNK_IMAGE;
-		chunk->image = img;
-		return 0;
-	}
-	Graph_Init( &chunk->thumb );
-	if( (params->width > 0 && img.width > (int)params->width)
-	    || (params->height > 0 && img.height > (int)params->height) ) {
-	    Graph_Zoom( &img, &chunk->thumb, TRUE,
-			params->width, params->height );
-	    Graph_Free( &img );
-	} else {
-		chunk->thumb = img;
-	}
-	chunk->type = DATA_CHUNK_THUMB;
+	
 	return 0;
 }
 
@@ -651,7 +665,7 @@ void FileService_Handler( void *arg )
 {
 	int n;
 	FileStreamChunk chunk;
-	Connection conn = arg;
+	Connection conn = (Connection)arg;
 	LOG( "[file service][thread %d] started, connection: %d\n",
 	     LCUIThread_SelfID(), conn->id );
 	while( 1 ) {
@@ -695,7 +709,7 @@ Connection FileService_Accept( void )
 	LinkedList_Unlink( &service.requests, node );
 	LCUICond_Signal( &service.cond );
 	LCUIMutex_Unlock( &service.mutex );
-	conn_client = node->data;
+	conn_client = (Connection)node->data;
 	conn = NEW( ConnectionRecord, 1 );
 	conn_service = Connection_Create();
 	conn->streams[0] = FileStream_Create();
@@ -889,7 +903,7 @@ int FileClient_Connect( FileClient client )
 
 void FileClient_Destroy( FileClient client )
 {
-	
+
 }
 
 void FileClient_Run( FileClient client )
@@ -915,7 +929,7 @@ void FileClient_Run( FileClient client )
 		}
 		LinkedList_Unlink( &client->tasks, node );
 		LCUIMutex_Unlock( &client->mutex );
-		task = node->data;
+		task = (FileClientTask*)node->data;
 		LOGW( L"[file client][connection %d] send request, "
 		      L"method: %d, path: %s\n",
 		      conn->id, task->request.method, task->request.path );
@@ -939,8 +953,9 @@ void FileClient_Run( FileClient client )
 
 static void FileClient_Thread( void *arg )
 {
-	FileClient_Run( arg );
-	FileClient_Destroy( arg );
+	FileClient client = (FileClient)arg;
+	FileClient_Run( client );
+	FileClient_Destroy( client );
 	LCUIThread_Exit( NULL );
 }
 

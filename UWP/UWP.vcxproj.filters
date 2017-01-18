@@ -53,6 +53,7 @@
     </Filter>
     <Filter Include="dll">
       <UniqueIdentifier>{b0981bac-b92a-4023-8fe1-c466cc613dd2}</UniqueIdentifier>
+      <Extensions>*.dll</Extensions>
     </Filter>
     <Filter Include="include">
       <UniqueIdentifier>{a90a0144-43d9-4e24-9fc3-813c67256943}</UniqueIdentifier>
@@ -62,9 +63,6 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="UWPMain.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="..\src\bridge_uwp.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\finder.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -154,6 +152,14 @@
     </ClCompile>
     <ClCompile Include="LCUIInput.cpp" />
     <ClCompile Include="LCUIRenderer.cpp" />
+    <ClCompile Include="bridge.cpp" />
+    <ClCompile Include="FileService.cpp" />
+    <ClCompile Include="..\src\lib\file_storage.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\dialog_password.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -219,6 +225,12 @@
     <ClInclude Include="..\include\ui.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\file_service.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\file_storage.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -265,19 +277,19 @@
     <None Include="Assets\ui.xml">
       <Filter>资产</Filter>
     </None>
-    <None Include="..\vendor\lib\LCUI_D.dll">
+    <None Include="LCUI_D.dll">
       <Filter>dll</Filter>
     </None>
-    <None Include="..\vendor\lib\libxml2.dll">
+    <None Include="libxml2.dll">
       <Filter>dll</Filter>
     </None>
-    <None Include="..\vendor\lib\sqlite3.dll">
+    <None Include="sqlite3.dll">
       <Filter>dll</Filter>
     </None>
-    <None Include="..\vendor\lib\unqlite.dll">
+    <None Include="unqlite.dll">
       <Filter>dll</Filter>
     </None>
-    <None Include="..\vendor\lib\yaml.dll">
+    <None Include="yaml.dll">
       <Filter>dll</Filter>
     </None>
   </ItemGroup>

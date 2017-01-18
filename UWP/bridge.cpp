@@ -2,7 +2,7 @@
  * bridge.cpp -- a bridge, provides a cross-platform implementation for some
  * interfaces.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * bridge.cpp -- 桥梁，为某些功能提供跨平台实现.
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -37,11 +37,11 @@
 
 #include "pch.h"
 #include "finder.h"
+#include <sys/stat.h>
 
 using namespace concurrency;
 using namespace Platform;
 using namespace Windows::System;
-using namespace Windows::Storage;
 using namespace Windows::Foundation;
 using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
@@ -49,8 +49,6 @@ using namespace Windows::Foundation::Collections;
 using namespace Windows::ApplicationModel;
 
 #define FutureAccessList AccessCache::StorageApplicationPermissions::FutureAccessList
-
-extern "C" {
 
 int GetAppDataFolderW( wchar_t *buf, int max_len )
 {
@@ -66,6 +64,51 @@ int GetAppInstalledLocationW( wchar_t *buf, int max_len )
 	return 0;
 }
 
+static void TestGetFile( const wchar_t *wpath )
+{
+	String ^path = ref new String( wpath );
+	create_task( StorageFile::GetFileFromPathAsync( path ) ).then( []( task<StorageFile^> fileTask ) {
+		StorageFile^ file = nullptr;
+		try {
+			file = fileTask.get();
+		} catch( Exception^ e ) {
+			return file;
+		}
+		return file;
+	} ).then( [](StorageFile^ file) {
+		if( !file ) {
+			return create_task( []() -> int {
+				return -ENOMEM;
+			} );
+		}
+		// TODO: Put code to handle the file when it is opened successfully.
+
+		auto t = create_task( file->GetBasicPropertiesAsync() ).then( []( FileProperties::BasicProperties ^props ) {
+			// TODO: Put code to handle the properties when it is get successfully.
+			LOG( "mtime: %llu\n", props->DateModified.UniversalTime );
+			return 0;
+		} );
+		if( true/* this file is image */ ) {
+			t = t.then( [file](int ret) {
+				return file->Properties->GetImagePropertiesAsync();
+			} ).then( [file]( task<FileProperties::ImageProperties^> t ) {
+				FileProperties::ImageProperties ^props;
+				try {
+					props = t.get();
+					LOG( "image size: %d,%d\n", props->Width, props->Height );
+				} catch( Exception^ e ) {
+
+				}
+				// TODO: Put code to handle the properties when it is get successfully.
+				return 0;
+			} );
+		}
+		return t;
+	} ).then( []( int ret ) {
+		LOG( "return: %d\n", ret );
+	} );
+}
+
 void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
 {
 	FolderPicker^ folderPicker = ref new FolderPicker();
@@ -74,15 +117,17 @@ void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
 	folderPicker->FileTypeFilter->Append( ".bmp" );
 	folderPicker->FileTypeFilter->Append( ".jpg" );
 	folderPicker->FileTypeFilter->Append( ".jpeg" );
-	create_task( folderPicker->PickSingleFolderAsync() ).then([callback]( StorageFolder^ folder ) {
+	create_task( folderPicker->PickSingleFolderAsync() )
+		.then([callback]( StorageFolder^ folder ) {
 		if( !folder ) {
 			return;
 		}
 		auto token = FutureAccessList->Add( folder );
-		callback( folder->Path->Data(), token->Data() );
+		//callback( folder->Path->Data(), token->Data() );
+		TestGetFile( L"F:\\我的文件\\图片收藏\\测试-005\\001.png" );
 	} );
 }
-
+/*
 static void ScanImageFilesInFolder( StorageFolder ^folder,
 				    FileHandlerAsync handler,
 				    void (*callback)(void*), void *data )
@@ -119,6 +164,7 @@ void ScanImageFilesAsyncW( const wchar_t *wpath, const wchar_t *wtoken,
 		ScanImageFilesInFolder( folder, handler, callback, data );
 	} );
 }
+*/
 
 void OpenUriW( const wchar_t *uristr )
 {
@@ -140,6 +186,4 @@ int MoveFileToTrashW( const wchar_t *filepath )
 int MoveFileToTrash( const char *filepath )
 {
 	return -1;
-}
-
 }
