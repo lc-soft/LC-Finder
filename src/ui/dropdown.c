@@ -56,7 +56,7 @@ static struct DropdwonModule {
 	int change_event;
 } self;
 
-static char *dropdown_css = ToString(
+static char *dropdown_css = CodeToString(
 
 dropdown {
 	z-index: 1000;

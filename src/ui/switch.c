@@ -56,7 +56,7 @@ static struct SwitchModule {
 	int event_change;
 } self;
 
-static const char *switch_css = ToString(
+static const char *switch_css = CodeToString(
 
 .switch {
 	height: 20px;

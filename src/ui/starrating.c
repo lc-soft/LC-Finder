@@ -41,7 +41,7 @@
 
 static LCUI_WidgetPrototype prototype = NULL;
 
-static const char *starrating_css = ToString(
+static const char *starrating_css = CodeToString(
 
 starrating .star {
 width: 24px;
