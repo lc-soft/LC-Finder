@@ -508,6 +508,19 @@ static task<int> GetFileStatus( StorageFile ^file,
 	} );
 }
 
+static task<int> GetFolderStatus( StorageFolder ^folder,
+				  FileStatus *status )
+{
+	status->type = FILE_TYPE_DIRECTORY;
+	status->ctime = folder->DateCreated.UniversalTime + TIME_SHIFT;
+	auto t = create_task( folder->GetBasicPropertiesAsync() )
+		.then( [status]( FileProperties::BasicProperties ^props ) {
+		status->mtime = props->DateModified.UniversalTime + TIME_SHIFT;
+		return 0;
+	} );
+	return t;
+}
+
 static int FileService_GetFileStatus( FileRequest *request,
 				      FileStreamChunk *chunk )
 {
@@ -535,7 +548,8 @@ static int FileService_RemoveFile( const wchar_t *path,
 	return 400;
 }
 
-static int FileService_GetFiles( Connection conn,
+static void FileService_GetFiles( Connection conn,
+				 StorageFolder ^folder,
 				 FileRequest *request,
 				 FileStreamChunk *chunk )
 {
@@ -543,22 +557,11 @@ static int FileService_GetFiles( Connection conn,
 	FileRequestParams *params = &request->params;
 	String ^path = ref new String( request->path );
 	auto action = StorageFolder::GetFolderFromPathAsync( path );
-	return create_task( action ).then( [response]( task<StorageFolder^> fileTask ) {
-		StorageFolder ^folder = nullptr;
-		try {
-			folder = fileTask.get();
-		} catch( COMException ^ex ) {
-			response->status = RESPONSE_STATUS_NOT_FOUND;
-		}
+	auto t = create_task( [folder]() {
 		return folder;
-	} ).then( [conn, params, response]( StorageFolder ^folder ) {
-		auto t = create_task( [folder]() {
-			return folder;
-		} );
-		if( !folder || params->filter == FILE_FILTER_FILE ) {
-			return t;
-		}
-		return t.then( [](StorageFolder ^folder) {
+	} );
+	if( folder && params->filter != FILE_FILTER_FILE ) {
+		t = t.then( [](StorageFolder ^folder) {
 			return folder->GetFoldersAsync();
 		}).then( [conn, folder]( IVectorView<StorageFolder^>^ folders ) {
 			char buf[PATH_LEN] = "d";
@@ -575,7 +578,8 @@ static int FileService_GetFiles( Connection conn,
 			} );
 			return folder;
 		} );
-	} ).then( [conn, params, response]( StorageFolder ^folder ) {
+	}
+	t.then( [conn, params, response]( StorageFolder ^folder ) {
 		auto t = create_task( [folder]() {
 			return folder ? 0 : -ENOENT;
 		} );
@@ -599,7 +603,7 @@ static int FileService_GetFiles( Connection conn,
 			} );
 			return 0;
 		} );
-	} ).get();
+	} ).wait();
 }
 
 static int FileService_GetFile( Connection conn,
@@ -611,22 +615,43 @@ static int FileService_GetFile( Connection conn,
 	FileRequestParams *params = &request->params;
 	String ^path = ref new String( request->path );
 	auto action = StorageFile::GetFileFromPathAsync( path );
-	int ret = create_task( action ).then( [&file, params, response]( task<StorageFile ^> t ) {
+	file = create_task( action ).then( [params, response]( task<StorageFile ^> t ) {
+		StorageFile ^file = nullptr;
+		response->status = RESPONSE_STATUS_OK;
 		try {
 			file = t.get();
-			response->status = RESPONSE_STATUS_OK;
-			return GetFileStatus( file, params, &response->file );
-		} catch( COMException ^ex ) {
+		} catch( InvalidArgumentException ^ex ) {
+			response->status = RESPONSE_STATUS_BAD_REQUEST;
+		} catch( Exception ^ex ) {
 			response->status = RESPONSE_STATUS_NOT_FOUND;
-			return create_task( []() -> int {
-				return -ENOMEM;
-			} );
 		}
+		return file;
 	} ).get();
-	if( response->status != RESPONSE_STATUS_OK ) {
-		return ret;
+	if( response->status == RESPONSE_STATUS_BAD_REQUEST ) {
+		StorageFolder ^folder;
+		auto action = StorageFolder::GetFolderFromPathAsync( path );
+		folder = create_task( action ).then( [params, response]( task<StorageFolder ^> t ) {
+			StorageFolder ^folder = nullptr;
+			response->status = RESPONSE_STATUS_OK;
+			try {
+				folder = t.get();
+			} catch( Exception ^ex ) {
+				response->status = RESPONSE_STATUS_NOT_FOUND;
+			}
+			return folder;
+		} ).get();
+		if( !folder ) {
+			return -ENOENT;
+		}
+		GetFolderStatus( folder, &response->file ).wait();
+		Connection_WriteChunk( conn, chunk );
+		FileService_GetFiles( conn, folder, request, chunk );
+		return 0;
 	}
-	
+	GetFileStatus( file, params, &response->file ).wait();
+	if( response->status != RESPONSE_STATUS_OK ) {
+		return -ENOENT;
+	}
 	return 0;
 }
 
