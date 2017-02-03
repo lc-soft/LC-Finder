@@ -166,32 +166,38 @@ static void UI_InitPrivateDirList( void )
 	}
 }
 
-static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnSelectDirDone( const wchar_t *wpath, const wchar_t *token )
 {
-	char path[PATH_LEN] = { 0 };
-	if( SelectFolder( path, PATH_LEN - 1 ) != 0 ) {
-		return;
-	}
+	char *path = EncodeUTF8( wpath );
 	if( !LCFinder_GetDir( path ) ) {
 		DB_Dir dir = LCFinder_AddDir( path, TRUE );
 		if( dir ) {
 			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 		}
 	}
+	free( path );
 }
 
-static void OnSelectPrivateDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnSelectPrivateDirDone( const wchar_t *wpath, const wchar_t *token )
 {
-	char path[PATH_LEN] = { 0 };
-	if( SelectFolder( path, PATH_LEN - 1 ) != 0 ) {
-		return;
-	}
+	char *path = EncodeUTF8( wpath );
 	if( !LCFinder_GetDir( path ) ) {
 		DB_Dir dir = LCFinder_AddDir( path, FALSE );
 		if( dir ) {
 			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 		}
 	}
+	free( path );
+}
+
+static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	SelectFolderAsyncW( OnSelectDirDone );
+}
+
+static void OnSelectPrivateDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+{
+	SelectFolderAsyncW( OnSelectPrivateDirDone );
 }
 
 /** 渲染缩略图缓存占用空间文本 */

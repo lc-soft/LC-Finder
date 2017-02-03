@@ -65,6 +65,7 @@ typedef struct ViewSyncRec_ {
 
 /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
+	size_t files_count;
 	LCUI_Thread tid;
 	LCUI_Cond cond;
 	LCUI_Cond cond_scan;
@@ -199,6 +200,7 @@ static void FileScanner_OnGetDirs( FileStatus *status,
 		pathjoin( file_entry->path, dirpath, buf + 1 );
 		LCUIMutex_Lock( &scanner->mutex );
 		LinkedList_Append( &scanner->files, file_entry );
+		scanner->files_count += 1;
 		LCUICond_Signal( &scanner->cond );
 		LCUIMutex_Unlock( &scanner->mutex );
 	}
@@ -250,6 +252,7 @@ static void FileScanner_ScanFiles( FileScanner scanner )
 			DEBUG_MSG("file: %s\n", file->path);
 			LCUIMutex_Lock( &scanner->mutex );
 			LinkedList_Append( &scanner->files, entry );
+			scanner->files_count += 1;
 			LCUICond_Signal( &scanner->cond );
 			LCUIMutex_Unlock( &scanner->mutex );
 		}
@@ -273,6 +276,7 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 		entry->path = path;
 		entry->is_dir = TRUE;
 		LinkedList_Append( &scanner->files, entry );
+		scanner->files_count += 1;
 	}
 	LCUICond_Signal( &scanner->cond );
 	LCUIMutex_Unlock( &scanner->mutex );
@@ -288,6 +292,7 @@ static void FileScanner_Init( FileScanner scanner )
 	LCUIMutex_Init( &scanner->mutex );
 	LCUIMutex_Init( &scanner->mutex_scan );
 	LinkedList_Init( &scanner->files );
+	scanner->files_count = 0;
 	scanner->is_async_scaning = FALSE;
 	scanner->is_running = FALSE;
 	scanner->dirpath = NULL;
@@ -302,6 +307,7 @@ static void FileScanner_Reset( FileScanner scanner )
 	}
 	LCUIMutex_Lock( &scanner->mutex );
 	LinkedList_Clear( &scanner->files, OnDeleteFileEntry );
+	scanner->files_count = 0;
 	LCUICond_Signal( &scanner->cond );
 	LCUIMutex_Unlock( &scanner->mutex );
 }
@@ -325,8 +331,8 @@ static void FileScanner_Thread( void *arg )
 	} else {
 		FileScanner_LoadSourceDirs( scanner );
 	}
-	DEBUG_MSG("scan files: %d\n", count);
-	if( scanner->files.length > 0 ) {
+	_DEBUG_MSG( "scan files: %d\n", scanner->files_count );
+	if( scanner->files_count > 0 ) {
 		Widget_AddClass( this_view.tip_empty, "hide" );
 		Widget_Hide( this_view.tip_empty );
 	} else {

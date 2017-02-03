@@ -268,7 +268,9 @@ static void OnGetFileStatus( FileStatus *status, void *data )
 	this_view.size = status->size;
 	this_view.mtime = status->mtime;
 	wgetsizestr( fsize_str, 256, this_view.size );
-	wgettimestr( mtime_str, 256, this_view.mtime );
+	if( wgettimestr( mtime_str, 256, this_view.mtime ) < 0 ) {
+		wcscpy( mtime_str, unknown );
+	}
 	TextView_SetTextW( this_view.txt_time, mtime_str );
 	TextView_SetTextW( this_view.txt_fsize, fsize_str );
 }

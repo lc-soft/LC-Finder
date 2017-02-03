@@ -452,11 +452,17 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnBtnSelectionClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	if( w->disabled ) {
+		return;
+	}
 	FileBrowser_EnableSelectionMode( e->data );
 }
 
 static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
+	if( w->disabled ) {
+		return;
+	}
 	FileBrowser_UnselectAllItems( e->data );
 	FileBrowser_DisableSelectionMode( e->data );
 }

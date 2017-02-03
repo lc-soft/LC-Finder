@@ -479,10 +479,11 @@ static task<int> GetFileStatus( StorageFile ^file,
 				FileRequestParams *params,
 				FileStatus *status )
 {
-	status->ctime = file->DateCreated.UniversalTime + TIME_SHIFT;
+	status->ctime = (file->DateCreated.UniversalTime - TIME_SHIFT) / 10000000;
 	auto t = create_task( file->GetBasicPropertiesAsync() )
 		.then( [status]( FileProperties::BasicProperties ^props ) {
-		status->mtime = props->DateModified.UniversalTime + TIME_SHIFT;
+		status->mtime = (props->DateModified.UniversalTime - TIME_SHIFT) / 10000000;
+		status->size = (size_t)props->Size;
 		return 0;
 	} );
 	if(file->IsOfType( StorageItemTypes::Folder )) {
@@ -595,6 +596,9 @@ static void FileService_GetFiles( Connection conn,
 				size_t size;
 				const wchar_t *name;
 				name = file->Name->Data();
+				if( !IsImageFile( name ) ) {
+					return;
+				}
 				size = LCUI_EncodeString( buf + 1, name,
 							  PATH_LEN - 2, ENCODING_UTF8 );
 				buf[size++] = '\n';
@@ -648,10 +652,10 @@ static int FileService_GetFile( Connection conn,
 		FileService_GetFiles( conn, folder, request, chunk );
 		return 0;
 	}
-	GetFileStatus( file, params, &response->file ).wait();
 	if( response->status != RESPONSE_STATUS_OK ) {
 		return -ENOENT;
 	}
+	GetFileStatus( file, params, &response->file ).wait();
 	return 0;
 }
 
