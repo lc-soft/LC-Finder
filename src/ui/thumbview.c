@@ -34,6 +34,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -99,9 +100,9 @@ typedef struct AnimationRec_ {
 
 /** 缩略图列表布局功能的相关数据 */
 typedef struct LayoutContextRec_ {
-	int x;				/**< 当前对象的 X 轴坐标 */
+	float x;			/**< 当前对象的 X 轴坐标 */
 	int count;			/**< 当前处理的总对象数量 */
-	int max_width;			/**< 最大宽度 */
+	float max_width;		/**< 最大宽度 */
 	LCUI_BOOL is_running;		/**< 是否正在布局 */
 	LCUI_BOOL is_delaying;		/**< 是否处于延迟状态 */
 	LCUI_Widget start;		/**< 起始处的部件 */
@@ -170,14 +171,15 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 	LinkedList list;
 	LinkedListNode *node;
 	LCUI_WidgetEventRec e;
-	int count = 0, top, bottom;
+	int count = 0;
+	float top, bottom;
 
 	if( !ctx->enabled ) {
 		return 0;
 	}
 	e.type = ctx->event_id;
 	e.cancel_bubble = TRUE;
-	bottom = top = ctx->top;
+	bottom = top = (float)ctx->top;
 	bottom += ctx->scrolllayer->parent->box.padding.height;
 	if( !ctx->top_child ) {
 		node = ctx->scrolllayer->children.head.next;
@@ -188,7 +190,7 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 	if( !ctx->top_child ) {
 		return 0;
 	}
-	if( ctx->top_child->box.border.top > bottom ) {
+	if( ctx->top_child->box.border.y > bottom ) {
 		node = Widget_GetNode( ctx->top_child );
 		ctx->top_child = NULL;
 		while( node ) {
@@ -618,15 +620,12 @@ void ThumbView_Unlock( LCUI_Widget w )
 /** 更新布局上下文，为接下来的子部件布局处理做准备 */
 static void ThumbView_UpdateLayoutContext( LCUI_Widget w )
 {
-	int max_width, n;
+	float max_width, n;
 	ThumbView view = Widget_GetData( w, self.main );
 	view->layout.max_width = w->parent->box.content.width;
 	max_width = view->layout.max_width;
-	n = max_width / FOLDER_MAX_WIDTH;
-	if( max_width % FOLDER_MAX_WIDTH > 0 ) {
-		n = n + 1;
-	}
-	view->layout.folders_per_row = n;
+	n = (float)ceil( max_width / FOLDER_MAX_WIDTH );
+	view->layout.folders_per_row = (int)n;
 	Widget_SetStyle( w, key_width, max_width, px );
 }
 
@@ -662,7 +661,7 @@ static void UpdateThumbRow( ThumbView view )
 	LCUI_Widget item;
 	ThumbViewItem data;
 	LinkedListNode *node;
-	int overflow_width, width, thumb_width, rest_width;
+	float overflow_width, width, thumb_width, rest_width;
 	if( view->layout.max_width <= THUBVIEW_MIN_WIDTH ) {
 		return;
 	}
@@ -711,11 +710,13 @@ static void UpdateThumbRow( ThumbView view )
 /* 根据当前布局更新图片尺寸 */
 static void UpdatePictureSize( LCUI_Widget item )
 {
-	int width, w, h;
+	float width, w = 226, h = 226;
 	ThumbViewItem data = Widget_GetData( item, self.item );
 	ThumbView view = data->view;
-	w = data->file->width > 0 ? data->file->width : 226;
-	h = data->file->height > 0 ? data->file->height : 226;
+	if( data->file->width > 0 ) {
+		w = (float)data->file->width;
+		h = (float)data->file->height;
+	}
 	width = PICTURE_FIXED_HEIGHT * w / h;
 	SetStyle( item->custom_style, key_width, width, px );
 	Widget_UpdateStyle( item, FALSE );
@@ -729,7 +730,8 @@ static void UpdatePictureSize( LCUI_Widget item )
 /* 根据当前布局更新文件夹尺寸 */
 static void UpdateFolderSize( LCUI_Widget item )
 {
-	int width, n;
+	int n;
+	float width;
 	ThumbViewItem data = Widget_GetData( item, self.item );
 	ThumbView view = data->view;
 	++view->layout.folder_count;
@@ -745,11 +747,11 @@ static void UpdateFolderSize( LCUI_Widget item )
 	width = (width - FOLDER_MARGIN_RIGHT*(n - 1)) / n;
 	/* 设置每行最后一个文件夹的右边距为 0px */
 	if( view->layout.folder_count % n == 0 ) {
-		SetStyle( item->custom_style, key_margin_right, 0, px );
+		Widget_SetStyle( item, key_margin_right, 0, px );
 	} else {
-		item->custom_style->sheet[key_margin_right].is_valid = FALSE;
+		Widget_UnsetStyle( item, key_margin_right );
 	}
-	SetStyle( item->custom_style, key_width, width, px );
+	Widget_SetStyle( item, key_width, width, px );
 	Widget_UpdateStyle( item, FALSE );
 }
 

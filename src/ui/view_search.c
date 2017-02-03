@@ -34,6 +34,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include "finder.h"
@@ -91,7 +92,7 @@ static struct SearchView {
 	struct {
 		int count;
 		int tags_per_row;
-		int max_width;
+		float max_width;
 	} layout;
 	int sort_mode;
 	LinkedList tags;
@@ -283,17 +284,13 @@ static void ViewSyncThread( void *arg )
 
 static void UpdateLayoutContext( void )
 {
-	double tmp;
-	int max_width, n;
+	double n;
+	float max_width;
 	max_width = this_view.view_tags->box.content.width;
 	n = max_width + TAG_MARGIN_RIGHT;
-	tmp = 1.0 * n / (TAG_MAX_WIDTH + TAG_MARGIN_RIGHT);
-	n /= TAG_MAX_WIDTH + TAG_MARGIN_RIGHT;
-	if( tmp > 1.0 * n ) {
-		n = n + 1;
-	}
+	n = ceil( n / TAG_MAX_WIDTH + TAG_MARGIN_RIGHT );
 	this_view.layout.max_width = max_width;
-	this_view.layout.tags_per_row = n;
+	this_view.layout.tags_per_row = (int)n;
 }
 
 static void OnTagViewStartLayout( LCUI_Widget w )
@@ -405,12 +402,12 @@ static void UnsetTagCover( LCUI_Widget w )
 
 static void UpdateTagSize( LCUI_Widget w )
 {
-	int width, n;
+	int n;
+	float width;
 	++this_view.layout.count;
 	if( this_view.layout.count == 1 ) {
 		UpdateLayoutContext();
 	}
-	_DEBUG_MSG( "max_width: %d\n", this_view.layout.max_width );
 	if( this_view.layout.max_width < TAG_MAX_WIDTH ) {
 		return;
 	}
@@ -423,7 +420,6 @@ static void UpdateTagSize( LCUI_Widget w )
 	} else {
 		Widget_UnsetStyle( w, key_margin_right );
 	}
-	_DEBUG_MSG("width: %d\n", width);
 	Widget_SetStyle( w, key_width, width, px );
 	Widget_UpdateStyle( w, FALSE );
 }
@@ -605,7 +601,6 @@ void UI_UpdateSearchView( void )
 		item = NEW( TagItemRec, 1 );
 		item->tag = finder.tags[i];
 		item->widget = CreateTagWidget( finder.tags[i] );
-		_DEBUG_MSG("append child\n");
 		ThumbView_Append( this_view.view_tags, item->widget );
 		LinkedList_Append( &this_view.tags, item );
 		++count;

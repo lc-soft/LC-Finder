@@ -276,7 +276,7 @@ static void FileScanner_Destroy( FileScanner scanner )
 static void OnTimeRangeClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUI_Widget title = e->data;
-	FileBrowser_SetScroll( &this_view.browser, title->box.graph.top );
+	FileBrowser_SetScroll( &this_view.browser, (int)title->box.graph.y );
 	FileBrowser_SetButtonsDisabled( &this_view.browser, FALSE );
 	Widget_Hide( this_view.time_ranges->parent->parent );
 }

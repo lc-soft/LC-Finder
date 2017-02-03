@@ -245,12 +245,12 @@ static void FileIndex_Delete( FileIndex fidx )
 static void GetViewerSize( int *width, int *height )
 {
 	if( this_view.picture->view->width > 200 ) {
-		*width = this_view.picture->view->width - 120;
+		*width = (int)this_view.picture->view->width - 120;
 	} else {
 		*width = 200;
 	}
 	if( this_view.picture->view->height > 200 ) {
-		*height = this_view.picture->view->height - 120;
+		*height = (int)this_view.picture->view->height - 120;
 	} else {
 		*height = 200;
 	}
@@ -371,11 +371,11 @@ static void InitSlideTransition( void )
 
 static void SetSliderPostion( int x )
 {
-	int width;
-	width = this_view.picture->view->width;
-	Widget_Move( this_view.pictures[0]->view, x - width, 0 );
-	Widget_Move( this_view.pictures[1]->view, x, 0 );
-	Widget_Move( this_view.pictures[2]->view, x + width, 0 );
+	float fx = (float)x;
+	float width = this_view.picture->view->width;
+	Widget_Move( this_view.pictures[0]->view, fx - width, 0 );
+	Widget_Move( this_view.pictures[1]->view, fx, 0 );
+	Widget_Move( this_view.pictures[2]->view, fx + width, 0 );
 }
 
 /** 更新滑动过渡效果 */
@@ -422,7 +422,7 @@ static void RestoreSliderPosition( void )
 		return;
 	}
 	st->action = RESTORE;
-	st->src_x = this_view.picture->view->x;
+	st->src_x = (int)this_view.picture->view->x;
 	if( st->src_x == 0 ) {
 		return;
 	} else if( st->src_x < 0 ) {
@@ -448,11 +448,11 @@ static void StartSlideTransition( int direction )
 	}
 	st->action = SWITCH;
 	st->direction = direction;
-	st->src_x = this_view.picture->view->x;
+	st->src_x = (int)this_view.picture->view->x;
 	if( st->direction == RIGHT ) {
-		st->dst_x = this_view.picture->view->width;
+		st->dst_x = (int)this_view.picture->view->width;
 	} else {
-		st->dst_x = 0 - this_view.picture->view->width;
+		st->dst_x = 0 - (int)this_view.picture->view->width;
 	}
 	st->is_running = TRUE;
 	st->start_time = LCUI_GetTime();
@@ -486,10 +486,10 @@ static int SwitchNextPicture( void )
 static void UpdatePicturePosition( Picture pic )
 {
 	LCUI_StyleSheet sheet;
-	int x = 0, y = 0, width, height;
+	float x = 0, y = 0, width, height;
 	sheet = pic->view->custom_style;
-	width = (int)(pic->data->width * pic->scale);
-	height = (int)(pic->data->height * pic->scale);
+	width = (float)(pic->data->width * pic->scale);
+	height = (float)(pic->data->height * pic->scale);
 	if( width <= pic->view->width ) {
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	}
@@ -504,14 +504,14 @@ static void UpdatePicturePosition( Picture pic )
 	if( width <= pic->view->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
-		this_view.focus_x = width / 2;
-		this_view.origin_focus_x = pic->data->width / 2;
+		this_view.focus_x = (int)(width / 2.0 + 0.5);
+		this_view.origin_focus_x = (int)(pic->data->width / 2 + 0.5);
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	} else {
 		this_view.drag.with_x = TRUE;
-		x = this_view.origin_focus_x;
+		x = (float)this_view.origin_focus_x;
 		this_view.focus_x = (int)(x * pic->scale + 0.5);
-		x = this_view.focus_x - this_view.offset_x;
+		x = (float)this_view.focus_x - this_view.offset_x;
 		/* X坐标调整，确保查看器的图片浏览范围不超出图片 */
 		if( x < 0 ) {
 			x = 0;
@@ -519,35 +519,35 @@ static void UpdatePicturePosition( Picture pic )
 		}
 		if( x + pic->view->width > width ) {
 			x = width - pic->view->width;
-			this_view.focus_x = x + this_view.offset_x;
+			this_view.focus_x = (int)(x + this_view.offset_x);
 		}
 		SetStyle( sheet, key_background_position_x, -x, px );
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
-		x = (int)(this_view.focus_x / pic->scale + 0.5);
-		this_view.origin_focus_x = x;
+		x = (float)(this_view.focus_x / pic->scale + 0.5);
+		this_view.origin_focus_x = (int)x;
 	}
 	/* 原理同上 */
 	if( height <= pic->view->height ) {
 		this_view.drag.with_y = FALSE;
-		this_view.focus_y = height / 2;
-		this_view.origin_focus_y = pic->data->height / 2;
+		this_view.focus_y = (int)(height / 2 + 0.5);
+		this_view.origin_focus_y = (int)(pic->data->height / 2 + 0.5);
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	} else {
 		this_view.drag.with_y = TRUE;
-		y = this_view.origin_focus_y;
+		y = (float)this_view.origin_focus_y;
 		this_view.focus_y = (int)(y * pic->scale + 0.5);
-		y = this_view.focus_y - this_view.offset_y;
+		y = (float)(this_view.focus_y - this_view.offset_y);
 		if( y < 0 ) {
 			y = 0;
 			this_view.focus_y = this_view.offset_y;
 		}
 		if( y + pic->view->height > height ) {
 			y = height - pic->view->height;
-			this_view.focus_y = y + this_view.offset_y;
+			this_view.focus_y = (int)(y + this_view.offset_y);
 		}
 		SetStyle( sheet, key_background_position_y, -y, px );
-		y = (int)(this_view.focus_y / pic->scale + 0.5);
-		this_view.origin_focus_y = y;
+		y = (float)(this_view.focus_y / pic->scale + 0.5);
+		this_view.origin_focus_y = (int)y;
 	}
 	Widget_UpdateStyle( pic->view, FALSE );
 }
@@ -555,14 +555,14 @@ static void UpdatePicturePosition( Picture pic )
 /** 重置浏览区域的位置偏移量 */
 static void ResetOffsetPosition( void )
 {
-	this_view.offset_x = this_view.picture->view->width / 2;
-	this_view.offset_y = this_view.picture->view->height / 2;
+	this_view.offset_x = roundi(this_view.picture->view->width / 2);
+	this_view.offset_y = roundi(this_view.picture->view->height / 2);
 }
 
 /** 设置当前图片缩放比例 */
 static void DirectSetPictureScale( Picture pic, double scale )
 {
-	int width, height;
+	float width, height;
 	LCUI_StyleSheet sheet;
 	if( scale <= pic->min_scale ) {
 		scale = pic->min_scale;
@@ -572,8 +572,8 @@ static void DirectSetPictureScale( Picture pic, double scale )
 	}
 	pic->scale = scale;
 	sheet = pic->view->custom_style;
-	width = (int)(scale * pic->data->width);
-	height = (int)(scale * pic->data->height);
+	width = (float)(scale * pic->data->width);
+	height = (float)(scale * pic->data->height);
 	SetStyle( sheet, key_background_size_width, width, px );
 	SetStyle( sheet, key_background_size_height, height, px );
 	Widget_UpdateStyle( pic->view, FALSE );
@@ -724,44 +724,44 @@ static void DragPicture( int mouse_x, int mouse_y )
 	}
 	sheet = pic->view->custom_style;
 	if( this_view.drag.with_x ) {
-		int x, width;
-		width = (int)(pic->data->width * pic->scale);
+		float x, width;
+		width = (float)(pic->data->width * pic->scale);
 		this_view.focus_x = this_view.drag.focus_x;
 		this_view.focus_x -= mouse_x - this_view.drag.mouse_x;
-		x = this_view.focus_x - this_view.offset_x;
+		x = (float)(this_view.focus_x - this_view.offset_x);
 		if( x < 0 ) {
 			x = 0;
 			this_view.focus_x = this_view.offset_x;
 		}
 		if( x + pic->view->width > width ) {
 			x = width - pic->view->width;
-			this_view.focus_x = x + this_view.offset_x;
+			this_view.focus_x = roundi( x + this_view.offset_x );
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_x, -x, px );
-		x = (int)(this_view.focus_x / pic->scale);
-		this_view.origin_focus_x = x;
+		x = (float)(this_view.focus_x / pic->scale);
+		this_view.origin_focus_x = roundi( x );
 	} else {
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	}
 	if( this_view.drag.with_y ) {
-		int y, height;
-		height = (int)(pic->data->height * pic->scale);
+		float y, height;
+		height = (float)(pic->data->height * pic->scale);
 		this_view.focus_y = this_view.drag.focus_y;
 		this_view.focus_y -= mouse_y - this_view.drag.mouse_y;
-		y = this_view.focus_y - this_view.offset_y;
+		y = (float)(this_view.focus_y - this_view.offset_y);
 		if( y < 0 ) {
 			y = 0;
 			this_view.focus_y = this_view.offset_y;
 		}
 		if( y + pic->view->height > height ) {
 			y = height - pic->view->height;
-			this_view.focus_y = y + this_view.offset_y;
+			this_view.focus_y = roundi( y + this_view.offset_y );
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_y, -y, px );
-		y = (int)(this_view.focus_y / pic->scale);
-		this_view.origin_focus_y = y;
+		y = (float)(this_view.focus_y / pic->scale);
+		this_view.origin_focus_y = roundi( y );
 	} else {
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	}
