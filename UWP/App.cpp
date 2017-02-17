@@ -16,11 +16,15 @@ using namespace Windows::System;
 using namespace Windows::Foundation;
 using namespace Windows::Graphics::Display;
 
-static App^ UWPApp = nullptr;
+static struct UWPAppModule {
+	App^ app;
+	void (*update)(LCUI_Surface);
+	void (*present)(LCUI_Surface);
+} UWPApp;
 
-static void UWPApp_DispatchEvent( void )
+static void UWPApp_ProcessEvents( void )
 {
-	UWPApp->ProcessEvents();
+	UWPApp.app->ProcessEvents();
 }
 
 static LCUI_BOOL UWPApp_WaitEvent( void )
@@ -51,7 +55,7 @@ static int UWPApp_UnbindSysEvent2( int handler_id )
 
 static void *UWPApp_GetData( void )
 {
-	return (void*)UWPApp;
+	return (void*)UWPApp.app;
 }
 
 static LCUI_AppDriver LCUI_CreateUWPApp( App^ app )
@@ -61,11 +65,23 @@ static LCUI_AppDriver LCUI_CreateUWPApp( App^ app )
 	driver->BindSysEvent = UWPApp_BindSysEvent;
 	driver->UnbindSysEvent = UWPApp_UnbindSysEvent;
 	driver->UnbindSysEvent2 = UWPApp_UnbindSysEvent2;
-	driver->DispatchEvent = UWPApp_DispatchEvent;
+	driver->ProcessEvents = UWPApp_ProcessEvents;
 	driver->PostTask = UWPApp_PostTask;
 	driver->GetData = UWPApp_GetData;
-	UWPApp = app;
+	UWPApp.app = app;
 	return driver;
+}
+
+static void UWPDisplay_Update( LCUI_Surface surface )
+{
+	UWPApp.update( surface );
+	UWPApp.app->Update();
+}
+
+static void UWPDisplay_Present( LCUI_Surface surface )
+{
+	UWPApp.present( surface );
+	UWPApp.app->Present();
 }
 
 static void LoggerHandler( const char *str )
@@ -101,6 +117,10 @@ App::App() :
 	m_input = std::unique_ptr<LCUIInput>( new LCUIInput );
 	m_displayDriver = LCUI_CreateUWPDisplay();
 	m_appDriver = LCUI_CreateUWPApp( this );
+	UWPApp.update = m_displayDriver->update;
+	UWPApp.present = m_displayDriver->present;
+	m_displayDriver->update = UWPDisplay_Update;
+	m_displayDriver->present = UWPDisplay_Present;
 }
 
 // 创建 IFrameworkView 时调用的第一个方法。
@@ -186,6 +206,22 @@ void App::Load(Platform::String^ entryPoint)
 	}
 }
 
+void App::Present()
+{
+	if( m_windowVisible ) {
+		if( m_main->Render() ) {
+			m_deviceResources->Present();
+		}
+	}
+}
+
+void App::Update()
+{
+	if( m_windowVisible ) {
+		m_main->Update();
+	}
+}
+
 void App::ProcessEvents()
 {
 	if( m_windowClosed ) {
@@ -195,11 +231,6 @@ void App::ProcessEvents()
 	auto dispathcer = CoreWindow::GetForCurrentThread()->Dispatcher;
 	if( m_windowVisible ) {
 		dispathcer->ProcessEvents( CoreProcessEventsOption::ProcessAllIfPresent );
-
-		m_main->Update();
-		if( m_main->Render() ) {
-			m_deviceResources->Present();
-		}
 	} else {
 		dispathcer->ProcessEvents( CoreProcessEventsOption::ProcessOneAndAllPending );
 	}
@@ -213,7 +244,6 @@ void App::Run()
 	LCUI_InitApp( m_appDriver );
 	LCUI_InitDisplay( m_displayDriver );
 	LCUI_InitCursor();
-	LCUI_SetTaskAgent( FALSE );
 	if( LCFinder_Init( 1, argv ) == 0 ) {
 		LCFinder_Run();
 	}
@@ -244,7 +274,7 @@ void App::OnSuspending(Platform::Object^ sender, SuspendingEventArgs^ args)
 
 	create_task([this, deferral]()
 	{
-        m_deviceResources->Trim();
+		m_deviceResources->Trim();
 
 		// 在此处插入代码。
 

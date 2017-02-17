@@ -84,14 +84,12 @@ void LCUIRenderer::Render()
 	ID2D1DeviceContext* context = m_deviceResources->GetD2DDeviceContext();
 	context->SaveDrawingState( m_stateBlock.Get() );
 	context->BeginDraw();
-	m_frameMutex.lock();
 	SwapFrames();
 	rect.left = rect.top = 0;
 	rect.right = (FLOAT)m_frameSize.width;
 	rect.bottom = (FLOAT)m_frameSize.height;
 	context->DrawBitmap( m_bmp.Get(), &rect, 1.0f, 
 			     D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR );
-	m_frameMutex.unlock();
 
 	// 此处忽略 D2DERR_RECREATE_TARGET。此错误指示该设备
 	// 丢失。将在下一次调用 Present 时对其进行处理。
@@ -101,16 +99,6 @@ void LCUIRenderer::Render()
 	}
 
 	context->RestoreDrawingState( m_stateBlock.Get() );
-}
-
-void LCUIRenderer::LockFrames()
-{
-	m_frameMutex.lock();
-}
-
-void LCUIRenderer::UnlockFrames()
-{
-	m_frameMutex.unlock();
 }
 
 void LCUIRenderer::SwapFrames()
@@ -151,14 +139,12 @@ void LCUIRenderer::CreateWindowSizeDependentResources()
 		},
 		dpi, dpi, D2D1_BITMAP_OPTIONS_NONE, 0
 	};
-	m_frameMutex.lock();
 	m_frameSwapable = true;
 	m_frameSize = { (UINT32)outputSize.Width, (UINT32)outputSize.Height };
 	Graph_Create( &display.frame, (int)m_frameSize.width, (int)m_frameSize.height );
 	Graph_FillRect( &display.frame, RGB( 255, 255, 255 ), NULL, TRUE );
 	context->CreateBitmap( m_frameSize, nullptr, 0, &props, &m_bmp );
 	context->CreateBitmap( m_frameSize, nullptr, 0, &props, &m_backBmp );
-	m_frameMutex.unlock();
 	UpdateSurfaceSize();
 }
 
@@ -177,7 +163,9 @@ static void UpdateSurfaceSize( void )
 	dpy_ev.surface = display.surface;
 	dpy_ev.resize.width = (int)display.renderer->m_frameSize.width;
 	dpy_ev.resize.height = (int)display.renderer->m_frameSize.height;
+	LCUIDisplay_SetSize( dpy_ev.resize.width, dpy_ev.resize.height );
 	EventTrigger_Trigger( display.trigger, DET_RESIZE, &dpy_ev );
+	LCUIDisplay_InvalidateArea( NULL );
 }
 
 static int UWPDisplay_GetWidth( void )
@@ -265,7 +253,6 @@ static LCUI_PaintContext UWPSurface_BeginPaint( LCUI_Surface surface, LCUI_Rect 
 	paint->rect = *rect;
 	paint->with_alpha = FALSE;
 	Graph_Init( &paint->canvas );
-	display.renderer->LockFrames();
 	LCUIRect_MergeRect( &display.rect, &display.rect, rect );
 	LCUIRect_ValidateArea( &paint->rect, UWPDisplay_GetWidth(), 
 			       UWPDisplay_GetHeight() );
@@ -277,7 +264,6 @@ static LCUI_PaintContext UWPSurface_BeginPaint( LCUI_Surface surface, LCUI_Rect 
 static void UWPSurface_EndPaint( LCUI_Surface surface, LCUI_PaintContext paint )
 {
 	free( paint );
-	display.renderer->UnlockFrames();
 }
 
 LCUI_DisplayDriver LCUI_CreateUWPDisplay( void )

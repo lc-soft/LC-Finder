@@ -55,13 +55,10 @@ public:
 	void Update( DX::StepTimer const& timer );
 	void Render();
 	void SwapFrames();
-	void LockFrames();
-	void UnlockFrames();
 	bool m_frameSwapable;
 	D2D1_SIZE_U m_frameSize;
 
 private:
-	std::mutex m_frameMutex;
 	std::shared_ptr<DX::DeviceResources> m_deviceResources;
 	Microsoft::WRL::ComPtr<ID2D1DrawingStateBlock1> m_stateBlock;
 	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_bmp;

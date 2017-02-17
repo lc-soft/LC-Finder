@@ -12,6 +12,8 @@ namespace UWP
 	public:
 		App();
 		void ProcessEvents();
+		void Update();
+		void Present();
 		// IFrameworkView 方法。
 		virtual void Initialize(Windows::ApplicationModel::Core::CoreApplicationView^ applicationView);
 		virtual void SetWindow(Windows::UI::Core::CoreWindow^ window);
