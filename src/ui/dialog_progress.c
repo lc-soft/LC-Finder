@@ -59,7 +59,7 @@ LCUI_ProgressDialog NewProgressDialog( void )
 	dialog->progress = LCUIWidget_New( "progress" );
 	dialog->btn_cancel = LCUIWidget_New( "button" );
 	dialog->container = LCUIWidget_New( NULL );
-	dialog->loop = LCUI_MainLoop_New();
+	dialog->loop = LCUIMainLoop_New();
 	Widget_AddClass( box, "dialog-btn-group one-button" );
 	Widget_AddClass( dialog->container, "dialog" );
 	Widget_AddClass( dialog_body, "dialog-body" );
@@ -82,12 +82,12 @@ LCUI_ProgressDialog NewProgressDialog( void )
 void OpenProgressDialog( LCUI_ProgressDialog dialog, LCUI_Widget parent )
 {
 	Widget_Append( parent, dialog->container );
-	LCUI_MainLoop_Run( dialog->loop );
+	LCUIMainLoop_Run( dialog->loop );
 	Widget_Destroy( dialog->container );
 	free( dialog );
 }
 
 void CloseProgressDialog( LCUI_ProgressDialog dialog )
 {
-	LCUI_MainLoop_Quit( dialog->loop );
+	LCUIMainLoop_Quit( dialog->loop );
 }

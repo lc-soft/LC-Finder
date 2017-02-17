@@ -242,6 +242,27 @@ static void FileIndex_Delete( FileIndex fidx )
 	fidx->name = NULL;
 }
 
+static void TaskForResetWidgetBackground( void *arg1, void *arg2 )
+{
+	LCUI_Widget w = arg1;
+	Widget_UnsetStyle( w, key_background_image );
+	Widget_UpdateBackground( w );
+	Widget_UpdateStyle( w, FALSE );
+}
+
+static void TaskForSetWidgetBackground( void *arg1, void *arg2 )
+{
+	LCUI_Widget w = arg1;
+	Widget_SetStyle( w, key_background_image, arg2, image );
+	Widget_UpdateStyle( w, FALSE );
+}
+
+static void TaskForHideTipEmpty( void *arg1, void *arg2 )
+{
+	Widget_RemoveClass( this_view.tip_empty, "hide" );
+	Widget_Show( this_view.tip_empty );
+}
+
 static void GetViewerSize( int *width, int *height )
 {
 	if( this_view.picture->view->width > 200 ) {
@@ -1056,7 +1077,6 @@ static int LoadPicture( Picture pic )
 {
 	wchar_t *wpath;
 	int storage = finder.storage_for_image;
-	LCUI_StyleSheet sheet = pic->view->custom_style;
 	if( !pic->file_for_load || !this_view.is_working ) {
 		return -1;
 	}
@@ -1070,12 +1090,9 @@ static int LoadPicture( Picture pic )
 	this_view.picture->timer = LCUITimer_Set( 300, OnShowTipLoading, 
 						  this_view.picture, FALSE );
 	if( Graph_IsValid( pic->data ) ) {
-		Widget_Lock( pic->view );
 		Graph_Free( pic->data );
-		sheet->sheet[key_background_image].is_valid = FALSE;
-		Widget_UpdateBackground( pic->view );
-		Widget_UpdateStyle( pic->view, FALSE );
-		Widget_Unlock( pic->view );
+		LCUI_PostSimpleTask( TaskForResetWidgetBackground, 
+				     pic->view, NULL );
 	}
 	wpath = pic->file_for_load;
 	pic->file_for_load = NULL;
@@ -1094,8 +1111,8 @@ static int LoadPicture( Picture pic )
 	LCUIMutex_Unlock( &this_view.mutex_load );
 	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
 	if( pic->is_valid && !pic->file_for_load ) {
-		SetStyle( sheet, key_background_image, pic->data, image );
-		Widget_UpdateStyle( pic->view, FALSE );
+		LCUI_PostSimpleTask( TaskForSetWidgetBackground,
+				     pic->view, pic->data );
 		ResetPictureSize( pic );
 	}
 
@@ -1149,8 +1166,7 @@ static void OnBtnDeleteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( OpenNextPicture() != 0 ) {
 		/** 如果前后都没有图片了，则提示没有可显示的内容 */
 		if( OpenPrevPicture() != 0 ) {
-			Widget_RemoveClass( this_view.tip_empty, "hide" );
-			Widget_Show( this_view.tip_empty );
+			LCUI_PostSimpleTask( TaskForHideTipEmpty, NULL, NULL );
 		}
 	}
 	LCFinder_DeleteFiles( &path, 1, NULL, NULL );

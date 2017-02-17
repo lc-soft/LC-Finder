@@ -54,14 +54,14 @@ static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DialogContext ctx = e->data;
 	ctx->result = TRUE;
-	LCUI_MainLoop_Quit( ctx->loop );
+	LCUIMainLoop_Quit( ctx->loop );
 }
 
 static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DialogContext ctx = e->data;
 	ctx->result = FALSE;
-	LCUI_MainLoop_Quit( ctx->loop );
+	LCUIMainLoop_Quit( ctx->loop );
 }
 
 LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title, 
@@ -76,7 +76,7 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
 	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
 	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
-	ctx.loop = LCUI_MainLoop_New();
+	ctx.loop = LCUIMainLoop_New();
 	Widget_AddClass( dialog, "dialog" );
 	Widget_AddClass( dialog_body, "dialog-body" );
 	Widget_AddClass( dialog_content, "dialog-content" );
@@ -113,7 +113,7 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 	Widget_Append( parent, dialog );
 	Widget_BindEvent( btn_ok, "click", OnBtnOkClick, &ctx, NULL );
 	Widget_BindEvent( btn_cancel, "click", OnBtnCancelClick, &ctx, NULL );
-	LCUI_MainLoop_Run( ctx.loop );
+	LCUIMainLoop_Run( ctx.loop );
 	Widget_Destroy( dialog );
 	return ctx.result;
 }

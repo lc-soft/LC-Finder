@@ -439,28 +439,6 @@ void Connection_Destroy( Connection conn )
 
 }
 
-static int FileService_GetFileImageStatus( FileRequest *request,
-					   FileStreamChunk *chunk )
-{
-	int width, height;
-	FileResponse *response = &chunk->response;
-#ifdef _WIN32
-	char *path = EncodeANSI( request->path );
-#else
-	char *path = EncodeUTF8( request->path );
-#endif
-	if( Graph_GetImageSize( path, &width, &height ) == 0 ) {
-		response->file.image = NEW( FileImageStatus, 1 );
-		response->file.image->width = width;
-		response->file.image->height = height;
-		free( path );
-		return 0;
-	}
-	response->file.image = NULL;
-	free( path );
-	return -1;
-}
-
 static int GetStatusByErrorCode( int code )
 {
 	switch( abs( code ) ) {

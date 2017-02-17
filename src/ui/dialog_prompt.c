@@ -86,14 +86,14 @@ static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		return;
 	}
 	ctx->result = 0;
-	LCUI_MainLoop_Quit( ctx->loop );
+	LCUIMainLoop_Quit( ctx->loop );
 }
 
 static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DialogContext ctx = e->data;
 	ctx->result = -1;
-	LCUI_MainLoop_Quit( ctx->loop );
+	LCUIMainLoop_Quit( ctx->loop );
 }
 
 int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
@@ -115,7 +115,7 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	ctx.old_text = val;
 	ctx.max_len = max_len;
 	ctx.checker = checker;
-	ctx.loop = LCUI_MainLoop_New();
+	ctx.loop = LCUIMainLoop_New();
 	ctx.input = LCUIWidget_New( "textedit" );
 	Widget_AddClass( dialog, "dialog" );
 	Widget_AddClass( dialog_body, "dialog-body" );
@@ -155,7 +155,7 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	Widget_BindEvent( btn_cancel, "click", OnBtnCancelClick, &ctx, NULL );
 	Widget_BindEvent( ctx.input, "change", OnInputChange, &ctx, NULL );
 	LCUIWidget_SetFocus( ctx.input );
-	LCUI_MainLoop_Run( ctx.loop );
+	LCUIMainLoop_Run( ctx.loop );
 	Widget_Destroy( dialog );
 	return ctx.result;
 }

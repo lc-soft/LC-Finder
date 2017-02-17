@@ -384,20 +384,16 @@ static void OnTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void SetTagCover( LCUI_Widget w, LCUI_Graph *thumb )
 {
-	Widget_Lock( w );
 	SetStyle( w->custom_style, key_background_image, thumb, image );
 	Widget_UpdateStyle( w, FALSE );
-	Widget_Unlock( w );
 }
 
 static void UnsetTagCover( LCUI_Widget w )
 {
-	Widget_Lock( w );
 	DEBUG_MSG("remove thumb\n");
 	Graph_Init( &w->computed_style.background.image );
 	w->custom_style->sheet[key_background_image].is_valid = FALSE;
 	Widget_UpdateStyle( w, FALSE );
-	Widget_Unlock( w );
 }
 
 static void UpdateTagSize( LCUI_Widget w )

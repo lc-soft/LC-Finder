@@ -63,7 +63,7 @@ void UI_InitSplashScreen( void )
 	wpathjoin( wpath, finder.work_dir, SPLASH_IMG_PATH );
 	window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	path = EncodeANSI( wpath );
-	if( Graph_LoadPNG( path, &self.img ) == 0 ) {
+	if( LCUI_ReadPNGFile( path, &self.img ) == 0 ) {
 		self.screen = LCUIWidget_New( NULL );
 		Widget_SetStyle( self.screen, key_width, 1.0, scale );
 		Widget_SetStyle( self.screen, key_height, 1.0, scale );

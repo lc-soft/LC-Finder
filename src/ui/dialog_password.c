@@ -104,7 +104,7 @@ static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		}
 		Widget_RemoveClass( ctx->input->parent, "error" );
 		ctx->result = 0;
-		LCUI_MainLoop_Quit( ctx->loop );
+		LCUIMainLoop_Quit( ctx->loop );
 		free( str );
 		return;
 	}
@@ -134,14 +134,14 @@ static void OnBtnOkClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		Widget_RemoveClass( ctx->input2->parent, "error" );
 	}
 	ctx->result = 0;
-	LCUI_MainLoop_Quit( ctx->loop );
+	LCUIMainLoop_Quit( ctx->loop );
 }
 
 static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	DialogContext ctx = e->data;
 	ctx->result = -1;
-	LCUI_MainLoop_Quit( ctx->loop );
+	LCUIMainLoop_Quit( ctx->loop );
 }
 
 int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title, 
@@ -163,7 +163,7 @@ int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 	ctx.data = data;
 	ctx.check = check;
 	ctx.type = TYPE_VERIFY_PASSWORD;
-	ctx.loop = LCUI_MainLoop_New();
+	ctx.loop = LCUIMainLoop_New();
 	ctx.input = LCUIWidget_New( "textedit" );
 	Widget_AddClass( dialog, "dialog" );
 	Widget_AddClass( dialog_body, "dialog-body" );
@@ -219,7 +219,7 @@ int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 	Widget_BindEvent( btn_cancel, "click", OnBtnCancelClick, &ctx, NULL );
 	Widget_BindEvent( ctx.input, "change", OnInputChange, &ctx, NULL );
 	LCUIWidget_SetFocus( ctx.input );
-	LCUI_MainLoop_Run( ctx.loop );
+	LCUIMainLoop_Run( ctx.loop );
 	Widget_Destroy( dialog );
 	return ctx.result;
 }
@@ -239,7 +239,7 @@ int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
 
 	ctx.btn = btn_ok;
 	ctx.type = TYPE_NEW_PASSWORD;
-	ctx.loop = LCUI_MainLoop_New();
+	ctx.loop = LCUIMainLoop_New();
 	ctx.input = LCUIWidget_New( "textedit" );
 	ctx.input2 = LCUIWidget_New( "textedit" );
 	Widget_AddClass( dialog, "dialog" );
@@ -304,7 +304,7 @@ int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
 	Widget_BindEvent( ctx.input, "change", OnInputChange, &ctx, NULL );
 	Widget_BindEvent( ctx.input2, "change", OnInputChange, &ctx, NULL );
 	LCUIWidget_SetFocus( ctx.input );
-	LCUI_MainLoop_Run( ctx.loop );
+	LCUIMainLoop_Run( ctx.loop );
 	TextEdit_GetTextW( ctx.input, 0, PWD_MAX_LEN, password );
 	Widget_Destroy( dialog );
 	return ctx.result;

@@ -411,7 +411,7 @@ static void ViewSync_Thread( void *arg )
 		LCUIMutex_Unlock( &scanner->mutex );
 		if( vs->prev_item_type != -1 && 
 		    vs->prev_item_type != entry->is_dir ) {
-			LCUI_Widget separator = LCUIWidget_New(NULL);
+			LCUI_Widget separator = LCUIWidget_New( NULL );
 			Widget_AddClass( separator, "divider" );
 			FileBrowser_Append( &this_view.browser, separator );
 		}
