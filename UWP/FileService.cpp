@@ -41,6 +41,7 @@
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
 #include <LCUI/thread.h>
+#include <LCUI/image.h>
 #include <LCUI/font/charset.h>
 #define LCFINDER_FILE_SERVICE_C
 #include "common.h"
@@ -53,6 +54,7 @@ using namespace Platform;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::ApplicationModel::AppService;
 using namespace Windows::ApplicationModel::DataTransfer;
+using namespace Windows::Storage::Streams;
 using namespace Windows::Foundation;
 using namespace Windows::Storage;
 
@@ -588,6 +590,140 @@ static void FileService_GetFiles( Connection conn,
 	} ).wait();
 }
 
+typedef struct ImageFileStreamPackRec_ {
+	IRandomAccessStream ^stream;
+} ImageFileStreamPackRec, *ImageFileStreamPack;
+
+class ImageFileStream {
+public:
+	ImageFileStream(IRandomAccessStream ^);
+	~ImageFileStream();
+	void Skip( long );
+	void Rewind( void );
+	size_t Read( unsigned char*, size_t );
+private:
+	IRandomAccessStream ^m_stream;
+};
+
+ImageFileStream::ImageFileStream( IRandomAccessStream ^stream )
+{
+	m_stream = stream;
+}
+
+ImageFileStream::~ImageFileStream()
+{
+	
+}
+
+size_t ImageFileStream::Read( unsigned char *buffer, size_t size )
+{
+	DataReader ^reader = ref new DataReader( m_stream );
+	return create_task( reader->LoadAsync( static_cast<UINT32>(size) ) ).then( [reader, buffer]( size_t size ) {
+		auto data = ref new Array<unsigned char>( size );
+		reader->ReadBytes( data );
+		memcpy( (void*)buffer, (void*)data->Data, size );
+		_DEBUG_MSG( "read size: %u\n", size );
+		return size;
+	} ).get();
+}
+
+void ImageFileStream::Skip( long offset )
+{
+	m_stream->Seek( m_stream->Position + offset );
+}
+
+void ImageFileStream::Rewind( void )
+{
+	m_stream->Seek( 0 );
+}
+
+static void FileOnRewind( void *data )
+{
+	ImageFileStream *stream = (ImageFileStream*)data;
+	stream->Rewind();
+}
+
+static void FileOnSkip( void *data, long count )
+{
+	ImageFileStream *stream = (ImageFileStream*)data;
+	stream->Skip( count );
+}
+
+static size_t FileOnRead( void *data, void *buffer, size_t size )
+{
+	ImageFileStream *stream = (ImageFileStream*)data;
+	return stream->Read( (unsigned char*)buffer, size );
+}
+
+static void LCUI_SetImageReader( LCUI_ImageReader reader, ImageFileStream *stream )
+{
+	reader->stream_data = (void*)stream;
+	reader->fn_rewind = FileOnRewind;
+	reader->fn_read = FileOnRead;
+	reader->fn_skip = FileOnSkip;
+}
+
+static void LCUI_ClearImageReader( LCUI_ImageReader reader )
+{
+	ImageFileStreamPack pack = (ImageFileStreamPack)reader->stream_data;
+	LCUI_DestroyImageReader( reader );
+	delete reader->stream_data;
+	reader->stream_data = NULL;
+}
+
+static int FileService_ReadImage( Connection conn,
+				  FileRequestParams *params,
+				  FileStreamChunk *chunk,
+				  LCUI_ImageReader reader )
+{
+	int ret;
+	LCUI_Graph img;
+	FileResponse *response = &chunk->response;
+
+	if( !reader ) {
+		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
+		return -ENODATA;
+	}
+	ret = LCUI_InitImageReader( reader );
+	if( ret != 0 ) {
+		LCUI_ClearImageReader( reader );
+		return ret;
+	}
+	ret = LCUI_ReadImageHeader( reader );
+	if( ret != 0 ) {
+		LCUI_ClearImageReader( reader );
+		return ret;
+	}
+	Graph_Init( &img );
+	LOG( "load image success, size: %d,%d\n", reader->header.width, reader->header.height );
+	response->file.image = NEW( FileImageStatus, 1 );
+	response->file.image->width = reader->header.width;
+	response->file.image->height = reader->header.height;
+	LOG( "write response, status: %d\n", response->status );
+	Connection_WriteChunk( conn, chunk );
+	ret = LCUI_ReadImage( reader, &img );
+	LCUI_ClearImageReader( reader );
+	if( ret != 0 ) {
+		return ret;
+	}
+	if( !params->get_thumbnail ) {
+		chunk->type = DATA_CHUNK_IMAGE;
+		chunk->image = img;
+		return 0;
+	}
+	Graph_Init( &chunk->thumb );
+	if( (params->width > 0 && img.width > (int)params->width)
+	    || (params->height > 0 && img.height > (int)params->height) ) {
+		Graph_Zoom( &img, &chunk->thumb, TRUE,
+			    params->width, params->height );
+		Graph_Free( &img );
+	} else {
+		chunk->thumb = img;
+	}
+	chunk->type = DATA_CHUNK_THUMB;
+	return 0;
+}
+
 static int FileService_GetFile( Connection conn,
 				FileRequest *request,
 				FileStreamChunk *chunk )
@@ -611,8 +747,8 @@ static int FileService_GetFile( Connection conn,
 	} ).get();
 	if( response->status == RESPONSE_STATUS_BAD_REQUEST ) {
 		StorageFolder ^folder;
-		auto action = StorageFolder::GetFolderFromPathAsync( path );
-		folder = create_task( action ).then( [params, response]( task<StorageFolder ^> t ) {
+		auto t = create_task( StorageFolder::GetFolderFromPathAsync( path ) );
+		folder = t.then( [params, response]( task<StorageFolder ^> t ) {
 			StorageFolder ^folder = nullptr;
 			response->status = RESPONSE_STATUS_OK;
 			try {
@@ -634,7 +770,20 @@ static int FileService_GetFile( Connection conn,
 		return -ENOENT;
 	}
 	GetFileStatus( file, params, &response->file ).wait();
-	return 0;
+	auto t = create_task( file->OpenAsync( FileAccessMode::Read ) );
+	return t.then( [conn, params, chunk, file]( task<IRandomAccessStream^> t ) {
+		LCUI_ImageReaderRec reader = { 0 };
+		IRandomAccessStream ^stream = nullptr;
+		try {
+			stream = t.get();
+		} catch( COMException^ ex ) {
+			return -ENODATA;
+		}
+		auto data = ImageFileStream( stream );
+		LCUI_SetImageReader( &reader, &data );
+		FileService_ReadImage( conn, params, chunk, &reader );
+		return 0;
+	} ).get();
 }
 
 static void FileService_HandleRequest( Connection conn, 

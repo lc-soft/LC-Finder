@@ -1205,9 +1205,11 @@ static void ThumbView_OnRemove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 	item = Widget_GetData( e->target, self.item );
 	if( item->loader ) {
+		LCUIMutex_Lock( &item->loader->mutex );
 		item->loader->active = FALSE;
 		item->loader->target = NULL;
 		item->loader->view = NULL;
+		LCUIMutex_Unlock( &item->loader->mutex );
 		item->loader = NULL;
 	}
 }
@@ -1217,11 +1219,12 @@ static void ThumbViewItem_OnDestroy( LCUI_Widget w )
 	ThumbViewItem item;
 	item = Widget_GetData( w, self.item );
 	if( item->loader ) {
-		LCUIMutex_Lock( &item->loader );
+		LCUIMutex_Lock( &item->loader->mutex );
 		item->loader->active = FALSE;
 		item->loader->target = NULL;
 		item->loader->view = NULL;
-		LCUIMutex_Unlock( &item->loader );
+		LCUIMutex_Unlock( &item->loader->mutex );
+		item->loader = NULL;
 	}
 	item->unsetthumb( w );
 	ThumbCache_Unlink( item->view->cache, 

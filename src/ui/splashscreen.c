@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * splashscreen.c -- splash screen
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * splashscreen.c -- 启动画面
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -38,6 +38,7 @@
 #include "ui.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
+#include <LCUI/image.h>
 
 #define SPLASH_IMG_PATH		L"assets/splashscreen.png"
 #define FADEOUT_DURATION	500
@@ -63,7 +64,7 @@ void UI_InitSplashScreen( void )
 	wpathjoin( wpath, finder.work_dir, SPLASH_IMG_PATH );
 	window = LCUIWidget_GetById( ID_WINDOW_MAIN );
 	path = EncodeANSI( wpath );
-	if( LCUI_ReadPNGFile( path, &self.img ) == 0 ) {
+	if( LCUI_ReadImageFile( path, &self.img ) == 0 ) {
 		self.screen = LCUIWidget_New( NULL );
 		Widget_SetStyle( self.screen, key_width, 1.0, scale );
 		Widget_SetStyle( self.screen, key_height, 1.0, scale );
