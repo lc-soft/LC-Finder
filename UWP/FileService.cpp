@@ -621,8 +621,8 @@ size_t ImageFileStream::Read( unsigned char *buffer, size_t size )
 	return create_task( reader->LoadAsync( static_cast<UINT32>(size) ) ).then( [reader, buffer]( size_t size ) {
 		auto data = ref new Array<unsigned char>( size );
 		reader->ReadBytes( data );
+		reader->DetachStream();
 		memcpy( (void*)buffer, (void*)data->Data, size );
-		_DEBUG_MSG( "read size: %u\n", size );
 		return size;
 	} ).get();
 }
@@ -667,7 +667,6 @@ static void LCUI_ClearImageReader( LCUI_ImageReader reader )
 {
 	ImageFileStreamPack pack = (ImageFileStreamPack)reader->stream_data;
 	LCUI_DestroyImageReader( reader );
-	delete reader->stream_data;
 	reader->stream_data = NULL;
 }
 
@@ -689,13 +688,7 @@ static int FileService_ReadImage( Connection conn,
 		LCUI_ClearImageReader( reader );
 		return ret;
 	}
-	ret = LCUI_ReadImageHeader( reader );
-	if( ret != 0 ) {
-		LCUI_ClearImageReader( reader );
-		return ret;
-	}
 	Graph_Init( &img );
-	LOG( "load image success, size: %d,%d\n", reader->header.width, reader->header.height );
 	response->file.image = NEW( FileImageStatus, 1 );
 	response->file.image->width = reader->header.width;
 	response->file.image->height = reader->header.height;
