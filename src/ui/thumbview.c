@@ -52,7 +52,7 @@
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
 #define ANIMATION_DURATION	500
-#define THUBVIEW_MIN_WIDTH	300
+#define THUMBVIEW_MIN_WIDTH	300
 #define FOLDER_MAX_WIDTH	388
 #define FOLDER_FIXED_HEIGHT	134
 #define PICTURE_FIXED_HEIGHT	226
@@ -616,10 +616,10 @@ static void ThumbView_UpdateLayoutContext( LCUI_Widget w )
 {
 	float max_width, n;
 	ThumbView view = Widget_GetData( w, self.main );
-	view->layout.max_width = w->parent->box.content.width;
-	max_width = view->layout.max_width;
+	max_width = max( THUMBVIEW_MIN_WIDTH, w->parent->box.content.width );
 	n = (float)ceil( max_width / FOLDER_MAX_WIDTH );
 	view->layout.folders_per_row = (int)n;
+	view->layout.max_width = max_width;
 	Widget_SetStyle( w, key_width, max_width, px );
 }
 
@@ -656,9 +656,10 @@ static void UpdateThumbRow( ThumbView view )
 	ThumbViewItem data;
 	LinkedListNode *node;
 	float overflow_width, width, thumb_width, rest_width;
-	if( view->layout.max_width <= THUBVIEW_MIN_WIDTH ) {
+	if( view->layout.max_width < THUMBVIEW_MIN_WIDTH ) {
 		return;
 	}
+	/* 计算溢出的宽度 */
 	overflow_width = view->layout.x - view->layout.max_width;
 	/**
 	 * 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
@@ -716,6 +717,7 @@ static void UpdatePictureSize( LCUI_Widget item )
 	Widget_UpdateStyle( item, FALSE );
 	view->layout.x += width;
 	LinkedList_Append( &view->layout.row, item );
+	/* 如果当前行图片总宽度超出最大宽度，则更新各个图片的宽度 */
 	if( view->layout.x >= view->layout.max_width ) {
 		UpdateThumbRow( view );
 	}
@@ -729,7 +731,7 @@ static void UpdateFolderSize( LCUI_Widget item )
 	ThumbViewItem data = Widget_GetData( item, self.item );
 	ThumbView view = data->view;
 	++view->layout.folder_count;
-	if( view->layout.max_width < THUBVIEW_MIN_WIDTH ) {
+	if( view->layout.max_width < THUMBVIEW_MIN_WIDTH ) {
 		item->custom_style->sheet[key_width].is_valid = FALSE;
 		Widget_AddClass( item, "full-width" );
 		return;
@@ -830,18 +832,18 @@ static void ThumbView_ExecUpdateLayout( LCUI_Widget w )
 	if( !view->layout.is_running ) {
 		return;
 	}
-	n = ThumbView_OnUpdateLayout( w, 16 );
+	n = ThumbView_OnUpdateLayout( w, 100 );
 	/* 如果还有未布局的缩略图则下次再继续 */
-	if( n == 16 ) {
-		view->tasks[TASK_LAYOUT] = TRUE;
-		LCUICond_Signal( &view->tasks_cond );
-	} else {
+	if( n < 100 ) {
 		UpdateThumbRow( view );
 		view->layout.current = NULL;
 		view->layout.is_running = FALSE;
 		Widget_BindEvent( w, "afterlayout",
 				  ThumbView_OnAfterLayout, NULL, NULL );
+		return;
 	}
+	view->tasks[TASK_LAYOUT] = TRUE;
+	LCUICond_Signal( &view->tasks_cond );
 }
 
 /** 延迟执行缩略图列表的布局操作 */

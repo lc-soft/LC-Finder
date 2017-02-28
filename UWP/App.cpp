@@ -198,12 +198,22 @@ void App::OnPointerWheelChanged(CoreWindow^ window, PointerEventArgs^ args)
 }
 
 // 初始化场景资源或加载之前保存的应用程序状态。
-void App::Load(Platform::String^ entryPoint)
+void App::Load( Platform::String^ entryPoint )
 {
-	if (m_main == nullptr)
-	{
-		m_main = std::unique_ptr<UWPMain>(new UWPMain(m_deviceResources));
+	char *argv[] = { "LC-Finder" };
+	if( m_main ) {
+		return;
 	}
+
+	Size size = m_deviceResources->GetOutputSize();
+	m_main = std::unique_ptr<UWPMain>( new UWPMain( m_deviceResources ) );
+
+	LCUI_InitBase();
+	LCUI_InitApp( m_appDriver );
+	LCUI_InitDisplay( m_displayDriver );
+	LCUI_InitCursor();
+	LCFinder_Init( 1, argv );
+	Widget_Resize( LCUIWidget_GetRoot(), size.Width, size.Height );
 }
 
 void App::Present()
@@ -239,14 +249,7 @@ void App::ProcessEvents()
 // 将在窗口处于活动状态后调用此方法。
 void App::Run()
 {
-	char *argv[] = { "LC-Finder" };
-	LCUI_InitBase();
-	LCUI_InitApp( m_appDriver );
-	LCUI_InitDisplay( m_displayDriver );
-	LCUI_InitCursor();
-	if( LCFinder_Init( 1, argv ) == 0 ) {
-		LCFinder_Run();
-	}
+	LCFinder_Run();
 }
 
 // IFrameworkView 所必需的。
