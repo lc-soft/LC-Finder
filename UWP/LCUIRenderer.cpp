@@ -67,9 +67,9 @@ LCUIRenderer::LCUIRenderer( const std::shared_ptr<DX::DeviceResources>& deviceRe
 	m_backBmp = nullptr;
 	m_frameSwapable = false;
 	m_deviceResources->GetD2DFactory()->CreateDrawingStateBlock( &m_stateBlock );
+	display.renderer = this;
 	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
-	display.renderer = this;
 }
 
 void LCUIRenderer::Update( DX::StepTimer const& timer )

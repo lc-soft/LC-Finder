@@ -531,7 +531,7 @@ static int LCFinder_InitWorkDir( void )
 	wchar_t data_dir[PATH_LEN];
 	wchar_t *dirs[2] = { L"fileset", L"thumbs" };
 #if defined(_WIN32) && defined(DEBUG)
-	_wchdir( L"F:\\代码库\\GitHub\\LC-Finder\\app" );
+	//_wchdir( L"F:\\代码库\\GitHub\\LC-Finder\\app" );
 #endif
 	if( GetAppInstalledLocationW( data_dir, PATH_LEN ) != 0 ) {
 		LOG( "[workdir] error\n" );
@@ -731,7 +731,7 @@ static int LCFinder_InitThumbDB( void )
 		}
 		path = LCFinder_CreateThumbDB( finder.dirs[i]->path );
 		finder.thumb_paths[i] = path;
-		LOGW(L"[thumbdb] %d: %s\n", path);
+		LOGW(L"[thumbdb] %d: %s\n", i, path);
 	}
 	LOG("[thumbdb] init done\n");
 	return 0;

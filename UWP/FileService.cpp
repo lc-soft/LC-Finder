@@ -47,6 +47,10 @@
 #include "common.h"
 #include "file_service.h"
 
+#undef LOG
+#undef LOGW
+#define LOG(format, ...)
+#define LOGW(format, ...)
 #define TIME_SHIFT 116444736000000000ULL
 
 using namespace concurrency;
@@ -688,6 +692,10 @@ static int FileService_ReadImage( Connection conn,
 		LCUI_ClearImageReader( reader );
 		return ret;
 	}
+	if( LCUI_SetImageReaderJump( reader ) ) {
+		LCUI_ClearImageReader( reader );
+		return -ENODATA;
+	}
 	Graph_Init( &img );
 	response->file.image = NEW( FileImageStatus, 1 );
 	response->file.image->width = reader->header.width;
@@ -774,8 +782,7 @@ static int FileService_GetFile( Connection conn,
 		}
 		auto data = ImageFileStream( stream );
 		LCUI_SetImageReader( &reader, &data );
-		FileService_ReadImage( conn, params, chunk, &reader );
-		return 0;
+		return FileService_ReadImage( conn, params, chunk, &reader );
 	} ).get();
 }
 

@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * LCUIRenderer.h -- UWP input support for LCUI
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * LCUIRenderer.h -- LCUI 的 UWP 版输入支持，包括鼠标、键盘、触屏等的输入处理
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -36,23 +36,33 @@
 
 #pragma once
 
+#include <LCUI_Build.h>
+#include <LCUI/LCUI.h>
+
 namespace UWP {
 
-class LCUIInput {
+class LCUIInputDriver  {
 public:
-	LCUIInput();
+	LCUIInputDriver();
 	void OnPointerPressed( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
 	void OnPointerMoved( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
 	void OnPointerReleased( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
-	void OnPointerExited( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
 	void OnPointerWheelChanged( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args );
 	void OnKeyDown( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args );
 	void OnKeyUp( Windows::UI::Core::CoreWindow^ sender,Windows::UI::Core:: KeyEventArgs^ args );
+	void RegisterIME( void );
+	void SelectIME( void );
 private:
-	Windows::Foundation::Point m_position;
-	bool m_actived;
-	bool m_leftButtonPressed;
-	bool m_rightButtonPressed;
+	int m_ime;
+	struct {
+		bool actived;
+		bool leftButtonPressed;
+		bool rightButtonPressed;
+		Windows::Foundation::Point position;
+	} m_mouse;
+	struct {
+		LinkedList points;
+	} m_touch;
 };
 
 }

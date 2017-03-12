@@ -491,42 +491,46 @@ static void OnGetThumbnail( FileStatus *status,
 	Graph_Init( thumb );
 }
 
-static void OnGetFileStatus( FileStatus *status, void *data )
+static void ThumbLoader_Load( ThumbLoader loader, FileStatus *status )
 {
 	int ret;
 	ThumbDataRec tdata;
 	ThumbViewItem item;
-	ThumbLoader loader = data;
-
 	LCUIMutex_Lock( &loader->mutex );
 	if( !loader->active || !loader->target ) {
 		LCUIMutex_Unlock( &loader->mutex );
 		ThumbLoader_Destroy( loader );
 		return;
 	}
-	if( !status ) {
-		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_OnError( loader );
-		return;
-	}
 	ret = ThumbDB_Load( loader->db, loader->path, &tdata );
 	item = Widget_GetData( loader->target, self.item );
 	LCUIMutex_Unlock( &loader->mutex );
-	if( ret == 0 && tdata.modify_time == status->mtime ) {
-		ThumbLoader_OnDone( loader, &tdata, status );
-		return;
+	if( ret == 0 ) {
+		if( status && tdata.modify_time == status->mtime ) {
+			ThumbLoader_OnDone( loader, &tdata, status );
+			return;
+		}
 	}
 	if( item->is_dir ) {
 		FileStorage_GetThumbnail( loader->view->storage,
-						loader->wfullpath,
-						FOLDER_MAX_WIDTH, 0,
-						OnGetThumbnail, loader );
+					  loader->wfullpath,
+					  FOLDER_MAX_WIDTH, 0,
+					  OnGetThumbnail, loader );
 		return;
 	}
 	FileStorage_GetThumbnail( loader->view->storage,
-					loader->wfullpath,
-					0, THUMB_MAX_WIDTH,
-					OnGetThumbnail, loader );
+				  loader->wfullpath,
+				  0, THUMB_MAX_WIDTH,
+				  OnGetThumbnail, loader );
+}
+
+static void OnGetFileStatus( FileStatus *status, void *data )
+{
+	if( !status ) {
+		ThumbLoader_OnError( data );
+		return;
+	}
+	ThumbLoader_Load( data, status );
 }
 
 /** 载入缩略图 */

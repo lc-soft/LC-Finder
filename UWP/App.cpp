@@ -2,6 +2,7 @@
 #include "App.h"
 #include "finder.h"
 #include <LCUI/cursor.h>
+#include <LCUI/ime.h>
 #include <ppltasks.h>
 
 using namespace UWP;
@@ -58,7 +59,7 @@ static void *UWPApp_GetData( void )
 	return (void*)UWPApp.app;
 }
 
-static LCUI_AppDriver LCUI_CreateUWPApp( App^ app )
+static LCUI_AppDriver LCUI_CreateUWPAppDriver( App^ app )
 {
 	ASSIGN( driver, LCUI_AppDriver );
 	driver->WaitEvent = UWPApp_WaitEvent;
@@ -114,13 +115,21 @@ App::App() :
 {
 	Logger_SetHandler( LoggerHandler );
 	Logger_SetHandlerW( LoggerHandlerW );
-	m_input = std::unique_ptr<LCUIInput>( new LCUIInput );
+	m_inputDriver = std::unique_ptr<LCUIInputDriver>( new LCUIInputDriver );
 	m_displayDriver = LCUI_CreateUWPDisplay();
-	m_appDriver = LCUI_CreateUWPApp( this );
+	m_appDriver = LCUI_CreateUWPAppDriver( this );
 	UWPApp.update = m_displayDriver->update;
 	UWPApp.present = m_displayDriver->present;
 	m_displayDriver->update = UWPDisplay_Update;
 	m_displayDriver->present = UWPDisplay_Present;
+
+	LCUI_InitBase();
+	LCUI_InitApp( m_appDriver );
+	LCUI_InitDisplay( m_displayDriver );
+	LCUI_InitIME();
+	LCUI_InitCursor();
+	m_inputDriver->RegisterIME();
+	m_inputDriver->SelectIME();
 }
 
 // 创建 IFrameworkView 时调用的第一个方法。
@@ -143,27 +152,27 @@ void App::Initialize(CoreApplicationView^ applicationView)
 }
 
 // 创建(或重新创建) CoreWindow 对象时调用。
-void App::SetWindow(CoreWindow^ window)
+void App::SetWindow( CoreWindow^ window )
 {
-	window->SizeChanged += 
-		ref new TypedEventHandler<CoreWindow^, WindowSizeChangedEventArgs^>(this, &App::OnWindowSizeChanged);
+	window->SizeChanged +=
+		ref new TypedEventHandler<CoreWindow^, WindowSizeChangedEventArgs^>( this, &App::OnWindowSizeChanged );
 
 	window->VisibilityChanged +=
-		ref new TypedEventHandler<CoreWindow^, VisibilityChangedEventArgs^>(this, &App::OnVisibilityChanged);
+		ref new TypedEventHandler<CoreWindow^, VisibilityChangedEventArgs^>( this, &App::OnVisibilityChanged );
 
-	window->Closed += 
-		ref new TypedEventHandler<CoreWindow^, CoreWindowEventArgs^>(this, &App::OnWindowClosed);
+	window->Closed +=
+		ref new TypedEventHandler<CoreWindow^, CoreWindowEventArgs^>( this, &App::OnWindowClosed );
 
 	DisplayInformation^ currentDisplayInformation = DisplayInformation::GetForCurrentView();
 
 	currentDisplayInformation->DpiChanged +=
-		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnDpiChanged);
+		ref new TypedEventHandler<DisplayInformation^, Object^>( this, &App::OnDpiChanged );
 
 	currentDisplayInformation->OrientationChanged +=
-		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnOrientationChanged);
+		ref new TypedEventHandler<DisplayInformation^, Object^>( this, &App::OnOrientationChanged );
 
 	DisplayInformation::DisplayContentsInvalidated +=
-		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnDisplayContentsInvalidated);
+		ref new TypedEventHandler<DisplayInformation^, Object^>( this, &App::OnDisplayContentsInvalidated );
 
 	window->PointerPressed +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerPressed );
@@ -173,28 +182,42 @@ void App::SetWindow(CoreWindow^ window)
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerReleased );
 	window->PointerWheelChanged +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>( this, &App::OnPointerWheelChanged );
+	window->KeyUp +=
+		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>( this, &App::OnKeyUp );
+	window->KeyDown +=
+		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>( this, &App::OnKeyDown );
 
-	m_deviceResources->SetWindow(window);
+	m_deviceResources->SetWindow( window );
 }
 
 void App::OnPointerPressed(CoreWindow^ window, PointerEventArgs^ args)
 {
-	m_input->OnPointerPressed( window, args );
+	m_inputDriver->OnPointerPressed( window, args );
 }
 
 void App::OnPointerMoved(CoreWindow^ window, PointerEventArgs^ args)
 {
-	m_input->OnPointerMoved( window, args );
+	m_inputDriver->OnPointerMoved( window, args );
 }
 
 void App::OnPointerReleased(CoreWindow^ window, PointerEventArgs^ args)
 {
-	m_input->OnPointerReleased( window, args );
+	m_inputDriver->OnPointerReleased( window, args );
 }
 
 void App::OnPointerWheelChanged(CoreWindow^ window, PointerEventArgs^ args)
 {
-	m_input->OnPointerWheelChanged( window, args );
+	m_inputDriver->OnPointerWheelChanged( window, args );
+}
+
+void App::OnKeyDown( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args )
+{
+	m_inputDriver->OnKeyDown( sender, args );
+}
+
+void App::OnKeyUp( Windows::UI::Core::CoreWindow^ sender,Windows::UI::Core:: KeyEventArgs^ args )
+{
+	m_inputDriver->OnKeyUp( sender, args );
 }
 
 // 初始化场景资源或加载之前保存的应用程序状态。
@@ -208,10 +231,6 @@ void App::Load( Platform::String^ entryPoint )
 	Size size = m_deviceResources->GetOutputSize();
 	m_main = std::unique_ptr<UWPMain>( new UWPMain( m_deviceResources ) );
 
-	LCUI_InitBase();
-	LCUI_InitApp( m_appDriver );
-	LCUI_InitDisplay( m_displayDriver );
-	LCUI_InitCursor();
 	LCFinder_Init( 1, argv );
 	Widget_Resize( LCUIWidget_GetRoot(), size.Width, size.Height );
 }
@@ -257,6 +276,11 @@ void App::Run()
 // 类，则将调用该方法。
 void App::Uninitialize()
 {
+}
+
+void App::OnFileActivated( Windows::ApplicationModel::Activation::FileActivatedEventArgs^ args )
+{
+	LOGW( L"file name: %s\n", args->Files->GetAt( 0 )->Name->Data() );
 }
 
 // 应用程序生命周期事件处理程序。

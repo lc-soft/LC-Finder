@@ -14,6 +14,8 @@ namespace UWP
 		void ProcessEvents();
 		void Update();
 		void Present();
+		void OnFileActivated( Windows::ApplicationModel::Activation::FileActivatedEventArgs^ args );
+
 		// IFrameworkView 方法。
 		virtual void Initialize(Windows::ApplicationModel::Core::CoreApplicationView^ applicationView);
 		virtual void SetWindow(Windows::UI::Core::CoreWindow^ window);
@@ -34,6 +36,8 @@ namespace UWP
 		void OnPointerPressed(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args);
 		void OnPointerReleased(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args);
 		void OnPointerWheelChanged(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::PointerEventArgs^ args);
+		void OnKeyDown( Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::KeyEventArgs^ args );
+		void OnKeyUp( Windows::UI::Core::CoreWindow^ sender,Windows::UI::Core:: KeyEventArgs^ args );
 
 		// DisplayInformation 事件处理程序。
 		void OnDpiChanged(Windows::Graphics::Display::DisplayInformation^ sender, Platform::Object^ args);
@@ -44,7 +48,7 @@ namespace UWP
 		LCUI_AppDriver m_appDriver;
 		LCUI_DisplayDriver m_displayDriver;
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
-		std::unique_ptr<LCUIInput> m_input;
+		std::unique_ptr<LCUIInputDriver> m_inputDriver;
 		std::unique_ptr<UWPMain> m_main;
 		bool m_windowClosed;
 		bool m_windowVisible;
