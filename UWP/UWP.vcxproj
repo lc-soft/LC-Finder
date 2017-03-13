@@ -159,11 +159,17 @@
       <DisableSpecificWarnings>4453;28204</DisableSpecificWarnings>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAsWinRT>true</CompileAsWinRT>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <CompileAsManaged>false</CompileAsManaged>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <PreBuildEvent>
-      <Command>copy "$(SolutionDir)app\locales\*.yaml" "$(ProjectDir)Locales\"
+      <Command>mkdir "$(ProjectDir)Assets\stylesheets"
+mkdir "$(ProjectDir)Assets\stylesheets\themes"
+copy "$(SolutionDir)app\locales\*.yaml" "$(ProjectDir)Locales\"
 copy "$(SolutionDir)app\assets\*.xml" "$(ProjectDir)Assets\"
-copy "$(SolutionDir)app\assets\*.css" "$(ProjectDir)Assets\"
+copy "$(SolutionDir)app\assets\stylesheets\*.css" "$(ProjectDir)Assets\stylesheets\"
+copy "$(SolutionDir)app\assets\stylesheets\themes\*.css" "$(ProjectDir)Assets\stylesheets\themes"
 copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
 copy "$(SolutionDir)vendor\lib\UWP\$(PlatformTarget)\*.dll" "$(ProjectDir)"
 </Command>
@@ -426,17 +432,14 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="Assets\materialdesignicons.min.css">
+    <None Include="Assets\stylesheets\iconfont.css">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
-    <None Include="Assets\ui-skin.css">
+    <None Include="Assets\stylesheets\main.css">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
-    <None Include="Assets\ui.css">
+    <None Include="Assets\stylesheets\themes\green.css">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DeploymentContent>
     </None>
     <None Include="LCUI_D.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
@@ -479,12 +482,6 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
     <ResourceCompile Include="UWP.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\materialdesignicons-webfont.ttf">
-      <FileType>Document</FileType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Assets\ui-view-picture-info.xml">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
@@ -497,6 +494,9 @@ copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\iconfont.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

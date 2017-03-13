@@ -1,0 +1,205 @@
+.theme-green {
+	.sidebar {
+		background-color: #fff;
+		border: 1px solid #DDDEDF;
+
+		.sidebar-item {
+			border-left: 2px solid transparent;
+		}
+		.sidebar-item .icon {
+			margin-left: -2px;
+		}
+		.sidebar-item:hover, 
+		sidebar-toggle:hover {
+			background-color: #fafafa;
+			border-color: #fafafa;
+		}
+		.active .text,
+		.sidebar-item:active .text,
+		sidebar-toggle:active .text {
+			color: #44BB55;
+		}
+		.sidebar-item:active,
+		sidebar-toggle:active {
+			background-color: #ECF8EE;
+		}
+		.sidebar-item.active,
+		.sidebar-item.active:hover {
+			background-color: #ECF8EE;
+			border-color: #44BB55;
+		}
+	}
+	.view, 
+	.subview {
+		background-color: #f5f7fa;
+	}
+	.view-navbar {
+		background-color: #414849;
+	}
+	.view-navbar .text {
+		color: #fff;
+	}
+	.view-navbar {
+		.divider {
+			background-color: #373D3E;
+		}
+		.view-navbar-btn{
+			&:hover {
+				background-color: #4C5556;
+			}
+			&:active, &.active {
+				background-color: #616C6D;
+			}
+			&:disabled, &:disabled:hover, &:disabled:active {
+				background-color: transparent;
+
+				.text {
+					color: #727e80;
+				}
+			}
+		}
+	}
+	.selection-mode .text.view-navbar-title {
+		color: #ddd;
+	}
+	.btn-link .text,
+	textview.btn-link,
+	textview-i18n.btn-link {
+		color: #44BB55;
+	}
+	.btn-link:hover .text,
+	textview.btn-link:hover,
+	textview-i18n.btn-link:hover {
+		color: #2E7D39;
+	}
+	textview, textview-i18 {
+		.btn-link.selected {
+			color: #333;
+			&:active, &:hover {
+				color: #333;
+			}
+		}
+	}
+	.file-list {
+		.file-list-item-picture.selected .checkbox {
+			color: #fff;
+			border-color: #44BB55;
+			background-color: #44BB55;
+		}
+		.file-list-item-folder:hover,
+		.file-list-item-picture.selected .picture-cover,
+		.file-list-item-picture:hover .picture-cover {
+			border-color: #44BB55;
+		}
+	}
+	.tag-thumb-list-item-checkbox {
+		color: #44BB55;
+	}
+	.tag-thumb-list-item-cover {
+		border: 2px solid #44BB55;
+	}
+	textedit:focus {
+		box-shadow: 0 0 6px rgba(68,187,85,0.4);
+		border-color: #44BB55;
+	}
+	.dialog-content progressbar,
+	.view-content-wrapper progressbar {
+		background-color: #44A340;
+	}
+	.source-list .source-list-item:hover {
+		background-color: #fdfdfd;
+	}
+	.source-list .source-list-item:active {
+		background-color: #fafafa;
+	}
+	.source-list .source-list-item .btn-delete:hover {
+		background-color: #fff;
+	}
+	.source-list .source-list-item .btn-delete:active {
+		background-color: #fcfcfc;
+	}
+	#picture-viewer-window{
+		background-color: #222;
+	}
+	#picture-viewer-window.window-navbar {
+		background-color: rgba(0,0,0,0.5);
+	}
+	#picture-viewer-window.zoom-btn-group {
+		background-color: rgba(0,0,0,0.8);
+		border-color: transparent;
+		padding: 2px;
+	}
+	#picture-viewer-window.icon-btn .icon,
+	#picture-viewer-window.icon-btn .text {
+		color: #fff;
+		background-color: transparent;
+	}
+	#picture-viewer-window.icon-btn:hover {
+		background-color: rgba(255,255,255,0.3);
+	}
+	#picture-viewer-window.icon-btn:active {
+		background-color: rgba(255,255,255,0.5);
+	}
+	#picture-viewer-window.icon-btn:disabled .icon,
+	#picture-viewer-window.icon-btn:disabled:hover .icon,
+	#picture-viewer-window.icon-btn:disabled:active .icon {
+		color: #888;
+	}
+	#picture-viewer-window.icon-btn:disabled,
+	#picture-viewer-window.icon-btn:disabled:hover,
+	#picture-viewer-window.icon-btn:disabled:active {
+		background-color: transparent;
+	}
+	.message.inverted .text {
+		color: #fff;
+	}
+	.icon.message.inverted .icon {
+		color: #555;
+	}
+	.message.box {
+		background-color: rgba(0,0,0,0.8);
+		box-shadow: 0 0 8px rgba(0,0,0,0.8);
+	}
+	#picture-info-panel{
+		background-color: #323232;	
+	}
+	#picture-info-panel.text,
+	#picture-info-paneltextview {
+		color: #fff;
+	}
+	#picture-info-panel.btn-link .text {
+		color: #44BB55;
+	}
+	#picture-info-panel.btn-link:hover .text {
+		color: #2E7D39;
+	}
+	#picture-info-panel.info-item .info-item-name {
+		color: #888;
+	}
+	.theme-green.panel .panel-header {
+		box-shadow: 0 0 4px rgba(0,0,0,0.4);
+	}
+	#picture-info-panel.tag-list-item {
+		background-color: #4c4c4c;
+		border-color: #5b5b5b;
+	}
+	#picture-info-panel.tag-list-item:hover {
+		background-color: #5a5a5a;
+		border-color: #6c6c6c;
+	}
+	#picture-info-panel.tag-list-item .btn-delete {
+		color: #fff;
+	}
+	#picture-info-panel.tag-list-item .btn-delete:hover {
+		color: #aaa;
+	}
+	#picture-info-panelstarrating .mdi-star {
+		color: #44A340;
+	}
+	.btn-dropdown.active {
+		border-color: #44BB55;
+	}
+	dropdown.checkable dropdown-item .icon {
+		color: #44BB55;
+	}
+}

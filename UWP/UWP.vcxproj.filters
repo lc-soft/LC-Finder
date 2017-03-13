@@ -256,18 +256,6 @@
     <None Include="Locales\zh-tw.yaml">
       <Filter>Locales</Filter>
     </None>
-    <None Include="Assets\materialdesignicons.min.css">
-      <Filter>资产</Filter>
-    </None>
-    <None Include="Assets\ui.css">
-      <Filter>资产</Filter>
-    </None>
-    <None Include="Assets\ui-skin.css">
-      <Filter>资产</Filter>
-    </None>
-    <None Include="Assets\materialdesignicons-webfont.ttf">
-      <Filter>资产</Filter>
-    </None>
     <None Include="Assets\ui-view-picture-info.xml">
       <Filter>资产</Filter>
     </None>
@@ -292,8 +280,22 @@
     <None Include="yaml.dll">
       <Filter>dll</Filter>
     </None>
+    <None Include="Assets\stylesheets\iconfont.css">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\stylesheets\main.css">
+      <Filter>资产</Filter>
+    </None>
+    <None Include="Assets\stylesheets\themes\green.css">
+      <Filter>资产</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UWP.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\iconfont.ttf">
+      <Filter>资产</Filter>
+    </Font>
   </ItemGroup>
 </Project>

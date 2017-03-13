@@ -325,11 +325,11 @@ static void UpdateResetSizeButton( void )
 		Widget_SetDisabled( this_view.btn_reset, TRUE );
 	}
 	if( this_view.picture->scale == this_view.picture->min_scale ) {
-		Widget_RemoveClass( txt, "mdi-fullscreen-exit" );
-		Widget_AddClass( txt, "mdi-fullscreen" );
+		Widget_RemoveClass( txt, "icon-fullscreen-exit" );
+		Widget_AddClass( txt, "icon-fullscreen" );
 	} else {
-		Widget_RemoveClass( txt, "mdi-fullscreen" );
-		Widget_AddClass( txt, "mdi-fullscreen-exit" );
+		Widget_RemoveClass( txt, "icon-fullscreen" );
+		Widget_AddClass( txt, "icon-fullscreen-exit" );
 	}
 }
 

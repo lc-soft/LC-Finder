@@ -451,7 +451,7 @@ static LCUI_Widget CreateTagWidget( DB_Tag tag )
 	Widget_AddClass( box, "tag-thumb-list-item" );
 	Widget_AddClass( info, "tag-thumb-list-item-info" );
 	Widget_AddClass( cover, "tag-thumb-list-item-cover" );
-	Widget_AddClass( check, "mdi mdi-check tag-thumb-list-item-checkbox" );
+	Widget_AddClass( check, "icon icon-check tag-thumb-list-item-checkbox" );
 	Widget_AddClass( txt_name, "text name" );
 	Widget_AddClass( txt_count, "text count" );
 	TextView_SetText( txt_name, tag->name );
@@ -674,7 +674,7 @@ static void InitSearchResultsSort( void )
 		icon = LCUIWidget_New( "textview" );
 		text = LCUIWidget_New( "textview-i18n" );
 		TextViewI18n_SetKey( text, sort->name_key );
-		Widget_AddClass( icon, "icon mdi mdi-check" );
+		Widget_AddClass( icon, "icon icon icon-check" );
 		Widget_AddClass( text, "text" );
 		Widget_Append( item, icon );
 		Widget_Append( item, text );

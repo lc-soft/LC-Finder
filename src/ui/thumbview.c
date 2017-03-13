@@ -416,7 +416,7 @@ static void ThumbLoader_OnError( ThumbLoader loader )
 	}
 	item->is_valid = FALSE;
 	icon = LCUIWidget_New( "textview" );
-	Widget_AddClass( icon, "tip icon mdi mdi-help" );
+	Widget_AddClass( icon, "tip icon icon icon-help" );
 	Widget_AddClass( icon, "floating center middle aligned" );
 	Widget_Append( item->cover, icon );
 	LCUIMutex_Unlock( &loader->mutex );
@@ -1022,7 +1022,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 	Widget_AddClass( infobar, "info" );
 	Widget_AddClass( name, "name" );
 	Widget_AddClass( path, "path" );
-	Widget_AddClass( icon, "icon mdi mdi-folder-outline" );
+	Widget_AddClass( icon, "icon icon icon-folder-outline" );
 	TextView_SetText( name, getfilename( filepath ) );
 	TextView_SetText( path, filepath );
 	Widget_Append( item, infobar );

@@ -254,7 +254,7 @@ include/sqlite3.h
 include/unqlite.h
 include/config.h
 UWP/[Aa]ssets/*.xml
-UWP/[Aa]ssets/*.css
+UWP/[Aa]ssets/stylesheets
 UWP/[Aa]ssets/*.ttf
 UWP/[Ll]ocales/
 UWP/BundleArtifacts

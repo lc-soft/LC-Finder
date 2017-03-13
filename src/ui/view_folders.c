@@ -545,7 +545,7 @@ static void InitFolderFilesSort( void )
 		icon = LCUIWidget_New( "textview" );
 		text = LCUIWidget_New( "textview-i18n" );
 		TextViewI18n_SetKey( text, sort->name_key );
-		Widget_AddClass( icon, "icon mdi mdi-check" );
+		Widget_AddClass( icon, "icon icon icon-check" );
 		Widget_AddClass( text, "text" );
 		Widget_Append( item, icon );
 		Widget_Append( item, text );

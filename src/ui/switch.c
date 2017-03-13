@@ -128,8 +128,8 @@ static void Switch_OnInit( LCUI_Widget w )
 	Widget_AddClass( w, "switch" );
 	Widget_AddClass( data->bar, "switch-bar" );
 	Widget_AddClass( data->slider, "switch-slider" );
-	Widget_AddClass( data->txt_on, "mdi mdi-check switch-on-block" );
-	Widget_AddClass( data->txt_off, "mdi mdi-close switch-off-block" );
+	Widget_AddClass( data->txt_on, "icon icon-check switch-on-block" );
+	Widget_AddClass( data->txt_off, "icon icon-close switch-off-block" );
 	Widget_Append( data->bar, data->txt_on );
 	Widget_Append( data->bar, data->slider );
 	Widget_Append( data->bar, data->txt_off );

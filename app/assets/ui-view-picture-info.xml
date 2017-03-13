@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <lcui-app>
   <ui>
-    <widget id="picture-info-panel" class="panel skin-light-green">
+    <widget id="picture-info-panel" class="panel theme-green">
       <widget class="panel-header">
         <widget type="textview-i18n" class="text panel-header-title" data-i18n-key="picture.info.title">文件信息</widget>
         <widget class="pull-right">
           <widget id="btn-hide-picture-info" class="icon-btn">
-            <widget type="textview" class="icon mdi mdi-close"></widget>
+            <widget type="textview" class="icon icon icon-close"></widget>
           </widget>
         </widget>
       </widget>

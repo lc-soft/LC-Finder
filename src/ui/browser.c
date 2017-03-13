@@ -218,7 +218,7 @@ static void FileBrowser_SelectItem( FileBrowser browser, FileIndex fidx )
 		FileBrowser_EnableSelectionMode( browser );
 	}
 	Widget_AddClass( fidx->item, "selected" );
-	Widget_AddClass( fidx->checkbox, "mdi-check" );
+	Widget_AddClass( fidx->checkbox, "icon-check" );
 	LinkedList_Append( &browser->selected_files, fidx );
 	FileBrowser_UpdateSelectionUI( browser );
 }
@@ -231,7 +231,7 @@ static void FileBrowser_UnselectItem( FileBrowser browser, FileIndex fidx )
 			continue;
 		}
 		Widget_RemoveClass( fidx->item, "selected" );
-		Widget_RemoveClass( fidx->checkbox, "mdi-check" );
+		Widget_RemoveClass( fidx->checkbox, "icon-check" );
 		LinkedList_DeleteNode( &browser->selected_files, node );
 		break;
 	}
@@ -244,7 +244,7 @@ static void FileBrowser_UnselectAllItems( FileBrowser browser )
 	for( LinkedList_Each(node, &browser->selected_files) ) {
 		FileIndex fidx = node->data;
 		Widget_RemoveClass( fidx->item, "selected" );
-		Widget_RemoveClass( fidx->checkbox, "mdi-check" );
+		Widget_RemoveClass( fidx->checkbox, "icon-check" );
 	}
 	LinkedList_Clear( &browser->selected_files, NULL );
 	FileBrowser_UpdateSelectionUI( browser );
@@ -543,7 +543,7 @@ LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
 	data->fidx->file = file;
 	data->fidx->node.data = data->fidx;
 	data->fidx->checkbox = LCUIWidget_New( "textview" );
-	Widget_AddClass( data->fidx->checkbox, "checkbox mdi" );
+	Widget_AddClass( data->fidx->checkbox, "checkbox icon" );
 	ThumbViewItem_AppendToCover( item, data->fidx->checkbox );
 	Dict_Add( browser->file_indexes, data->fidx->file->path, data->fidx );
 	LinkedList_AppendNode( &browser->files, &data->fidx->node );

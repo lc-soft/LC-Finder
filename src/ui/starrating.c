@@ -67,13 +67,13 @@ static void UpdateRating( LCUI_Widget w, int rating )
 		if( child->index >= rating ) {
 			break;
 		}
-		Widget_AddClass( child, "mdi-star" );
-		Widget_RemoveClass( child, "mdi-star-outline" );
+		Widget_AddClass( child, "icon-star" );
+		Widget_RemoveClass( child, "icon-star-outline" );
 	}
 	for( ; node; node = node->next ) {
 		child = node->data;
-		Widget_RemoveClass( child, "mdi-star" );
-		Widget_AddClass( child, "mdi-star-outline" );
+		Widget_RemoveClass( child, "icon-star" );
+		Widget_AddClass( child, "icon-star-outline" );
 	}
 }
 
@@ -126,7 +126,7 @@ static void OnInit( LCUI_Widget w )
 	data->max_rating = 5;
 	for( i = 0; i < data->max_rating; ++i ) {
 		LCUI_Widget child = LCUIWidget_New( "textview" );
-		Widget_AddClass( child, "star mdi mdi-star-outline" );
+		Widget_AddClass( child, "star icon icon-star-outline" );
 		Widget_Append( w, child );
 	}
 	Widget_BindEvent( w, "mousemove", OnMouseMove, NULL, NULL );

@@ -93,9 +93,9 @@ static LCUI_Widget NewDirListItem( DB_Dir dir )
 	text = LCUIWidget_New( "textview" );
 	btn = LCUIWidget_New( "textview" );
 	Widget_AddClass( item, "source-list-item" );
-	Widget_AddClass( icon, "icon mdi mdi-folder-outline" );
+	Widget_AddClass( icon, "icon icon icon-folder-outline" );
 	Widget_AddClass( text, "text" );
-	Widget_AddClass( btn, "btn-delete mdi mdi-close" );
+	Widget_AddClass( btn, "btn-delete icon icon-close" );
 	TextView_SetText( text, dir->path );
 	Widget_BindEvent( btn, "click", OnBtnRemoveClick, dir, NULL );
 	Widget_Append( item, icon );

@@ -150,7 +150,7 @@ static void PictureInfo_AppendTag( DB_Tag tag )
 	txt_name = LCUIWidget_New( "textview" );
 	btn_del = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "tag-list-item" );
-	Widget_AddClass( btn_del, "btn-delete mdi mdi-close" );
+	Widget_AddClass( btn_del, "btn-delete icon icon-close" );
 	TextView_SetText( txt_name, tag->name );
 	Widget_Append( box, txt_name );
 	Widget_Append( box, btn_del );

@@ -1,0 +1,33 @@
+.hide-path .info .path {
+	display: none;
+}
+.hide-path .info .name {
+	height: 34px;
+	line-height: 34px;
+}
+.folder-info-box {
+	top: 50px;
+	width: 100%;
+	display: none;
+	position: absolute;
+	padding: 10px 25px 10px 25px;
+	background-color: #fff;
+
+	.btn-link {
+		maring-top: 0;
+	}
+}
+.folder-info-box-name {
+	font-size: 18px;
+}
+.folder-info-box-path {
+	color: #888;
+}
+.show-folder-info-box {
+	.view-body {
+		padding-top: 140px;
+	}
+	.folder-info-box {
+		display: block;
+	}
+}
