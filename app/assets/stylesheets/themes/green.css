@@ -27,8 +27,7 @@
   background-color: #ECF8EE;
   border-color: #44BB55;
 }
-.theme-green .view,
-.theme-green .subview {
+.theme-green .view, .theme-green .subview {
   background-color: #f5f7fa;
 }
 .theme-green .view-navbar {
@@ -55,14 +54,16 @@
 .theme-green .selection-mode .text.view-navbar-title {
   color: #ddd;
 }
-.theme-green .btn-link .text,
-.theme-green textview.btn-link,
-.theme-green textview-i18n.btn-link {
+.theme-green textview.btn-link, .theme-green textview-i18n.btn-link {
   color: #44BB55;
 }
-.theme-green .btn-link:hover .text,
-.theme-green textview.btn-link:hover,
-.theme-green textview-i18n.btn-link:hover {
+.theme-green textview.btn-link:hover, .theme-green textview-i18n.btn-link:hover {
+  color: #2E7D39;
+}
+.theme-green .btn-link .text {
+  color: #44BB55;
+}
+.theme-green .btn-link:hover .text {
   color: #2E7D39;
 }
 .theme-green textview .btn-link.selected, .theme-green textview-i18 .btn-link.selected {
@@ -107,38 +108,6 @@
 .theme-green .source-list .source-list-item .btn-delete:active {
   background-color: #fcfcfc;
 }
-.theme-green #picture-viewer-window {
-  background-color: #222;
-}
-.theme-green #picture-viewer-window.window-navbar {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-.theme-green #picture-viewer-window.zoom-btn-group {
-  background-color: rgba(0, 0, 0, 0.8);
-  border-color: transparent;
-  padding: 2px;
-}
-.theme-green #picture-viewer-window.icon-btn .icon,
-.theme-green #picture-viewer-window.icon-btn .text {
-  color: #fff;
-  background-color: transparent;
-}
-.theme-green #picture-viewer-window.icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-.theme-green #picture-viewer-window.icon-btn:active {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-.theme-green #picture-viewer-window.icon-btn:disabled .icon,
-.theme-green #picture-viewer-window.icon-btn:disabled:hover .icon,
-.theme-green #picture-viewer-window.icon-btn:disabled:active .icon {
-  color: #888;
-}
-.theme-green #picture-viewer-window.icon-btn:disabled,
-.theme-green #picture-viewer-window.icon-btn:disabled:hover,
-.theme-green #picture-viewer-window.icon-btn:disabled:active {
-  background-color: transparent;
-}
 .theme-green .message.inverted .text {
   color: #fff;
 }
@@ -149,45 +118,73 @@
   background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
 }
-.theme-green #picture-info-panel {
-  background-color: #323232;
-}
-.theme-green #picture-info-panel.text,
-.theme-green #picture-info-paneltextview {
-  color: #fff;
-}
-.theme-green #picture-info-panel.btn-link .text {
-  color: #44BB55;
-}
-.theme-green #picture-info-panel.btn-link:hover .text {
-  color: #2E7D39;
-}
-.theme-green #picture-info-panel.info-item .info-item-name {
-  color: #888;
-}
-.theme-green .theme-green.panel .panel-header {
+.theme-green.panel .panel-header {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-}
-.theme-green #picture-info-panel.tag-list-item {
-  background-color: #4c4c4c;
-  border-color: #5b5b5b;
-}
-.theme-green #picture-info-panel.tag-list-item:hover {
-  background-color: #5a5a5a;
-  border-color: #6c6c6c;
-}
-.theme-green #picture-info-panel.tag-list-item .btn-delete {
-  color: #fff;
-}
-.theme-green #picture-info-panel.tag-list-item .btn-delete:hover {
-  color: #aaa;
-}
-.theme-green #picture-info-panelstarrating .mdi-star {
-  color: #44A340;
 }
 .theme-green .btn-dropdown.active {
   border-color: #44BB55;
 }
 .theme-green dropdown.checkable dropdown-item .icon {
   color: #44BB55;
+}
+
+#picture-viewer-window.theme-green {
+  background-color: #222;
+}
+#picture-viewer-window.theme-green .window-navbar {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+#picture-viewer-window.theme-green .zoom-btn-group {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: transparent;
+  padding: 2px;
+}
+#picture-viewer-window.theme-green .icon-btn .icon, #picture-viewer-window.theme-green .icon-btn .text {
+  color: #fff;
+  background-color: transparent;
+}
+#picture-viewer-window.theme-green .icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+#picture-viewer-window.theme-green .icon-btn:active {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+#picture-viewer-window.theme-green .icon-btn:disabled .icon, #picture-viewer-window.theme-green .icon-btn:disabled:hover .icon, #picture-viewer-window.theme-green .icon-btn:disabled:active .icon {
+  color: #888;
+}
+#picture-viewer-window.theme-green .icon-btn:disabled, #picture-viewer-window.theme-green .icon-btn:disabled:hover, #picture-viewer-window.theme-green .icon-btn:disabled:active {
+  background-color: transparent;
+}
+
+#picture-info-panel.theme-green {
+  background-color: #323232;
+}
+#picture-info-panel.theme-green .text, #picture-info-panel.theme-green textview {
+  color: #fff;
+}
+#picture-info-panel.theme-green .btn-link .text {
+  color: #44BB55;
+}
+#picture-info-panel.theme-green .btn-link:hover .text {
+  color: #2E7D39;
+}
+#picture-info-panel.theme-green .info-item .info-item-name {
+  color: #888;
+}
+#picture-info-panel.theme-green .tag-list-item {
+  background-color: #4c4c4c;
+  border-color: #5b5b5b;
+}
+#picture-info-panel.theme-green .tag-list-item:hover {
+  background-color: #5a5a5a;
+  border-color: #6c6c6c;
+}
+#picture-info-panel.theme-green .tag-list-item .btn-delete {
+  color: #fff;
+}
+#picture-info-panel.theme-green .tag-list-item .btn-delete:hover {
+  color: #aaa;
+}
+#picture-info-panel.theme-green starrating .icon-star {
+  color: #44A340;
 }
