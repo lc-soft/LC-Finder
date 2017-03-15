@@ -40,7 +40,7 @@
 
 LCFINDER_BEGIN_HEADER
 
-int SelectFolder( char *dirpath, int max_len );
+int SelectFolderW( wchar_t *dirpath );
 
 void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
 

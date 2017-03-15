@@ -130,14 +130,13 @@ int MoveFileToTrash( const char *filepath )
 
 #define TEXT_SELECT_DIR	L"选择文件夹"
 
-int SelectFolder( char *dirpath, int max_len )
+int SelectFolderW( wchar_t *dirpath )
 {
 	int len;
 	HWND hwnd;
 	BROWSEINFOW bi;
 	LCUI_Surface s;
 	LPITEMIDLIST iids;
-	wchar_t wdirpath[PATH_LEN] = L"";
 	s = LCUIDisplay_GetSurfaceOwner( NULL );
 	hwnd = (HWND)Surface_GetHandle( s );
 	memset( &bi, 0, sizeof( bi ) );
@@ -149,32 +148,31 @@ int SelectFolder( char *dirpath, int max_len )
 	if( !iids ) {
 		return -1;
 	}
-	SHGetPathFromIDList( iids, wdirpath );
+	SHGetPathFromIDList( iids, dirpath );
 	len = wcslen( wdirpath );
-	if( len <= 0 ) {
-		return -1;
+	if( len > 0 ) {
+		return 0;
 	}
-	LCUI_EncodeString( dirpath, wdirpath, max_len, ENCODING_UTF8 );
-	return 0;
+	return -1;
 }
 
 #else
 
 /* 适用于 Win 7 及以上的系统 */
 
-int SelectFolder( char *dirpath, int max_len )
+int SelectFolderW( wchar_t *dirpath )
 {
 	PWSTR pszPath;
 	DWORD dwOptions;
 	IShellItem *pItem;
 	IFileDialog *pFile;
 	HRESULT hr = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED |
-					COINIT_DISABLE_OLE1DDE );
+				     COINIT_DISABLE_OLE1DDE );
 	if( FAILED( hr ) ) {
 		return -1;
 	}
 	hr = CoCreateInstance( CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-				IID_PPV_ARGS( &pFile ) );
+			       IID_PPV_ARGS( &pFile ) );
 	if( FAILED( hr ) ) {
 		CoUninitialize();
 		return -2;
@@ -197,7 +195,6 @@ int SelectFolder( char *dirpath, int max_len )
 		if( FAILED( hr ) ) {
 			break;
 		}
-		LCUI_EncodeString( dirpath, pszPath, max_len, ENCODING_UTF8 );
 		CoTaskMemFree( pszPath );
 	} while( 0 );
 	pFile->Release();
@@ -206,4 +203,21 @@ int SelectFolder( char *dirpath, int max_len )
 }
 
 #endif
+
+typedef void( *SelectFolderCallback)(const wchar_t*, const wchar_t*);
+
+static void OnSelectFolderAsyncW( void *arg1, void *arg2 )
+{
+	wchar_t path[PATH_LEN + 1];
+	SelectFolderCallback callback = (SelectFolderCallback)arg1;
+	if ( SelectFolderW( path ) == 0 ) {
+		callback( path, NULL );
+	}
+}
+
+void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
+{
+	LCUI_PostSimpleTask( OnSelectFolderAsyncW, callback, NULL );
+}
+
 #endif

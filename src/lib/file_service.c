@@ -42,6 +42,7 @@
 #include <LCUI/font/charset.h>
 #include <LCUI/thread.h>
 #include <LCUI/graph.h>
+#include <LCUI/image.h>
 #include "build.h"
 #include "bridge.h"
 #include "common.h"
@@ -441,7 +442,7 @@ static int FileService_GetFileImageStatus( FileRequest *request,
 #else
 	char *path = EncodeUTF8( request->path );
 #endif
-	if( Graph_GetImageSize( path, &width, &height ) == 0 ) {
+	if( LCUI_GetImageSize( path, &width, &height ) == 0 ) {
 		response->file.image = NEW( FileImageStatus, 1 );
 		response->file.image->width = width;
 		response->file.image->height = height;
@@ -585,7 +586,7 @@ static int FileService_GetFile( Connection conn,
 	path = EncodeANSI( request->path );
 	Graph_Init( &img );
 	LOG( "load image: %s\n", path );
-	if( Graph_LoadImage( path, &img ) != 0 ) {
+	if( LCUI_ReadImageFile( path, &img ) != 0 ) {
 		LOG( "load image failed\n", path );
 		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
 		free( path );
