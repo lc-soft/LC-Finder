@@ -33,28 +33,28 @@
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
-    <ClCompile Include="src\ui\browser.c" />
-    <ClCompile Include="src\ui\dialog_confirm.c" />
-    <ClCompile Include="src\ui\dialog_password.c" />
-    <ClCompile Include="src\ui\dialog_progress.c" />
-    <ClCompile Include="src\ui\dialog_prompt.c" />
-    <ClCompile Include="src\ui\dropdown.c" />
-    <ClCompile Include="src\ui\filesync.c" />
-    <ClCompile Include="src\ui\progressbar.c" />
-    <ClCompile Include="src\ui\splashscreen.c" />
-    <ClCompile Include="src\ui\starrating.c" />
-    <ClCompile Include="src\ui\switch.c" />
-    <ClCompile Include="src\ui\textview_i18n.c" />
-    <ClCompile Include="src\ui\thumbview.c" />
-    <ClCompile Include="src\ui\timeseparator.c" />
-    <ClCompile Include="src\ui\view_folders.c" />
-    <ClCompile Include="src\ui\view_home.c" />
-    <ClCompile Include="src\ui\view_picture.c" />
-    <ClCompile Include="src\ui\view_picture_info.c" />
-    <ClCompile Include="src\ui\view_search.c" />
-    <ClCompile Include="src\ui\view_settings.c" />
-    <ClCompile Include="src\ui\sidebar.c" />
     <ClCompile Include="src\ui\ui.c" />
+    <ClCompile Include="src\ui\views\folders.c" />
+    <ClCompile Include="src\ui\views\home.c" />
+    <ClCompile Include="src\ui\views\picture.c" />
+    <ClCompile Include="src\ui\views\picture_info.c" />
+    <ClCompile Include="src\ui\views\search.c" />
+    <ClCompile Include="src\ui\views\settings.c" />
+    <ClCompile Include="src\ui\widgets\browser.c" />
+    <ClCompile Include="src\ui\widgets\dialog_confirm.c" />
+    <ClCompile Include="src\ui\widgets\dialog_password.c" />
+    <ClCompile Include="src\ui\widgets\dialog_progress.c" />
+    <ClCompile Include="src\ui\widgets\dialog_prompt.c" />
+    <ClCompile Include="src\ui\widgets\dropdown.c" />
+    <ClCompile Include="src\ui\widgets\filesync.c" />
+    <ClCompile Include="src\ui\widgets\progressbar.c" />
+    <ClCompile Include="src\ui\widgets\sidebar.c" />
+    <ClCompile Include="src\ui\widgets\splashscreen.c" />
+    <ClCompile Include="src\ui\widgets\starrating.c" />
+    <ClCompile Include="src\ui\widgets\switch.c" />
+    <ClCompile Include="src\ui\widgets\textview_i18n.c" />
+    <ClCompile Include="src\ui\widgets\thumbview.c" />
+    <ClCompile Include="src\ui\widgets\timeseparator.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app\assets\ui-skin.css" />
@@ -204,8 +204,7 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(SolutionDir)vendor\lib\*.dll" "$(ProjectDir)"</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>

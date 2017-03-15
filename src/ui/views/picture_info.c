@@ -54,7 +54,6 @@
 #include "starrating.h"
 
 #define MAX_TAG_LEN			256
-#define XML_PATH			"assets/ui-view-picture-info.xml"
 #define KEY_UNKNOWN			"picture.unknown"
 #define KEY_TITLE_ADD_TAG		"picture.dialog.title.add_tag"
 #define KEY_TITLE_DEL_TAG		"picture.dialog.title.delete_tag"
@@ -215,7 +214,7 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 void UI_InitPictureInfoView( void )
 {
 	LCUI_Widget box, parent, btn_hide, btn_add_tag, btn_open;
-	box = LCUIBuilder_LoadFile( XML_PATH );
+	box = LCUIBuilder_LoadFile( FILE_PICTURE_INFO_VIEW );
 	if( !box ) {
 		return;
 	}

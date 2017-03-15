@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * ui.h -- ui managment module
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * ui.h -- 图形界面管理模块
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -127,6 +127,11 @@
 #define ID_DROPDOWN_FOLDER_FILES_SORT	"dropdown-folder-files-sort"
 #define ID_DROPDOWN_SEARCH_FILES_SORT	"dropdown-search-files-sort"
 #define ID_SWITCH_PRIVATE_SPACE		"switch-private-space-open"
+
+/* xml 文件位置 */
+#define FILE_MAIN_VIEW		"assets/views/main.xml"
+#define FILE_PICTURE_VIEW	"assets/views/picture.xml"
+#define FILE_PICTURE_INFO_VIEW	"assets/views/picture_info.xml"
 
 #define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )

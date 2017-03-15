@@ -17,7 +17,13 @@
       <UniqueIdentifier>{fff477ac-eadc-49ea-b19c-0910a30903c1}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\ui">
-      <UniqueIdentifier>{90be4bd8-deb5-4bdc-9866-57c7c74d830a}</UniqueIdentifier>
+      <UniqueIdentifier>{b7cb1dc6-7c0b-45d1-afe6-eda0dd9567c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ui\widgets">
+      <UniqueIdentifier>{d7c0629f-30f0-42e7-9a54-44aeaaadcada}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ui\views">
+      <UniqueIdentifier>{c3af2c6f-ac71-4c0d-9f2d-0277dd529f83}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,20 +33,8 @@
     <ClCompile Include="src\lib\file_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\sidebar.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\ui.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_settings.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\finder.c">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_folders.c">
-      <Filter>源文件\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\lib\sha1.c">
       <Filter>源文件</Filter>
@@ -54,71 +48,83 @@
     <ClCompile Include="src\lib\thumb_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\thumbview.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_home.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\filesync.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\dialog_confirm.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_picture.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_picture_info.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_search.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\dialog_prompt.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\starrating.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\progressbar.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\dialog_progress.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\browser.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\timeseparator.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\textview_i18n.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\lib\i18n.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\dropdown.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\splashscreen.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\switch.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\bridge_win32.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\dialog_password.c">
-      <Filter>源文件\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\lib\file_service.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\lib\file_storage.c">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\folders.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\home.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture_info.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\search.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\browser.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\dialog_confirm.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\dialog_password.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\dialog_progress.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\dialog_prompt.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\dropdown.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\filesync.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\progressbar.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\sidebar.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\splashscreen.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\starrating.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\switch.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\textview_i18n.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\thumbview.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\widgets\timeseparator.c">
+      <Filter>源文件\ui\widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\ui.c">
+      <Filter>源文件\ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

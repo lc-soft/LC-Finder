@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * ui.c -- ui managment module
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * ui.c -- 图形界面管理模块
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -50,7 +50,7 @@
 #include "dialog.h"
 #include "switch.h"
 
-#define XML_PATH "assets/ui.xml"
+#define XML_PATH "assets/views/main.xml"
 
 typedef struct ArgumentsRec_ {
 	const char *filepath;
@@ -161,7 +161,7 @@ int UI_Init( int argc, char **argv )
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUIDisplay_SetSize( 960, 640 );
 #endif
-	box = LCUIBuilder_LoadFile( XML_PATH );
+	box = LCUIBuilder_LoadFile( FILE_MAIN_VIEW );
 	if( !box ) {
 		return -1;
 	}

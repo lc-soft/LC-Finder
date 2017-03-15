@@ -52,7 +52,6 @@
 #include "dialog.h"
 
 #define MAX_SCALE	5.0
-#define XML_PATH	"assets/ui-view-picture.xml"
 #define TEXT_DELETE	L"删除此文件？"
 
 #define ClearPositionStyle(W) do { \
@@ -1361,7 +1360,7 @@ static void OnKeyDown( LCUI_SysEvent e, void *data )
 void UI_InitPictureView( int mode )
 {
 	LCUI_Widget box, btn_back, btn_back2, btn_info, btn_del;
-	box = LCUIBuilder_LoadFile( XML_PATH );
+	box = LCUIBuilder_LoadFile( FILE_PICTURE_VIEW );
 	if( box ) {
 		Widget_Top( box );
 		Widget_Unwrap( box );
