@@ -12,6 +12,7 @@
 
 
 ## 功能及特性
+
 - 缩略图预览
 - 文件夹浏览
 - 图片查看器
@@ -34,7 +35,7 @@ config           相关配置
 include          头文件
 src              源代码
   lib            基础功能库
-  scss           SCSS 文件，包含界面样式代码src
+  scss           SCSS 文件，包含了界面样式
     common       常用样式
       iconfont   图标样式
     componets    界面组件样式
