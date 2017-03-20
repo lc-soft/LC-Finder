@@ -15,131 +15,125 @@
 	vertical-align: middle;
 	background-color: #fff;
 	box-sizing: border-box;
+
+	.text-block {
+		margin-bottom: 15px;
+	}
+	.dialog-header {
+		width: 100%;
+		padding: 15px 15px 5px 15px;
+		box-sizing: border-box;
+	}
+	.dialog-body {
+		padding: 15px;
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.dialog-footer {
+		width: 100%;
+		padding: 5px 15px 15px 15px;
+		box-sizing: border-box;
+	}
+	.input-group {
+		padding: 5px 15px;
+		box-sizing: border-box;
+		margin: -5px -15px 10px -15px;
+	}
+	.input-group:last-child {
+		margin-bottom: 0;
+	}
+	.input-group .message {
+		padding-top: 5px;
+	}
+	.input-group .error.message {
+		color: #fff;
+		padding: 4px 10px;
+		font-size: 13px;
+		background-color: #FD4C4C;
+		box-sizing: border-box;
+		display: none;
+	}
+	.input-group.error textedit,
+	.input-group.error textedit:active,
+	.input-group.error textedit:focus,
+	.input-group.error textedit:hover {
+		border-color: #FD4C4C;
+		box-shadow: none;
+	}
+	.input-group.error .error.message {
+		display: block;
+	}
+	.dialog-header .text,
+	.dialog-header textview {
+		font-size: 18px;
+	}
+	.dialog-body .text,
+	.dialog-body textview {
+		font-size: 14px;
+		width: 100%;
+	}
+	.dialog-btn {
+		width: 100%;
+		height: 30px;
+		padding: 0;
+		background-color: #ddd;
+		box-sizing: border-box;
+		border: 2px solid #ddd;
+	}
+	.dialog-btn-group {
+		width: 50%;
+		height: 30px;
+		display: inline-block;
+		padding: 0 4px;
+		box-sizing: border-box;
+	}
+	.dialog-btn-group:first-child {
+		padding-left: 0;
+	}
+	.dialog-btn-group:last-child {
+		padding-right: 0;
+	}
+	.dialog-btn {
+		&:hover {
+			border: 2px solid #aaa;
+		}
+		&:active {
+			background-color: #aaa;
+		}
+		&:disabled {
+			background-color: #eaeaea;
+			border: 2px solid #eaeaea;
+		}
+		&:disabled .text,
+		&:disabled textview {
+			color: #bbb;
+		}
+		.text, textview {
+			width: 100%;
+			text-align: center;
+			line-height: 30px;
+		}	
+	}
+	textedit.has-error {
+		&:focus, &:hover, &:active {
+			border-color: #a94442;
+			box-shadow: 0 0 6px rgba(169,68,66,0.4);
+		}
+	}
+	progress {
+		width: 100%;
+		height: 14px;
+		display: block;
+		background-color: #eee;
+		margin-bottom: 5px;
+	}
+	progressbar {
+		width: 100%;
+		height: 100%;
+		background-color: #888;
+	}
+
 }
 textedit.dialog-input {
 	box-sizing: border-box;
-}
-.dialog-content .text-block {
-	margin-bottom: 15px;
-}
-.dialog-content .dialog-header {
-	width: 100%;
-	padding: 15px 15px 5px 15px;
-	box-sizing: border-box;
-}
-.dialog-content .dialog-body {
-	padding: 15px;
-	width: 100%;
-	box-sizing: border-box;
-}
-.dialog-content .dialog-footer {
-	width: 100%;
-	padding: 5px 15px 15px 15px;
-	box-sizing: border-box;
-}
-.dialog-content .input-group {
-	padding: 5px 15px;
-	box-sizing: border-box;
-	margin: -5px -15px 10px -15px;
-}
-.dialog-content .input-group:last-child {
-	margin-bottom: 0;
-}
-.dialog-content .input-group .message {
-	padding-top: 5px;
-}
-.dialog-content .input-group .error.message {
-	color: #fff;
-	padding: 4px 10px;
-	font-size: 13px;
-	background-color: #FD4C4C;
-	box-sizing: border-box;
-	display: none;
-}
-.dialog-content .input-group.error textedit,
-.dialog-content .input-group.error textedit:active,
-.dialog-content .input-group.error textedit:focus,
-.dialog-content .input-group.error textedit:hover {
-	border-color: #FD4C4C;
-	box-shadow: none;
-}
-.dialog-content .input-group.error .error.message {
-	display: block;
-}
-.dialog-content .dialog-header .text,
-.dialog-content .dialog-header textview {
-	font-size: 18px;
-}
-.dialog-content .dialog-body .text,
-.dialog-content .dialog-body textview {
-	font-size: 14px;
-	width: 100%;
-}
-.dialog-content .dialog-btn {
-	width: 100%;
-	height: 30px;
-	padding: 0;
-	background-color: #ddd;
-	box-sizing: border-box;
-	border: 2px solid #ddd;
-}
-.dialog-content .dialog-btn-group {
-	width: 50%;
-	height: 30px;
-	display: inline-block;
-	padding: 0 4px;
-	box-sizing: border-box;
-}
-.dialog-content .dialog-btn-group.one-button {
-	width: 100%;
-	display: block;
-}
-.dialog-content .dialog-btn-group.one-button .dialog-btn {
-	width: 50%;
-	margin: 0 auto;
-}
-.dialog-content .dialog-btn-group:first-child {
-	padding-left: 0;
-}
-.dialog-content .dialog-btn-group:last-child {
-	padding-right: 0;
-}
-.dialog-content .dialog-btn:hover {
-	border: 2px solid #aaa;
-}
-.dialog-content .dialog-btn:active {
-	background-color: #aaa;
-}
-.dialog-content .dialog-btn:disabled {
-	background-color: #eaeaea;
-	border: 2px solid #eaeaea;
-}
-.dialog-content .dialog-btn:disabled .text,
-.dialog-content .dialog-btn:disabled textview {
-	color: #bbb;
-}
-.dialog-content .dialog-btn .text,
-.dialog-content .dialog-btn textview {
-	width: 100%;
-	text-align: center;
-	line-height: 30px;
-}
-.dialog-content textedit.has-error,
-.dialog-content textedit.has-error:focus,
-.dialog-content textedit.has-error:hover,
-.dialog-content textedit.has-error:active {
-	border-color: #a94442;
-	box-shadow: 0 0 6px rgba(169,68,66,0.4);
-}
-.dialog-content progress {
-	width: 100%;
-	height: 14px;
-	display: block;
-	background-color: #eee;
-	margin-bottom: 5px;
-}
-.dialog-content progressbar {
-	width: 100%;
-	height: 100%;
-	background-color: #888;
 }

@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * dialog.h -- dialog
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * dialog.h -- 对话框
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -47,6 +47,16 @@ typedef struct LCUI_ProgressDialogRec_ {
 	LCUI_Widget container;
 	LCUI_MainLoop loop;
 } LCUI_ProgressDialogRec, *LCUI_ProgressDialog;
+
+/** 
+ * 显示“警告”对话框
+ * @param[in] parent 用于容纳对话框的父部件
+ * @param[in] title 对话框标题
+ * @param[in] text 对话框内容
+ */
+LCUI_API void LCUIDialog_Alert( LCUI_Widget parent,
+				const wchar_t* title,
+				const wchar_t *text );
 
 /** 
  * 显示“确认”对话框
