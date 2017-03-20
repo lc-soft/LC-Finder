@@ -166,28 +166,42 @@ static void UI_InitPrivateDirList( void )
 	}
 }
 
-static void OnSelectDirDone( const wchar_t *wpath, const wchar_t *token )
+static void OnSelectDirDone( const wchar_t *wpath, const wchar_t *wtoken )
 {
+	char *token = NULL;
 	char *path = EncodeUTF8( wpath );
+	if( wtoken ) {
+		token = EncodeUTF8( wtoken );
+	}
 	if( !LCFinder_GetDir( path ) ) {
-		DB_Dir dir = LCFinder_AddDir( path, TRUE );
+		DB_Dir dir = LCFinder_AddDir( path, token, TRUE );
 		if( dir ) {
 			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 		}
 	}
 	free( path );
+	if( token ) {
+		free( token );
+	}
 }
 
-static void OnSelectPrivateDirDone( const wchar_t *wpath, const wchar_t *token )
+static void OnSelectPrivateDirDone( const wchar_t *wpath, const wchar_t *wtoken )
 {
+	char *token = NULL;
 	char *path = EncodeUTF8( wpath );
+	if( wtoken ) {
+		token = EncodeUTF8( wtoken );
+	}
 	if( !LCFinder_GetDir( path ) ) {
-		DB_Dir dir = LCFinder_AddDir( path, FALSE );
+		DB_Dir dir = LCFinder_AddDir( path, token, FALSE );
 		if( dir ) {
 			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
 		}
 	}
 	free( path );
+	if( token ) {
+		free( token );
+	}
 }
 
 static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

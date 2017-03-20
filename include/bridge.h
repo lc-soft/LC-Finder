@@ -40,9 +40,9 @@
 
 LCFINDER_BEGIN_HEADER
 
-int SelectFolderW( wchar_t *dirpath );
-
 void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
+
+void RemoveFolderAccessW( const wchar_t *token );
 
 int GetAppDataFolderW( wchar_t *buf, int max_len );
 

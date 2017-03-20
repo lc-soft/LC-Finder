@@ -64,51 +64,6 @@ int GetAppInstalledLocationW( wchar_t *buf, int max_len )
 	return 0;
 }
 
-static void TestGetFile( const wchar_t *wpath )
-{
-	String ^path = ref new String( wpath );
-	create_task( StorageFile::GetFileFromPathAsync( path ) ).then( []( task<StorageFile^> fileTask ) {
-		StorageFile^ file = nullptr;
-		try {
-			file = fileTask.get();
-		} catch( Exception^ e ) {
-			return file;
-		}
-		return file;
-	} ).then( [](StorageFile^ file) {
-		if( !file ) {
-			return create_task( []() -> int {
-				return -ENOMEM;
-			} );
-		}
-		// TODO: Put code to handle the file when it is opened successfully.
-
-		auto t = create_task( file->GetBasicPropertiesAsync() ).then( []( FileProperties::BasicProperties ^props ) {
-			// TODO: Put code to handle the properties when it is get successfully.
-			LOG( "mtime: %llu\n", props->DateModified.UniversalTime );
-			return 0;
-		} );
-		if( true/* this file is image */ ) {
-			t = t.then( [file](int ret) {
-				return file->Properties->GetImagePropertiesAsync();
-			} ).then( [file]( task<FileProperties::ImageProperties^> t ) {
-				FileProperties::ImageProperties ^props;
-				try {
-					props = t.get();
-					LOG( "image size: %d,%d\n", props->Width, props->Height );
-				} catch( Exception^ e ) {
-
-				}
-				// TODO: Put code to handle the properties when it is get successfully.
-				return 0;
-			} );
-		}
-		return t;
-	} ).then( []( int ret ) {
-		LOG( "return: %d\n", ret );
-	} );
-}
-
 void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
 {
 	FolderPicker^ folderPicker = ref new FolderPicker();
@@ -123,48 +78,15 @@ void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
 			return;
 		}
 		auto token = FutureAccessList->Add( folder );
-		//callback( folder->Path->Data(), token->Data() );
-		TestGetFile( L"F:\\我的文件\\图片收藏\\测试-005\\001.png" );
-	} );
-}
-/*
-static void ScanImageFilesInFolder( StorageFolder ^folder,
-				    FileHandlerAsync handler,
-				    void (*callback)(void*), void *data )
-{
-	if( !folder ) {
-		return;
-	}
-	auto options = ref new  Windows::Storage::Search::QueryOptions();
-	options->FileTypeFilter->Append( ".png" );
-	options->FileTypeFilter->Append( ".jpg" );
-	options->FileTypeFilter->Append( ".jpeg" );
-	options->FileTypeFilter->Append( ".bmp" );
-	auto query = folder->CreateFileQueryWithOptions( options );
-	auto task = create_task( query->GetFilesAsync() );
-	task.then( [handler, callback, data]( IVectorView<StorageFile^>^ files ) {
-		for( unsigned int i = 0; i < files->Size; i++ ) {
-			StorageFile^ file = files->GetAt( i );
-			FileIO::ReadBufferAsync( file );
-			if( handler( data, file->Path->Data() ) != 0 ) {
-				break;
-			}
-		}
-		callback( data );
+		callback( folder->Path->Data(), token->Data() );
 	} );
 }
 
-void ScanImageFilesAsyncW( const wchar_t *wpath, const wchar_t *wtoken,
-			   FileHandlerAsync handler, void( *callback )(void*),
-			   void *data )
+void RemoveFolderAccessW( const wchar_t *token )
 {
-	Platform::String ^token = ref new Platform::String( wtoken );
-	auto task = create_task( FutureAccessList->GetFolderAsync( token ) );
-	task.then( [handler, callback, data]( StorageFolder ^folder ) {
-		ScanImageFilesInFolder( folder, handler, callback, data );
-	} );
+	auto str = ref new Platform::String( token );
+	FutureAccessList->Remove( str );
 }
-*/
 
 void OpenUriW( const wchar_t *uristr )
 {

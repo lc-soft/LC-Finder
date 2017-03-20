@@ -79,8 +79,15 @@ typedef struct FinderConfigRec_ {
 	char encrypted_password[48];	/**< 加密后的密码 */
 } FinderConfigRec, *FinderConfig;
 
+enum FinderState {
+	FINDER_STATE_NONE,
+	FINDER_STATE_ACTIVATED,
+	FINDER_STATE_BLOCKED
+};
+
 /** LCFinder 的主要数据记录 */
 typedef struct Finder_ {
+	int state;			/**< 当前状态 */
 	DB_Dir *dirs;			/**< 源文件夹列表 */
 	DB_Tag *tags;			/**< 标签列表 */
 	int n_dirs;			/**< 多少个源文件夹 */
@@ -144,7 +151,7 @@ void LCFinder_SyncFilesAsync( FileSyncStatus s );
 
 DB_Dir LCFinder_GetDir( const char *dirpath );
 
-DB_Dir LCFinder_AddDir( const char *dirpath, int visible );
+DB_Dir LCFinder_AddDir( const char *dirpath, const char *token, int visible );
 
 DB_Tag LCFinder_GetTag( const char *tagname );
 

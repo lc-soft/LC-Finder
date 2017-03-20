@@ -55,6 +55,12 @@
 
 #define THUMB_CACHE_SIZE (64*1024*1024)
 
+#ifdef ASSERT
+#undef ASSERT
+#endif
+
+#define ASSERT(X) if(!(X)) { _DEBUG_MSG("error\n"); goto error;}
+
 Finder finder;
 
 typedef struct DirStatusDataPackRec_ {
@@ -124,7 +130,7 @@ static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 	return DecodeUTF8( dbpath );
 }
 
-DB_Dir LCFinder_AddDir( const char *dirpath, int visible )
+DB_Dir LCFinder_AddDir( const char *dirpath, const char *token, int visible )
 {
 	int i, len;
 	char *path;
@@ -144,7 +150,7 @@ DB_Dir LCFinder_AddDir( const char *dirpath, int visible )
 			return NULL;
 		}
 	}
-	dir = DB_AddDir( dirpath, visible );
+	dir = DB_AddDir( dirpath, token, visible );
 	if( !dir ) {
 		free( path );
 		return NULL;
@@ -156,7 +162,7 @@ DB_Dir LCFinder_AddDir( const char *dirpath, int visible )
 		finder.n_dirs -= 1;
 		return NULL;
 	}
-	paths = realloc( finder.thumb_paths, 
+	paths = realloc( finder.thumb_paths,
 			 sizeof( wchar_t* )*finder.n_dirs );
 	if( !path ) {
 		finder.n_dirs -= 1;
@@ -171,9 +177,9 @@ DB_Dir LCFinder_AddDir( const char *dirpath, int visible )
 
 void LCFinder_DeleteDir( DB_Dir dir )
 {
-	int i, len;
+	int i;
 	SyncTask t;
-	wchar_t *wpath;
+	wchar_t *wpath, *wtoken;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		if( dir == finder.dirs[i] ) {
 			break;
@@ -183,13 +189,16 @@ void LCFinder_DeleteDir( DB_Dir dir )
 		return;
 	}
 	finder.dirs[i] = NULL;
-	len = strlen( dir->path ) + 1;
-	wpath = NEW( wchar_t, len );
-	LCUI_DecodeString( wpath, dir->path, len, ENCODING_UTF8 );
+	wpath = DecodeUTF8( dir->path );
 	/* 准备清除文件列表缓存 */
 	t = SyncTask_NewW( finder.fileset_dir, wpath );
 	LCFinder_TriggerEvent( EVENT_DIR_DEL, dir );
 	SyncTask_ClearCache( t );
+	if( dir->token ) {
+		wtoken = DecodeUTF8( dir->token );
+		RemoveFolderAccessW( wtoken );
+		free( wtoken );
+	}
 	free( wpath );
 	/* 准备清除缩略图数据库 */
 	wpath = finder.thumb_paths[i];
@@ -650,6 +659,24 @@ static int LCFinder_InitFileDB( void )
 	finder.n_tags = DB_GetTags( &finder.tags );
 	free( path );
 	return 0;
+
+error:
+	free( path );
+	return 1;
+}
+
+static void LCFinder_ExitFileDB( void )
+{
+	int i;
+	for( i = 0; i < finder.n_dirs; ++i ) {
+		DBDir_Release( finder.dirs[i] );
+		finder.dirs[i] = NULL;
+	}
+	for( i = 0; i < finder.n_tags; ++i ) {
+		DBTag_Release( finder.tags[i] );
+		finder.tags[i] = NULL;
+	}
+	DB_Exit();
 }
 
 static int LCFinder_InitThumbCache( void )
@@ -786,6 +813,9 @@ static int LCFinder_InitFileStorage( void )
 	ASSERT( finder.storage_for_thumb > 0 );
 	ASSERT( finder.storage_for_scan > 0 );
 	return 0;
+
+error:
+	return -1;
 }
 
 static void LCFinder_ExitFileStorage( void )
@@ -889,14 +919,19 @@ int LCFinder_Init( int argc, char **argv )
 	finder.trigger = EventTrigger();
 	ASSERT( LCFinder_InitWorkDir() == 0 );
 	ASSERT( LCFinder_LoadConfig() == 0 );
+	ASSERT( LCFinder_InitLanguage() == 0 );
 	ASSERT( LCFinder_InitFileDB() == 0 );
 	ASSERT( LCFinder_InitThumbDB() == 0 );
 	ASSERT( LCFinder_InitThumbCache() == 0 );
-	ASSERT( LCFinder_InitLanguage() == 0 );
 	ASSERT( LCFinder_InitFileStorage() == 0 );
 	ASSERT( UI_Init( argc, argv ) == 0 );
 	LCUI_BindEvent( LCUI_QUIT, LCFinder_OnExit, NULL, NULL );
+	finder.state = FINDER_STATE_ACTIVATED;
 	return 0;
+
+error:
+	finder.state = FINDER_STATE_BLOCKED;
+	return -1;
 }
 
 void LCFinder_Exit( void )
@@ -904,10 +939,15 @@ void LCFinder_Exit( void )
 	UI_Exit();
 	LCFinder_ExitThumbDB();
 	LCFinder_ExitFileStorage();
+	LCFinder_ExitFileDB();
 }
 
 int LCFinder_Run( void )
 {
+	if( finder.state != FINDER_STATE_ACTIVATED ) {
+		LCFinder_Exit();
+		return -1;
+	}
 	return UI_Run();
 }
 

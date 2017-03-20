@@ -988,6 +988,9 @@ static Picture CreatePicture( void )
 
 static void DeletePicture( Picture pic )
 {
+	if( !pic ) {
+		return;
+	}
 	if( pic->data ) {
 		Graph_Free( pic->data );
 		pic->data = NULL;

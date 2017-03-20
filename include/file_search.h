@@ -52,6 +52,7 @@ typedef struct DB_TagRec_ {
 typedef struct DB_DirRec_ {
 	int id;			/**< 文件夹标识号 */
 	char *path;		/**< 文件夹路径 */
+	char *token;		/**< 文件夹访问凭据 */
 	int visible;		/**< 是否可见 */
 } DB_DirRec, *DB_Dir;
 
@@ -90,11 +91,16 @@ typedef void* DB_Query;
 /** 初始化数据库模块 */
 int DB_Init( const char *dbpath );
 
+void DB_Exit( void );
+
 /** 添加一个文件夹 */
-DB_Dir DB_AddDir( const char *dirpath, int visible );
+DB_Dir DB_AddDir( const char *dirpath, const char *token, int visible );
 
 /** 删除一个文件夹 */
 void DB_DeleteDir( DB_Dir dir );
+
+/** 释放文件夹信息占用的资源 */
+void DBDir_Release( DB_Dir dir );
 
 /** 获取所有文件夹 */
 int DB_GetDirs( DB_Dir **outlist );
@@ -139,8 +145,11 @@ int DBFile_SetTime( DB_File file, int ctime, int mtime );
 /** 复制文件信息 */
 DB_File DBFile_Dup( DB_File file );
 
-/** 释放文件信息 */
+/** 释放文件信息占用的资源 */
 void DBFile_Release( DB_File file );
+
+/** 释放标签信息占用的资源 */
+void DBTag_Release( DB_Tag tag );
 
 /** 获取符合查询条件的文件总数 */
 int DBQuery_GetTotalFiles( DB_Query query );
