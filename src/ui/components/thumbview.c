@@ -47,7 +47,7 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 
-#define THUMB_TASK_MAX		10
+#define THUMB_TASK_MAX		16
 #define SCROLLLOADING_DELAY	500
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
@@ -83,8 +83,8 @@ enum AnimationType {
 
 /** 任务类型 */
 enum ThumbViewTaskType {
-	TASK_LOAD_THUMB,
-	TASK_LAYOUT,
+	TASK_LOAD_THUMB,	/**< 加载缩略图 */
+	TASK_LAYOUT,		/**< 处理布局 */
 	TASK_TOTAL
 };
 
@@ -114,37 +114,61 @@ typedef struct LayoutContextRec_ {
 	int folders_per_row;		/**< 每行有多少个文件夹 */
 } LayoutContextRec, *LayoutContext;
 
-typedef struct ThumbViewRec_ {
-	int storage;			/**< 文件存储服务的连接标识符 */
-	Dict **dbs;			/**< 缩略图数据库字典，以目录路径进行索引 */
-	ThumbCache cache;		/**< 缩略图缓存 */
-	ThumbLinker linker;		/**< 缩略图链接器 */
-	LinkedList files;		/**< 当前视图下的文件列表 */
-	LinkedList thumb_tasks;		/**< 缩略图加载任务队列 */
-	RBTree task_targets;		/**< 各个任务的目标部件 */
-	LCUI_Cond tasks_cond;		/**< 任务队列条件变量 */
-	LCUI_Mutex tasks_mutex;		/**< 任务队列互斥锁 */
-	LCUI_BOOL tasks[TASK_TOTAL];	/**< 当前任务 */
-	LCUI_Mutex mutex;		/**< 互斥锁 */
-	LCUI_Thread thread;		/**< 任务处理线程 */
-	LCUI_BOOL is_loading;		/**< 是否处于载入中状态 */
-	LCUI_BOOL is_running;		/**< 是否处于运行状态 */
-	ScrollLoading scrollload;	/**< 滚动加载功能所需的相关数据 */
-	LayoutContextRec layout;	/**< 缩略图布局功能所需的相关数据 */
-	AnimationRec animation;		/**< 动画相关数据，用于实现淡入淡出的动画效果 */
-	void (*onlayout)(LCUI_Widget);	/**< 回调函数，当布局开始时调用 */
-} ThumbViewRec, *ThumbView;
+typedef struct ThumbViewRec_ *ThumbView;
+typedef struct ThumbLoaderRec_ *ThumbLoader;
+typedef void( *ThumbLoaderCallback )(ThumbLoader);
 
+/** 缩略图加载器的数据结构 */
 typedef struct ThumbLoaderRec_ {
 	LCUI_BOOL active;		/**< 是否处于活动状态 */
 	ThumbDB db;			/**< 缩略图缓存数据库 */
 	ThumbView view;			/**< 所属缩略图视图 */
 	LCUI_Widget target;		/**< 需要缩略图的部件 */
 	LCUI_Mutex mutex;		/**< 互斥锁 */
+	LCUI_Cond cond;			/**< 条件变量 */
 	char path[PATH_LEN];		/**< 图片文件路径，相对于源文件夹 */
 	char fullpath[PATH_LEN];	/**< 图片文件的完整路径 */
 	wchar_t *wfullpath;		/**< 图片文件路径（宽字符版） */
-} ThumbLoaderRec, *ThumbLoader;
+	void *data;			/**< 传给回调函数的附加参数 */
+	ThumbLoaderCallback callback;	/**< 回调函数 */
+} ThumbLoaderRec;
+
+/** 任务状态 */
+enum ThumbViewTaskState {
+	TASK_STATE_FINISHED,
+	TASK_STATE_RUNNING,
+	TASK_STATE_READY
+};
+
+/** 任务 */
+typedef struct ThumbViewTaskRec_ {
+	int state;
+	union {
+		ThumbLoader loader;
+		void *data;
+	};
+} ThumbViewTaskRec, *ThumbViewTask;
+
+typedef struct ThumbViewRec_ {
+	int storage;				/**< 文件存储服务的连接标识符 */
+	Dict **dbs;				/**< 缩略图数据库字典，以目录路径进行索引 */
+	ThumbCache cache;			/**< 缩略图缓存 */
+	ThumbLinker linker;			/**< 缩略图链接器 */
+	LinkedList files;			/**< 当前视图下的文件列表 */
+	LinkedList thumb_tasks;			/**< 缩略图加载任务队列 */
+	RBTree task_targets;			/**< 各个任务的目标部件 */
+	LCUI_Cond tasks_cond;			/**< 任务队列条件变量 */
+	LCUI_Mutex tasks_mutex;			/**< 任务队列互斥锁 */
+	ThumbViewTaskRec tasks[TASK_TOTAL];	/**< 当前任务 */
+	LCUI_Mutex mutex;			/**< 互斥锁 */
+	LCUI_Thread thread;			/**< 任务处理线程 */
+	LCUI_BOOL is_loading;			/**< 是否处于载入中状态 */
+	LCUI_BOOL is_running;			/**< 是否处于运行状态 */
+	ScrollLoading scrollload;		/**< 滚动加载功能所需的相关数据 */
+	LayoutContextRec layout;		/**< 缩略图布局功能所需的相关数据 */
+	AnimationRec animation;			/**< 动画相关数据，用于实现淡入淡出的动画效果 */
+	void (*onlayout)(LCUI_Widget);		/**< 回调函数，当布局开始时调用 */
+} ThumbViewRec;
 
 /** 缩略图列表项的数据 */
 typedef struct ThumbViewItemRec_ {
@@ -396,6 +420,13 @@ static void ThumbLoader_Destroy( ThumbLoader loader )
 	free( loader );
 }
 
+static void ThumbLoader_Callback( ThumbLoader loader )
+{
+	if( loader->callback ) {
+		loader->callback( loader );
+	}
+}
+
 static void ThumbLoader_OnError( ThumbLoader loader )
 {
 	LCUI_Widget icon;
@@ -403,24 +434,21 @@ static void ThumbLoader_OnError( ThumbLoader loader )
 
 	LCUIMutex_Lock( &loader->mutex );
 	if( !loader->active ) {
-		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_Destroy( loader );
-		return;
+		goto exit;
 	}
 	item = Widget_GetData( loader->target, self.item );
 	item->loader = NULL;
 	if( !item->is_valid || item->is_dir ) {
-		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_Destroy( loader );
-		return;
+		goto exit;
 	}
 	item->is_valid = FALSE;
 	icon = LCUIWidget_New( "textview" );
 	Widget_AddClass( icon, "tip icon icon icon-help" );
 	Widget_AddClass( icon, "floating center middle aligned" );
 	Widget_Append( item->cover, icon );
+exit:
 	LCUIMutex_Unlock( &loader->mutex );
-	ThumbLoader_Destroy( loader );
+	ThumbLoader_Callback( loader );
 }
 
 static void ThumbLoader_OnDone( ThumbLoader loader,
@@ -431,7 +459,7 @@ static void ThumbLoader_OnDone( ThumbLoader loader,
 	LCUIMutex_Lock( &loader->mutex );
 	if( !loader->active || !loader->target ) {
 		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_Destroy( loader );
+		ThumbLoader_Callback( loader );
 		return;
 	}
 	item = Widget_GetData( loader->target, self.item );
@@ -458,7 +486,7 @@ static void ThumbLoader_OnDone( ThumbLoader loader,
 					     loader->target, thumb );
 		}
 		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_Destroy( loader );
+		ThumbLoader_Callback( loader );
 		return;
 	}
 	LCUIMutex_Unlock( &loader->mutex );
@@ -473,7 +501,7 @@ static void OnGetThumbnail( FileStatus *status,
 	LCUIMutex_Lock( &loader->mutex );
 	if( !loader->active || !loader->target ) {
 		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_Destroy( loader );
+		ThumbLoader_Callback( loader );
 		return;
 	}
 	LCUIMutex_Unlock( &loader->mutex );
@@ -499,7 +527,7 @@ static void ThumbLoader_Load( ThumbLoader loader, FileStatus *status )
 	LCUIMutex_Lock( &loader->mutex );
 	if( !loader->active || !loader->target ) {
 		LCUIMutex_Unlock( &loader->mutex );
-		ThumbLoader_Destroy( loader );
+		ThumbLoader_Callback( loader );
 		return;
 	}
 	ret = ThumbDB_Load( loader->db, loader->path, &tdata );
@@ -533,23 +561,46 @@ static void OnGetFileStatus( FileStatus *status, void *data )
 	ThumbLoader_Load( data, status );
 }
 
-/** 载入缩略图 */
-static void ThumbLoader_Start( ThumbView view, LCUI_Widget target )
+static ThumbLoader ThumbLoader_Create( ThumbView view, LCUI_Widget target )
 {
-	size_t len;
-	DB_Dir dir;
 	ThumbViewItem item;
 	ThumbLoader loader;
 
 	loader = NEW( ThumbLoaderRec, 1 );
+	item = Widget_GetData( target, self.item );
+	if( item ) {
+		item->loader = loader;
+	} else {
+		free( loader );
+		return NULL;
+	}
 	loader->view = view;
+	loader->data = NULL;
 	loader->active = TRUE;
 	loader->target = target;
+	loader->callback = NULL;
 	LCUIMutex_Init( &loader->mutex );
-	item = Widget_GetData( target, self.item );
-	item->loader = loader;
-	_DEBUG_MSG( "loader: %p, target: %p, target state: %d\n",
-		    loader, target, target->state );
+	DEBUG_MSG( "loader: %p, target: %p, target state: %d\n",
+		   loader, target, target->state );
+	return loader;
+}
+
+static void ThumbLoader_SetCallback( ThumbLoader loader,
+				     ThumbLoaderCallback callback,
+				     void *data )
+{
+	loader->callback = callback;
+	loader->data = data;
+}
+
+/** 载入缩略图 */
+static void ThumbLoader_Start( ThumbLoader loader )
+{
+	size_t len;
+	DB_Dir dir;
+	ThumbViewItem item;
+	ThumbView view = loader->view;
+	item = Widget_GetData( loader->target, self.item );
 	dir = LCFinder_GetSourceDir( item->path );
 	if( !dir ) {
 		ThumbLoader_OnError( loader );
@@ -588,17 +639,34 @@ static void ThumbLoader_Start( ThumbView view, LCUI_Widget target )
 static void ThumbLoader_Stop( ThumbLoader loader )
 {
 	LCUIMutex_Lock( &loader->mutex );
-	_DEBUG_MSG( "loader: %p, target: %p\n", loader, loader->target );
+	DEBUG_MSG( "loader: %p, target: %p\n", loader, loader->target );
 	loader->active = FALSE;
 	loader->target = NULL;
 	loader->view = NULL;
 	LCUIMutex_Unlock( &loader->mutex );
 }
 
+static void ThumbView_OnThumbLoadDone( ThumbLoader loader )
+{
+	ThumbView view = loader->view;
+	ThumbViewTask task = &view->tasks[TASK_LOAD_THUMB];
+	LCUIMutex_Lock( &view->tasks_mutex );
+	if( loader->view->thumb_tasks.length > 0 ) {
+		task->state = TASK_STATE_READY;
+	} else {
+		task->state = TASK_STATE_FINISHED;
+	}
+	ThumbLoader_Destroy( loader );
+	LCUICond_Signal( &view->tasks_cond );
+	LCUIMutex_Unlock( &view->tasks_mutex );
+	task->loader = NULL;
+}
+
 /** 执行加载缩略图的任务 */
 static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 {
 	LCUI_Graph *thumb;
+	ThumbLoader loader;
 	ThumbView view = Widget_GetData( w, self.main );
 	ThumbViewItem item = Widget_GetData( target, self.item );
 	thumb = ThumbCache_Link( view->cache, item->path,
@@ -609,7 +677,11 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 		}
 		return;
 	}
-	ThumbLoader_Start( view, target );
+	loader = ThumbLoader_Create( view, target );
+	ThumbLoader_SetCallback( loader, ThumbView_OnThumbLoadDone, NULL );
+	view->tasks[TASK_LOAD_THUMB].state = TASK_STATE_RUNNING;
+	view->tasks[TASK_LOAD_THUMB].loader = loader;
+	ThumbLoader_Start( loader );
 }
 
 void ThumbView_Lock( LCUI_Widget w )
@@ -857,7 +929,7 @@ static void ThumbView_ExecUpdateLayout( LCUI_Widget w )
 				  ThumbView_OnAfterLayout, NULL, NULL );
 		return;
 	}
-	view->tasks[TASK_LAYOUT] = TRUE;
+	view->tasks[TASK_LAYOUT].state = TASK_STATE_READY;
 	LCUICond_Signal( &view->tasks_cond );
 }
 
@@ -879,7 +951,7 @@ static void OnDelayLayout( void *arg )
 	if( view->onlayout ) {
 		view->onlayout( w );
 	}
-	view->tasks[TASK_LAYOUT] = TRUE;
+	view->tasks[TASK_LAYOUT].state = TASK_STATE_READY;
 	LCUICond_Signal( &view->tasks_cond );
 }
 
@@ -1010,7 +1082,7 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	}
 	LinkedList_Insert( &data->view->thumb_tasks, 0, w );
 	RBTree_CustomInsert( &data->view->task_targets, w, w );
-	data->view->tasks[TASK_LOAD_THUMB] = TRUE;
+	data->view->tasks[TASK_LOAD_THUMB].state = TASK_STATE_READY;
 	/* 通知任务线程处理该任务 */
 	LCUICond_Signal( &data->view->tasks_cond );
 	LCUIMutex_Unlock( &data->view->tasks_mutex );
@@ -1162,9 +1234,6 @@ static void ThumbView_ExecTask( LCUI_Widget w, int task )
 		RBTree_CustomErase( &view->task_targets, target );
 		LCUIMutex_Unlock( &view->tasks_mutex );
 		ThumbView_ExecLoadThumb( w, target );
-		if( view->thumb_tasks.length > 0 ) {
-			view->tasks[TASK_LOAD_THUMB] = TRUE;
-		}
 		LinkedListNode_Delete( node );
 		break;
 	case TASK_LAYOUT:
@@ -1173,28 +1242,38 @@ static void ThumbView_ExecTask( LCUI_Widget w, int task )
 	}
 }
 
-/** 缩略图加载任务处理线程 */
+/** 任务处理线程 */
 static void ThumbView_TaskThread( void *arg )
 {
+	ThumbView view;
+	ThumbViewTask task;
 	LCUI_BOOL shown = TRUE;
 	LCUI_Widget parent, w = arg;
-	ThumbView view = Widget_GetData( w, self.main );
+	view = Widget_GetData( w, self.main );
 	while( view->is_running ) {
 		int i, count;
 		view->is_loading = TRUE;
 		LCUIMutex_Lock( &view->mutex );
 		for( i = 0, count = 0; i < TASK_TOTAL; ++i ) {
-			if( view->tasks[i] ) {
-				view->tasks[i] = FALSE;
+			task = &view->tasks[i];
+			switch( task->state ) {
+			case TASK_STATE_READY:
+				task->state = TASK_STATE_FINISHED;
 				ThumbView_ExecTask( w, i );
-				if( !view->tasks[i] ) {
+				if( task->state == TASK_STATE_FINISHED ) {
 					++count;
 				}
-			} else {
+				break;
+			case TASK_STATE_RUNNING:
+				break;
+			case TASK_STATE_FINISHED:
+			default:
 				++count;
+				break;
 			}
 		}
 		LCUIMutex_Unlock( &view->mutex );
+		/* 如果所有任务都处理完成 */
 		if( count == TASK_TOTAL ) {
 			view->is_loading = FALSE;
 			LCUIMutex_Lock( &view->tasks_mutex );
@@ -1240,7 +1319,6 @@ static void ThumbView_OnRemove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	ThumbViewItem item;
 	e->cancel_bubble = TRUE;
-	_DEBUG_MSG("target: %p\n", w);
 	if( !Widget_CheckPrototype( e->target, self.item ) ) {
 		return;
 	}
