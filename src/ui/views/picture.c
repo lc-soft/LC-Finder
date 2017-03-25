@@ -81,9 +81,11 @@ typedef struct PcitureRec_ {
 	wchar_t *file;			/**< 当前已加载的图片的路径  */
 	wchar_t *file_for_load;		/**< 当前需加载的图片的路径  */
 	LCUI_BOOL is_loading;		/**< 是否正在载入图片 */
-	LCUI_BOOL is_valid;		/**< 是否有效 */
+	LCUI_BOOL is_valid;		/**< 图片内容是否有效 */
 	LCUI_Graph *data;		/**< 当前已经加载的图片数据 */
 	LCUI_Widget view;		/**< 视图，用于呈现该图片 */
+	LCUI_Mutex mutex;		/**< 互斥锁，主要用户异步加载 */
+	LCUI_Cond cond;			/**< 条件变量，主要用户异步加载 */
 	double scale;			/**< 图片缩放比例 */
 	double min_scale;		/**< 图片最小缩放比例 */
 	int timer;			/**< 定时器，用于延迟显示“载入中...”提示框 */
@@ -104,6 +106,17 @@ typedef struct FileScannerRec_ {
 	LinkedList files;	/**< 已扫描到的文件列表 */
 	FileIterator iterator;	/**< 文件迭代器 */
 } FileScannerRec, *FileScanner;
+
+typedef struct PictureLoaderRec_ {
+	int num;				/**< 当前需加载的图片的序号（下标） */
+	LCUI_BOOL is_running;			/**< 是否正在运行 */
+	LCUI_Cond cond;				/**< 条件变量 */
+	LCUI_Mutex mutex;			/**< 互斥锁 */
+	LCUI_Cond load_cond;			/**< 条件变量，用于加载图片 */
+	LCUI_Mutex load_mutex;			/**< 互斥锁，用于加载图片 */
+	LCUI_Thread thread;			/**< 图片加载器所在的线程 */
+	Picture *pictures;			/**< 图片实例引用 */
+} PictureLoaderRec, *PictureLoader;
 
 typedef struct FileDataPackRTec_ {
 	FileIndex fidx;
@@ -126,16 +139,9 @@ static struct PictureViewer {
 	LCUI_BOOL is_opening;			/**< 当前视图是否为打开状态 */
 	LCUI_BOOL is_zoom_mode;			/**< 当前视图是否为放大/缩小模式 */
 	LCUI_BOOL is_touch_mode;		/**< 当前是否为触屏模式 */
-	Picture pictures[3];			/**< 三组图片实例 */
 	int mode;				/**< 当前运行模式 */
-	int picture_i;				/**< 当前需加载的图片的序号（下标） */
 	Picture picture;			/**< 当前焦点图片 */
-	LCUI_Cond cond;				/**< 条件变量 */
-	LCUI_Cond cond_load;			/**< 条件变量，用于图片加载 */
-	LCUI_Mutex mutex;			/**< 互斥锁 */
-	LCUI_Mutex mutex_load;			/**< 互斥锁，用于图片加载 */
-	LCUI_Thread th_picloader;		/**< 图片加载器线程 */
-	LCUI_Thread th_scanner;			/**< 图片文件扫描器线程 */
+	Picture pictures[3];			/**< 三组图片实例 */
 	FileIterator iterator;			/**< 图片文件列表迭代器 */
 	int focus_x, focus_y;			/**< 当前焦点位置，相对于按比例缩放后的图片 */
 	int origin_focus_x, origin_focus_y;	/**< 当前焦点位置，相对于原始尺寸的图片 */
@@ -171,7 +177,19 @@ static struct PictureViewer {
 		LCUI_BOOL is_running;		/**< 是否正在运行 */
 	} slide;				/**< 图片水平滑动功能的相关数据 */
 	FileScannerRec scanner;
+	PictureLoaderRec loader;
 } this_view = {0};
+
+static void FileIndex_Destroy( FileIndex fidx )
+{
+	free( fidx->name );
+	free( fidx );
+}
+
+static void FileIndex_OnDestroy( void *data )
+{
+	FileIndex_Destroy( data );
+}
 
 static void FileIterator_Destroy( FileIterator iter )
 {
@@ -244,9 +262,13 @@ static void FileIndex_Delete( FileIndex fidx )
 static void TaskForResetWidgetBackground( void *arg1, void *arg2 )
 {
 	LCUI_Widget w = arg1;
+	LCUI_Graph *image = arg2;
 	Widget_UnsetStyle( w, key_background_image );
-	Widget_UpdateBackground( w );
 	Widget_UpdateStyle( w, FALSE );
+	if( image ) {
+		Graph_Free( image );
+		free( image );
+	}
 }
 
 static void TaskForSetWidgetBackground( void *arg1, void *arg2 )
@@ -332,6 +354,19 @@ static void UpdateResetSizeButton( void )
 	}
 }
 
+static void SetPictureView( Picture pic )
+{
+	LCUI_PostSimpleTask( TaskForSetWidgetBackground,
+			     pic->view, pic->data );
+}
+
+static void ClearPictureView( Picture pic )
+{
+	LCUI_PostSimpleTask( TaskForResetWidgetBackground,
+			     pic->view, pic->data );
+	pic->data = NULL;
+}
+
 static int OpenPrevPicture( void )
 {
 	Picture pic;
@@ -350,6 +385,7 @@ static int OpenPrevPicture( void )
 		pic->file = NULL;
 	}
 	this_view.pictures[0] = pic;
+	ClearPictureView( pic );
 	UI_OpenPictureView( iter->filepath );
 	return 0;
 }
@@ -372,6 +408,7 @@ static int OpenNextPicture( void )
 		pic->file = NULL;
 	}
 	this_view.pictures[2] = pic;
+	ClearPictureView( pic );
 	UI_OpenPictureView( iter->filepath );
 	return 0;
 }
@@ -677,6 +714,7 @@ static void OnPictureResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnShowTipLoading( void *arg )
 {
 	Picture pic = arg;
+	_DEBUG_MSG("pic: %p, current: %p\n", pic, this_view.picture);
 	if( this_view.picture == pic ) {
 		if( pic->is_loading ) {
 			Widget_Show( this_view.tip_loading );
@@ -975,6 +1013,7 @@ static Picture CreatePicture( void )
 	ASSIGN( pic, Picture );
 	pic->timer = 0;
 	pic->file = NULL;
+	pic->is_valid = FALSE;
 	pic->is_loading = FALSE;
 	pic->file_for_load = NULL;
 	pic->data = Graph_New();
@@ -983,6 +1022,8 @@ static Picture CreatePicture( void )
 	BindEvent( pic->view, "resize", OnPictureResize );
 	BindEvent( pic->view, "touch", OnPictureTouch );
 	BindEvent( pic->view, "mousedown", OnPictureMouseDown );
+	LCUIMutex_Init( &pic->mutex );
+	LCUICond_Init( &pic->cond );
 	return pic;
 }
 
@@ -991,6 +1032,8 @@ static void DeletePicture( Picture pic )
 	if( !pic ) {
 		return;
 	}
+	LCUICond_Destroy( &pic->cond );
+	LCUIMutex_Destroy( &pic->mutex );
 	if( pic->data ) {
 		Graph_Free( pic->data );
 		pic->data = NULL;
@@ -1060,7 +1103,7 @@ static void SetPicturePreloadList( void )
 static void OnPictureLoadDone( LCUI_Graph *img, void *data )
 {
 	Picture pic = data;
-	LCUIMutex_Lock( &this_view.mutex_load );
+	LCUIMutex_Lock( &pic->mutex );
 	if( img ) {
 		pic->data = Graph_New();	
 		*pic->data = *img;
@@ -1070,13 +1113,13 @@ static void OnPictureLoadDone( LCUI_Graph *img, void *data )
 		pic->is_valid = FALSE;
 	}
 	pic->is_loading = FALSE;
-	LCUICond_Signal( &this_view.cond_load );
-	LCUIMutex_Unlock( &this_view.mutex_load );
+	LCUICond_Signal( &pic->cond );
+	LCUIMutex_Unlock( &pic->mutex );
 }
 
-/** 加载图片数据 */
-static int LoadPicture( Picture pic )
+static int LoadPictureAsync( Picture pic )
 {
+
 	wchar_t *wpath;
 	int storage = finder.storage_for_image;
 	if( !pic->file_for_load || !this_view.is_working ) {
@@ -1086,15 +1129,13 @@ static int LoadPicture( Picture pic )
 	if( pic->file && wcscmp( pic->file, pic->file_for_load ) == 0 ) {
 		free( pic->file_for_load );
 		pic->file_for_load = NULL;
-		goto load_finished;
+		return 0;
 	}
+	_DEBUG_MSG( "pic: %p, set loading tip\n", pic );
 	/** 300毫秒后显示 "图片载入中..." 的提示 */
-	this_view.picture->timer = LCUITimer_Set( 300, OnShowTipLoading, 
-						  this_view.picture, FALSE );
-	if( Graph_IsValid( pic->data ) ) {
-		Graph_Free( pic->data );
-		LCUI_PostSimpleTask( TaskForResetWidgetBackground, 
-				     pic->view, NULL );
+	pic->timer = LCUITimer_Set( 300, OnShowTipLoading, pic, FALSE );
+	if( pic->data && Graph_IsValid( pic->data ) ) {
+		ClearPictureView( pic );
 	}
 	wpath = pic->file_for_load;
 	pic->file_for_load = NULL;
@@ -1104,21 +1145,14 @@ static int LoadPicture( Picture pic )
 	pic->file = wpath;
 	pic->is_valid = FALSE;
 	pic->is_loading = TRUE;
-	LCUIMutex_Lock( &this_view.mutex_load );
-	/* 异步请求加载图像内容，并阻塞等待加载完成 */
+	/* 异步请求加载图像内容 */
 	FileStorage_GetImage( storage, pic->file, OnPictureLoadDone, pic );
-	while( pic->is_loading && this_view.is_working ) {
-		LCUICond_Wait( &this_view.cond_load, &this_view.mutex_load );
-	}
-	LCUIMutex_Unlock( &this_view.mutex_load );
-	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
-	if( pic->is_valid && !pic->file_for_load ) {
-		LCUI_PostSimpleTask( TaskForSetWidgetBackground,
-				     pic->view, pic->data );
-		ResetPictureSize( pic );
-	}
+	return 0;
+}
 
-load_finished:
+/** 结束加载缩略图 */
+static void FinishLoadPicture( Picture pic )
+{
 	pic->is_loading = FALSE;
 	if( this_view.picture->view == pic->view ) {
 		Widget_Hide( this_view.tip_loading );
@@ -1130,7 +1164,22 @@ load_finished:
 		UpdateResetSizeButton();
 		UpdateZoomButtons();
 	}
-	return 0;
+}
+
+/** 等待缩略图加载完成 */
+static void WaitPictureLoadDone( Picture pic )
+{
+	LCUIMutex_Lock( &pic->mutex );
+	while( pic->is_loading && this_view.is_working ) {
+		LCUICond_Wait( &pic->cond, &pic->mutex );
+	}
+	LCUIMutex_Unlock( &pic->mutex );
+	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
+	if( pic->is_valid && !pic->file_for_load ) {
+		SetPictureView( pic );
+		ResetPictureSize( pic );
+	}
+	FinishLoadPicture( pic );
 }
 
 /** 在”放大“按钮被点击的时候 */
@@ -1271,29 +1320,84 @@ static void FileScanner_Start( FileScanner scanner, const wchar_t *filepath )
 static void FileScanner_Exit( FileScanner scanner )
 {
 	scanner->is_running = FALSE;
-	// ...
+	LinkedList_ClearData( &scanner->files, FileIndex_Destroy );
+	free( scanner->file );
+	scanner->file = NULL;
 }
 
-/** 图片加载器 */
-static void PictureLoader( void *arg )
+/** 图片加载器线程 */
+static void PictureLoader_Thread( void *arg )
 {
-	LCUIMutex_Lock( &this_view.mutex );
-	while( this_view.is_working ) {
-		LCUICond_Wait( &this_view.cond, &this_view.mutex );
-		this_view.picture_i = 0;
-		for( ; this_view.picture_i < 3; ++this_view.picture_i ) {
-			int i;
-			switch( this_view.picture_i ) {
-			case 0: i = 1; break;
-			case 1: i = 2; break;
-			case 2: i = 0; break;
+	Picture pic;
+	PictureLoader loader = arg;
+	LCUIMutex_Lock( &loader->mutex );
+	while( loader->is_running ) {
+		LCUICond_Wait( &loader->cond, &loader->mutex );
+		for( loader->num = 0; loader->num < 3 &&
+		     loader->is_running; ++loader->num ) {
+			/* 图片实例组是这样记录图片的：
+			 * [0] 上一张图片
+			 * [1] 当前显示的图片
+			 * [2] 下一张图片
+			 * 而加载器是这样记录下标的：
+			 * [0] 当前显示的图片
+			 * [1] 下一张图片
+			 * [2] 上一张图片
+			 * 因此需要经过转换才能取到对应的图片实例
+			 */
+			switch( loader->num ) {
+			case 0: pic = loader->pictures[1]; break;
+			case 1: pic = loader->pictures[2]; break;
+			case 2: pic = loader->pictures[0]; break;
 			default: continue;
 			}
-			LoadPicture( this_view.pictures[i] );
+			LoadPictureAsync( pic );
+			LCUIMutex_Unlock( &loader->mutex );
+			WaitPictureLoadDone( pic );
+			LCUIMutex_Lock( &loader->mutex );
 		}
 	}
-	LCUIMutex_Unlock( &this_view.mutex );
+	LCUIMutex_Unlock( &loader->mutex );
 	LCUIThread_Exit( NULL );
+}
+
+/* 设置图片加载器的目标 */
+static void PictureLoader_SetTarget( PictureLoader loader,
+				     const wchar_t *path )
+{
+	LCUIMutex_Lock( &loader->mutex );
+	SetPicture( this_view.picture, path );
+	SetPicturePreloadList();
+	loader->num = -1;
+	/* 如果当前图片实例正在加载图片资源，则直接显示提示 */
+	if( this_view.picture->is_loading ) {
+		Widget_Show( this_view.tip_loading );
+	}
+	LCUICond_Signal( &loader->cond );
+	LCUIMutex_Unlock( &loader->mutex );
+}
+
+static void PictureLoader_Init( PictureLoader loader, Picture pictures[3] )
+{
+	loader->num = -1;
+	loader->is_running = TRUE;
+	loader->pictures = pictures;
+	LCUICond_Init( &loader->cond );
+	LCUICond_Init( &loader->load_cond );
+	LCUIMutex_Init( &loader->mutex );
+	LCUIMutex_Init( &loader->load_mutex );
+	LCUIThread_Create( &loader->thread, PictureLoader_Thread, loader );
+}
+
+static void PictureLoader_Exit( PictureLoader loader )
+{
+	LCUIMutex_Lock( &loader->mutex );
+	loader->is_running = FALSE;
+	LCUICond_Signal( &loader->cond );
+	LCUIMutex_Unlock( &loader->mutex );
+	LCUIThread_Join( loader->thread, NULL );
+	LCUICond_Destroy( &loader->cond );
+	LCUIMutex_Destroy( &loader->mutex );
 }
 
 static void OnBtnShowInfoClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -1401,15 +1505,11 @@ void UI_InitPictureView( int mode )
 	BindEvent( this_view.view_pictures, "dblclick", OnMouseDblClick );
 	LCUI_BindEvent( LCUI_KEYDOWN, OnKeyDown, NULL, NULL );
 	InitSlideTransition();
-	LCUICond_Init( &this_view.cond );
-	LCUICond_Init( &this_view.cond_load );
-	LCUIMutex_Init( &this_view.mutex );
-	LCUIMutex_Init( &this_view.mutex_load );
 	this_view.pictures[0] = CreatePicture();
 	this_view.pictures[1] = CreatePicture();
 	this_view.pictures[2] = CreatePicture();
 	this_view.picture = this_view.pictures[0];
-	LCUIThread_Create( &this_view.th_picloader, PictureLoader, NULL );
+	PictureLoader_Init( &this_view.loader, this_view.pictures );
 	Widget_Hide( this_view.window );
 	UI_InitPictureInfoView();
 	UpdateSwitchButtons();
@@ -1424,28 +1524,20 @@ void UI_InitPictureView( int mode )
 
 void UI_OpenPictureView( const char *filepath )
 {
-	int len;
 	wchar_t *wpath, title[256] = {0};
 	LCUI_Widget main_window, root;
 
-	len = strlen( filepath );
 	root = LCUIWidget_GetRoot();
-	LCUIMutex_Lock( &this_view.mutex );
-	wpath = calloc( len + 1, sizeof( wchar_t ) );
-	this_view.picture_i = -1;
+	wpath = DecodeUTF8( filepath );
 	this_view.is_opening = TRUE;
 	this_view.is_zoom_mode = FALSE;
 	this_view.picture = this_view.pictures[1];
-	LCUI_DecodeString( wpath, filepath, len, ENCODING_UTF8 );
 	SelectWidget( main_window, ID_WINDOW_MAIN );
 	swprintf( title, 255, L"%ls - "LCFINDER_NAME, wgetfilename( wpath ) );
 	Widget_SetTitleW( root, title );
 	Widget_Hide( this_view.tip_unsupport );
 	Widget_Hide( this_view.tip_empty );
-	SetPicture( this_view.picture, wpath );
-	SetPicturePreloadList();
-	LCUIMutex_Unlock( &this_view.mutex );
-	LCUICond_Signal( &this_view.cond );
+	PictureLoader_SetTarget( &this_view.loader, wpath );
 	UI_SetPictureInfoView( filepath );
 	Widget_Show( this_view.window );
 	Widget_Hide( main_window );
@@ -1479,21 +1571,13 @@ void UI_ClosePictureView( void )
 	Widget_Show( main_window );
 	Widget_Hide( this_view.window );
 	this_view.is_opening = FALSE;
-	LCUICond_Signal( &this_view.cond );
 	UI_SetPictureView( NULL );
 }
 
 void UI_ExitPictureView( void )
 {
 	this_view.is_working = FALSE;
-	LCUIMutex_Lock( &this_view.mutex );
-	LCUICond_Signal( &this_view.cond );
-	LCUIMutex_Unlock( &this_view.mutex );
-	LCUIThread_Join( this_view.th_picloader, NULL );
-	LCUIMutex_Destroy( &this_view.mutex );
-	LCUIMutex_Destroy( &this_view.mutex_load );
-	LCUICond_Destroy( &this_view.cond );
-	LCUICond_Destroy( &this_view.cond_load );
+	PictureLoader_Exit( &this_view.loader );
 	DeletePicture( this_view.pictures[0] );
 	DeletePicture( this_view.pictures[1] );
 	DeletePicture( this_view.pictures[2] );
