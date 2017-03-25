@@ -47,7 +47,7 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 
-#define THUMB_TASK_MAX		16
+#define THUMB_TASK_MAX		32
 #define SCROLLLOADING_DELAY	500
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
@@ -199,7 +199,8 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 	int count = 0;
 	float top, bottom;
 
-	if( !ctx->enabled ) {
+	/* 若未启用滚动加载，或滚动层的高度过低，则本次不处理滚动加载 */
+	if( !ctx->enabled || ctx->scrolllayer->height < 64 ) {
 		return 0;
 	}
 	e.type = ctx->event_id;
@@ -580,8 +581,6 @@ static ThumbLoader ThumbLoader_Create( ThumbView view, LCUI_Widget target )
 	loader->target = target;
 	loader->callback = NULL;
 	LCUIMutex_Init( &loader->mutex );
-	DEBUG_MSG( "loader: %p, target: %p, target state: %d\n",
-		   loader, target, target->state );
 	return loader;
 }
 
@@ -639,7 +638,6 @@ static void ThumbLoader_Start( ThumbLoader loader )
 static void ThumbLoader_Stop( ThumbLoader loader )
 {
 	LCUIMutex_Lock( &loader->mutex );
-	DEBUG_MSG( "loader: %p, target: %p\n", loader, loader->target );
 	loader->active = FALSE;
 	loader->target = NULL;
 	loader->view = NULL;
