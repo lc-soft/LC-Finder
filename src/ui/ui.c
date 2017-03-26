@@ -50,8 +50,6 @@
 #include "dialog.h"
 #include "switch.h"
 
-#define XML_PATH "assets/views/main.xml"
-
 typedef struct ArgumentsRec_ {
 	const char *filepath;
 	const char *appname;

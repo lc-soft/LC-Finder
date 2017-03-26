@@ -84,8 +84,8 @@ typedef struct PcitureRec_ {
 	LCUI_BOOL is_valid;		/**< 图片内容是否有效 */
 	LCUI_Graph *data;		/**< 当前已经加载的图片数据 */
 	LCUI_Widget view;		/**< 视图，用于呈现该图片 */
-	LCUI_Mutex mutex;		/**< 互斥锁，主要用户异步加载 */
-	LCUI_Cond cond;			/**< 条件变量，主要用户异步加载 */
+	LCUI_Mutex mutex;		/**< 互斥锁，用于异步加载 */
+	LCUI_Cond cond;			/**< 条件变量，用于异步加载 */
 	double scale;			/**< 图片缩放比例 */
 	double min_scale;		/**< 图片最小缩放比例 */
 	int timer;			/**< 定时器，用于延迟显示“载入中...”提示框 */
@@ -112,8 +112,6 @@ typedef struct PictureLoaderRec_ {
 	LCUI_BOOL is_running;			/**< 是否正在运行 */
 	LCUI_Cond cond;				/**< 条件变量 */
 	LCUI_Mutex mutex;			/**< 互斥锁 */
-	LCUI_Cond load_cond;			/**< 条件变量，用于加载图片 */
-	LCUI_Mutex load_mutex;			/**< 互斥锁，用于加载图片 */
 	LCUI_Thread thread;			/**< 图片加载器所在的线程 */
 	Picture *pictures;			/**< 图片实例引用 */
 } PictureLoaderRec, *PictureLoader;
@@ -1383,9 +1381,7 @@ static void PictureLoader_Init( PictureLoader loader, Picture pictures[3] )
 	loader->is_running = TRUE;
 	loader->pictures = pictures;
 	LCUICond_Init( &loader->cond );
-	LCUICond_Init( &loader->load_cond );
 	LCUIMutex_Init( &loader->mutex );
-	LCUIMutex_Init( &loader->load_mutex );
 	LCUIThread_Create( &loader->thread, PictureLoader_Thread, loader );
 }
 
