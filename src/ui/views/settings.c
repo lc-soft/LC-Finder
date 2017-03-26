@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * view_settings.c -- settings view
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * view_settings.c -- “设置”视图
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -411,11 +411,9 @@ void UI_InitPrivateSpaceView( void )
 static void CheckLicense( void )
 {
 	LCUI_Widget txt = LCUIWidget_GetById( ID_TXT_TRIAL_LICENSE );
-	if( finder.license.is_active & !finder.license.is_trial ) {
-		Widget_Hide( txt );
-		return;
+	if( finder.license.is_active && !finder.license.is_trial ) {
+		Widget_Destroy( txt );
 	}
-	Widget_Show( txt );
 }
 
 static void OnLicenseChange( void *privdata, void *data )
@@ -454,4 +452,5 @@ void UI_InitSettingsView( void )
 	UI_InitPrivateSpaceView();
 	UI_InitLanguages();
 	UI_InitDirList();
+	CheckLicense();
 }

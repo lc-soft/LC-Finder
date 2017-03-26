@@ -264,8 +264,7 @@ static void TaskForResetWidgetBackground( void *arg1, void *arg2 )
 	Widget_UnsetStyle( w, key_background_image );
 	Widget_UpdateStyle( w, FALSE );
 	if( image ) {
-		Graph_Free( image );
-		free( image );
+		Graph_Delete( image );
 	}
 }
 
@@ -712,7 +711,6 @@ static void OnPictureResize( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 static void OnShowTipLoading( void *arg )
 {
 	Picture pic = arg;
-	_DEBUG_MSG("pic: %p, current: %p\n", pic, this_view.picture);
 	if( this_view.picture == pic ) {
 		if( pic->is_loading ) {
 			Widget_Show( this_view.tip_loading );
@@ -1033,7 +1031,7 @@ static void DeletePicture( Picture pic )
 	LCUICond_Destroy( &pic->cond );
 	LCUIMutex_Destroy( &pic->mutex );
 	if( pic->data ) {
-		Graph_Free( pic->data );
+		Graph_Delete( pic->data );
 		pic->data = NULL;
 	}
 	if( pic->file_for_load ) {
@@ -1129,7 +1127,6 @@ static int LoadPictureAsync( Picture pic )
 		pic->file_for_load = NULL;
 		return 0;
 	}
-	_DEBUG_MSG( "pic: %p, set loading tip\n", pic );
 	/** 300毫秒后显示 "图片载入中..." 的提示 */
 	pic->timer = LCUITimer_Set( 300, OnShowTipLoading, pic, FALSE );
 	if( pic->data && Graph_IsValid( pic->data ) ) {

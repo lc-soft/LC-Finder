@@ -640,7 +640,6 @@ static void ThumbLoader_Stop( ThumbLoader loader )
 	LCUIMutex_Lock( &loader->mutex );
 	loader->active = FALSE;
 	loader->target = NULL;
-	loader->view = NULL;
 	LCUIMutex_Unlock( &loader->mutex );
 }
 
@@ -918,7 +917,6 @@ static void ThumbView_ExecUpdateLayout( LCUI_Widget w )
 		return;
 	}
 	n = ThumbView_OnUpdateLayout( w, 100 );
-	/* 如果还有未布局的缩略图则下次再继续 */
 	if( n < 100 ) {
 		UpdateThumbRow( view );
 		view->layout.current = NULL;
@@ -927,6 +925,7 @@ static void ThumbView_ExecUpdateLayout( LCUI_Widget w )
 				  ThumbView_OnAfterLayout, NULL, NULL );
 		return;
 	}
+	/* 如果还有未布局的缩略图则下次再继续 */
 	view->tasks[TASK_LAYOUT].state = TASK_STATE_READY;
 	LCUICond_Signal( &view->tasks_cond );
 }

@@ -288,6 +288,8 @@ static DB_Dir DB_LoadDir( sqlite3_stmt *stmt )
 	text = sqlite3_column_text( stmt, 2 );
 	if( text ) {
 		dir->token = strdup( text );
+	} else {
+		dir->token = NULL;
 	}
 	return dir;
 }
@@ -324,7 +326,7 @@ void DBDir_Release( DB_Dir dir )
 {
 	free( dir->path );
 	if( dir->token ) {
-		free( dir );
+		free( dir->token );
 	}
 	dir->path = NULL;
 	dir->token = NULL;

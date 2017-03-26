@@ -914,17 +914,37 @@ int LCFinder_LoadConfig( void )
 	return 0;
 }
 
+static void LCFinder_InitEvent( void )
+{
+	finder.trigger = EventTrigger();
+}
+
 static void LCFinder_OnExit( LCUI_SysEvent e, void *arg )
 {
 	LCFinder_Exit();
 }
 
+#ifdef PLATFORM_WIN32
+static void LoggerHandler( const char *str )
+{
+	OutputDebugStringA( str );
+}
+
+static void LoggerHandlerW( const wchar_t *str )
+{
+	OutputDebugStringW( str );
+}
+#endif
+
 int LCFinder_Init( int argc, char **argv )
 {
-#if defined (PLATFORM_WIN32) && defined (DEBUG)
+#if defined (PLATFORM_WIN32)
 	_wsetlocale( LC_ALL, L"chs" );
+	Logger_SetHandler( LoggerHandler );
+	Logger_SetHandlerW( LoggerHandlerW );
 #endif
-	finder.trigger = EventTrigger();
+	LCFinder_InitEvent();
+	LCFinder_InitLicense();
 	ASSERT( LCFinder_InitWorkDir() == 0 );
 	ASSERT( LCFinder_LoadConfig() == 0 );
 	ASSERT( LCFinder_InitLanguage() == 0 );
@@ -960,22 +980,9 @@ int LCFinder_Run( void )
 }
 
 #ifndef PLATFORM_WIN32_PC_APP
-
-static void LoggerHandler( const char *str )
-{
-	OutputDebugStringA( str );
-}
-
-static void LoggerHandlerW( const wchar_t *str )
-{
-	OutputDebugStringW( str );
-}
-
 int main( int argc, char **argv )
 {
-	Logger_SetHandler( LoggerHandler );
-	Logger_SetHandlerW( LoggerHandlerW );
-	ASSERT( LCFinder_Init( argc, argv ) == 0 );
-	return UI_Run();
+	LCFinder_Init( argc, argv );
+	return LCFinder_Run();
 }
 #endif
