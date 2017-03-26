@@ -40,6 +40,8 @@
 
 LCFINDER_BEGIN_HEADER
 
+void LCFinder_InitLicense( void );
+
 void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
 
 void RemoveFolderAccessW( const wchar_t *token );

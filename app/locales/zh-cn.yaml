@@ -117,6 +117,9 @@ strings:
             reset_dialog:
                 title: 重置密码
                 text: 重置私人空间的开启密码
+        trial_message: >-
+            当前是试用版，仅供评估使用，如果你认为此应用对你有用，
+            可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。
         language: 语言
         language_description: 更改界面的显示语言
         license: 许可协议

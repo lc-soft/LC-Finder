@@ -408,6 +408,21 @@ void UI_InitPrivateSpaceView( void )
 	self->is_loaded = FALSE;
 }
 
+static void CheckLicense( void )
+{
+	LCUI_Widget txt = LCUIWidget_GetById( ID_TXT_TRIAL_LICENSE );
+	if( finder.license.is_active & !finder.license.is_trial ) {
+		Widget_Hide( txt );
+		return;
+	}
+	Widget_Show( txt );
+}
+
+static void OnLicenseChange( void *privdata, void *data )
+{
+	CheckLicense();
+}
+
 void UI_InitSettingsView( void )
 {
 	LCUI_Widget btn, switcher;
@@ -435,6 +450,7 @@ void UI_InitSettingsView( void )
 	TextViewI18n_Refresh( this_view.thumb_db_stats );
 	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
+	LCFinder_BindEvent( EVENT_LICENSE_CHG, OnLicenseChange, NULL );
 	UI_InitPrivateSpaceView();
 	UI_InitLanguages();
 	UI_InitDirList();

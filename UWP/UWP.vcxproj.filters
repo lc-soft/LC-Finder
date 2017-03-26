@@ -264,9 +264,6 @@
     <None Include="Locales\en-us.yaml">
       <Filter>Locales</Filter>
     </None>
-    <None Include="Locales\ja-jp.yaml">
-      <Filter>Locales</Filter>
-    </None>
     <None Include="Locales\zh-cn.yaml">
       <Filter>Locales</Filter>
     </None>

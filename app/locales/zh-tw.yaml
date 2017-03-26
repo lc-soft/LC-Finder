@@ -118,6 +118,9 @@ strings:
             reset_dialog:
                 title: 重置密碼
                 text: 重置私人空間的開啓密碼
+        trial_message: >-
+            當前是試用版，僅供評估使用，如果你認為此應用對你有用，
+            可以選擇購買正式版，你的感謝和財務支持將激勵我們繼續開發此應用。
         language: 語言
         language_description: 更改界面的顯示語言
         license: 許可協議

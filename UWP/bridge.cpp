@@ -47,6 +47,7 @@ using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::ApplicationModel;
+using namespace Windows::ApplicationModel::Store;
 
 #define FutureAccessList AccessCache::StorageApplicationPermissions::FutureAccessList
 
@@ -102,7 +103,24 @@ void OpenFileManagerW( const wchar_t *filepath )
 
 int MoveFileToTrashW( const wchar_t *filepath )
 {
+	// 当前版本暂不提供文件删除功能
 	return -1;
+}
+
+static void OnLicenseChanged( void )
+{
+	LicenseInformation ^license = CurrentApp::LicenseInformation;
+	finder.license.is_active = license->IsActive;
+	finder.license.is_trial = license->IsTrial;
+	LCFinder_TriggerEvent( EVENT_LICENSE_CHG, NULL );
+}
+
+void LCFinder_InitLicense( void )
+{
+	LicenseInformation ^license = CurrentApp::LicenseInformation;
+	license->LicenseChanged += ref new LicenseChangedEventHandler( OnLicenseChanged );
+	finder.license.is_active = license->IsActive;
+	finder.license.is_trial = license->IsTrial;
 }
 
 int MoveFileToTrash( const char *filepath )

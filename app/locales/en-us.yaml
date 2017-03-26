@@ -118,6 +118,13 @@ strings:
             reset_dialog:
                 title: Reset password
                 text: Reset the password for private space
+        trial_message: >-
+            This is a trial version, only for evaluation use,
+            if you think this application is useful to you, then it's a good
+            reason to purchase.
+            
+            Your gratitude and finance help will motivate
+            me to continue this application development.
         language: Language
         language_description: Change language
         license: License

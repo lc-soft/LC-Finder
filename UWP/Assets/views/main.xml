@@ -256,7 +256,8 @@
                 <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
                 <widget class="item-group">
                   <widget type="textview" class="text">LC-Finder 0.1.0 Beta 1</widget>
-                  <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2016 LC's Software，保留所有权利。</widget>
+                  <widget id="txt-trial-license" type="textview-i18n" class="text text-line" data-i18n-key="settings.trial_message">当前是试用版，仅供评估使用，如果你认为此应用对你有用，可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。</widget>
+                  <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2017 LC's Software，保留所有权利。</widget>
                   <widget class="btn-group">
                     <widget id="btn-open-license" class="btn btn-link">
                       <widget type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</widget>

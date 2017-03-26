@@ -733,6 +733,11 @@ static int LCFinder_InitLanguage( void )
 	if( I18n_SetLanguage( finder.config.language ) ) {
 		return 0;
 	}
+	I18n_GetDefaultLanguage( finder.config.language, 32 );
+	LCFinder_SaveConfig();
+	if( I18n_SetLanguage( finder.config.language ) ) {
+		return 0;
+	}
 	return -1;
 }
 
@@ -768,6 +773,9 @@ static int LCFinder_InitThumbDB( void )
 static void LCFinder_ExitThumbDB( void )
 {
 	int i;
+	if( !finder.thumb_dbs ) {
+		return;
+	}
 	LOG("[thumbdb] exit ..\n");
 	Dict_Release( finder.thumb_dbs );
 	for( i = 0; i < finder.n_dirs; ++i ) {

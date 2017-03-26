@@ -62,7 +62,8 @@ enum LCFinderEventType {
 	EVENT_FILE_DEL,
 	EVENT_THUMBDB_DEL_DONE,
 	EVENT_LANG_CHG,
-	EVENT_PRIVATE_SPACE_CHG
+	EVENT_PRIVATE_SPACE_CHG,
+	EVENT_LICENSE_CHG
 };
 
 /** 配置数据结构 */
@@ -78,6 +79,11 @@ typedef struct FinderConfigRec_ {
 	int files_sort;			/**< 文件的排序方式 */
 	char encrypted_password[48];	/**< 加密后的密码 */
 } FinderConfigRec, *FinderConfig;
+
+typedef struct FinderLicenseRec_ {
+	LCUI_BOOL is_active;
+	LCUI_BOOL is_trial;
+} FinderLicenseRec, *FinderLicense;
 
 enum FinderState {
 	FINDER_STATE_NONE,
@@ -101,6 +107,7 @@ typedef struct Finder_ {
 	Dict *thumb_dbs;		/**< 缩略图数据库记录，以源文件夹路径作为索引 */
 	LCUI_EventTrigger trigger;	/**< 事件触发器 */
 	FinderConfigRec config;		/**< 当前配置 */
+	FinderLicenseRec license;	/**< 当前许可证状态信息 */
 	int open_private_space;		/**< 是否打开了私人空间 */
 	int storage;			/**< 文件服务连接标识符，主要用于获取文件基本信息 */
 	int storage_for_image;		/**< 文件服务连接标识符，主要用于读取图片内容 */
