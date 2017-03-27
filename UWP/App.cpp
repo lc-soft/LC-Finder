@@ -85,16 +85,6 @@ static void UWPDisplay_Present( LCUI_Surface surface )
 	UWPApp.app->Present();
 }
 
-static void LoggerHandler( const char *str )
-{
-	OutputDebugStringA( str );
-}
-
-static void LoggerHandlerW( const wchar_t *str )
-{
-	OutputDebugStringW( str );
-}
-
 // 主函数仅用于初始化我们的 IFrameworkView 类。
 [Platform::MTAThread]
 int main(Platform::Array<Platform::String^>^)
@@ -113,23 +103,7 @@ App::App() :
 	m_windowClosed(false),
 	m_windowVisible(true)
 {
-	Logger_SetHandler( LoggerHandler );
-	Logger_SetHandlerW( LoggerHandlerW );
-	m_inputDriver = std::unique_ptr<LCUIInputDriver>( new LCUIInputDriver );
-	m_displayDriver = LCUI_CreateUWPDisplay();
-	m_appDriver = LCUI_CreateUWPAppDriver( this );
-	UWPApp.update = m_displayDriver->update;
-	UWPApp.present = m_displayDriver->present;
-	m_displayDriver->update = UWPDisplay_Update;
-	m_displayDriver->present = UWPDisplay_Present;
-
 	LCUI_InitBase();
-	LCUI_InitApp( m_appDriver );
-	LCUI_InitDisplay( m_displayDriver );
-	LCUI_InitIME();
-	LCUI_InitCursor();
-	m_inputDriver->RegisterIME();
-	m_inputDriver->SelectIME();
 }
 
 // 创建 IFrameworkView 时调用的第一个方法。
@@ -228,11 +202,23 @@ void App::Load( Platform::String^ entryPoint )
 		return;
 	}
 
-	Size size = m_deviceResources->GetOutputSize();
+	m_displayDriver = LCUI_CreateUWPDisplay();
+	m_inputDriver = std::unique_ptr<LCUIInputDriver>( new LCUIInputDriver );
 	m_main = std::unique_ptr<UWPMain>( new UWPMain( m_deviceResources ) );
+	m_appDriver = LCUI_CreateUWPAppDriver( this );
+	UWPApp.update = m_displayDriver->update;
+	UWPApp.present = m_displayDriver->present;
+	m_displayDriver->update = UWPDisplay_Update;
+	m_displayDriver->present = UWPDisplay_Present;
+
+	LCUI_InitApp( m_appDriver );
+	LCUI_InitDisplay( m_displayDriver );
+	LCUI_InitIME();
+	LCUI_InitCursor();
+	m_inputDriver->RegisterIME();
+	m_inputDriver->SelectIME();
 
 	LCFinder_Init( 1, argv );
-	Widget_Resize( LCUIWidget_GetRoot(), size.Width, size.Height );
 }
 
 void App::Present()
