@@ -103,7 +103,7 @@ static struct FileService {
 	LinkedList connections;
 } service;
 
-static void FileStreamChunk_Destroy( FileStreamChunk *chunk )
+void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 {
 	switch( chunk->type ) {
 	case DATA_CHUNK_RESPONSE:
@@ -125,6 +125,11 @@ static void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 		break;
 	default: break;
 	}
+}
+
+static void FileStreamChunk_Release( FileStreamChunk *chunk )
+{
+	FileStreamChunk_Destroy( chunk );
 	free( chunk );
 }
 
@@ -169,7 +174,7 @@ void FileStream_Destroy( FileStream stream )
 		return;
 	}
 	stream->active = FALSE;
-	LinkedList_Clear( &stream->data, FileStreamChunk_Destroy );
+	LinkedList_Clear( &stream->data, FileStreamChunk_Release );
 	LCUIMutex_Destroy( &stream->mutex );
 	LCUICond_Destroy( &stream->cond );
 }
@@ -249,7 +254,7 @@ size_t FileStream_Read( FileStream stream, char *buf,
 			LCUIMutex_Unlock( &stream->mutex );
 			if( chunk->type != DATA_CHUNK_BUFFER ||
 			    chunk->type != DATA_CHUNK_FILE ) {
-				FileStreamChunk_Destroy( stream->chunk );
+				FileStreamChunk_Release( stream->chunk );
 				break;
 			}
 			stream->chunk = chunk;
@@ -257,7 +262,7 @@ size_t FileStream_Read( FileStream stream, char *buf,
 		if( chunk->type == DATA_CHUNK_FILE ) {
 			read_count = fread( buf, size, count, chunk->file );
 			if( feof(chunk->file) ) {
-				FileStreamChunk_Destroy( stream->chunk );
+				FileStreamChunk_Release( stream->chunk );
 				stream->chunk = NULL;
 			}
 			return read_count;
@@ -275,7 +280,7 @@ size_t FileStream_Read( FileStream stream, char *buf,
 		chunk->cur += read_size;
 		cur += read_size;
 		if( chunk->cur >= chunk->size - 1 ) {
-			FileStreamChunk_Destroy( stream->chunk );
+			FileStreamChunk_Release( stream->chunk );
 			stream->chunk = NULL;
 		}
 	}
@@ -347,7 +352,7 @@ char *FileStream_ReadLine( FileStream stream, char *buf, size_t size )
 		if( chunk->type == DATA_CHUNK_FILE ) {
 			p = fgets( buf, size, chunk->file );
 			if( !p || feof(chunk->file) ) {
-				FileStreamChunk_Destroy( chunk );
+				FileStreamChunk_Release( chunk );
 				stream->chunk = NULL;
 			}
 			return p;
@@ -361,7 +366,7 @@ char *FileStream_ReadLine( FileStream stream, char *buf, size_t size )
 			p++;
 		}
 		if( chunk->cur >= chunk->size ) {
-			FileStreamChunk_Destroy( chunk );
+			FileStreamChunk_Release( chunk );
 			stream->chunk = NULL;
 		}
 		count += 1;
@@ -589,6 +594,7 @@ static int FileService_GetFile( Connection conn,
 	if( LCUI_ReadImageFile( path, &img ) != 0 ) {
 		LOG( "load image failed\n", path );
 		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
+		Graph_Free( &img );
 		free( path );
 		return -1;
 	}

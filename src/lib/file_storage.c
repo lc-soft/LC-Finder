@@ -178,6 +178,7 @@ static void OnResponse( FileResponse *response, void *data )
 		break;
 	default: break;
 	}
+	FileStreamChunk_Destroy( &chunk );
 	free( pack );
 }
 

@@ -156,7 +156,7 @@ void LCUIRenderer::ReleaseDeviceDependentResources()
 static void UpdateSurfaceSize( void )
 {
 	LCUI_DisplayEventRec dpy_ev;
-	if( !display.surface ) {
+	if( !display.surface || !display.renderer ) {
 		return;
 	}
 	dpy_ev.type = DET_RESIZE;

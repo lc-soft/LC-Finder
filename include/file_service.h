@@ -144,6 +144,8 @@ typedef struct FileStreamChunk_ {
 	size_t size;			/**< 数据总大小 */
 } FileStreamChunk;
 
+void FileStreamChunk_Destroy( FileStreamChunk *chunk );
+
 FileStream FileStream_Create( void );
 
 void FileStream_Close( FileStream stream );

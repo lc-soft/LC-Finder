@@ -580,6 +580,7 @@ static ThumbLoader ThumbLoader_Create( ThumbView view, LCUI_Widget target )
 	loader->active = TRUE;
 	loader->target = target;
 	loader->callback = NULL;
+	LCUICond_Init( &loader->cond );
 	LCUIMutex_Init( &loader->mutex );
 	return loader;
 }
