@@ -266,12 +266,10 @@ textview-i18n.btn-link:hover,
 .dialog-content .input-group.error .error.message {
   display: block;
 }
-.dialog-content .dialog-header .text,
-.dialog-content .dialog-header textview {
+.dialog-content .dialog-header .text, .dialog-content .dialog-header textview {
   font-size: 18px;
 }
-.dialog-content .dialog-body .text,
-.dialog-content .dialog-body textview {
+.dialog-content .dialog-body .text, .dialog-content .dialog-body textview {
   font-size: 14px;
   width: 100%;
 }
@@ -295,6 +293,14 @@ textview-i18n.btn-link:hover,
 }
 .dialog-content .dialog-btn-group:last-child {
   padding-right: 0;
+}
+.dialog-content .dialog-btn-group.one-button {
+  width: 100%;
+  display: block;
+}
+.dialog-content .dialog-btn-group.one-button .dialog-btn {
+  width: 50%;
+  margin: 0 auto;
 }
 .dialog-content .dialog-btn:hover {
   border: 2px solid #aaa;

@@ -38,39 +38,45 @@
 		padding: 5px 15px;
 		box-sizing: border-box;
 		margin: -5px -15px 10px -15px;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+		.message {
+			padding-top: 5px;
+		}
+		.error.message {
+			color: #fff;
+			padding: 4px 10px;
+			font-size: 13px;
+			background-color: #FD4C4C;
+			box-sizing: border-box;
+			display: none;
+		}
+
+		&.error {
+			textedit,
+			textedit:active,
+			textedit:focus,
+			textedit:hover {
+				border-color: #FD4C4C;
+				box-shadow: none;
+			}
+			.error.message {
+				display: block;
+			}
+		}
 	}
-	.input-group:last-child {
-		margin-bottom: 0;
+	.dialog-header {
+		.text, textview {
+			font-size: 18px;
+		}
 	}
-	.input-group .message {
-		padding-top: 5px;
-	}
-	.input-group .error.message {
-		color: #fff;
-		padding: 4px 10px;
-		font-size: 13px;
-		background-color: #FD4C4C;
-		box-sizing: border-box;
-		display: none;
-	}
-	.input-group.error textedit,
-	.input-group.error textedit:active,
-	.input-group.error textedit:focus,
-	.input-group.error textedit:hover {
-		border-color: #FD4C4C;
-		box-shadow: none;
-	}
-	.input-group.error .error.message {
-		display: block;
-	}
-	.dialog-header .text,
-	.dialog-header textview {
-		font-size: 18px;
-	}
-	.dialog-body .text,
-	.dialog-body textview {
-		font-size: 14px;
-		width: 100%;
+	.dialog-body {
+		.text, textview {
+			font-size: 14px;
+			width: 100%;
+		}
 	}
 	.dialog-btn {
 		width: 100%;
@@ -86,12 +92,23 @@
 		display: inline-block;
 		padding: 0 4px;
 		box-sizing: border-box;
-	}
-	.dialog-btn-group:first-child {
-		padding-left: 0;
-	}
-	.dialog-btn-group:last-child {
-		padding-right: 0;
+
+
+		&:first-child {
+			padding-left: 0;
+		}
+		&:last-child {
+			padding-right: 0;
+		}
+		&.one-button {
+			width: 100%;
+			display: block;
+
+			 .dialog-btn {
+				width: 50%;
+				margin: 0 auto;
+			}
+		}
 	}
 	.dialog-btn {
 		&:hover {
