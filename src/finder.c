@@ -354,7 +354,9 @@ static void LCFinder_OnScanFinished( FileSyncStatus s )
 	int i;
 	if( s->task_i < finder.n_dirs - 1 ) {
 		s->task_i += 1;
-		SyncTask_Finish( s->task );
+		if( s->task ) {
+			SyncTask_Finish( s->task );
+		}
 		LCFinder_SwitchTask( s );
 		return;
 	}
@@ -497,11 +499,15 @@ static void LCFinder_SwitchTask( FileSyncStatus s )
 	DB_Dir dir;
 	wchar_t *path;
 	s->task = s->tasks[s->task_i];
-	SyncTask_Start( s->task );
-	dir = finder.dirs[s->task_i];
-	path = DecodeUTF8( dir->path );
-	LCFinder_ScanDir( s, path );
-	free( path );
+	if( s->task ) {
+		SyncTask_Start( s->task );
+		dir = finder.dirs[s->task_i];
+		path = DecodeUTF8( dir->path );
+		LCFinder_ScanDir( s, path );
+		free( path );
+	} else {
+		LCFinder_OnScanFinished( s );
+	}
 }
 
 void LCFinder_SyncFilesAsync( FileSyncStatus s )
@@ -520,6 +526,11 @@ void LCFinder_SyncFilesAsync( FileSyncStatus s )
 	s->scaned_dirs = 0;
 	s->deleted_files = 0;
 	s->state = STATE_STARTED;
+	if( finder.n_dirs < 1 ) {
+		s->tasks = NULL;
+		LCFinder_OnScanFinished( s );
+		return;
+	}
 	s->tasks = NEW( SyncTask, finder.n_dirs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		DB_Dir dir = finder.dirs[i];
@@ -669,7 +680,9 @@ static void LCFinder_ExitFileDB( void )
 {
 	int i;
 	for( i = 0; i < finder.n_dirs; ++i ) {
-		DBDir_Release( finder.dirs[i] );
+		if( finder.dirs[i] ) {
+			DBDir_Release( finder.dirs[i] );
+		}
 		finder.dirs[i] = NULL;
 	}
 	for( i = 0; i < finder.n_tags; ++i ) {

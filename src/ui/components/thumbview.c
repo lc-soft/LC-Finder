@@ -407,7 +407,7 @@ static void OnRemoveThumb( void *data )
 	LCUI_Widget w = data;
 	ThumbViewItem item = Widget_GetData( w, self.item );
 	if( item->unsetthumb ) {
-		LCUI_PostSimpleTask( item->unsetthumb, w, NULL );
+		item->unsetthumb( w );
 	}
 }
 

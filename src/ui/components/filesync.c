@@ -129,8 +129,8 @@ static void OnStartSyncFiles( void *privdata, void *data )
 	}
 	self.is_syncing = TRUE;
 	self.timer = LCUITimer_Set( 200, OnUpdateStats, NULL, TRUE );
-	LCFinder_SyncFilesAsync( &self.status );
 	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
+	LCFinder_SyncFilesAsync( &self.status );
 	Widget_RemoveClass( alert, "hide" );
 }
 

@@ -480,12 +480,15 @@ void SyncTask_Finish( SyncTask t )
 
 void SyncTask_Commit( SyncTask t )
 {
+	DirStats ds = GetDirStats( t );
 #ifdef _WIN32
+	unqlite_close( ds->db );
 	_wremove( t->file );
 	_wrename( t->tmpfile, t->file );
 #else
 	char *file = EncodeUTF8( t->file );
 	char *tmpfile = EncodeUTF8( t->tmpfile );
+	unqlite_close( ds->db );
 	remove( file );
 	rename( tmpfile, file );
 	free( file );
