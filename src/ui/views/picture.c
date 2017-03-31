@@ -361,6 +361,7 @@ static void ClearPictureView( Picture pic )
 {
 	LCUI_PostSimpleTask( TaskForResetWidgetBackground,
 			     pic->view, pic->data );
+	pic->is_valid = FALSE;
 	pic->data = NULL;
 }
 
@@ -654,7 +655,7 @@ static void ResetPictureSize( Picture pic )
 {
 	int width, height;
 	double scale_x, scale_y;
-	if( !Graph_IsValid( pic->data ) ) {
+	if( !pic->data || !Graph_IsValid( pic->data ) ) {
 		return;
 	}
 	GetViewerSize( &width, &height );
@@ -1145,23 +1146,7 @@ static int LoadPictureAsync( Picture pic )
 	return 0;
 }
 
-/** 结束加载缩略图 */
-static void FinishLoadPicture( Picture pic )
-{
-	pic->is_loading = FALSE;
-	if( this_view.picture->view == pic->view ) {
-		Widget_Hide( this_view.tip_loading );
-		if( pic->is_valid ) {
-			Widget_Hide( this_view.tip_unsupport );
-		} else {
-			Widget_Show( this_view.tip_unsupport );
-		}
-		UpdateResetSizeButton();
-		UpdateZoomButtons();
-	}
-}
-
-/** 等待缩略图加载完成 */
+/** 等待图片加载完成 */
 static void WaitPictureLoadDone( Picture pic )
 {
 	LCUIMutex_Lock( &pic->mutex );
@@ -1174,7 +1159,19 @@ static void WaitPictureLoadDone( Picture pic )
 		SetPictureView( pic );
 		ResetPictureSize( pic );
 	}
-	FinishLoadPicture( pic );
+	pic->is_loading = FALSE;
+	if( this_view.picture->view == pic->view ) {
+		if( !pic->file_for_load ) {
+			Widget_Hide( this_view.tip_loading );
+		}
+		if( pic->is_valid ) {
+			Widget_Hide( this_view.tip_unsupport );
+		} else {
+			Widget_Show( this_view.tip_unsupport );
+		}
+		UpdateResetSizeButton();
+		UpdateZoomButtons();
+	}
 }
 
 /** 在”放大“按钮被点击的时候 */
