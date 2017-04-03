@@ -64,7 +64,9 @@ int GetAppDataFolderW( wchar_t *buf, int max_len )
 
 int GetAppInstalledLocationW( wchar_t *buf, int max_len )
 {
-	if( GetCurrentDirectoryW( max_len, buf ) > 0 ) {
+	wchar_t path[PATH_LEN];
+	if( GetModuleFileNameW( NULL, path, max_len ) > 0 ) {
+		wgetdirpath( buf, max_len, path );
 		return 0;
 	}
 	return -1;

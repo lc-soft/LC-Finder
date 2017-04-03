@@ -144,7 +144,7 @@ static void UI_SetWindowIcon( void )
 int UI_Init( int argc, char **argv )
 {
 	LCUI_Widget box, root;
-	ArgumentsRec args = {0};
+	ArgumentsRec args = { 0 };
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUI_Init();
 #endif

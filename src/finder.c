@@ -547,12 +547,9 @@ void LCFinder_SyncFilesAsync( FileSyncStatus s )
 /** 初始化工作目录 */
 static int LCFinder_InitWorkDir( void )
 {
-	int len, len1, len2;
+	int len, tdir_len, fdir_len;
 	wchar_t data_dir[PATH_LEN];
 	wchar_t *dirs[2] = { L"fileset", L"thumbs" };
-#if defined(_WIN32) && defined(DEBUG)
-	//_wchdir( L"F:\\代码库\\GitHub\\LC-Finder\\app" );
-#endif
 	if( GetAppInstalledLocationW( data_dir, PATH_LEN ) != 0 ) {
 		LOG( "[workdir] error\n" );
 		return -1;
@@ -560,16 +557,17 @@ static int LCFinder_InitWorkDir( void )
 	len = wcslen( data_dir ) + 1;
 	finder.work_dir = NEW( wchar_t, len );
 	wcsncpy( finder.work_dir, data_dir, len );
+	wchdir( finder.work_dir );
 	if( GetAppDataFolderW( data_dir, PATH_LEN ) != 0 ) {
 		LOG( "[workdir] error\n" );
 		return -1;
 	}
 	len = wcslen( data_dir ) + 2;
-	len1 = len + wcslen( dirs[0] );
-	len2 = len + wcslen( dirs[1] );
+	tdir_len = len + wcslen( dirs[0] );
+	fdir_len = len + wcslen( dirs[1] );
 	finder.data_dir = NEW( wchar_t, len );
-	finder.fileset_dir = NEW( wchar_t, len1 );
-	finder.thumbs_dir = NEW( wchar_t, len2 );
+	finder.fileset_dir = NEW( wchar_t, tdir_len );
+	finder.thumbs_dir = NEW( wchar_t, fdir_len );
 	wcsncpy( finder.data_dir, data_dir, len );
 	wpathjoin( finder.fileset_dir, data_dir, dirs[0] );
 	wpathjoin( finder.thumbs_dir, data_dir, dirs[1] );

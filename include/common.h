@@ -89,6 +89,8 @@ int wgetcurdir( wchar_t *path, int max_len );
 
 int wmkdir( wchar_t *wpath );
 
+int wchdir( wchar_t *wpath );
+
 Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
 		      void (*val_del)(void*, void*) );
 

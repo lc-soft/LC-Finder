@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * common.c -- common function set.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * common.c -- 一些通用的基础功能集
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -50,14 +50,18 @@ char *EncodeUTF8( const wchar_t *wstr )
 	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
 	char *str = malloc( len * sizeof( char ) );
 	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
+	str[len - 1] = 0;
 	return str;
 }
 
 char *EncodeANSI( const wchar_t *wstr )
 {
-	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_ANSI ) + 1;
-	char *str = malloc( len * sizeof( char ) );
+	int len;
+	char *str;
+	len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_ANSI ) + 1;
+	str = malloc( len * sizeof( char ) );
 	LCUI_EncodeString( str, wstr, len, ENCODING_ANSI );
+	str[len - 1] = 0;
 	return str;
 }
 
@@ -326,6 +330,18 @@ int wmkdir( wchar_t *wpath )
 #else
 	char *path = EncodeUTF8( wpath );
 	int ret = mkdir( path, S_IRWXU );
+	free( path );
+	return ret;
+#endif
+}
+
+int wchdir( wchar_t *wpath )
+{
+#ifdef _WIN32
+	return _wchdir( wpath );
+#else
+	char *path = EncodeUTF8( wpath );
+	int ret = chdir( path );
 	free( path );
 	return ret;
 #endif
