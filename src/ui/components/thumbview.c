@@ -444,7 +444,7 @@ static void ThumbLoader_OnError( ThumbLoader loader )
 	}
 	item->is_valid = FALSE;
 	icon = LCUIWidget_New( "textview" );
-	Widget_AddClass( icon, "tip icon icon icon-help" );
+	Widget_AddClass( icon, "tip icon icon-help" );
 	Widget_AddClass( icon, "floating center middle aligned" );
 	Widget_Append( item->cover, icon );
 exit:

@@ -40,6 +40,7 @@
 
 #include "file_service.h"
 
+typedef void( *HandlerOnGetProgress )(float, void*);
 typedef void( *HandlerOnGetImage )(LCUI_Graph*, void*);
 typedef void( *HandlerOnGetStatus )(FileStatus*, void*);
 typedef void( *HandlerOnGetFile )(FileStatus*, FileStream, void*);
@@ -65,7 +66,9 @@ int FileStorage_GetFolders( int conn_id, const wchar_t *filename,
 			    HandlerOnGetFile callback, void *data );
 
 int FileStorage_GetImage( int conn_id, const wchar_t *filename,
-			  HandlerOnGetImage callback, void *data );
+			  HandlerOnGetImage callback,
+			  HandlerOnGetProgress progress,
+			  void *data );
 
 int FileStorage_GetThumbnail( int conn_id, const wchar_t *filename,
 			      int width, int height,

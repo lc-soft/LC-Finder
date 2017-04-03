@@ -702,6 +702,8 @@ static int FileService_ReadImage( Connection conn,
 		Graph_Free( &img );
 		return -ENODATA;
 	}
+	reader->fn_prog = params->progress;
+	reader->prog_arg = params->progress_arg;
 	response->file.image = NEW( FileImageStatus, 1 );
 	response->file.image->width = reader->header.width;
 	response->file.image->height = reader->header.height;
@@ -710,6 +712,7 @@ static int FileService_ReadImage( Connection conn,
 	ret = LCUI_ReadImage( reader, &img );
 	LCUI_ClearImageReader( reader );
 	if( ret != 0 ) {
+		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
 		Graph_Free( &img );
 		return ret;
 	}

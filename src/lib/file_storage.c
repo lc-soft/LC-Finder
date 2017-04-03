@@ -58,6 +58,7 @@ typedef struct HandlerDataPackRec_ {
 		HandlerOnGetStatus on_get_status;
 		HandlerOnGetImage on_get_image;
 	};
+	HandlerOnGetProgress on_get_prog;
 	void *data;
 } HandlerDataPackRec, *HandlerDataPack;
 
@@ -256,8 +257,16 @@ int FileStorage_GetFolders( int conn_id, const wchar_t *filename,
 	return 0;
 }
 
+static void FileStorgage_OnGetProgress( void *data, float progress )
+{
+	HandlerDataPack pack = data;
+	pack->on_get_prog( progress, pack->data );
+}
+
 int FileStorage_GetImage( int conn_id, const wchar_t *filename, 
-			  HandlerOnGetImage callback, void *data )
+			  HandlerOnGetImage callback, 
+			  HandlerOnGetProgress progress,
+			  void *data )
 {
 	HandlerDataPack pack;
 	FileRequestHandler handler;
@@ -271,8 +280,11 @@ int FileStorage_GetImage( int conn_id, const wchar_t *filename,
 	pack = NEW( HandlerDataPackRec, 1 );
 	pack->type = HANDLER_ON_GET_IMAGE;
 	pack->on_get_image = callback;
+	pack->on_get_prog = progress;
 	pack->data = data;
 	request.method = REQUEST_METHOD_GET;
+	request.params.progress_arg = pack;
+	request.params.progress = FileStorgage_OnGetProgress;
 	wcsncpy( request.path, filename, 255 );
 	handler.callback = OnResponse;
 	handler.data = pack;

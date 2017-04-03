@@ -1,4 +1,5 @@
 $primary-color: #44BB55;
+$primary-dark-color: #44A340;
 
 .theme-green {
 	.sidebar {
@@ -30,6 +31,12 @@ $primary-color: #44BB55;
 			background-color: #ECF8EE;
 			border-color: $primary-color;
 		}
+	}
+	progress {
+		background-color: rgba(255,255,255,0.1);
+	}
+	progressbar {
+		background-color: $primary-dark-color;
 	}
 	.view, .subview {
 		background-color: #f5f7fa;
@@ -105,10 +112,6 @@ $primary-color: #44BB55;
 		box-shadow: 0 0 6px rgba(68,187,85,0.4);
 		border-color: $primary-color;
 	}
-	.dialog-content progressbar,
-	.view-content-wrapper progressbar {
-		background-color: #44A340;
-	}
 	.source-list {
 		.source-list-item {
 			&:hover {
@@ -130,6 +133,11 @@ $primary-color: #44BB55;
 	}
 	.icon.message.inverted .icon {
 		color: #555;
+	}
+	.message progress {
+		bottom: 0;
+		height: 2px;
+		position: absolute;
 	}
 	.message.box {
 		background-color: rgba(0,0,0,0.8);
@@ -209,6 +217,6 @@ $primary-color: #44BB55;
 		}
 	}
 	starrating .icon-star {
-		color: #44A340;
+		color: $primary-dark-color;
 	}
 }

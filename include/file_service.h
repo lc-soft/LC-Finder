@@ -86,32 +86,36 @@ typedef struct FileStatus_ {
 } FileStatus;
 
 enum FileFilter {
-	FILE_FILTER_NONE,
-	FILE_FILTER_FILE,
-	FILE_FILTER_FOLDER
+	FILE_FILTER_NONE,	/**< 不过滤 */
+	FILE_FILTER_FILE,	/**< 仅保留文件 */
+	FILE_FILTER_FOLDER	/**< 仅保留文件夹 */
 };
 
 /** 文件请求参数 */
 typedef struct FileRequestParams_ {
-	int filter;
-	LCUI_BOOL get_thumbnail;
-	LCUI_BOOL with_image_status;
-	unsigned int width;
-	unsigned int height;
+	int filter;				/**< 过滤条件 */
+	LCUI_BOOL get_thumbnail;		/**< 是否仅获取缩略图 */
+	LCUI_BOOL with_image_status;		/**< 是否附带获取图片文件状态信息 */
+	void( *progress )(void*, float);	/**< 回调函数，用于接收文件读取进度 */
+	void *progress_arg;			/**< 接收文件读取进度时的附加参数 */
+	unsigned int width;			/**< 缩略图的宽度 */
+	unsigned int height;			/**< 缩略图的高度 */
 } FileRequestParams;
 
+/** 文件请求 */
 typedef struct FileRequest_ {
-	int method;
-	wchar_t path[256];
-	FileStatus file;
-	FileRequestParams params;
-	FileStream stream;
+	int method;			/**< 请求方式 */
+	wchar_t path[256];		/**< 资源路径 */
+	FileStatus file;		/**< 文件状态参数 */
+	FileRequestParams params;	/**< 请求参数 */
+	FileStream stream;		/**< 文件流 */
 } FileRequest;
 
+/** 文件响应 */
 typedef struct FileResponse_ {
-	int status;
-	FileStatus file;
-	FileStream stream;
+	int status;		/**< 状态 */
+	FileStatus file;	/**< 文件状态 */
+	FileStream stream;	/**< 文件流 */
 } FileResponse;
 
 typedef struct FileRequestHandler_ {

@@ -577,7 +577,9 @@ static int FileService_GetFile( Connection conn,
 {
 	int ret;
 	char *path;
+	FILE *fp;
 	LCUI_Graph img;
+	LCUI_ImageReaderRec reader = { 0 };
 	FileResponse *response = &chunk->response;
 	FileRequestParams *params = &request->params;
 	ret = FileService_GetFileStatus( request, chunk );
@@ -588,21 +590,35 @@ static int FileService_GetFile( Connection conn,
 		Connection_WriteChunk( conn, chunk );
 		return FileService_GetFiles( conn, request, chunk );
 	}
-	path = EncodeANSI( request->path );
 	Graph_Init( &img );
+	path = EncodeANSI( request->path );
 	LOG( "load image: %s\n", path );
-	if( LCUI_ReadImageFile( path, &img ) != 0 ) {
-		LOG( "load image failed\n", path );
-		response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
-		Graph_Free( &img );
-		free( path );
-		return -1;
-	}
+	fp = fopen( path, "rb" );
 	free( path );
-	LOG( "load image success, size: %d,%d\n", img.width, img.height );
+	if( !fp ) {
+		response->status = RESPONSE_STATUS_NOT_FOUND;
+		return - 1;
+	}
+	LCUI_SetImageReaderForFile( &reader, fp );
+	reader.fn_prog = request->params.progress;
+	reader.prog_arg = request->params.progress_arg;
+	if( LCUI_InitImageReader( &reader ) != 0 ) {
+		goto load_image_falied;
+	}
+	if( LCUI_SetImageReaderJump( &reader ) ) {
+		goto load_image_falied;
+	}
+	if( LCUI_ReadImageHeader( &reader ) != 0 ) {
+		goto load_image_falied;
+	}
 	response->file.image = NEW( FileImageStatus, 1 );
-	response->file.image->width = img.width;
-	response->file.image->height = img.height;
+	response->file.image->width = reader.header.width;
+	response->file.image->height = reader.header.height;
+	if( LCUI_ReadImage( &reader, &img ) != 0 ) {
+		goto load_image_falied;
+	}
+	fclose( fp );
+	LOG( "load image success, size: %d,%d\n", img.width, img.height );
 	LOG( "write response, status: %d\n", response->status );
 	Connection_WriteChunk( conn, chunk );
 	if( !params->get_thumbnail ) {
@@ -621,6 +637,13 @@ static int FileService_GetFile( Connection conn,
 	}
 	chunk->type = DATA_CHUNK_THUMB;
 	return 0;
+
+load_image_falied:
+	LOG( "load image failed\n", path );
+	response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
+	Graph_Free( &img );
+	fclose( fp );
+	return -1;
 }
 
 static void FileService_HandleRequest( Connection conn, 

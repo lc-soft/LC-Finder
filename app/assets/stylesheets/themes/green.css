@@ -27,6 +27,12 @@
   background-color: #ECF8EE;
   border-color: #44BB55;
 }
+.theme-green progress {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.theme-green progressbar {
+  background-color: #44A340;
+}
 .theme-green .view, .theme-green .subview {
   background-color: #f5f7fa;
 }
@@ -92,10 +98,6 @@
   box-shadow: 0 0 6px rgba(68, 187, 85, 0.4);
   border-color: #44BB55;
 }
-.theme-green .dialog-content progressbar,
-.theme-green .view-content-wrapper progressbar {
-  background-color: #44A340;
-}
 .theme-green .source-list .source-list-item:hover {
   background-color: #fdfdfd;
 }
@@ -113,6 +115,11 @@
 }
 .theme-green .icon.message.inverted .icon {
   color: #555;
+}
+.theme-green .message progress {
+  bottom: 0;
+  height: 2px;
+  position: absolute;
 }
 .theme-green .message.box {
   background-color: rgba(0, 0, 0, 0.8);

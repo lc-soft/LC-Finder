@@ -86,6 +86,7 @@ strings:
         dialog:
             title:
                 delete: 删除文件
+                confirm_delete: 删除此文件？
                 add_tags: 为选中的文件添加标签
                 deleting: 删除中 ...
                 adding_tags: 添加标签中 ...

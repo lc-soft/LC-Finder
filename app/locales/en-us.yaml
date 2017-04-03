@@ -86,6 +86,7 @@ strings:
         dialog:
             title:
                 delete: Delete files
+                confirm_delete: Delete this file?
                 add_tags: Add tags
                 deleting: Deleting ...
                 adding_tags: Adding tags ...
