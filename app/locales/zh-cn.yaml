@@ -11,6 +11,10 @@ strings:
     switch:
         on: 开
         off: 关
+    dialog:
+        placeholder:
+            password: 密码
+            confirm_password: 确认密码
     sort:
         header: 排序方式
         ctime_desc: 最近创建

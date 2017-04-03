@@ -2,7 +2,7 @@
  * dialog_password.c -- password dialog, used for pop-up dialog to check
  * password or input new password.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * dialog_confirm.c --  密码对话框，用于弹出提示框确认密码或设置新密码
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -53,6 +53,8 @@
 #define KEY_MSG_PWD_EMPTY	"message.password_empty"
 #define KEY_MSG_PWD_TOO_LONG	"message.password_too_long"
 #define KEY_MSG_PWD_NOT_MATCH	"message.passwords_not_match"
+#define KEY_TXT_PWD		"dialog.placeholder.password"
+#define KEY_TXT_PWD2		"dialog.placeholder.confirm_password"
 #define PWD_MAX_LEN		48
 
 typedef struct DialogContextRec_ {
@@ -184,6 +186,7 @@ int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 	box = LCUIWidget_New( NULL );
 	dialog_text = LCUIWidget_New( "textview" );
 	TextEdit_SetPasswordChar( ctx.input, L'●' );
+	TextEdit_SetPlaceHolderW( ctx.input, I18n_GetText( KEY_TXT_PWD ) );
 	TextView_SetTextW( dialog_text, I18n_GetText( KEY_MSG_PWD_ERR ) );
 	Widget_AddClass( dialog_text, "error message" );
 	Widget_AddClass( box, "input-group" );
@@ -248,6 +251,7 @@ int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
 	Widget_AddClass( dialog_header, "dialog-header" );
 	Widget_AddClass( dialog_footer, "dialog-footer" );
 	Widget_AddClass( ctx.input, "dialog-input full-width" );
+	Widget_AddClass( ctx.input2, "dialog-input full-width" );
 	/* title */
 	dialog_text = LCUIWidget_New( "textview" );
 	TextView_SetTextW( dialog_text, title );
@@ -263,6 +267,8 @@ int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
 	ctx.msg2 = LCUIWidget_New( "textview" );
 	TextEdit_SetPasswordChar( ctx.input, L'●' );
 	TextEdit_SetPasswordChar( ctx.input2, L'●' );
+	TextEdit_SetPlaceHolderW( ctx.input, I18n_GetText( KEY_TXT_PWD ) );
+	TextEdit_SetPlaceHolderW( ctx.input2, I18n_GetText( KEY_TXT_PWD2 ) );
 	Widget_AddClass( ctx.msg, "error message" );
 	Widget_AddClass( ctx.msg2, "error message" );
 	Widget_AddClass( box, "input-group" );

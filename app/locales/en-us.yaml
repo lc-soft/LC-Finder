@@ -11,6 +11,10 @@ strings:
     switch:
         on: On
         off: Off
+    dialog:
+        placeholder:
+            password: Password
+            confirm_password: Confirm password
     sort:
         header: Sort options
         ctime_desc: Recently created
