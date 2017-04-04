@@ -71,16 +71,13 @@
   display: inline-block;
   padding: 8px 14px;
 }
-
 .btn .text {
   display: inline-block;
 }
-
 .btn:disabled {
   background-color: #fff;
   border: 1px solid #dedede;
 }
-
 .btn:disabled .text {
   color: #7B7B7B;
 }
@@ -122,18 +119,14 @@ textview-i18n.btn-link:hover,
   border: 1px solid #eaeaea;
   background-color: #fff;
 }
-
 .btn-basic:hover {
   border-color: #cbcbcb;
   background-color: #e6e6e6;
 }
-
-.btn-basic:acitve {
+.btn-basic:active {
   background-color: #d7d7d7;
 }
-
-.btn-basic:disabled:hover,
-.btn-basic:disabled:active {
+.btn-basic:disabled:hover, .btn-basic:disabled:active {
   background-color: #fff;
   border-color: #eaeaea;
 }
@@ -282,17 +275,9 @@ progressbar {
 .dialog-content .dialog-header .text, .dialog-content .dialog-header textview {
   font-size: 18px;
 }
-.dialog-content .dialog-body .text, .dialog-content .dialog-body textview {
+.dialog-content .dialog-body .text, .dialog-content .dialog-body textview, .dialog-content .dialog-body button {
   font-size: 14px;
   width: 100%;
-}
-.dialog-content .dialog-btn {
-  width: 100%;
-  height: 30px;
-  padding: 0;
-  background-color: #ddd;
-  box-sizing: border-box;
-  border: 2px solid #ddd;
 }
 .dialog-content .dialog-btn-group {
   width: 50%;
@@ -315,6 +300,16 @@ progressbar {
   width: 50%;
   margin: 0 auto;
 }
+.dialog-content .dialog-btn {
+  width: 100%;
+  height: 30px;
+  padding: 0;
+  line-height: 28px;
+  text-align: center;
+  box-sizing: border-box;
+  background-color: #ddd;
+  border: 2px solid #ddd;
+}
 .dialog-content .dialog-btn:hover {
   border: 2px solid #aaa;
 }
@@ -325,13 +320,8 @@ progressbar {
   background-color: #eaeaea;
   border: 2px solid #eaeaea;
 }
-.dialog-content .dialog-btn:disabled .text, .dialog-content .dialog-btn:disabled textview {
+.dialog-content .dialog-btn:disabled {
   color: #bbb;
-}
-.dialog-content .dialog-btn .text, .dialog-content .dialog-btn textview {
-  width: 100%;
-  text-align: center;
-  line-height: 30px;
 }
 .dialog-content textedit.has-error:focus, .dialog-content textedit.has-error:hover, .dialog-content textedit.has-error:active {
   border-color: #a94442;
@@ -504,99 +494,74 @@ dropdown.checkable dropdown-item.active .icon {
   padding: 0 0 0 48px;
   box-sizing: border-box;
 }
-
 .view .view-navbar {
   top: 0;
-  left: 48px;
+  left: 0;
   width: 100%;
   height: 48px;
   position: absolute;
+  padding-left: 48px;
   background-color: #fafafa;
+  box-sizing: border-box;
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.6);
 }
-
-.view .view-body {
-  height: 100%;
-  width: 100%;
-  padding: 48px 0 0 0;
-  box-sizing: border-box;
-}
-
-.view .view-content-wrapper {
-  width: 100%;
-  height: 100%;
-}
-
-.view .view-content {
-  width: 100%;
-  padding: 15px 25px 0 25px;
-  box-sizing: border-box;
-}
-
-.view .item-group {
-  margin: 0 0 15px 0;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.view-navbar .view-navbar-title,
-.view-navbar .view-navbar-text {
-  font-size: 16px;
-  line-height: 48px;
-  display: inline-block;
-}
-
-.view-navbar .view-navbar-title {
-  padding: 0 0 0 25px;
-}
-
-.view-body .title {
-  font-size: 20px;
-  line-height: 32px;
-  height: 32px;
-  margin: 0 0 10px 0;
-}
-
-.view-body .title2 {
-  font-size: 16px;
-  line-height: 24px;
-  margin: 0 0 5px 0;
-}
-
-.view-navbar .divider {
+.view .view-navbar .divider {
   width: 1px;
   display: inline-block;
   background-color: #aaa;
   height: 100%;
   margin: 0 12px;
 }
-
-.view-navbar .view-navbar-btn {
+.view .view-navbar .view-navbar-title, .view .view-navbar .view-navbar-text {
+  font-size: 16px;
+  line-height: 48px;
+  display: inline-block;
+}
+.view .view-navbar .view-navbar-title {
+  padding: 0 0 0 25px;
+}
+.view .view-navbar .view-navbar-btn {
   display: inline-block;
   padding: 14px 12px 12px 10px;
 }
-
-.view-navbar .view-navbar-btn .text {
+.view .view-navbar .view-navbar-btn .text {
   display: inline-block;
 }
-
-.view-navbar .view-navbar-btn .text {
+.view .view-navbar .view-navbar-btn .text {
   font-size: 16px;
   height: 24px;
 }
-
-.view-navbar .view-navbar-btn .icon {
+.view .view-navbar .view-navbar-btn .icon {
   width: 24px;
   font-size: 24px;
   line-height: 24px;
   text-align: center;
 }
-
-.view-navbar .view-navbar-title {
+.view .view-navbar .view-navbar-title {
   display: inline-block;
 }
-
-.view-content-wrapper progress {
+.view .view-body {
+  height: 100%;
+  width: 100%;
+  padding: 48px 0 0 0;
+  box-sizing: border-box;
+}
+.view .view-body .title {
+  font-size: 20px;
+  line-height: 32px;
+  height: 32px;
+  margin: 0 0 10px 0;
+}
+.view .view-body .title2 {
+  font-size: 16px;
+  line-height: 24px;
+  margin: 0 0 5px 0;
+}
+.view .view-content-wrapper {
+  width: 100%;
+  height: 100%;
+}
+.view .view-content-wrapper progress.top-fixed {
   top: 0;
   left: 0;
   width: 100%;
@@ -604,24 +569,31 @@ dropdown.checkable dropdown-item.active .icon {
   position: absolute;
   background-color: #ccc;
 }
-
-.view-content-wrapper progressbar {
+.view .view-content-wrapper progress.top-fixed progressbar {
   width: 100%;
   height: 100%;
   background-color: #888;
 }
+.view .view-content {
+  width: 100%;
+  padding: 15px 25px 0 25px;
+  box-sizing: border-box;
+}
+.view .item-group {
+  margin: 0 0 15px 0;
+  box-sizing: border-box;
+  width: 100%;
+}
 
 .subview {
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   position: absolute;
-  top: 0;
-  left: 48px;
+  padding-left: 48px;
   background-color: #fff;
-}
-
-.subview .view-navbar {
-  left: 0;
+  box-sizing: border-box;
 }
 
 .file-list {
@@ -843,12 +815,15 @@ thumbviewitem.selected .tag-thumb-list-item-cover {
   box-sizing: border-box;
 }
 .search-panel .search-input-group .btn {
-  position: absolute;
-  right: 10px;
   top: 10px;
+  right: 10px;
   height: 40px;
+  position: absolute;
   box-sizing: border-box;
   z-index: 0;
+}
+.search-panel .search-input-group .btn .text {
+  line-height: 22px;
 }
 .search-panel .search-input-group .btn:hover {
   z-index: 2;

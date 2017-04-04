@@ -1,109 +1,116 @@
+@import "variables";
+
 .view {
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
 	position: absolute;
-	padding: 0 0 0 48px;
+	padding: 0 0 0 $sidebar-min-width;
 	box-sizing: border-box;
-}
-.view .view-navbar {
-	top: 0;
-	left: 48px;
-	width: 100%;
-	height: 48px;
-	position: absolute;
-	background-color: #fafafa;
-	box-shadow: 0px 0px 4px rgba(0,0,0,0.6);
-}
-.view .view-body {
-	height: 100%;
-	width: 100%;
-	padding: 48px 0 0 0;
-	box-sizing: border-box;
-}
-.view .view-content-wrapper {
-	width: 100%;
-	height: 100%;
-}
-.view .view-content {
-	width: 100%;
-	padding: 15px 25px 0 25px;
-	box-sizing: border-box;
-}
-.view .item-group {
-	margin: 0 0 15px 0;
-	box-sizing: border-box;
-	width: 100%;
-}
-.view-navbar .view-navbar-title,
-.view-navbar .view-navbar-text {
-	font-size: 16px;
-	line-height: 48px;
-	display: inline-block;
-}
-.view-navbar .view-navbar-title {
-	padding: 0 0 0 25px;
-}
-.view-body .title {
-	font-size: 20px;
-	line-height: 32px;
-	height: 32px;
-	margin: 0 0 10px 0;
-}
-.view-body .title2 {
-	font-size: 16px;
-	line-height: 24px;
-	margin: 0 0 5px 0;
-}
-.view-navbar .divider {
-	width: 1px;
-	display: inline-block;
-	background-color: #aaa;
-	height: 100%;
-	margin: 0 12px;
-}
-.view-navbar .view-navbar-btn {
-	display: inline-block;
-	padding: 14px 12px 12px 10px;
-}
-.view-navbar .view-navbar-btn .text {
-	display: inline-block;
-}
-.view-navbar .view-navbar-btn .text {
-	font-size: 16px;
-	height: 24px;
-}
-.view-navbar .view-navbar-btn .icon {
-	width: 24px;
-	font-size: 24px;
-	line-height: 24px;
-	text-align: center;
-}
-.view-navbar .view-navbar-title {
-	display: inline-block;
-}
-.view-content-wrapper progress {
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 4px;
-	position: absolute;
-	background-color: #ccc;
-}
-.view-content-wrapper progressbar {
-	width: 100%;
-	height: 100%;
-	background-color: #888;
+
+	.view-navbar {
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 48px;
+		position: absolute;
+		padding-left: $sidebar-min-width;
+		background-color: #fafafa;
+		box-sizing: border-box;
+		box-shadow: 0px 0px 4px rgba(0,0,0,0.6);
+
+		.divider {
+			width: 1px;
+			display: inline-block;
+			background-color: #aaa;
+			height: 100%;
+			margin: 0 12px;
+		}
+		.view-navbar-title, .view-navbar-text {
+			font-size: 16px;
+			line-height: 48px;
+			display: inline-block;
+		}
+		.view-navbar-title {
+			padding: 0 0 0 25px;
+		}
+		.view-navbar-btn {
+			display: inline-block;
+			padding: 14px 12px 12px 10px;
+		}
+		.view-navbar-btn .text {
+			display: inline-block;
+		}
+		.view-navbar-btn .text {
+			font-size: 16px;
+			height: 24px;
+		}
+		.view-navbar-btn .icon {
+			width: 24px;
+			font-size: 24px;
+			line-height: 24px;
+			text-align: center;
+		}
+		.view-navbar-title {
+			display: inline-block;
+		}
+	}
+	.view-body {
+		height: 100%;
+		width: 100%;
+		padding: $navbar-height 0 0 0;
+		box-sizing: border-box;
+
+		.title {
+			font-size: 20px;
+			line-height: 32px;
+			height: 32px;
+			margin: 0 0 10px 0;
+		}
+		.title2 {
+			font-size: 16px;
+			line-height: 24px;
+			margin: 0 0 5px 0;
+		}
+	}
+	.view-content-wrapper {
+		width: 100%;
+		height: 100%;
+
+		progress.top-fixed {
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 4px;
+			position: absolute;
+			background-color: #ccc;
+
+			progressbar {
+				width: 100%;
+				height: 100%;
+				background-color: #888;
+			}
+		}
+	}
+	.view-content {
+		width: 100%;
+		padding: 15px 25px 0 25px;
+		box-sizing: border-box;
+	}
+	.item-group {
+		margin: 0 0 15px 0;
+		box-sizing: border-box;
+		width: 100%;
+	}
 }
 .subview {
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	position: absolute;
-	top: 0;
-	left: 48px;
-	background-color: #fff;	
-}
-.subview .view-navbar {
-	left: 0;
+	padding-left: $sidebar-min-width;
+	background-color: #fff;
+	box-sizing: border-box;
 }

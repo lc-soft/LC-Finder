@@ -88,12 +88,16 @@ thumbviewitem.selected {
 			box-sizing: border-box;
 		}
 		.btn {
-			position: absolute;
-			right: 10px;
 			top: 10px;
+			right: 10px;
 			height: 40px;
+			position: absolute;
 			box-sizing: border-box;
 			z-index: 0;
+
+			.text {
+				line-height: 22px;
+			}
 		}
 		.btn:hover {
 			z-index: 2;

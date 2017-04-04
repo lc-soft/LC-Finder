@@ -38,6 +38,11 @@ $primary-dark-color: #44A340;
 	progressbar {
 		background-color: $primary-dark-color;
 	}
+	.dialog-content {
+		progress {
+			background-color: rgba(0,0,0,0.05);
+		}
+	}
 	.view, .subview {
 		background-color: #f5f7fa;
 	}
@@ -82,7 +87,7 @@ $primary-dark-color: #44A340;
 	.btn-link:hover .text {
 		color: #2E7D39;
 	}
-	textview, textview-i18 {
+	textview, textview-i18n {
 		.btn-link.selected {
 			color: #333;
 			&:active, &:hover {

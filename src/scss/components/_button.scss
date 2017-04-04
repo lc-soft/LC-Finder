@@ -1,16 +1,17 @@
 .btn {
 	display: inline-block;
 	padding: 8px 14px;
-}
-.btn .text {
-	display: inline-block;
-}
-.btn:disabled {
-	background-color: #fff;
-	border: 1px solid #dedede;
-}
-.btn:disabled .text {
-	color: #7B7B7B;
+
+	.text {
+		display: inline-block;
+	}
+	&:disabled {
+		background-color: #fff;
+		border: 1px solid #dedede;
+		.text {
+			color: #7B7B7B;
+		}
+	}
 }
 .btn-link {
 	padding: 0;
@@ -42,18 +43,19 @@ textview-i18n.btn-link:hover,
 .btn-basic {
 	border: 1px solid #eaeaea;
 	background-color: #fff;
-}
-.btn-basic:hover {
-	border-color: #cbcbcb;
-	background-color: #e6e6e6;
-}
-.btn-basic:acitve {
-	background-color: #d7d7d7;
-}
-.btn-basic:disabled:hover,
-.btn-basic:disabled:active {
-	background-color: #fff;
-	border-color: #eaeaea;
+
+	&:hover {
+		border-color: #cbcbcb;
+		background-color: #e6e6e6;
+	}
+	&:active {
+		background-color: #d7d7d7;
+	}
+	&:disabled:hover,
+	&:disabled:active {
+		background-color: #fff;
+		border-color: #eaeaea;
+	}
 }
 .btn-dropdown {
 	border: 1px solid #ddd;

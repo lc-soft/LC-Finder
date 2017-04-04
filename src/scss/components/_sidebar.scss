@@ -1,12 +1,14 @@
+@import "variables";
+
 .sidebar {
-	width: 256px;
+	width: $sidebar-width;
 	height: 100%;
 	background-color: #fff;
 	position: absolute;
 	z-index: 100;
 }
 .sidebar-mini {
-	width: 48px;
+	width: $sidebar-min-width;
 }
 .sidebar .sidebar-item {
 	width: 256px;

@@ -33,6 +33,9 @@
 .theme-green progressbar {
   background-color: #44A340;
 }
+.theme-green .dialog-content progress {
+  background-color: rgba(0, 0, 0, 0.05);
+}
 .theme-green .view, .theme-green .subview {
   background-color: #f5f7fa;
 }
@@ -72,10 +75,10 @@
 .theme-green .btn-link:hover .text {
   color: #2E7D39;
 }
-.theme-green textview .btn-link.selected, .theme-green textview-i18 .btn-link.selected {
+.theme-green textview .btn-link.selected, .theme-green textview-i18n .btn-link.selected {
   color: #333;
 }
-.theme-green textview .btn-link.selected:active, .theme-green textview .btn-link.selected:hover, .theme-green textview-i18 .btn-link.selected:active, .theme-green textview-i18 .btn-link.selected:hover {
+.theme-green textview .btn-link.selected:active, .theme-green textview .btn-link.selected:hover, .theme-green textview-i18n .btn-link.selected:active, .theme-green textview-i18n .btn-link.selected:hover {
   color: #333;
 }
 .theme-green .file-list .file-list-item-picture.selected .checkbox {
