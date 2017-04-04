@@ -38,8 +38,9 @@
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/button.h>
 #include <LCUI/gui/widget/textview.h>
-#include "textview_i18n.h"
+#include "i18n.h"
 #include "dialog.h"
 
 #define KEY_CANCEL	"button.cancel"
@@ -67,15 +68,15 @@ static void OnBtnCancelClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title, 
 			      const wchar_t *text )
 {
-	DialogContextRec ctx = {0};
+	DialogContextRec ctx = { 0 };
 	LCUI_Widget dialog_text, box;
 	LCUI_Widget dialog = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_body = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_content = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_header = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
-	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
-	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
+	LCUI_Widget btn_cancel = LCUIWidget_New( "button" );
+	LCUI_Widget btn_ok = LCUIWidget_New( "button" );
 	ctx.loop = LCUIMainLoop_New();
 	Widget_AddClass( dialog, "dialog" );
 	Widget_AddClass( dialog_body, "dialog-body" );
@@ -89,21 +90,15 @@ LCUI_BOOL LCUIDialog_Confirm( LCUI_Widget parent, const wchar_t* title,
 	TextView_SetTextW( dialog_text, text );
 	Widget_Append( dialog_body, dialog_text );
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview-i18n" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
-	Widget_AddClass( dialog_text, "text" );
-	TextViewI18n_SetKey( dialog_text, KEY_OK );
-	Widget_Append( btn_ok, dialog_text );
+	Button_SetTextW( btn_ok, I18n_GetText( KEY_OK ) );
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
 	box = LCUIWidget_New( NULL );
-	dialog_text  = LCUIWidget_New( "textview-i18n" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
-	Widget_AddClass( dialog_text, "text" );
-	TextViewI18n_SetKey( dialog_text, KEY_CANCEL );
-	Widget_Append( btn_cancel, dialog_text );
+	Button_SetTextW( btn_cancel, I18n_GetText( KEY_CANCEL ) );
 	Widget_Append( box, btn_cancel );
 	Widget_Append( dialog_footer, box );
 	Widget_Append( dialog_content, dialog_header );

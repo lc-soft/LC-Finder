@@ -38,6 +38,7 @@
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/button.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
 #include "i18n.h"
@@ -108,8 +109,8 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	LCUI_Widget dialog_content = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_header = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
-	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
-	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
+	LCUI_Widget btn_cancel = LCUIWidget_New( "button" );
+	LCUI_Widget btn_ok = LCUIWidget_New( "button" );
 	ctx.btn = btn_ok;
 	ctx.text = newval;
 	ctx.old_text = val;
@@ -130,19 +131,15 @@ int LCUIDialog_Prompt( LCUI_Widget parent, const wchar_t* title,
 	Widget_Append( dialog_header, dialog_text );
 	Widget_Append( dialog_body, ctx.input );
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
-	TextView_SetTextW( dialog_text, I18n_GetText( KEY_OK ) );
-	Widget_Append( btn_ok, dialog_text );
+	Button_SetTextW( btn_ok, I18n_GetText( KEY_OK ) );
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
-	TextView_SetTextW( dialog_text, I18n_GetText( KEY_CANCEL ) );
-	Widget_Append( btn_cancel, dialog_text );
+	Button_SetTextW( btn_cancel, I18n_GetText( KEY_CANCEL ) );
 	Widget_Append( box, btn_cancel );
 	Widget_Append( dialog_footer, box );
 	Widget_Append( dialog_content, dialog_header );

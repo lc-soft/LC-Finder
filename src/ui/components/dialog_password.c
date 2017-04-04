@@ -158,8 +158,8 @@ int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 	LCUI_Widget dialog_content = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_header = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
-	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
-	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
+	LCUI_Widget btn_cancel = LCUIWidget_New( "button" );
+	LCUI_Widget btn_ok = LCUIWidget_New( "button" );
 
 	ctx.btn = btn_ok;
 	ctx.data = data;
@@ -195,19 +195,15 @@ int LCUIDialog_CheckPassword( LCUI_Widget parent, const wchar_t *title,
 	Widget_Append( dialog_body, box );
 	/* footer buttons */
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
-	TextView_SetTextW( dialog_text, I18n_GetText( KEY_OK ) );
-	Widget_Append( btn_ok, dialog_text );
+	Button_SetTextW( btn_ok, I18n_GetText( KEY_OK ) );
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
-	TextView_SetTextW( dialog_text, I18n_GetText( KEY_CANCEL ) );
-	Widget_Append( btn_cancel, dialog_text );
+	Button_SetTextW( btn_cancel, I18n_GetText( KEY_CANCEL ) );
 	Widget_Append( box, btn_cancel );
 	Widget_Append( dialog_footer, box );
 	/* build dialog */
@@ -237,8 +233,8 @@ int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
 	LCUI_Widget dialog_content = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_header = LCUIWidget_New( NULL );
 	LCUI_Widget dialog_footer = LCUIWidget_New( NULL );
-	LCUI_Widget btn_cancel = LCUIWidget_New( NULL );
-	LCUI_Widget btn_ok = LCUIWidget_New( NULL );
+	LCUI_Widget btn_cancel = LCUIWidget_New( "button" );
+	LCUI_Widget btn_ok = LCUIWidget_New( "button" );
 
 	ctx.btn = btn_ok;
 	ctx.type = TYPE_NEW_PASSWORD;
@@ -282,19 +278,15 @@ int LCUIDialog_NewPassword( LCUI_Widget parent, const wchar_t *title,
 	Widget_Append( dialog_body, box );
 	/* footer buttons */
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_ok, "dialog-btn" );
-	TextView_SetTextW( dialog_text, I18n_GetText( KEY_OK ) );
-	Widget_Append( btn_ok, dialog_text );
+	Button_SetTextW( btn_ok, I18n_GetText( KEY_OK ) );
 	Widget_Append( box, btn_ok );
 	Widget_Append( dialog_footer, box );
 	box = LCUIWidget_New( NULL );
-	dialog_text = LCUIWidget_New( "textview" );
 	Widget_AddClass( box, "dialog-btn-group" );
 	Widget_AddClass( btn_cancel, "dialog-btn" );
-	TextView_SetTextW( dialog_text, I18n_GetText( KEY_CANCEL ) );
-	Widget_Append( btn_cancel, dialog_text );
+	Button_SetTextW( btn_cancel, I18n_GetText( KEY_CANCEL ) );
 	Widget_Append( box, btn_cancel );
 	Widget_Append( dialog_footer, box );
 	/* build dialog */
