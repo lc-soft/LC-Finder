@@ -280,7 +280,6 @@ static void SyncChangedFile( void *data, const FileInfo info )
 	pack->status->synced_files += 1;
 	LCUI_EncodeString( path, info->path, PATH_LEN, ENCODING_UTF8 );
 	DB_UpdateFileTime( pack->dir, path, ctime, mtime );
-	DEBUG_MSG( "%ls\n", wpath );
 }
 
 static void SyncDeletedFile( void *data, const FileInfo info )
@@ -355,6 +354,9 @@ static void LCFinder_OnScanFinished( FileSyncStatus s )
 	if( s->task_i < finder.n_dirs - 1 ) {
 		s->task_i += 1;
 		if( s->task ) {
+			s->added_files += s->task->added_files;
+			s->deleted_files += s->task->deleted_files;
+			s->changed_files += s->task->changed_files;
 			SyncTask_Finish( s->task );
 		}
 		LCFinder_SwitchTask( s );

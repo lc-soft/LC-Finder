@@ -164,6 +164,7 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir )
 	wpathjoin( t->file, data_dir, name );
 	swprintf( t->tmpfile, max_len, L"%ls%ls", t->file, suffix );
 	t->state = STATE_NONE;
+	t->changed_files = 0;
 	t->deleted_files = 0;
 	t->total_files = 0;
 	t->added_files = 0;

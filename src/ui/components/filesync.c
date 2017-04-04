@@ -56,17 +56,23 @@ static struct SyncContextRec_ {
 	LCUI_Widget title;		/**< 提示框中显示的标题 */
 	LCUI_Thread thread;		/**< 用于进行文件同步的线程 */
 	int timer;			/**< 用于动态更新提示框内容的定时器 */
+	int cached_state;		/**< 当前缓存的同步状态 */
 } self = { 0 };
 
 static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 {
 	int count, total;
-	switch( self.status.state ) {
+	switch( self.cached_state ) {
 	case STATE_SAVING:
 		count = self.status.synced_files;
 		total = self.status.added_files;
 		total += self.status.changed_files;
 		total += self.status.deleted_files;
+		if( self.status.task ) {
+			total += self.status.task->added_files;
+			total += self.status.task->changed_files;
+			total += self.status.task->deleted_files;
+		}
 		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count, total );
 		break;
 	case STATE_FINISHED:
@@ -86,7 +92,8 @@ static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 
 static void OnUpdateStats( void *arg )
 {
-	switch( self.status.state ) {
+	self.cached_state = self.status.state;
+	switch( self.cached_state ) {
 	case STATE_SAVING:
 		TextViewI18n_SetKey( self.text, KEY_TEXT_SAVING );
 		break;
@@ -127,6 +134,7 @@ static void OnStartSyncFiles( void *privdata, void *data )
 	if( self.is_syncing ) {
 		return;
 	}
+	OnUpdateStats( NULL );
 	self.is_syncing = TRUE;
 	self.timer = LCUITimer_Set( 200, OnUpdateStats, NULL, TRUE );
 	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
