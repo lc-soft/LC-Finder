@@ -38,10 +38,10 @@
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/button.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
 #include "i18n.h"
-#include "textview_i18n.h"
 #include "dialog.h"
 
 #define TYPE_NEW_PASSWORD	0

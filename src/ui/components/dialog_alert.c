@@ -38,6 +38,7 @@
 #include "finder.h"
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/button.h>
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
 #include "i18n.h"

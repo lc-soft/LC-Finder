@@ -163,10 +163,12 @@ static void FileIndex_Delete( FileIndex fidx )
 	fidx->item = NULL;
 }
 
-static void RenderSelectedItemsText( wchar_t *buf, const wchar_t *text, void *data )
+static void RenderSelectedItemsText( wchar_t *buf,
+				     const wchar_t *text, void *data )
 {
 	FileBrowser browser = data;
-	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, browser->selected_files.length );
+	swprintf( buf, TXTFMT_BUF_MAX_LEN, text,
+		  browser->selected_files.length );
 }
 
 static void RenderProgressText( DialogDataPack pack )
@@ -320,9 +322,9 @@ static void FileDeletionThread( void *arg )
 	while( cursor ) {
 		cursor = Widget_GetPrev( cursor );
 		/**
-		 * 如果当前游标定位在时间分割器（time-separator）上，则继续向前
-		 * 移动，因为在文件删除后，时间分割器可能会被删除，需要避免缩略图
-		 * 列表视图在重新布局时访问到它。
+		 * 如果当前游标定位在时间分割器（time-separator）上，则继续向
+		 * 前移动，因为在文件删除后，时间分割器可能会被删除，需要避免
+		 * 缩略图列表视图在重新布局时访问到它。
 		 */
 		if( cursor->type &&
 		    strcmp( cursor->type, "time-separator" ) == 0 ) {

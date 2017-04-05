@@ -955,8 +955,6 @@ void FileClient_Run( FileClient client )
 		}
 		while( client->active ) {
 			n = Connection_ReceiveResponse( conn, &response );
-			LOG( "receive count: %d, response status: %d\n",
-			     n, response.status );
 			if( n != 0 ) {
 				break;
 			}
