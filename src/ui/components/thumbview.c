@@ -156,7 +156,6 @@ typedef struct ThumbViewRec_ {
 	ThumbLinker linker;			/**< 缩略图链接器 */
 	LinkedList files;			/**< 当前视图下的文件列表 */
 	LinkedList thumb_tasks;			/**< 缩略图加载任务队列 */
-	RBTree task_targets;			/**< 各个任务的目标部件 */
 	LCUI_Cond tasks_cond;			/**< 任务队列条件变量 */
 	LCUI_Mutex tasks_mutex;			/**< 任务队列互斥锁 */
 	ThumbViewTaskRec tasks[TASK_TOTAL];	/**< 当前任务 */
@@ -567,14 +566,11 @@ static ThumbLoader ThumbLoader_Create( ThumbView view, LCUI_Widget target )
 	ThumbViewItem item;
 	ThumbLoader loader;
 
-	loader = NEW( ThumbLoaderRec, 1 );
 	item = Widget_GetData( target, self.item );
-	if( item ) {
-		item->loader = loader;
-	} else {
-		free( loader );
+	if( !item || item->loader ) {
 		return NULL;
 	}
+	loader = NEW( ThumbLoaderRec, 1 );
 	loader->view = view;
 	loader->data = NULL;
 	loader->active = TRUE;
@@ -582,6 +578,7 @@ static ThumbLoader ThumbLoader_Create( ThumbView view, LCUI_Widget target )
 	loader->callback = NULL;
 	LCUICond_Init( &loader->cond );
 	LCUIMutex_Init( &loader->mutex );
+	item->loader = loader;
 	return loader;
 }
 
@@ -619,13 +616,13 @@ static void ThumbLoader_Start( ThumbLoader loader )
 			ThumbLoader_OnError( loader );
 			return;
 		}
-		if( loader->fullpath[len] == PATH_SEP ) {
+		if( item->path[len] == PATH_SEP ) {
 			len += 1;
 		}
 		pathjoin( loader->path, item->path + len, DIR_COVER_THUMB );
 	} else {
 		pathjoin( loader->fullpath, item->path, "" );
-		if( loader->fullpath[len] == PATH_SEP ) {
+		if( item->path[len] == PATH_SEP ) {
 			len += 1;
 		}
 		pathjoin( loader->path, item->path + len , "" );
@@ -676,6 +673,9 @@ static void ThumbView_ExecLoadThumb( LCUI_Widget w, LCUI_Widget target )
 		return;
 	}
 	loader = ThumbLoader_Create( view, target );
+	if( !loader ) {
+		return;
+	}
 	ThumbLoader_SetCallback( loader, ThumbView_OnThumbLoadDone, NULL );
 	view->tasks[TASK_LOAD_THUMB].state = TASK_STATE_RUNNING;
 	view->tasks[TASK_LOAD_THUMB].loader = loader;
@@ -716,6 +716,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	view->is_loading = FALSE;
 	LCUIMutex_Lock( &view->tasks_mutex );
 	LCUIMutex_Lock( &view->layout.row_mutex );
+	ScrollLoading_Enable( view->scrollload, FALSE );
 	view->layout.x = 0;
 	view->layout.count = 0;
 	view->layout.start = NULL;
@@ -731,6 +732,7 @@ void ThumbView_Empty( LCUI_Widget w )
 	LCUICond_Signal( &view->tasks_cond );
 	LCUIMutex_Unlock( &view->layout.row_mutex );
 	LCUIMutex_Unlock( &view->tasks_mutex );
+	ScrollLoading_Enable( view->scrollload, TRUE );
 	ScrollLoading_Reset( view->scrollload );
 }
 
@@ -1046,8 +1048,7 @@ static int RemoveThumbTask( LCUI_Widget w )
 		if( node->data != w ) {
 			continue;
 		}
-		LinkedList_Unlink( tasks, node );
-		RBTree_CustomErase( &data->view->task_targets, w );
+		LinkedList_DeleteNode( tasks, node );
 		LCUIMutex_Unlock( &data->view->tasks_mutex );
 		return 0;
 	}
@@ -1061,7 +1062,7 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	ThumbViewItem data = Widget_GetData( w, self.item );
 	LinkedList *tasks = &data->view->thumb_tasks;
 	if( w->custom_style->sheet[key_background_image].is_valid ||
-	    !data || !data->view->cache ) {
+	    !data || !data->view->cache || data->loader ) {
 		return;
 	}
 	LCUIMutex_Lock( &data->view->tasks_mutex );
@@ -1070,16 +1071,8 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		LinkedListNode *node = LinkedList_GetNode( tasks, -1 );
 		LinkedList_Unlink( tasks, node );
 		target = node->data;
-		RBTree_CustomErase( &data->view->task_targets, target );
-	} else {
-		/* 如果已经存在目标为该部件的任务，则不重复添加 */
-		if( RBTree_CustomSearch( &data->view->task_targets, w ) ) {
-			LCUIMutex_Unlock( &data->view->tasks_mutex );
-			return;
-		}
 	}
 	LinkedList_Insert( &data->view->thumb_tasks, 0, w );
-	RBTree_CustomInsert( &data->view->task_targets, w, w );
 	data->view->tasks[TASK_LOAD_THUMB].state = TASK_STATE_READY;
 	/* 通知任务线程处理该任务 */
 	LCUICond_Signal( &data->view->tasks_cond );
@@ -1229,7 +1222,6 @@ static void ThumbView_ExecTask( LCUI_Widget w, int task )
 		}
 		target = node->data;
 		LinkedList_Unlink( &view->thumb_tasks, node );
-		RBTree_CustomErase( &view->task_targets, target );
 		LCUIMutex_Unlock( &view->tasks_mutex );
 		ThumbView_ExecLoadThumb( w, target );
 		LinkedListNode_Delete( node );
@@ -1397,8 +1389,6 @@ static void ThumbView_OnInit( LCUI_Widget w )
 	LinkedList_Init( &view->files );
 	LinkedList_Init( &view->thumb_tasks );
 	LinkedList_Init( &view->layout.row );
-	RBTree_Init( &view->task_targets );
-	RBTree_OnCompare( &view->task_targets, OnCompareTaskTarget );
 	LCUIMutex_Init( &view->layout.row_mutex );
 	view->scrollload = ScrollLoading_New( w );
 	Widget_BindEvent( w, "ready", ThumbView_OnReady, NULL, NULL );
