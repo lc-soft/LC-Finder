@@ -11,7 +11,7 @@
           <widget type="sidebar-toggle">
             <widget type="textview" class="icon icon icon-menu"></widget>
           </widget>
-          <widget type="textview" class="text sidebar-title">LC-Finder</widget>
+          <widget type="textview" class="text sidebar-title">LC's Finder</widget>
         </widget>
         <widget id="sidebar-btn-search" class="sidebar-item">
           <widget type="textview" class="text icon icon icon-magnify"></widget>
@@ -56,7 +56,7 @@
         </widget>
         <widget class="view-body">
           <widget id="view-home-content-wrapper" class="view-content-wrapper">
-            <widget id="view-home-progress" type="progress"></widget>
+            <widget id="view-home-progress" class="top-fixed" type="progress"></widget>
             <widget id="view-home-content" class="view-content full-height">
               <widget id="tip-empty-collection" class="floating center middle aligned icon message hide">
                 <widget type="textview" class="icon icon icon-image-multiple"></widget>
@@ -255,7 +255,7 @@
               <widget class="setting-group">
                 <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
                 <widget class="item-group">
-                  <widget type="textview" class="text">LC-Finder 0.1.0 Beta 1</widget>
+                  <widget type="textview" class="text">LC's Finder 0.1.0 Beta 1</widget>
                   <widget id="txt-trial-license" type="textview-i18n" class="text text-line" data-i18n-key="settings.trial_message">当前是试用版，仅供评估使用，如果你认为此应用对你有用，可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。</widget>
                   <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2017 LC's Software，保留所有权利。</widget>
                   <widget class="btn-group">
