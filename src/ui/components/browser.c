@@ -326,7 +326,7 @@ static void FileDeletionThread( void *arg )
 		 * 前移动，因为在文件删除后，时间分割器可能会被删除，需要避免
 		 * 缩略图列表视图在重新布局时访问到它。
 		 */
-		if( cursor->type &&
+		if( cursor && cursor->type &&
 		    strcmp( cursor->type, "time-separator" ) == 0 ) {
 			continue;
 		}

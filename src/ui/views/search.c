@@ -286,7 +286,7 @@ static void UpdateLayoutContext( void )
 {
 	double n;
 	float max_width;
-	max_width = this_view.view_tags->box.content.width;
+	max_width = this_view.view_tags->parent->box.content.width;
 	n = max_width + TAG_MARGIN_RIGHT;
 	n = ceil( n / (TAG_MAX_WIDTH + TAG_MARGIN_RIGHT) );
 	this_view.layout.max_width = max_width;

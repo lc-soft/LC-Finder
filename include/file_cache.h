@@ -74,8 +74,6 @@ SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir );
 int SyncTask_AddFileW( SyncTask t, const wchar_t *path,
 		       unsigned int ctime, unsigned int mtime );
 
-int SyncTask_ScanFileW( SyncTask t, const wchar_t *path );
-
 /** 打开缓存 */
 int SyncTask_OpenCacheW( SyncTask t, const wchar_t *path );
 
