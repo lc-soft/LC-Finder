@@ -141,6 +141,19 @@ static void UI_SetWindowIcon( void )
 #endif
 }
 
+#define LCUIWidget_HideById(ID) Widget_Hide( LCUIWidget_GetById(ID) );
+
+static void UI_HideInvalidElements( void )
+{
+#ifdef PLATFORM_WIN32_PC_APP
+	LCUIWidget_HideById( ID_BTN_OPEN_PICTURE_DIR );
+	LCUIWidget_HideById( ID_BTN_DELETE_PICTURE );
+	LCUIWidget_HideById( ID_BTN_DELETE_HOME_FILES );
+	LCUIWidget_HideById( ID_BTN_DELETE_FOLDER_FILES );
+	LCUIWidget_HideById( ID_BTN_DELETE_SEARCH_FILES );
+#endif
+}
+
 int UI_Init( int argc, char **argv )
 {
 	LCUI_Widget box, root;
@@ -170,14 +183,15 @@ int UI_Init( int argc, char **argv )
 	Widget_UpdateStyle( root, TRUE );
 	UI_SetWindowIcon();
 	ParseCommandArguments( &args, argc, argv );
-	//LCUITimer_Set( 2000, onTimer, NULL, FALSE );
 	if( !args.filepath ) {
 		UI_InitSplashScreen();
 		UI_InitMainView();
 		UI_InitPictureView( MODE_FULL );
+		UI_HideInvalidElements();
 		return 0;
 	}
 	UI_InitPictureView( MODE_SINGLE_PICVIEW );
+	UI_HideInvalidElements();
 #ifdef _WIN32
 	{
 		char *filepath;
