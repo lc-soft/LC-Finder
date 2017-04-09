@@ -28,8 +28,34 @@ strings:
         password_too_long: 密码太长
         password_empty: 密码不能为空
         passwords_not_match: 两次输入的密码不一致
+    datetime:
+        format: YYYY年MM月DD日，DATE hh:mm
+        year_format: YYYY年MM月
+        month_format: MM月DD日
+        days:
+            0: 星期一
+            1: 星期二
+            2: 星期三
+            3: 星期三
+            4: 星期五
+            5: 星期六
+            6: 星期天
+        months:
+            0: 1
+            1: 2
+            2: 3
+            3: 4
+            4: 5
+            5: 6
+            6: 7
+            7: 8
+            8: 9
+            9: 10
+            10: 11
+            11: 12
     home:
         title: 集锦
+        pictures_count_stats: '%d张图片'
         message:
             empty: 未找到可读取的图片
     folders:

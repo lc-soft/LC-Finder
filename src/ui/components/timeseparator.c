@@ -36,25 +36,122 @@
  * ****************************************************************************/
 
 #include <time.h>
+#include <stdio.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "textview_i18n.h"
 #include "timeseparator.h"
+#include "i18n.h"
 
-#define TEXT_TIME_TITLE		L"%d年%d月"
-#define TEXT_TIME_SUBTITLE	L"%d月%d日 %d张照片"
-#define TEXT_TIME_SUBTITLE2	L"%d月%d日 - %d月%d日 %d张照片"
+#define KEY_YEAR_FORMAT		"datetime.year_format"
+#define KEY_MONTH_FORMAT	"datetime.month_format"
+#define KEY_STATS		"home.pictures_count_stats"
+#define KEY_MONTHS		"datetime.months"
 
  /** 时间分割线功能的数据 */
 typedef struct TimeSeparatorRec_ {
 	int count;		/**< 当前时间段内的记录数量 */
 	struct tm time;		/**< 当前时间段的起始时间 */
+	struct tm end_time;	/**< 当前时间段的结束时间 */
 	LCUI_Widget subtitle;	/**< 子标题 */
 	LCUI_Widget title;	/**< 标题 */
 } TimeSeparatorRec, *TimeSeparator;
 
 static LCUI_WidgetPrototype prototype = NULL;
+
+static int FormatYearString( wchar_t *str, int max_len, struct tm *t )
+{
+	int n;
+	char key[64], month_key[4];
+	const wchar_t *format, *month_str;
+	wchar_t buf[256], year_str[6], mday_str[4];
+	format = I18n_GetText( KEY_YEAR_FORMAT );
+	if( !format ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	wcscpy( buf, format );
+	swprintf( year_str, 5, L"%d", 1900 + t->tm_year );
+	swprintf( mday_str, 3, L"%d", t->tm_mday );
+	snprintf( month_key, 3, "%d", t->tm_mon );
+	snprintf( key, 63, KEY_MONTHS".%s", month_key );
+	month_str = I18n_GetText( key );
+	if( !month_str ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	n = wcsreplace( buf, 255, L"YYYY", year_str );
+	n += wcsreplace( buf, 255, L"MM", month_str );
+	wcsncpy( str, buf, max_len );
+	return n;
+}
+
+static int FormatMonthString( wchar_t *str, int max_len, struct tm *t )
+{
+	int n;
+	char key[64], month_key[4];
+	const wchar_t *format, *month_str;
+	wchar_t buf[256], mday_str[4];
+	format = I18n_GetText( KEY_MONTH_FORMAT );
+	if( !format ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	wcscpy( buf, format );
+	swprintf( mday_str, 3, L"%d", t->tm_mday );
+	snprintf( month_key, 3, "%d", t->tm_mon );
+	snprintf( key, 63, KEY_MONTHS".%s", month_key );
+	month_str = I18n_GetText( key );
+	if( !month_str ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	n = wcsreplace( buf, 255, L"MM", month_str );
+	n += wcsreplace( buf, 255, L"DD", mday_str );
+	wcsncpy( str, buf, max_len );
+	return n;
+}
+
+static void RenderTitle( wchar_t *buf, const wchar_t *text, void *privdata )
+{
+	TimeSeparator sep = privdata;
+	if( !text ) {
+		wcscpy( buf, L"<translation missing>" );
+		return;
+	}
+	FormatYearString( buf, TXTFMT_BUF_MAX_LEN - 1, &sep->time );
+}
+
+static void RenderSubtitle( wchar_t *buf, const wchar_t *text, void *privdata )
+{
+	TimeSeparator sep = privdata;
+	wchar_t start_str[64], end_str[64], stats[64];
+	if( !text ) {
+		wcscpy( buf, L"<translation missing>" );
+		return;
+	}
+	wcscpy( end_str, text );
+	wcscpy( start_str, text );
+	text = I18n_GetText( KEY_STATS );
+	if( !text ) {
+		wcscpy( buf, L"<translation missing>" );
+		return;
+	}
+	swprintf( stats, 63, text, sep->count );
+	FormatMonthString( start_str, 63, &sep->time );
+	/* 如果时间跨度超过一天 */
+	if( sep->end_time.tm_year != sep->time.tm_year ||
+	    sep->end_time.tm_mon != sep->time.tm_mon ||
+	    sep->end_time.tm_mday != sep->time.tm_mday ) {
+		FormatMonthString( end_str, 63, &sep->end_time );
+		swprintf( buf, TXTFMT_BUF_MAX_LEN - 1, L"%s - %s %s",
+			  start_str, end_str, stats );
+		return;
+	}
+	swprintf( buf, TXTFMT_BUF_MAX_LEN - 1, L"%s %s", start_str, stats );
+}
 
 static void TimeSeparator_OnInit( LCUI_Widget w )
 {
@@ -65,8 +162,12 @@ static void TimeSeparator_OnInit( LCUI_Widget w )
 	sep->time.tm_mon = 0;
 	sep->time.tm_mday = 0;
 	sep->time.tm_year = 0;
-	sep->title = LCUIWidget_New( "textview" );
-	sep->subtitle = LCUIWidget_New( "textview" );
+	sep->title = LCUIWidget_New( "textview-i18n" );
+	sep->subtitle = LCUIWidget_New( "textview-i18n" );
+	TextViewI18n_SetKey( sep->title, KEY_YEAR_FORMAT );
+	TextViewI18n_SetKey( sep->subtitle, KEY_MONTH_FORMAT );
+	TextViewI18n_SetFormater( sep->title, RenderTitle, sep );
+	TextViewI18n_SetFormater( sep->subtitle, RenderSubtitle, sep );
 	Widget_AddClass( sep->title, "time-separator-title btn btn-link" );
 	Widget_AddClass( sep->subtitle, "time-separator-subtitle" );
 	Widget_Append( w, sep->title );
@@ -82,32 +183,18 @@ LCUI_BOOL TimeSeparator_CheckTime( LCUI_Widget w, struct tm *t )
 
 void TimeSeparator_SetTime( LCUI_Widget w, const struct tm *t )
 {
-	wchar_t title[128];
 	TimeSeparator sep = Widget_GetData( w, prototype );
-	swprintf( title, 128, TEXT_TIME_TITLE, 
-		  1900 + t->tm_year, t->tm_mon + 1 );
-	TextView_SetTextW( sep->title, title );
 	sep->time = *t;
+	TextViewI18n_Refresh( sep->title );
+	TextViewI18n_Refresh( sep->subtitle );
 }
 
 void TimeSeparator_AddTime( LCUI_Widget w, struct tm *t )
 {
-	wchar_t text[128];
 	TimeSeparator sep = Widget_GetData( w, prototype );
-
 	sep->count += 1;
-	/** 如果时间跨度不超过一天 */
-	if( t->tm_year == sep->time.tm_year &&
-	    t->tm_mon == sep->time.tm_mon &&
-	    t->tm_mday == sep->time.tm_mday ) {
-		swprintf( text, 128, TEXT_TIME_SUBTITLE, t->tm_mon + 1,
-			  t->tm_mday, sep->count );
-	} else {
-		swprintf( text, 128, TEXT_TIME_SUBTITLE2,
-			  t->tm_mon + 1, t->tm_mday, sep->time.tm_mon + 1,
-			  sep->time.tm_mday, sep->count );
-	}
-	TextView_SetTextW( sep->subtitle, text );
+	sep->end_time = *t;
+	TextViewI18n_Refresh( sep->subtitle );
 }
 
 void TimeSeparator_Reset( LCUI_Widget w )

@@ -85,6 +85,50 @@ typedef struct TagInfoPackRec_ {
 	DB_Tag tag;
 } TagInfoPackRec, *TagInfoPack;
 
+static int wgettimestr( wchar_t *str, int max_len, time_t time )
+{
+	int n;
+	struct tm *t;
+	char key[64], wday_key[10], month_key[4];
+	const wchar_t *format, *month_str, *wday_str;
+	wchar_t buf[256], year_str[6], mday_str[4], hour_str[4], min_str[4];
+	t = localtime( &time );
+	if( !t ) {
+		return -1;
+	}
+	format = I18n_GetText( "datetime.format" );
+	if( !format ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	wcscpy( buf, format );
+	swprintf( year_str, 5, L"%d", 1900 + t->tm_year );
+	swprintf( mday_str, 3, L"%d", t->tm_mday );
+	swprintf( hour_str, 3, L"%d", t->tm_hour );
+	swprintf( min_str, 3, L"%d", t->tm_min );
+	snprintf( month_key, 3, "%d", t->tm_mon );
+	snprintf( wday_key, 9, "%d", t->tm_wday );
+	snprintf( key, 63, "datetime.months.%s", month_key );
+	month_str = I18n_GetText( key );
+	if( !month_str ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	snprintf( key, 63, "datetime.days.%s", wday_key );
+	wday_str = I18n_GetText( key );
+	if( !wday_str ) {
+		wcscpy( str, L"<translation missing>" );
+		return 0;
+	}
+	n = wcsreplace( buf, 255, L"YYYY", year_str );
+	n += wcsreplace( buf, 255, L"MM", month_str );
+	n += wcsreplace( buf, 255, L"DD", mday_str );
+	n += wcsreplace( buf, 255, L"DATE", wday_str );
+	n += wcsreplace( buf, 255, L"hh", hour_str );
+	n += wcsreplace( buf, 255, L"mm", min_str );
+	wcsncpy( str, buf, max_len );
+	return n;
+}
 
 static LCUI_BOOL CheckTagName( const wchar_t *tagname )
 {
