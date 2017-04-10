@@ -144,28 +144,56 @@ static Language I18n_AddLanguage( const char *path, Dict *dict )
 	return lang;
 }
 
+static char *LoadFileToBuffer( const char *path, size_t *size )
+{
+	char *buffer, *p;
+	size_t buffer_size = 0, read_size = 256;
+	FILE *file = fopen( path, "rb" );
+	if( !file ) {
+		return NULL;
+	}
+	buffer = NULL;
+	while( !feof( file ) ) {
+		p = realloc( buffer, buffer_size + sizeof( char ) * 256 );
+		if( !p ) {
+			free( buffer );
+			fclose( file );
+			return NULL;
+		}
+		buffer = p;
+		p = buffer + buffer_size;
+		read_size = fread( p, sizeof( char ), 256, file );
+		buffer_size += read_size;
+	};
+	*size = buffer_size;
+	buffer[buffer_size] = 0;
+	fclose( file );
+	return buffer;
+}
+
 Dict *I18n_LoadFile( const char *path )
 {
-	FILE *file;
+	size_t size;
+	char *buffer;
 	yaml_token_t token;
 	yaml_parser_t parser;
 	Dict *dict, *parent_dict;
 	DictValue value, parent_value;
 	int state = 0;
 
-	LOG( "[i18n] load language file: %s\n", path );
-	file = fopen( path, "r" );
-	if( !file ) {
-		LOG( "[i18n] failed to open file: %s\n", path );
-		return NULL;
-	}
 	parent_value = value = NULL;
 	parent_dict = dict = StrDict_Create( NULL, DeleteDictValue );
 	if( !yaml_parser_initialize( &parser ) ) {
 		LOG( "[i18n] failed to initialize parser!\n" );
 		return NULL;
 	}
-	yaml_parser_set_input_file( &parser, file );
+	LOG( "[i18n] load language file: %s\n", path );
+	buffer = LoadFileToBuffer( path, &size );
+	if( !buffer ) {
+		LOG( "[i18n] failed to open file: %s\n", path );
+		return NULL;
+	}
+	yaml_parser_set_input_string( &parser, buffer, size );
 	do {
 		if( !yaml_parser_scan( &parser, &token ) ) {
 			LOG( "[i18n] error: %s\n", parser.problem );
@@ -218,7 +246,7 @@ Dict *I18n_LoadFile( const char *path )
 	} while( token.type != YAML_STREAM_END_TOKEN );
 	yaml_token_delete( &token );
 	yaml_parser_delete( &parser );
-	fclose( file );
+	free( buffer );
 	return dict;
 }
 
