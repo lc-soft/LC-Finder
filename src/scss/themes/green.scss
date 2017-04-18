@@ -2,9 +2,12 @@ $primary-color: #44BB55;
 $primary-dark-color: #44A340;
 
 .theme-green {
+	&.window {
+		border-top: 1px solid #eee;
+	}
 	.sidebar {
 		background-color: #fff;
-		border: 1px solid #DDDEDF;
+		border-right: 1px solid #DDDEDF;
 
 		.sidebar-item {
 			border-left: 2px solid transparent;

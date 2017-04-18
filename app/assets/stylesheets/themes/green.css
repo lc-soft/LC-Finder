@@ -1,6 +1,9 @@
+.theme-green.window {
+  border-top: 1px solid #eee;
+}
 .theme-green .sidebar {
   background-color: #fff;
-  border: 1px solid #DDDEDF;
+  border-right: 1px solid #DDDEDF;
 }
 .theme-green .sidebar .sidebar-item {
   border-left: 2px solid transparent;
