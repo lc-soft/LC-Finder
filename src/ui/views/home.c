@@ -77,6 +77,7 @@ typedef struct ViewSyncRec_ {
 
 /** 主页集锦视图的相关数据 */
 static struct HomeCollectionView {
+	LCUI_BOOL is_activated;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget time_ranges;
@@ -439,14 +440,19 @@ void UI_InitHomeView( void )
 	BindEvent( this_view.view, "show.view", OnViewShow );
 	BindEvent( btn[0], "click", OnBtnSyncClick );
 	this_view.viewsync.tid = tid;
+	this_view.is_activated = TRUE;
 	LoadCollectionFiles();
 }
 
 void UI_ExitHomeView( void )
 {
+	if( !this_view.is_activated ) {
+		return;
+	}
 	this_view.viewsync.is_running = FALSE;
-	FileScanner_Destroy( &this_view.scanner );
+	FileScanner_Reset( &this_view.scanner );
 	LCUIThread_Join( this_view.viewsync.tid, NULL );
+	FileScanner_Destroy( &this_view.scanner );
 	LCUICond_Destroy( &this_view.viewsync.ready );
 	LCUIMutex_Destroy( &this_view.viewsync.mutex );
 }

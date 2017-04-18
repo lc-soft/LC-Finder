@@ -1077,7 +1077,6 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	/* 通知任务线程处理该任务 */
 	LCUICond_Signal( &data->view->tasks_cond );
 	LCUIMutex_Unlock( &data->view->tasks_mutex );
-	DEBUG_MSG( "on scroll load: %s\n", task->info->path );
 }
 
 void ThumbView_EnableScrollLoading( LCUI_Widget w )
@@ -1402,8 +1401,11 @@ static void ThumbView_OnDestroy( LCUI_Widget w )
 	ThumbView_Lock( w );
 	ThumbView_Empty( w );
 	ScrollLoading_Delete( view->scrollload );
-	view->is_running = FALSE;
 	ThumbView_Unlock( w );
+	view->is_running = FALSE;
+	LCUIMutex_Lock( &view->tasks_mutex );
+	LCUICond_Signal( &view->tasks_cond );
+	LCUIMutex_Unlock( &view->tasks_mutex );
 	LCUIThread_Join( view->thread, NULL );
 }
 

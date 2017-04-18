@@ -85,6 +85,7 @@ typedef struct FileEntryRec_ {
 
 static struct FoldersViewData {
 	DB_Dir dir;
+	LCUI_BOOL is_activated;
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget info;
@@ -608,14 +609,19 @@ void UI_InitFoldersView( void )
 	LCFinder_BindEvent( EVENT_DIR_DEL, OnFolderChange, NULL );
 	LCFinder_BindEvent( EVENT_LANG_CHG, OnLanguageChanged, NULL );
 	FileBrowser_Create( &this_view.browser );
+	this_view.is_activated = TRUE;
 	InitFolderFilesSort();
 	OpenFolder( NULL );
 }
 
 void UI_ExitFolderView( void )
 {
+	if( !this_view.is_activated ) {
+		return;
+	}
 	this_view.viewsync.is_running = FALSE;
-	FileScanner_Destroy( &this_view.scanner );
+	FileScanner_Reset( &this_view.scanner );
 	LCUIThread_Join( this_view.viewsync.tid, NULL );
+	FileScanner_Destroy( &this_view.scanner );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
 }

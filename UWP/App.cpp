@@ -28,16 +28,6 @@ static void UWPApp_ProcessEvents( void )
 	UWPApp.app->ProcessEvents();
 }
 
-static LCUI_BOOL UWPApp_WaitEvent( void )
-{
-	return TRUE;
-}
-
-static LCUI_BOOL UWPApp_PostTask( LCUI_AppTask task )
-{
-	return TRUE;
-}
-
 static int UWPApp_BindSysEvent( int type, LCUI_EventFunc func,
 				void *data, void( *destroy_data )(void*) )
 {
@@ -62,12 +52,10 @@ static void *UWPApp_GetData( void )
 static LCUI_AppDriver LCUI_CreateUWPAppDriver( App^ app )
 {
 	ASSIGN( driver, LCUI_AppDriver );
-	driver->WaitEvent = UWPApp_WaitEvent;
 	driver->BindSysEvent = UWPApp_BindSysEvent;
 	driver->UnbindSysEvent = UWPApp_UnbindSysEvent;
 	driver->UnbindSysEvent2 = UWPApp_UnbindSysEvent2;
 	driver->ProcessEvents = UWPApp_ProcessEvents;
-	driver->PostTask = UWPApp_PostTask;
 	driver->GetData = UWPApp_GetData;
 	UWPApp.app = app;
 	return driver;

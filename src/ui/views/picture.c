@@ -569,7 +569,7 @@ static void UpdatePicturePosition( Picture pic )
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
 		this_view.focus_x = roundi( width / 2.0 );
-		this_view.origin_focus_x = roundi( pic->data->width / 2 );
+		this_view.origin_focus_x = roundi( pic->data->width / 2.0 );
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	} else {
 		this_view.drag.with_x = TRUE;
@@ -595,7 +595,7 @@ static void UpdatePicturePosition( Picture pic )
 	if( height <= pic->view->height ) {
 		this_view.drag.with_y = FALSE;
 		this_view.focus_y = roundi( height / 2 );
-		this_view.origin_focus_y = roundi( pic->data->height / 2 );
+		this_view.origin_focus_y = roundi( pic->data->height / 2.0 );
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	} else {
 		this_view.drag.with_y = TRUE;
@@ -1039,6 +1039,7 @@ static Picture CreatePicture( void )
 	pic->file_for_load = NULL;
 	pic->data = Graph_New();
 	pic->view = LCUIWidget_New( "picture" );
+	pic->min_scale = pic->scale = 1.0;
 	Widget_Append( this_view.view_pictures, pic->view );
 	BindEvent( pic->view, "resize", OnPictureResize );
 	BindEvent( pic->view, "touch", OnPictureTouch );
@@ -1393,11 +1394,9 @@ static void PictureLoader_Thread( void *arg )
 			case 2: pic = loader->pictures[0]; break;
 			default: continue;
 			}
-			_DEBUG_MSG( "pic: %p, num: %d, loading\n", pic, loader->num );
 			LoadPictureAsync( pic );
 			LCUIMutex_Unlock( &loader->mutex );
 			WaitPictureLoadDone( pic );
-			_DEBUG_MSG( "pic: %p, num: %d, finish\n", pic, loader->num );
 			LCUIMutex_Lock( &loader->mutex );
 		}
 	}
