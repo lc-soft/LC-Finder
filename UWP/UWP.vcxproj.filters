@@ -270,11 +270,14 @@
     <None Include="Locales\zh-tw.yaml">
       <Filter>Locales</Filter>
     </None>
-    <None Include="LCUI_D.dll">
-      <Filter>dll</Filter>
+    <None Include="Assets\stylesheets\themes\green.css">
+      <Filter>资产\stylesheets</Filter>
     </None>
-    <None Include="libxml2.dll">
-      <Filter>dll</Filter>
+    <None Include="Assets\stylesheets\main.css">
+      <Filter>资产\stylesheets</Filter>
+    </None>
+    <None Include="Assets\stylesheets\iconfont.css">
+      <Filter>资产\stylesheets</Filter>
     </None>
     <None Include="sqlite3.dll">
       <Filter>dll</Filter>
@@ -285,14 +288,8 @@
     <None Include="yaml.dll">
       <Filter>dll</Filter>
     </None>
-    <None Include="Assets\stylesheets\themes\green.css">
-      <Filter>资产\stylesheets</Filter>
-    </None>
-    <None Include="Assets\stylesheets\main.css">
-      <Filter>资产\stylesheets</Filter>
-    </None>
-    <None Include="Assets\stylesheets\iconfont.css">
-      <Filter>资产\stylesheets</Filter>
+    <None Include="LCUI.dll">
+      <Filter>dll</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

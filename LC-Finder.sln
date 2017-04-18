@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LC-Finder", "LC-Finder.vcxproj", "{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}"
 EndProject
@@ -24,9 +24,7 @@ Global
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Debug|x86.Build.0 = Debug|Win32
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|ARM.ActiveCfg = Release|Win32
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x64.ActiveCfg = Release|x64
-		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x64.Build.0 = Release|x64
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x86.ActiveCfg = Release|Win32
-		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x86.Build.0 = Release|Win32
 		{A32417AA-EA1C-46B4-AE1C-23F54F41567A}.Debug|ARM.ActiveCfg = Debug|ARM
 		{A32417AA-EA1C-46B4-AE1C-23F54F41567A}.Debug|ARM.Build.0 = Debug|ARM
 		{A32417AA-EA1C-46B4-AE1C-23F54F41567A}.Debug|ARM.Deploy.0 = Debug|ARM

@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="相关资源">
-      <UniqueIdentifier>{fff477ac-eadc-49ea-b19c-0910a30903c1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\ui">
       <UniqueIdentifier>{b7cb1dc6-7c0b-45d1-afe6-eda0dd9567c9}</UniqueIdentifier>
     </Filter>
@@ -133,12 +130,6 @@
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="app\assets\ui.css">
-      <Filter>相关资源</Filter>
-    </None>
-    <None Include="app\assets\ui-skin.css">
-      <Filter>相关资源</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\file_search.h">
@@ -220,16 +211,5 @@
     <Image Include="LC-Finder.ico">
       <Filter>资源文件</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="app\assets\ui-view-picture.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-    <Xml Include="app\assets\ui-view-picture-info.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-    <Xml Include="app\assets\ui.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
   </ItemGroup>
 </Project>

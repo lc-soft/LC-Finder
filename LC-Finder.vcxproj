@@ -58,8 +58,6 @@
     <ClCompile Include="src\ui\views\settings.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app\assets\ui-skin.css" />
-    <None Include="app\assets\ui.css" />
     <None Include="LICENSE" />
     <None Include="README.md" />
   </ItemGroup>
@@ -94,22 +92,17 @@
   <ItemGroup>
     <Image Include="LC-Finder.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Xml Include="app\assets\ui-view-picture-info.xml" />
-    <Xml Include="app\assets\ui-view-picture.xml" />
-    <Xml Include="app\assets\ui.xml" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LC_Finder</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <WindowsAppContainer>false</WindowsAppContainer>
@@ -117,7 +110,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <WindowsAppContainer>false</WindowsAppContainer>
@@ -198,14 +191,16 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;Ole32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>user32.lib;Ole32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>
       <Command>
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy "$(SolutionDir)vendor\lib\*.dll" "$(ProjectDir)"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -214,7 +209,7 @@
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>
@@ -225,7 +220,7 @@ copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -240,7 +235,8 @@ copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
       <AdditionalDependencies>user32.lib;Ole32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
-      <IgnoreSpecificDefaultLibraries>msvcrtd.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -257,7 +253,7 @@ copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>
