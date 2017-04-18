@@ -100,7 +100,7 @@ int LCFinder_TriggerEvent( int event_id, void *data )
 
 DB_Dir LCFinder_GetDir( const char *dirpath )
 {
-	int i;
+	size_t i;
 	DB_Dir dir;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
@@ -132,8 +132,8 @@ static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 
 DB_Dir LCFinder_AddDir( const char *dirpath, const char *token, int visible )
 {
-	int i, len;
 	char *path;
+	size_t i, len;
 	wchar_t **paths;
 	DB_Dir dir, *dirs;
 	len = strlen( dirpath );
@@ -177,7 +177,7 @@ DB_Dir LCFinder_AddDir( const char *dirpath, const char *token, int visible )
 
 void LCFinder_DeleteDir( DB_Dir dir )
 {
-	int i;
+	size_t i;
 	SyncTask t;
 	wchar_t *wpath, *wtoken;
 	for( i = 0; i < finder.n_dirs; ++i ) {
@@ -219,10 +219,11 @@ static void OnCloseFileCache( void *privdata, void *data )
 	SyncTask_Delete( data );
 }
 
-int LCFinder_DeleteFiles( const char **files, int nfiles,
-			  int( *onstep )(void*, int, int), void *privdata )
+size_t LCFinder_DeleteFiles( const char **files, size_t nfiles,
+			  int( *onstep )(void*, size_t, size_t),
+			  void *privdata )
 {
-	int i, len;
+	size_t i, len;
 	wchar_t *path;
 	SyncTask task;
 	Dict *tasks = StrDict_Create( NULL, OnCloseFileCache );
@@ -294,7 +295,7 @@ static void SyncDeletedFile( void *data, const FileInfo info )
 
 DB_Dir LCFinder_GetSourceDir( const char *filepath )
 {
-	int i;
+	size_t i;
 	DB_Dir dir;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		dir = finder.dirs[i];
@@ -305,9 +306,9 @@ DB_Dir LCFinder_GetSourceDir( const char *filepath )
 	return NULL;
 }
 
-int LCFinder_GetSourceDirList( DB_Dir **outdirs )
+size_t LCFinder_GetSourceDirList( DB_Dir **outdirs )
 {
-	int i, count;
+	size_t i, count;
 	DB_Dir *dirs;
 	dirs = malloc( (finder.n_dirs + 1) * sizeof( DB_Dir ) );
 	if( !dirs ) {
@@ -330,7 +331,7 @@ int LCFinder_GetSourceDirList( DB_Dir **outdirs )
 
 int64_t LCFinder_GetThumbDBTotalSize( void )
 {
-	int i;
+	size_t i;
 	struct stat buf;
 	int64_t sum_size;
 
@@ -350,7 +351,7 @@ void LCFinder_ScanDir( FileSyncStatus s, const wchar_t *path );
 
 static void LCFinder_OnScanFinished( FileSyncStatus s )
 {
-	int i;
+	size_t i;
 	if( s->task_i < finder.n_dirs - 1 ) {
 		s->task_i += 1;
 		if( s->task ) {
@@ -514,7 +515,7 @@ static void LCFinder_SwitchTask( FileSyncStatus s )
 
 void LCFinder_SyncFilesAsync( FileSyncStatus s )
 {
-	int i;
+	size_t i;
 	wchar_t path[PATH_LEN];
 	path[PATH_LEN - 1] = 0;
 	s->task_i = 0;
@@ -549,7 +550,7 @@ void LCFinder_SyncFilesAsync( FileSyncStatus s )
 /** 初始化工作目录 */
 static int LCFinder_InitWorkDir( void )
 {
-	int len, tdir_len, fdir_len;
+	size_t len, tdir_len, fdir_len;
 	wchar_t data_dir[PATH_LEN];
 	wchar_t *dirs[2] = { L"fileset", L"thumbs" };
 	if( GetAppInstalledLocationW( data_dir, PATH_LEN ) != 0 ) {
@@ -582,7 +583,7 @@ static int LCFinder_InitWorkDir( void )
 
 DB_Tag LCFinder_GetTag( const char *tagname )
 {
-	int i;
+	size_t i;
 	for( i = 0; i < finder.n_tags; ++i ) {
 		if( strcmp( finder.tags[i]->name, tagname ) == 0 ) {
 			return finder.tags[i];
@@ -625,9 +626,9 @@ DB_Tag LCFinder_AddTagForFile( DB_File file, const char *tagname )
 	return tag;
 }
 
-int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags )
+size_t LCFinder_GetFileTags( DB_File file, DB_Tag **outtags )
 {
-	int i, j, count, n;
+	size_t i, j, count, n;
 	DB_Tag *tags, *newtags;
 	n = DBFile_GetTags( file, &tags );
 	newtags = malloc( sizeof( DB_Tag ) * (n + 1) );
@@ -648,7 +649,7 @@ int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags )
 
 void LCFinder_ReloadTags( void )
 {
-	int i;
+	size_t i;
 	for( i = 0; i < finder.n_tags; ++i ) {
 		free( finder.tags[i]->name );
 		finder.tags[i]->name = NULL;
@@ -678,7 +679,7 @@ error:
 
 static void LCFinder_ExitFileDB( void )
 {
-	int i;
+	size_t i;
 	for( i = 0; i < finder.n_dirs; ++i ) {
 		if( finder.dirs[i] ) {
 			DBDir_Release( finder.dirs[i] );
@@ -720,13 +721,11 @@ static int LCFinder_InitLanguage( void )
 		int len;
 		wchar_t *name, *p;
 		name = LCUI_GetFileName( entry );
-		/* 忽略 . 和 .. 文件夹 */
+		/* 忽略 . 开头的文件，包括 . 和 .. 文件夹 */
 		if( name[0] == '.' ) {
-			if( name[1] == 0 || (name[1] == '.' && name[2] == 0) ) {
-				continue;
-			}
+			continue;
 		}
-		if( !LCUI_FileIsArchive( entry ) ) {
+		if( !LCUI_FileIsRegular( entry ) ) {
 			continue;
 		}
 		p = wcsstr( name, LANG_FILE_EXT );
@@ -762,7 +761,7 @@ static void ThumbDBDict_ValDel( void *privdata, void *val )
 /** 初始化缩略图数据库 */
 static int LCFinder_InitThumbDB( void )
 {
-	int i;
+	size_t i;
 	wchar_t *path;
 	LOG("[thumbdb] init ...\n");
 	finder.thumb_dbs = StrDict_Create( NULL, ThumbDBDict_ValDel );
@@ -785,7 +784,7 @@ static int LCFinder_InitThumbDB( void )
 /** 退出缩略图数据库 */
 static void LCFinder_ExitThumbDB( void )
 {
-	int i;
+	size_t i;
 	if( !finder.thumb_dbs ) {
 		return;
 	}
@@ -804,7 +803,7 @@ static void LCFinder_ExitThumbDB( void )
 /** 清除缩略图数据库 */
 void LCFinder_ClearThumbDB( void )
 {
-	int i;
+	size_t i;
 	wchar_t *path;
 	Dict_Release( finder.thumb_dbs );
 	for( i = 0; i < finder.n_dirs; ++i ) {
@@ -951,7 +950,7 @@ static void LoggerHandlerW( const wchar_t *str )
 
 int LCFinder_Init( int argc, char **argv )
 {
-#if defined (PLATFORM_WIN32)
+#ifdef PLATFORM_WIN32
 	_wsetlocale( LC_ALL, L"chs" );
 	Logger_SetHandler( LoggerHandler );
 	Logger_SetHandlerW( LoggerHandlerW );

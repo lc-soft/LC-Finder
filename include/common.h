@@ -64,9 +64,9 @@ wchar_t *DecodeUTF8( const char *str );
 
 wchar_t *DecodeANSI( const char *str );
 
-void EncodeSHA1( char *hash_out, const char *str, int len );
+void EncodeSHA1( char *hash_out, const char *str, size_t len );
 
-void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len );
+void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, size_t len );
 
 int IsImageFile( const wchar_t *path );
 
@@ -80,9 +80,9 @@ const wchar_t *wgetfilename( const wchar_t *path );
 
 int wgetfilestat( const wchar_t *wpath, struct stat *buf );
 
-int pathjoin( char *path, const char *path1, const char *path2 );
+size_t pathjoin( char *path, const char *path1, const char *path2 );
 
-int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
+size_t wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
 
 /** 获取程序当前所在目录 */
 int wgetcurdir( wchar_t *path, int max_len );

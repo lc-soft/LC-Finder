@@ -151,7 +151,7 @@ static void OnResponse( FileResponse *response, void *data )
 			break;
 		}
 		n = FileStream_ReadChunk( response->stream, &chunk );
-		if( n < 0 || chunk.type != DATA_CHUNK_THUMB ) {
+		if( n == 0 || chunk.type != DATA_CHUNK_THUMB ) {
 			pack->on_get_thumb( NULL, NULL, pack->data );
 			break;
 		}
@@ -164,7 +164,7 @@ static void OnResponse( FileResponse *response, void *data )
 			break;
 		}
 		n = FileStream_ReadChunk( response->stream, &chunk );
-		if( n < 0 || chunk.type != DATA_CHUNK_IMAGE ) {
+		if( n == 0 || chunk.type != DATA_CHUNK_IMAGE ) {
 			pack->on_get_image( NULL, pack->data );
 			break;
 		}

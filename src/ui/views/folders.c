@@ -270,7 +270,7 @@ static int FileScanner_LoadSourceDirs( FileScanner scanner )
 	n = LCFinder_GetSourceDirList( &dirs );
 	for( i = 0; i < n; ++i ) {
 		FileEntry entry = NEW( FileEntryRec, 1 );
-		int len = strlen( dirs[i]->path ) + 1;
+		size_t len = strlen( dirs[i]->path ) + 1;
 		char *path = malloc( sizeof( char ) * len );
 		strcpy( path, dirs[i]->path );
 		entry->path = path;
@@ -440,9 +440,8 @@ static void OpenFolder( const char *dirpath )
 	char *path = NULL, *scan_path = NULL;
 
 	if( dirpath ) {
-		int i;
-		int len = strlen( dirpath );
-		int n = LCFinder_GetSourceDirList( &dirs );
+		size_t len = strlen( dirpath );
+		int i, n = LCFinder_GetSourceDirList( &dirs );
 		path = malloc( sizeof( char )*(len + 1) );
 		scan_path = malloc( sizeof( char )*(len + 2) );
 		strcpy( scan_path, dirpath );

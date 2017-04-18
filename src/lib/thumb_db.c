@@ -53,13 +53,13 @@ typedef struct ThumbDBRec_ {
 #define THUMB_MAX_SIZE 8553600
 
 typedef struct ThumbDataBlockRec_ {
-	size_t width;
-	size_t height;
-	size_t origin_width;
-	size_t origin_height;
-	size_t mem_size;
+	uint32_t width;
+	uint32_t height;
+	uint32_t origin_width;
+	uint32_t origin_height;
+	uint32_t mem_size;
 	int color_type;
-	unsigned int modify_time;
+	uint32_t modify_time;
 } ThumbDataBlockRec, *ThumbDataBlock;
 
 ThumbDB ThumbDB_Open( const char *filepath )

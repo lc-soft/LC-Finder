@@ -382,7 +382,7 @@ DB_Tag DB_AddTag( const char *tagname )
 	sqlite3_stmt *stmt;
 	stmt = self.stmts[SQL_ADD_TAG];
 	sqlite3_reset( stmt );
-	sqlite3_bind_text( stmt, 1, tagname, strlen( tagname ), NULL );
+	sqlite3_bind_text( stmt, 1, tagname, -1, NULL );
 	ret = sqlite3_step( stmt );
 	if( ret != SQLITE_DONE ) {
 		printf( "[database] error: %s\n", sqlite3_errmsg( self.db ) );
@@ -390,7 +390,7 @@ DB_Tag DB_AddTag( const char *tagname )
 	}
 	stmt = self.stmts[SQL_GET_TAG];
 	sqlite3_reset( stmt );
-	sqlite3_bind_text( stmt, 1, tagname, strlen( tagname ), NULL );
+	sqlite3_bind_text( stmt, 1, tagname, -1, NULL );
 	ret = sqlite3_step( stmt );
 	if( ret != SQLITE_ROW ) {
 		return NULL;
@@ -407,7 +407,7 @@ void DB_AddFile( DB_Dir dir, const char *filepath, int ctime, int mtime )
 	sqlite3_stmt *stmt = self.stmts[SQL_ADD_FILE];
 	sqlite3_reset( stmt );
 	sqlite3_bind_int( stmt, 1, dir->id );
-	sqlite3_bind_text( stmt, 2, filepath, strlen( filepath ), NULL );
+	sqlite3_bind_text( stmt, 2, filepath, -1, NULL );
 	sqlite3_bind_int( stmt, 3, ctime );
 	sqlite3_bind_int( stmt, 4, mtime );
 	sqlite3_step( stmt );
@@ -421,7 +421,7 @@ void DB_UpdateFileTime( DB_Dir dir, const char *filepath,
 	sqlite3_bind_int( stmt, 1, ctime );
 	sqlite3_bind_int( stmt, 2, mtime );
 	sqlite3_bind_int( stmt, 3, dir->id );
-	sqlite3_bind_text( stmt, 4, filepath, strlen(filepath), NULL );
+	sqlite3_bind_text( stmt, 4, filepath, -1, NULL );
 	sqlite3_step( stmt );
 }
 
@@ -429,7 +429,7 @@ void DB_DeleteFile( const char *filepath )
 {
 	sqlite3_stmt *stmt = self.stmts[SQL_DEL_FILE];
 	sqlite3_reset( stmt );
-	sqlite3_bind_text( stmt, 1, filepath, strlen( filepath ), NULL );
+	sqlite3_bind_text( stmt, 1, filepath, -1, NULL );
 	sqlite3_step( stmt );
 }
 
@@ -450,7 +450,7 @@ void DBFile_Release( DB_File file )
 
 static DB_File DB_LoadFile( sqlite3_stmt *stmt )
 {
-	int len;
+	size_t len;
 	DB_File file;
 	const char *path;
 	if( sqlite3_step( stmt ) != SQLITE_ROW ) {
@@ -475,7 +475,7 @@ DB_File DB_GetFile( const char *filepath )
 {
 	sqlite3_stmt *stmt = self.stmts[SQL_GET_FILE];
 	sqlite3_reset( stmt );
-	sqlite3_bind_text( stmt, 1, filepath, strlen( filepath ), NULL );
+	sqlite3_bind_text( stmt, 1, filepath, -1, NULL );
 	return DB_LoadFile( stmt );
 }
 
@@ -551,10 +551,10 @@ int DBFile_AddTag( DB_File file, DB_Tag tag )
 	return -1;
 }
 
-int DBFile_GetTags( DB_File file, DB_Tag **outtags )
+size_t DBFile_GetTags( DB_File file, DB_Tag **outtags )
 {
 	const char *name;
-	int len, total = 0;
+	size_t len, total = 0;
 	sqlite3_stmt *stmt;
 	DB_Tag tag, *tags = NULL, *newtags;
 	stmt = self.stmts[SQL_GET_FILE_TAGS];
@@ -661,7 +661,7 @@ int DBQuery_GetTotalFiles( DB_Query query )
 	return total;
 }
 
-static int escape( char *buf, const char *str )
+static size_t escape( char *buf, const char *str )
 {
 	char *outptr = buf;
 	const char *inptr = str;
@@ -689,7 +689,7 @@ DB_File DBQuery_FetchFile( DB_Query query )
 
 DB_Query DB_NewQuery( const DB_QueryTerms terms )
 {
-	int i;
+	size_t i;
 	char sql[SQL_BUF_SIZE];
 	char buf_terms[256] = " WHERE ";
 	char buf_having[256] = "HAVING ";

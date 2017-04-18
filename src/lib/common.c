@@ -67,7 +67,7 @@ char *EncodeANSI( const wchar_t *wstr )
 
 wchar_t *DecodeUTF8( const char *str )
 {
-	int len = strlen( str ) + 1;
+	int len = (int)strlen( str ) + 1;
 	wchar_t *wstr = malloc( len * sizeof( wchar_t ) );
 	LCUI_DecodeString( wstr, str, len, ENCODING_UTF8 );
 	return wstr;
@@ -75,13 +75,13 @@ wchar_t *DecodeUTF8( const char *str )
 
 wchar_t *DecodeANSI( const char *str )
 {
-	int len = strlen( str ) + 1;
+	int len = (int)strlen( str ) + 1;
 	wchar_t *wstr = malloc( len * sizeof( wchar_t ) );
 	len = LCUI_DecodeString( wstr, str, len, ENCODING_ANSI );
 	return wstr;
 }
 
-void EncodeSHA1( char *hash_out, const char *str, int len )
+void EncodeSHA1( char *hash_out, const char *str, size_t len )
 {
 	int i;
 	SHA1_CTX ctx;
@@ -98,7 +98,7 @@ void EncodeSHA1( char *hash_out, const char *str, int len )
 	}
 }
 
-void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len )
+void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, size_t len )
 {
 	int i;
 	SHA1_CTX ctx;
@@ -191,7 +191,7 @@ void StrDict_Release( Dict *d )
 
 char *getdirname( const char *path )
 {
-	int i, len = strlen( path );
+	int i, len = (int)strlen( path );
 	char *dirname = malloc( sizeof(char) * len );
 	for( i = len - 1; i >= 0; --i ) {
 		if( path[i] == PATH_SEP ) {
@@ -207,7 +207,7 @@ char *getdirname( const char *path )
 
 wchar_t *wgetdirname( const wchar_t *path )
 {
-	int i, len = wcslen( path ) + 1;
+	int i, len = (int)wcslen( path ) + 1;
 	wchar_t *dirname = malloc( sizeof( wchar_t ) * len );
 	for( i = len - 1, dirname[i] = 0; i >= 0; --i ) {
 		if( path[i] == PATH_SEP ) {
@@ -271,9 +271,9 @@ int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 	return ret;
 }
 
-int pathjoin( char *path, const char *path1, const char *path2 )
+size_t pathjoin( char *path, const char *path1, const char *path2 )
 {
-	int len = strlen( path1 );
+	size_t len = strlen( path1 );
 	if( path != path1 ) {
 		strcpy( path, path1 );
 	}
@@ -290,9 +290,9 @@ int pathjoin( char *path, const char *path1, const char *path2 )
 	return len;
 }
 
-int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
+size_t wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 {
-	int len = wcslen( path1 );
+	size_t len = wcslen( path1 );
 	if( path != path1 ) {
 		wcscpy( path, path1 );
 	}

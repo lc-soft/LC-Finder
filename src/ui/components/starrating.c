@@ -79,12 +79,13 @@ static void UpdateRating( LCUI_Widget w, int rating )
 
 static void OnMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int x, y;
+	int ix, iy;
+	float x, y;
 	LCUI_Widget target;
-	Widget_GetAbsXY( w, NULL, &x, &y );
-	x = e->motion.x - x;
-	y = e->motion.y - y;
-	target = Widget_At( w, x, y );
+	Widget_GetOffset( w, NULL, &x, &y );
+	ix = e->motion.x - roundi( x );
+	iy = e->motion.y - roundi( y );
+	target = Widget_At( w, ix, iy );
 	if( !target ) {
 		return;
 	}
@@ -93,13 +94,14 @@ static void OnMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void OnMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	int x, y;
+	int ix, iy;
+	float x, y;
 	LCUI_Widget target;
 	StarRating data = Widget_GetData( w, prototype );
-	Widget_GetAbsXY( w, NULL, &x, &y );
-	x = e->motion.x - x;
-	y = e->motion.y - y;
-	target = Widget_At( w, x, y );
+	Widget_GetOffset( w, NULL, &x, &y );
+	ix = e->motion.x - roundi( x );
+	iy = e->motion.y - roundi( y );
+	target = Widget_At( w, ix, iy );
 	if( !target ) {
 		return;
 	}

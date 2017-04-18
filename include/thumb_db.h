@@ -44,9 +44,9 @@ typedef struct ThumbDBRec_ *ThumbDB;
 #endif
 
 typedef struct ThumbDatakRec_ {
-	uint_t modify_time;		/**< 修改时间 */
-	int origin_width;		/**< 原始宽度 */
-	int origin_height;		/**< 原始高度 */
+	uint32_t modify_time;		/**< 修改时间 */
+	uint32_t origin_width;		/**< 原始宽度 */
+	uint32_t origin_height;		/**< 原始高度 */
 	LCUI_Graph graph;		/**< 缩略图数据 */
 } ThumbDataRec, *ThumbData;
 

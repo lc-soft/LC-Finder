@@ -71,8 +71,8 @@ typedef struct DB_FileRec_ {
 typedef struct DB_QueryTermsRec_ {
 	DB_Dir *dirs;			/**< 源文件夹列表 */
 	DB_Tag *tags;			/**< 标签列表 */
-	int n_dirs;			/**< 文件夹数量 */
-	int n_tags;			/**< 标签数量 */
+	size_t n_dirs;			/**< 文件夹数量 */
+	size_t n_tags;			/**< 标签数量 */
 	int offset;			/**< 从何处开始取数据记录 */
 	int limit;			/**< 数据记录的最大数量 */
 	int for_tree;			/**< 是否搜索子级目录树，值为 0 时只搜索当前目录下的文件 */
@@ -131,7 +131,7 @@ int DBFile_RemoveTag( DB_File file, DB_Tag tag );
 int DBFile_AddTag( DB_File file, DB_Tag tag );
 
 /** 获取文件拥有的标签列表 */
-int DBFile_GetTags( DB_File file, DB_Tag **outtags );
+size_t DBFile_GetTags( DB_File file, DB_Tag **outtags );
 
 /** 为文件评分 */
 int DBFile_SetScore( DB_File file, int score );

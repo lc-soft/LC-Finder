@@ -137,7 +137,7 @@ static void OnAddDir( void *privdata, void *arg )
 /** 初始化文件夹目录控件 */
 static void UI_InitDirList( void )
 {
-	int i;
+	size_t i;
 	LCUI_Widget item;
 	this_view.dirpaths = StrDict_Create( NULL, NULL );
 	for( i = 0; i < finder.n_dirs; ++i ) {
@@ -152,7 +152,7 @@ static void UI_InitDirList( void )
 
 static void UI_InitPrivateDirList( void )
 {
-	int i;
+	size_t i;
 	LCUI_Widget item;
 	struct PrivateSpaceViewData *self = &private_space_view;
 	self->dirpaths = StrDict_Create( NULL, NULL );

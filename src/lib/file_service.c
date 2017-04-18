@@ -54,6 +54,14 @@
 #define S_ISREG(mode)		_S_ISTYPE((mode), _S_IFREG)
 #endif
 
+//#define DEBUG
+#ifdef DEBUG
+#undef LOG
+#undef LOGW
+#define LOG(...) NULL
+#define LOGW(...) NULL
+#endif
+
 typedef struct FileStreamRec_ {
 	LCUI_BOOL active;
 	LCUI_BOOL closed;
@@ -179,7 +187,7 @@ void FileStream_Destroy( FileStream stream )
 	LCUICond_Destroy( &stream->cond );
 }
 
-size_t FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
+int FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
 {
 	LinkedListNode *node;
 	if( !FileStream_Useable( stream ) ) {
@@ -202,7 +210,7 @@ size_t FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
 	return 0;
 }
 
-size_t FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk )
+int FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk )
 {
 	FileStreamChunk *buf;
 	if( !FileStream_Useable( stream ) ) {
@@ -535,7 +543,7 @@ static int FileService_GetFiles( Connection conn,
 		}
 		switch( request->params.filter ) {
 		case FILE_FILTER_FILE:
-			if( !LCUI_FileIsArchive( entry ) ) {
+			if( !LCUI_FileIsRegular( entry ) ) {
 				continue;
 			}
 			if( !IsImageFile( name ) ) {
@@ -544,13 +552,13 @@ static int FileService_GetFiles( Connection conn,
 			buf[0] = '-';
 			break;
 		case FILE_FILTER_FOLDER:
-			if( ! LCUI_FileIsDirectory( entry ) ) {
+			if( !LCUI_FileIsDirectory( entry ) ) {
 				continue;
 			}
 			buf[0] = 'd';
 			break;
 		default:
-			if( LCUI_FileIsArchive( entry ) ) {
+			if( LCUI_FileIsRegular( entry ) ) {
 				if( !IsImageFile( name ) ) {
 					continue;
 				}
@@ -639,7 +647,7 @@ static int FileService_GetFile( Connection conn,
 	return 0;
 
 load_image_falied:
-	LOG( "load image failed\n", path );
+	LOG( "load image failed\n" );
 	response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
 	Graph_Free( &img );
 	fclose( fp );
@@ -939,6 +947,7 @@ void FileClient_Run( FileClient client )
 			LCUICond_Wait( &client->cond, &client->mutex );
 		}
 		node = LinkedList_GetNode( &client->tasks, 0 );
+		LOG( "[file client] getted task: %p\n", node );
 		if( !node ) {
 			LCUIMutex_Unlock( &client->mutex );
 			continue;
@@ -959,6 +968,9 @@ void FileClient_Run( FileClient client )
 				break;
 			}
 		}
+		if( !client->active ) {
+			break;
+		}
 		response.stream = conn->input;
 		task->handler.callback( &response, task->handler.data );
 	}
@@ -976,6 +988,7 @@ void FileClient_Close( FileClient client )
 {
 	LCUIMutex_Lock( &client->mutex );
 	client->active = FALSE;
+	Connection_Close( client->connection );
 	LCUICond_Signal( &client->cond );
 	LCUIMutex_Unlock( &client->mutex );
 	LCUIThread_Join( client->thread, NULL );

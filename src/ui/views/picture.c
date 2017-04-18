@@ -290,15 +290,15 @@ static void TaskForHideTipEmpty( void *arg1, void *arg2 )
 	Widget_Show( this_view.tip_empty );
 }
 
-static void GetViewerSize( int *width, int *height )
+static void GetViewerSize( size_t *width, size_t *height )
 {
 	if( this_view.picture->view->width > 200 ) {
-		*width = (int)this_view.picture->view->width - 120;
+		*width = (size_t)this_view.picture->view->width - 120;
 	} else {
 		*width = 200;
 	}
 	if( this_view.picture->view->height > 200 ) {
-		*height = (int)this_view.picture->view->height - 120;
+		*height = (size_t)this_view.picture->view->height - 120;
 	} else {
 		*height = 200;
 	}

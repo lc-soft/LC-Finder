@@ -61,7 +61,7 @@ static struct SyncContextRec_ {
 
 static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
 {
-	int count, total;
+	size_t count, total;
 	switch( self.cached_state ) {
 	case STATE_SAVING:
 		count = self.status.synced_files;

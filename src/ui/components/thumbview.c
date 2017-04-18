@@ -65,7 +65,7 @@
 
 /** 滚动加载功能的相关数据 */
 typedef struct ScrollLoadingRec_ {
-	int top;			/**< 当前可见区域上边界的 Y 轴坐标 */
+	float top;			/**< 当前可见区域上边界的 Y 轴坐标 */
 	int event_id;			/**< 滚动加载功能的事件ID */
 	int timer;			/**< 定时器，用于实现延迟加载 */
 	LCUI_BOOL is_delaying;		/**< 是否处于延迟状态 */
@@ -283,7 +283,7 @@ static void ScrollLoading_Update( ScrollLoading ctx )
 static void ScrollLoading_OnScroll( LCUI_Widget w,
 				    LCUI_WidgetEvent e, void *arg )
 {
-	int *scroll_pos = arg;
+	float *scroll_pos = arg;
 	ScrollLoading ctx = e->data;
 	ctx->top = *scroll_pos;
 	ScrollLoading_Update( ctx );
@@ -1098,7 +1098,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 				    LCUI_BOOL show_path )
 {
 	ThumbViewItem data;
-	int len = strlen( filepath ) + 1;
+	size_t len = strlen( filepath ) + 1;
 	LCUI_Widget item = LCUIWidget_New( "thumbviewitem" );
 	LCUI_Widget name = LCUIWidget_New( "textview" );
 	LCUI_Widget path = LCUIWidget_New( "textview" );

@@ -83,7 +83,7 @@ typedef struct DataPackRec_ {
 
  /** 对话框数据包 */
 typedef struct DialogDataPackRec_ {
-	int i, n;
+	size_t i, n;
 	LCUI_BOOL active;
 	LCUI_Thread thread;
 	FileBrowser browser;
@@ -263,7 +263,7 @@ static LCUI_BOOL CheckTagName( const wchar_t *tagname )
 	return TRUE;
 }
 
-static int OnFileDeleted( void *privdata, int i, int n )
+static int OnFileDeleted( void *privdata, size_t i, size_t n )
 {
 	DialogDataPack pack;
 	pack = privdata, pack->i = i, pack->n = n;
@@ -290,7 +290,7 @@ static void OnFileDeletionEvent( void *privdata, void *arg )
 
 static void FileDeletionThread( void *arg )
 {
-	int i, n;
+	size_t i, n;
 	FileIndex fidx;
 	char **filepaths;
 	LCUI_Widget cursor;

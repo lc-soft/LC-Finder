@@ -191,7 +191,7 @@ void FileStream_Destroy( FileStream stream )
 	LCUICond_Destroy( &stream->cond );
 }
 
-size_t FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
+int FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
 {
 	LinkedListNode *node;
 	if( !FileStream_Useable( stream ) ) {
@@ -214,7 +214,7 @@ size_t FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk )
 	return 0;
 }
 
-size_t FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk )
+int FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk )
 {
 	FileStreamChunk *buf;
 	if( !FileStream_Useable( stream ) ) {

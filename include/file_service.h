@@ -156,9 +156,9 @@ void FileStream_Close( FileStream stream );
 
 void FileStream_Destroy( FileStream stream );
 
-size_t FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk );
+int FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk );
 
-size_t FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk );
+int FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk );
 
 size_t FileStream_Read( FileStream stream, char *buf,
 			size_t size, size_t count );

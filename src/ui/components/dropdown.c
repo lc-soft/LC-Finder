@@ -136,16 +136,13 @@ static void DropdownHeader_Destrtoy( LCUI_Widget w )
 
 void Dropdown_UpdatePosition( LCUI_Widget w )
 {
-	int ix, iy;
 	float x, y;
 	Dropdown data = Widget_GetData( w, self.dropdown );
 	if( !data->target ) {
 		Widget_Move( w, 0, 0 );
 		return;
 	}
-	Widget_GetAbsXY( data->target, w->parent, &ix, &iy );
-	x = (float)ix;
-	y = (float)iy;
+	Widget_GetOffset( data->target, w->parent, &x, &y );
 	switch( data->position ) {
 	case SV_TOP_LEFT:
 		y -= data->target->height + w->height;
@@ -169,9 +166,8 @@ void Dropdown_UpdatePosition( LCUI_Widget w )
 		if( y >= 0 ) {
 			break;
 		}
-		Widget_GetAbsXY( data->target, w->parent, &ix, &iy );
-		x = (float)ix;
-		y = (float)iy + data->target->height;
+		Widget_GetOffset( data->target, w->parent, &x, &y );
+		y += data->target->height;
 		break;
 	case SV_BOTTOM_LEFT:
 	case SV_BOTTOM_RIGHT:
@@ -179,9 +175,8 @@ void Dropdown_UpdatePosition( LCUI_Widget w )
 		if( y + w->height <= w->parent->height ) {
 			break;
 		}
-		Widget_GetAbsXY( data->target, w->parent, &ix, &iy );
-		x = (float)ix;
-		y = (float)iy - data->target->height + w->height;
+		Widget_GetOffset( data->target, w->parent, &x, &y );
+		y = y - data->target->height + w->height;
 		break;
 	}
 	switch( data->position ) {
@@ -190,9 +185,8 @@ void Dropdown_UpdatePosition( LCUI_Widget w )
 		if( x >= 0 ) {
 			break;
 		}
-		Widget_GetAbsXY( data->target, w->parent, &ix, &iy );
-		x = (float)ix;
-		y = (float)iy + data->target->height;
+		Widget_GetOffset( data->target, w->parent, &x, &y );
+		y += data->target->height;
 		break;
 	case SV_TOP_LEFT:
 	case SV_BOTTOM_LEFT:
@@ -200,8 +194,8 @@ void Dropdown_UpdatePosition( LCUI_Widget w )
 		if( x + w->width <= w->parent->width ) {
 			break;
 		}
-		Widget_GetAbsXY( data->target, w->parent, &ix, &iy );
-		x = (float)ix + data->target->width - w->width;
+		Widget_GetOffset( data->target, w->parent, &x, &y );
+		x = x + data->target->width - w->width;
 		break;
 	}
 	Widget_Move( w, x, y );

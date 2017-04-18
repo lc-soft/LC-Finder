@@ -335,7 +335,7 @@ static void AddTagToSearch( LCUI_Widget w )
 
 static void DeleteTagFromSearch( LCUI_Widget w )
 {
-	int len, taglen;
+	size_t len, taglen;
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512], *p, *pend;
@@ -484,7 +484,7 @@ static void OnBtnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 static void StartSearchFiles( LinkedList *tags )
 {
-	int n_tags = 0;
+	size_t n_tags = 0;
 	DB_Tag *newtags;
 	LinkedListNode *node;
 	newtags = malloc( sizeof( DB_Tag ) * (tags->length + 1) );
@@ -492,7 +492,7 @@ static void StartSearchFiles( LinkedList *tags )
 		return;
 	}
 	LinkedList_ForEach( node, tags ) {
-		int i;
+		size_t i;
 		for( i = 0; i < finder.n_tags; ++i ) {
 			DB_Tag tag = finder.tags[i];
 			if( strcmp( tag->name, node->data ) == 0 ) {
@@ -584,7 +584,7 @@ static void OnBtnHideReusltClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 
 void UI_UpdateSearchView( void )
 {
-	int i, count;
+	size_t i, count;
 	LCFinder_ReloadTags();
 	this_view.layout.count = 0;
 	ThumbView_Empty( this_view.view_tags );

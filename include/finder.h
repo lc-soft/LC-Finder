@@ -96,8 +96,8 @@ typedef struct Finder_ {
 	int state;			/**< 当前状态 */
 	DB_Dir *dirs;			/**< 源文件夹列表 */
 	DB_Tag *tags;			/**< 标签列表 */
-	int n_dirs;			/**< 多少个源文件夹 */
-	int n_tags;			/**< 多少个标签 */
+	size_t n_dirs;			/**< 多少个源文件夹 */
+	size_t n_tags;			/**< 多少个标签 */
 	wchar_t *work_dir;		/**< 工作目录 */
 	wchar_t *data_dir;		/**< 数据文件夹 */
 	wchar_t *fileset_dir;		/**< 文件列表缓存所在文件夹 */
@@ -119,7 +119,7 @@ typedef void( *LCFinder_EventHandler )(void*, void*);
 
 /** 文件同步状态记录 */
 typedef struct FileSyncStatusRec_ {
-	int task_i;
+	size_t task_i;
 	int state;		/**< 当前状态 */
 	size_t files;		/**< 文件总数 */
 	size_t dirs;		/**< 目录总数 */
@@ -146,7 +146,7 @@ int LCFinder_TriggerEvent( int event_id, void *data );
 /** 获取指定文件路径所处的源文件夹 */
 DB_Dir LCFinder_GetSourceDir( const char *filepath );
 
-int LCFinder_GetSourceDirList( DB_Dir **outdirs );
+size_t LCFinder_GetSourceDirList( DB_Dir **outdirs );
 
 /** 获取缩略图数据库总大小 */
 int64_t LCFinder_GetThumbDBTotalSize( void );
@@ -167,15 +167,16 @@ DB_Tag LCFinder_AddTag( const char *tagname );
 DB_Tag LCFinder_AddTagForFile( DB_File file, const char *tagname );
 
 /** 获取文件的标签列表 */
-int LCFinder_GetFileTags( DB_File file, DB_Tag **outtags );
+size_t LCFinder_GetFileTags( DB_File file, DB_Tag **outtags );
 
 /** 重新载入标签列表 */
 void LCFinder_ReloadTags( void );
 
 void LCFinder_DeleteDir( DB_Dir dir );
 
-int LCFinder_DeleteFiles( const char **files, int nfiles,
-			  int( *onstep )(void*, int, int), void *privdata );
+size_t LCFinder_DeleteFiles( const char **files, size_t nfiles,
+			     int( *onstep )(void*, size_t, size_t),
+			     void *privdata );
 
 /** 保存配置 */
 int LCFinder_SaveConfig( void );

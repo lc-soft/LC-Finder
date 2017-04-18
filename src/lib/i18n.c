@@ -87,7 +87,7 @@ static wchar_t *yaml_token_getwcs( yaml_token_t *token )
 	char *str = token->data.scalar.value;
 	size_t len = token->data.scalar.length + 1;
 	wchar_t *wcs = malloc( sizeof( wchar_t ) * len );
-	LCUI_DecodeString( wcs, str, len, ENCODING_UTF8 );
+	LCUI_DecodeString( wcs, str, (int)len, ENCODING_UTF8 );
 	return wcs;
 }
 
