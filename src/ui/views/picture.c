@@ -1536,10 +1536,10 @@ static void OnKeyDown( LCUI_SysEvent e, void *data )
 	int focus_y = this_view.focus_y;
 	switch( e->key.code ) {
 	case LCUIKEY_MINUS:
-		SetPictureZoomIn( this_view.picture );
+		SetPictureZoomOut( this_view.picture );
 		break;
 	case LCUIKEY_EQUAL:
-		SetPictureZoomOut( this_view.picture );
+		SetPictureZoomIn( this_view.picture );
 		break;
 	case LCUIKEY_LEFT:
 		if( !this_view.is_zoom_mode ) {
