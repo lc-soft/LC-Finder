@@ -55,7 +55,7 @@
 #endif
 
 //#define DEBUG
-#ifdef DEBUG
+#ifndef DEBUG
 #undef LOG
 #undef LOGW
 #define LOG(...) NULL
