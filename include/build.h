@@ -56,6 +56,8 @@
 
 #ifdef _WIN32
 #define PLATFORM_WIN32
+// 如果需要编译成 Windows XP 系统上能跑的版本的话
+//#define PLATFORM_WIN32_DESKTOP_XP
 #if (WINAPI_PARTITION_PC_APP == 1)
 #define PLATFORM_WIN32_PC_APP
 #else

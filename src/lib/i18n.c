@@ -38,6 +38,7 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
+#include "build.h"
 #include "common.h"
 #include "i18n.h"
 
@@ -340,8 +341,10 @@ Language I18n_SetLanguage( const char *lang_code )
 
 int I18n_GetDefaultLanguage( char *lang, int max_len )
 {
-	wchar_t buf[64] = {0};
+	wchar_t buf[64] = L"en-US";
+#ifndef PLATFORM_WIN32_DESKTOP_XP
 	GetUserDefaultLocaleName( buf, 63 );
+#endif
 	return LCUI_EncodeString( lang, buf, max_len, ENCODING_UTF8 );
 }
 
