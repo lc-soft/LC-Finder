@@ -2,9 +2,6 @@ $primary-color: #44BB55;
 $primary-dark-color: #44A340;
 
 .theme-green {
-	&.window {
-		border-top: 1px solid #eee;
-	}
 	.sidebar {
 		background-color: #fff;
 		border-right: 1px solid #DDDEDF;
@@ -15,7 +12,7 @@ $primary-dark-color: #44A340;
 		.sidebar-item .icon {
 			margin-left: -2px;
 		}
-		.sidebar-item:hover, 
+		.sidebar-item:hover,
 		sidebar-toggle:hover {
 			background-color: #fafafa;
 			border-color: #fafafa;
@@ -36,7 +33,7 @@ $primary-dark-color: #44A340;
 		}
 	}
 	progress {
-		background-color: rgba(255,255,255,0.1);
+		background-color: rgba(0,0,0,0.2);
 	}
 	progressbar {
 		background-color: $primary-dark-color;
@@ -195,7 +192,7 @@ $primary-dark-color: #44A340;
 	}
 }
 #picture-info-panel.theme-green {
-	background-color: #323232;	
+	background-color: #323232;
 
 	.text, textview {
 		color: #fff;

@@ -558,12 +558,10 @@ dropdown.checkable dropdown-item.active .icon {
   width: 100%;
   height: 4px;
   position: absolute;
-  background-color: #ccc;
 }
 .view .view-content-wrapper progress.top-fixed progressbar {
-  width: 100%;
+  width: 0;
   height: 100%;
-  background-color: #888;
 }
 .view .view-content {
   width: 100%;
@@ -609,7 +607,7 @@ dropdown.checkable dropdown-item.active .icon {
   height: 54px;
   position: absolute;
   background-color: rgba(255, 255, 255, 0.8);
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(255, 255, 255, 0.95);
   padding: 10px 50px 10px 10px;
   box-sizing: border-box;
 }
