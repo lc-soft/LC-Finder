@@ -192,7 +192,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
       <AdditionalDependencies>user32.lib;Ole32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
-      <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>msvcrtd</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>
       <Command>
