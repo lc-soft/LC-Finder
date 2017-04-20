@@ -60,6 +60,7 @@
 
 #define ClearPositionStyle(W) do { \
 	W->custom_style->sheet[key_left].is_valid = FALSE; \
+	Widget_UnsetStyle( W, key_left ); \
 	Widget_UpdateStyle( W, FALSE ); \
 } while(0);
 
@@ -461,6 +462,9 @@ static void OnSlideTransition( void *arg )
 	if( x == st->dst_x ) {
 		st->timer = 0;
 		st->is_running = FALSE;
+		ClearPositionStyle( this_view.pictures[0]->view );
+		ClearPositionStyle( this_view.pictures[1]->view );
+		ClearPositionStyle( this_view.pictures[2]->view );
 		if( st->action != SWITCH ) {
 			return;
 		}
@@ -469,9 +473,6 @@ static void OnSlideTransition( void *arg )
 		} else {
 			OpenNextPicture();
 		}
-		ClearPositionStyle( this_view.pictures[0]->view );
-		ClearPositionStyle( this_view.pictures[1]->view );
-		ClearPositionStyle( this_view.pictures[2]->view );
 		return;	
 	}
 	st->timer = LCUITimer_Set( 10, OnSlideTransition, NULL, FALSE );
