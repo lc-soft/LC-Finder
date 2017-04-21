@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_search.h -- file indexing and searching.
  *
- * Copyright (C) 2015-2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2015-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_search.h -- 文件信息的索引与搜索。
  *
- * 版权所有 (C) 2015-2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2015-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -52,6 +52,8 @@ typedef struct DB_TagRec_ {
 typedef struct DB_DirRec_ {
 	int id;			/**< 文件夹标识号 */
 	char *path;		/**< 文件夹路径 */
+	char *token;		/**< 文件夹访问凭据 */
+	int visible;		/**< 是否可见 */
 } DB_DirRec, *DB_Dir;
 
 typedef struct DB_FileRec_ {
@@ -69,8 +71,8 @@ typedef struct DB_FileRec_ {
 typedef struct DB_QueryTermsRec_ {
 	DB_Dir *dirs;			/**< 源文件夹列表 */
 	DB_Tag *tags;			/**< 标签列表 */
-	int n_dirs;			/**< 文件夹数量 */
-	int n_tags;			/**< 标签数量 */
+	size_t n_dirs;			/**< 文件夹数量 */
+	size_t n_tags;			/**< 标签数量 */
 	int offset;			/**< 从何处开始取数据记录 */
 	int limit;			/**< 数据记录的最大数量 */
 	int for_tree;			/**< 是否搜索子级目录树，值为 0 时只搜索当前目录下的文件 */
@@ -87,13 +89,18 @@ typedef void* DB_Query;
 #endif
 
 /** 初始化数据库模块 */
-int DB_Init( void );
+int DB_Init( const char *dbpath );
+
+void DB_Exit( void );
 
 /** 添加一个文件夹 */
-DB_Dir DB_AddDir( const char *dirpath );
+DB_Dir DB_AddDir( const char *dirpath, const char *token, int visible );
 
 /** 删除一个文件夹 */
 void DB_DeleteDir( DB_Dir dir );
+
+/** 释放文件夹信息占用的资源 */
+void DBDir_Release( DB_Dir dir );
 
 /** 获取所有文件夹 */
 int DB_GetDirs( DB_Dir **outlist );
@@ -104,6 +111,10 @@ DB_Tag DB_AddTag( const char *tagname );
 /** 添加一个文件记录 */
 void DB_AddFile( DB_Dir dir, const char *filepath, int ctime, int mtime );
 
+/** 修改文件的时间信息 */
+void DB_UpdateFileTime( DB_Dir dir, const char *filepath,
+			int ctime, int mtime );
+
 /** 删除一个文件记录 */
 void DB_DeleteFile( const char *filepath );
 
@@ -113,9 +124,6 @@ DB_File DB_GetFile( const char *filepath );
 /** 获取全部标签记录 */
 int DB_GetTags( DB_Tag **outlist );
 
-/** 移除一个标签记录 */
-void DBTag_Remove( DB_Tag tag );
-
 /** 为文件移除一个标签 */
 int DBFile_RemoveTag( DB_File file, DB_Tag tag );
 
@@ -123,7 +131,7 @@ int DBFile_RemoveTag( DB_File file, DB_Tag tag );
 int DBFile_AddTag( DB_File file, DB_Tag tag );
 
 /** 获取文件拥有的标签列表 */
-int DBFile_GetTags( DB_File file, DB_Tag **outtags );
+size_t DBFile_GetTags( DB_File file, DB_Tag **outtags );
 
 /** 为文件评分 */
 int DBFile_SetScore( DB_File file, int score );
@@ -137,8 +145,11 @@ int DBFile_SetTime( DB_File file, int ctime, int mtime );
 /** 复制文件信息 */
 DB_File DBFile_Dup( DB_File file );
 
-/** 释放文件信息 */
+/** 释放文件信息占用的资源 */
 void DBFile_Release( DB_File file );
+
+/** 释放标签信息占用的资源 */
+void DBTag_Release( DB_Tag tag );
 
 /** 获取符合查询条件的文件总数 */
 int DBQuery_GetTotalFiles( DB_Query query );

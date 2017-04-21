@@ -13,11 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="相关资源">
-      <UniqueIdentifier>{fff477ac-eadc-49ea-b19c-0910a30903c1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\ui">
-      <UniqueIdentifier>{90be4bd8-deb5-4bdc-9866-57c7c74d830a}</UniqueIdentifier>
+      <UniqueIdentifier>{b7cb1dc6-7c0b-45d1-afe6-eda0dd9567c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ui\views">
+      <UniqueIdentifier>{c3af2c6f-ac71-4c0d-9f2d-0277dd529f83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ui\components">
+      <UniqueIdentifier>{afd4671a-646f-489d-84bf-272f450f3b83}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,20 +30,8 @@
     <ClCompile Include="src\lib\file_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\sidebar.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\ui.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_settings.c">
-      <Filter>源文件\ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\finder.c">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\view_folders.c">
-      <Filter>源文件\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\lib\sha1.c">
       <Filter>源文件</Filter>
@@ -54,66 +45,91 @@
     <ClCompile Include="src\lib\thumb_cache.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\thumbview.c">
+    <ClCompile Include="src\lib\i18n.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bridge_win32.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\file_service.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\file_storage.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\folders.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\home.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture_info.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\search.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\ui.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\view_home.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\browser.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\filesync.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\dialog_alert.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\dialog_confirm.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\dialog_confirm.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\view_picture.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\dialog_password.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\view_picture_info.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\dialog_progress.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\view_search.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\dialog_prompt.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\dialog_prompt.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\dropdown.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\starrating.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\filesync.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\progressbar.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\progressbar.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\dialog_progress.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\sidebar.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\browser.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\splashscreen.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\timeseparator.c">
-      <Filter>源文件\ui</Filter>
+    <ClCompile Include="src\ui\components\starrating.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\switch.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\textview_i18n.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\thumbview.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\timeseparator.c">
+      <Filter>源文件\ui\components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="res\ui.css">
-      <Filter>相关资源</Filter>
-    </None>
-    <None Include="res\ui-skin.css">
-      <Filter>相关资源</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="res\ui.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-    <Xml Include="res\ui-view-picture.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
-    <Xml Include="res\ui-view-picture-info.xml">
-      <Filter>相关资源</Filter>
-    </Xml>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\file_search.h">
@@ -161,6 +177,30 @@
     <ClInclude Include="include\timeseparator.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\textview_i18n.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\i18n.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dropdown.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bridge.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\switch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\build.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\file_service.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\file_storage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LC-Finder.rc">
@@ -168,7 +208,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="lc-finder-icon.ico">
+    <Image Include="LC-Finder.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

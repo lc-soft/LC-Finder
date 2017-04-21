@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * common.c -- common function set.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * common.c -- 一些通用的基础功能集
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
@@ -47,20 +48,40 @@
 char *EncodeUTF8( const wchar_t *wstr )
 {
 	int len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_UTF8 ) + 1;
-	char *str = malloc( len * sizeof(char) );
+	char *str = malloc( len * sizeof( char ) );
 	LCUI_EncodeString( str, wstr, len, ENCODING_UTF8 );
+	str[len - 1] = 0;
+	return str;
+}
+
+char *EncodeANSI( const wchar_t *wstr )
+{
+	int len;
+	char *str;
+	len = LCUI_EncodeString( NULL, wstr, 0, ENCODING_ANSI ) + 1;
+	str = malloc( len * sizeof( char ) );
+	LCUI_EncodeString( str, wstr, len, ENCODING_ANSI );
+	str[len - 1] = 0;
 	return str;
 }
 
 wchar_t *DecodeUTF8( const char *str )
 {
-	int len = strlen( str ) + 1;
+	int len = (int)strlen( str ) + 1;
 	wchar_t *wstr = malloc( len * sizeof( wchar_t ) );
 	LCUI_DecodeString( wstr, str, len, ENCODING_UTF8 );
 	return wstr;
 }
 
-void EncodeSHA1( char *hash_out, const char *str, int len )
+wchar_t *DecodeANSI( const char *str )
+{
+	int len = (int)strlen( str ) + 1;
+	wchar_t *wstr = malloc( len * sizeof( wchar_t ) );
+	len = LCUI_DecodeString( wstr, str, len, ENCODING_ANSI );
+	return wstr;
+}
+
+void EncodeSHA1( char *hash_out, const char *str, size_t len )
 {
 	int i;
 	SHA1_CTX ctx;
@@ -77,7 +98,7 @@ void EncodeSHA1( char *hash_out, const char *str, int len )
 	}
 }
 
-void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len )
+void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, size_t len )
 {
 	int i;
 	SHA1_CTX ctx;
@@ -93,6 +114,29 @@ void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len )
 		swprintf( elem, 4, L"%02x", results[i] );
 		wcscat( hash_out, elem );
 	}
+}
+
+int IsImageFile( const wchar_t *path )
+{
+	int i;
+	const wchar_t *p, *suffixs[] = {L"png", L"bmp", L"jpg", L"jpeg"};
+
+	for( p = path; *p; ++p );
+	for( --p; p != path; --p ) {
+		if( *p == L'.' ) {
+			break;
+		}
+	}
+	if( *p != L'.' ) {
+		return FALSE;
+	}
+	++p;
+	for( i = 0; i < 4; ++i ) {
+		if( wcscasecmp( p, suffixs[i] ) == 0 ) {
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 static unsigned int Dict_KeyHash( const void *key )
@@ -115,7 +159,7 @@ static int Dict_KeyCompare( void *privdata, const void *key1, const void *key2 )
 
 static void *Dict_KeyDup( void *privdata, const void *key )
 {
-	char *newkey = malloc( (strlen( key ) + 1)*sizeof( char ) );
+	char *newkey = malloc( (strlen( key ) + 1) * sizeof( char ) );
 	strcpy( newkey, key );
 	return newkey;
 }
@@ -145,16 +189,36 @@ void StrDict_Release( Dict *d )
 	free( privdata );
 }
 
-const char *getdirname( const char *path )
+char *getdirname( const char *path )
 {
-	int i;
-	const char *p = NULL;
-	for( i = 0; path[i]; ++i ) {
+	int i, len = (int)strlen( path );
+	char *dirname = malloc( sizeof(char) * len );
+	for( i = len - 1; i >= 0; --i ) {
 		if( path[i] == PATH_SEP ) {
-			p = path + i + 1;
+			dirname[i] = 0;
+			break;
 		}
 	}
-	return p;
+	for( ; i >= 0; --i ) {
+		dirname[i] = path[i];
+	}
+	return dirname;
+}
+
+wchar_t *wgetdirname( const wchar_t *path )
+{
+	int i, len = (int)wcslen( path ) + 1;
+	wchar_t *dirname = malloc( sizeof( wchar_t ) * len );
+	for( i = len - 1, dirname[i] = 0; i >= 0; --i ) {
+		if( path[i] == PATH_SEP ) {
+			dirname[i] = 0;
+			break;
+		}
+	}
+	for( --i; i >= 0; --i ) {
+		dirname[i] = path[i];
+	}
+	return dirname;
 }
 
 const char *getfilename( const char *path )
@@ -199,73 +263,63 @@ int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath )
 
 int wgetfilestat( const wchar_t *wpath, struct stat *buf )
 {
-	int fd, ret = -1;
-#ifdef _WIN32
-	fd = _wopen( wpath, _O_RDONLY );
-	if( fd > 0 ) {
-		ret = fstat( fd, buf );
-		_close( fd );
-	}
-#else
+	int ret;
 	char *path;
-	path = EncodeUTF8( wpath );
-	fd = open( path, O_RDONLY );
-	if( fd > 0 ) {
-		ret = fstat( fd, buf );
-		close( fd );
-	}
+	path = EncodeANSI( wpath );
+	ret = stat( path, buf );
 	free( path );
-#endif
 	return ret;
 }
 
-int pathjoin( char *path, const char *path1, const char *path2 )
+size_t pathjoin( char *path, const char *path1, const char *path2 )
 {
-	int len = strlen( path1 );
+	size_t len = strlen( path1 );
 	if( path != path1 ) {
 		strcpy( path, path1 );
 	}
-	if( path1[len-1] != PATH_SEP ) {
+	if( path[len - 1] != PATH_SEP ) {
 		path[len++] = PATH_SEP;
 		path[len] = 0;
 	}
 	strcpy( path + len, path2 );
 	len = strlen( path );
-	if( path1[len-1] == PATH_SEP ) {
+	if( path[len - 1] == PATH_SEP ) {
 		--len;
 		path[len] = 0;
 	}
 	return len;
 }
 
-int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
+size_t wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 )
 {
-	int len = wcslen( path1 );
+	size_t len = wcslen( path1 );
 	if( path != path1 ) {
 		wcscpy( path, path1 );
 	}
-	if( path1[len-1] != PATH_SEP ) {
+	if( path[len - 1] != PATH_SEP ) {
 		path[len++] = PATH_SEP;
 		path[len] = 0;
 	}
 	wcscpy( path + len, path2 );
 	len = wcslen( path );
-	if( path1[len-1] == PATH_SEP ) {
+	if( path[len - 1] == PATH_SEP ) {
 		--len;
 		path[len] = 0;
 	}
 	return len;
 }
 
-void wgetcurdir( wchar_t *wpath, int max_len )
+int wgetcurdir( wchar_t *wpath, int max_len )
 {
 #ifdef _WIN32
-	GetCurrentDirectoryW( max_len, wpath );
+	return GetCurrentDirectoryW( max_len, wpath );
 #else
+	int len;
 	char *path = malloc( sizeof(char) * (max_len + 1) );
 	getcwd( path, max_len );
-	LCUI_DecodeString( wpath, path, max_len, ENCODING_UTF8 );
+	len = LCUI_DecodeString( wpath, path, max_len, ENCODING_UTF8 );
 	free( path );
+	return len;
 #endif
 }
 
@@ -281,20 +335,39 @@ int wmkdir( wchar_t *wpath )
 #endif
 }
 
-void wopenbrowser( const wchar_t *url )
+int wchdir( wchar_t *wpath )
 {
 #ifdef _WIN32
-	ShellExecuteW( NULL, L"open", url, NULL, NULL, SW_SHOW );
+	return _wchdir( wpath );
+#else
+	char *path = EncodeUTF8( wpath );
+	int ret = chdir( path );
+	free( path );
+	return ret;
 #endif
 }
 
-void wopenfilemanger( const wchar_t *filepath )
+int wgetnumberstr( wchar_t *str, int max_len, size_t number )
 {
-#ifdef _WIN32
-	wchar_t args[4096];
-	swprintf( args, 4095, L"/select,\"%s\"", filepath );
-	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
-#endif
+	int right, j, k, len, buf_len, count;
+	wchar_t *buf = malloc( sizeof( wchar_t ) * (max_len + 1) );
+	len = swprintf( buf, max_len, L"%lu", number );
+	count = (int)ceil( len / 3.0 - 1.0 );
+	buf_len = len + count;
+	max_len = max_len > buf_len ? buf_len : max_len;
+	for( k = 1, right = max_len - 1, j = len - 1; right >= 0; --right ) {
+		if( right < max_len - 1 && count > 0 && k % 4 == 0 ) {
+			str[right] = L',';
+			--count;
+			k = 1;
+		} else {
+			str[right] = buf[j--];
+			++k;
+		}
+	}
+	str[max_len] = 0;
+	free( buf );
+	return len;
 }
 
 int wgettimestr( wchar_t *str, int max_len, time_t time )
@@ -305,12 +378,36 @@ int wgettimestr( wchar_t *str, int max_len, time_t time )
 		L"星期五", L"星期六", L"星期天"
 	};
 	t = localtime( &time );
+	if( !t ) {
+		return -1;
+	}
 	return swprintf( str, max_len, L"%d年%d月%d日，%ls %d:%d",
 			 1900 + t->tm_year, t->tm_mon + 1, t->tm_mday,
 			 days[t->tm_wday], t->tm_hour, t->tm_min );
 }
 
-int getsizestr( wchar_t *str, int max_len, int64_t size )
+int getsizestr( char *str, int64_t size )
+{
+	int i;
+	double num;
+	int64_t tmp, prev_tmp;
+	char *units[5] = {"B", "KB", "MB", "GB", "TB"};
+
+	if( size < 1024 ) {
+		return sprintf( str, "%d%s", (int)size, units[0] );
+	}
+	for( i = 0, tmp = size; i < 5; ++i ) {
+		if( tmp < 1024 ) {
+			break;
+		}
+		prev_tmp = tmp;
+		tmp = tmp / 1024;
+	}
+	num = 1.0 * prev_tmp / 1024.0;
+	return sprintf( str, "%0.2f%s", num, units[i] );
+}
+
+int wgetsizestr( wchar_t *str, int max_len, int64_t size )
 {
 	int i;
 	double num;
@@ -364,36 +461,4 @@ int wcscasecmp( const wchar_t *str1, const wchar_t *str2 )
 		++p2;
 	}
 	return ch1 - ch2;
-}
-
-int wmovefiletotrash( const wchar_t *wfilepath )
-{
-#ifdef _WIN32
-	int ret;
-	SHFILEOPSTRUCT sctFileOp = {0};
-	size_t len = wcslen( wfilepath ) + 2;
-	wchar_t *path = malloc( sizeof( wchar_t ) * len );
-	wcsncpy( path, wfilepath, len );
-	path[len - 1] = 0;
-	sctFileOp.pTo = NULL;
-	sctFileOp.pFrom = path;
-	sctFileOp.wFunc = FO_DELETE;
-	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION |
-			   FOF_NOERRORUI | FOF_SILENT;
-	ret = SHFileOperationW( &sctFileOp );
-	free( path );
-	return ret;
-#else
-	return -1;
-#endif
-}
-
-int movefiletotrash( const char *filepath )
-{
-	int ret, len = strlen( filepath ) + 1;
-	wchar_t *wfilepath = malloc( sizeof( wchar_t ) * len );
-	LCUI_DecodeString( wfilepath, filepath, len, ENCODING_UTF8 );
-	ret = wmovefiletotrash( wfilepath );
-	free( wfilepath );
-	return ret;
 }

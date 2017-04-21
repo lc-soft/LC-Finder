@@ -1,0 +1,227 @@
+$primary-color: #44BB55;
+$primary-dark-color: #44A340;
+
+.theme-green {
+	.sidebar {
+		background-color: #fff;
+		border-right: 1px solid #DDDEDF;
+
+		.sidebar-item {
+			border-left: 2px solid transparent;
+		}
+		.sidebar-item .icon {
+			margin-left: -2px;
+		}
+		.sidebar-item:hover,
+		sidebar-toggle:hover {
+			background-color: #fafafa;
+			border-color: #fafafa;
+		}
+		.active .text,
+		.sidebar-item:active .text,
+		sidebar-toggle:active .text {
+			color: $primary-color;
+		}
+		.sidebar-item:active,
+		sidebar-toggle:active {
+			background-color: #ECF8EE;
+		}
+		.sidebar-item.active,
+		.sidebar-item.active:hover {
+			background-color: #ECF8EE;
+			border-color: $primary-color;
+		}
+	}
+	progress {
+		background-color: rgba(0,0,0,0.2);
+	}
+	progressbar {
+		background-color: $primary-dark-color;
+	}
+	.dialog-content {
+		progress {
+			background-color: rgba(0,0,0,0.05);
+		}
+	}
+	.view, .subview {
+		background-color: #f5f7fa;
+	}
+	.view-navbar {
+		background-color: #414849;
+		.text {
+			color: #fff;
+		}
+		.divider {
+			background-color: #373D3E;
+		}
+		.view-navbar-btn {
+			&:hover {
+				background-color: #4C5556;
+			}
+			&:active, &.active {
+				background-color: #616C6D;
+			}
+			&:disabled, &:disabled:hover, &:disabled:active {
+				background-color: transparent;
+
+				.text {
+					color: #727e80;
+				}
+			}
+		}
+	}
+	.selection-mode .text.view-navbar-title {
+		color: #ddd;
+	}
+	textview, textview-i18n {
+		&.btn-link {
+			color: $primary-color;
+			&:hover {
+				color: #2E7D39;
+			}
+		}
+	}
+	.btn-link .text {
+		color: $primary-color;
+	}
+	.btn-link:hover .text {
+		color: #2E7D39;
+	}
+	textview, textview-i18n {
+		.btn-link.selected {
+			color: #333;
+			&:active, &:hover {
+				color: #333;
+			}
+		}
+	}
+	.file-list {
+		.file-list-item-picture.selected .checkbox {
+			color: #fff;
+			border-color: $primary-color;
+			background-color: $primary-color;
+		}
+		.file-list-item-folder:hover,
+		.file-list-item-picture.selected .picture-cover,
+		.file-list-item-picture:hover .picture-cover {
+			border-color: $primary-color;
+		}
+	}
+	.tag-thumb-list-item-checkbox {
+		color: $primary-color;
+	}
+	.tag-thumb-list-item-cover {
+		border: 2px solid $primary-color;
+	}
+	textedit:focus {
+		box-shadow: 0 0 6px rgba(68,187,85,0.4);
+		border-color: $primary-color;
+	}
+	.source-list {
+		.source-list-item {
+			&:hover {
+				background-color: #fdfdfd;
+			}
+			&:active {
+				background-color: #fafafa;
+			}
+			.btn-delete:hover {
+				background-color: #fff;
+			}
+			.btn-delete:active {
+				background-color: #fcfcfc;
+			}
+		}
+	}
+	.message.inverted .text {
+		color: #fff;
+	}
+	.icon.message.inverted .icon {
+		color: #555;
+	}
+	.message progress {
+		bottom: 0;
+		height: 2px;
+		position: absolute;
+	}
+	.message.box {
+		background-color: rgba(0,0,0,0.8);
+		box-shadow: 0 0 8px rgba(0,0,0,0.8);
+	}
+	&.panel .panel-header {
+		box-shadow: 0 0 4px rgba(0,0,0,0.4);
+	}
+	.btn-dropdown.active {
+		border-color: $primary-color;
+	}
+	dropdown.checkable dropdown-item .icon {
+		color: $primary-color;
+	}
+}
+#picture-viewer-window.theme-green {
+	background-color: #222;
+	.window-navbar {
+		background-color: rgba(0,0,0,0.5);
+	}
+	.zoom-btn-group {
+		background-color: rgba(0,0,0,0.8);
+		border-color: transparent;
+		padding: 2px;
+	}
+	.icon-btn {
+		.icon, .text {
+			color: #fff;
+			background-color: transparent;
+		}
+		&:hover {
+			background-color: rgba(255,255,255,0.3);
+		}
+		&:active {
+			background-color: rgba(255,255,255,0.5);
+		}
+		&:disabled .icon,
+		&:disabled:hover .icon,
+		&:disabled:active .icon {
+			color: #888;
+		}
+		&:disabled,
+		&:disabled:hover,
+		&:disabled:active {
+			background-color: transparent;
+		}
+	}
+}
+#picture-info-panel.theme-green {
+	background-color: #323232;
+
+	.text, textview {
+		color: #fff;
+	}
+	.btn-link .text {
+		color: $primary-color;
+	}
+	.btn-link:hover .text {
+		color: #2E7D39;
+	}
+	.info-item .info-item-name {
+		color: #888;
+	}
+	.tag-list-item {
+		background-color: #4c4c4c;
+		border-color: #5b5b5b;
+
+		&:hover {
+			background-color: #5a5a5a;
+			border-color: #6c6c6c;
+		}
+		.btn-delete {
+			color: #fff;
+		}
+		.btn-delete:hover {
+			color: #aaa;
+		}
+	}
+	starrating .icon-star {
+		color: $primary-dark-color;
+	}
+}

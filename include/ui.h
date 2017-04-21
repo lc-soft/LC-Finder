@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * ui.h -- ui managment module
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * ui.h -- 图形界面管理模块
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -43,6 +43,7 @@
 #define ID_PANEL_PICTURE_INFO		"picture-info-panel"
 #define ID_TXT_VIEW_HOME_TITLE		"view-home-title"
 #define ID_TXT_VIEW_SEARCH_RESULT_TITLE	"view-search-result-title"
+#define ID_TXT_VIEW_SEARCH_RESULT_COUNT	"view-search-result-count"
 #define ID_TXT_VIEW_FOLDERS_TITLE	"view-folders-title"
 #define ID_TXT_PICTURE_NAME		"picture-info-name"
 #define ID_TXT_PICTURE_TIME		"picture-info-time"
@@ -51,7 +52,9 @@
 #define ID_TXT_PICTURE_PATH		"picture-info-path"
 #define ID_TXT_FILE_SYNC_STATS		"file-sync-tip-stats"
 #define ID_TXT_FILE_SYNC_TITLE		"file-sync-tip-title"
-#define ID_TXT_THUMB_DB_SPACE_USAGE	"text-thumb-db-space-usage"
+#define ID_TXT_THUMB_DB_SIZE		"text-thumb-db-size"
+#define ID_TXT_CURRENT_LANGUAGE		"txt-current-language"
+#define ID_TXT_TRIAL_LICENSE		"txt-trial-license"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
 #define ID_VIEW_PCITURE_RATING		"picture-info-rating"
@@ -66,6 +69,8 @@
 #define ID_VIEW_FOLDER_INFO_NAME	"view-folders-info-box-name"
 #define ID_VIEW_FOLDER_INFO_PATH	"view-folders-info-box-path"
 #define ID_VIEW_SOURCE_LIST		"current-source-list"
+#define ID_VIEW_PRIVATE_SOURCE_LIST	"current-private-source-list"
+#define ID_VIEW_PRIVATE_SPACE		"view-private-space"
 #define ID_VIEW_SEARCH_TAGS		"view-search-tags"
 #define ID_VIEW_SEARCH_RESULT		"view-search-result"
 #define ID_VIEW_SEARCH_FILES		"view-search-files"
@@ -92,20 +97,25 @@
 #define ID_BTN_SHOW_PICTURE_INFO	"btn-show-picture-info"
 #define ID_BTN_DELETE_PICTURE		"btn-delete-picture"
 #define ID_BTN_HIDE_PICTURE_VIEWER	"btn-hide-picture-viewer"
+#define ID_BTN_BROWSE_ALL		"btn-browse-all"
 #define ID_BTN_PICTURE_RESET_SIZE	"btn-picture-reset-size"
 #define ID_BTN_PICTURE_ZOOM_IN		"btn-picture-zoom-in"
 #define ID_BTN_PICTURE_ZOOM_OUT		"btn-picture-zoom-out"
 #define ID_BTN_PCITURE_PREV		"btn-picture-prev"
 #define ID_BTN_PCITURE_NEXT		"btn-picture-next"
 #define ID_BTN_ADD_SOURCE		"btn-add-source"
+#define ID_BTN_ADD_PRIVATE_SOURCE	"btn-add-private-source"
 #define ID_BTN_SIDEBAR_SETTINGS		"sidebar-btn-settings"
 #define ID_BTN_SIDEBAR_SEEARCH		"sidebar-btn-search"
 #define ID_BTN_CLEAR_THUMB_DB		"btn-clear-thumb-db"
 #define ID_BTN_OPEN_LICENSE		"btn-open-license"
 #define ID_BTN_OPEN_WEBSITE		"btn-open-website"
 #define ID_BTN_OPEN_FEEDBACK		"btn-open-feedback"
+#define ID_BTN_OPEN_SOURCECODE		"btn-open-sourcecode"
 #define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
 #define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
+#define ID_BTN_FOLDER_FILES_SORT	"btn-sort-folder-files"
+#define ID_BTN_RESET_PASSWORD		"btn-reset-password"
 #define ID_TIP_HOME_EMPTY		"tip-empty-collection"
 #define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
 #define ID_TIP_SEARCH_TAGS_EMPTY	"tip-search-tags-empty"
@@ -114,6 +124,23 @@
 #define ID_TIP_PICTURE_NOT_FOUND	"tip-picture-not-found"
 #define ID_TIP_PICTURE_UNSUPPORT	"tip-picture-unsupport"
 #define ID_INPUT_SEARCH			"input-search"
+#define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
+#define ID_DROPDOWN_FOLDER_FILES_SORT	"dropdown-folder-files-sort"
+#define ID_DROPDOWN_SEARCH_FILES_SORT	"dropdown-search-files-sort"
+#define ID_SWITCH_PRIVATE_SPACE		"switch-private-space-open"
+
+/* xml 文件位置 */
+#define FILE_MAIN_VIEW		"assets/views/main.xml"
+#define FILE_PICTURE_VIEW	"assets/views/picture.xml"
+#define FILE_PICTURE_INFO_VIEW	"assets/views/picture_info.xml"
+
+#define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
+#define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )
+
+enum UIMode {
+	MODE_FULL,
+	MODE_SINGLE_PICVIEW
+};
 
 /** 文件迭代器 */
 typedef struct FileIteratorRec_* FileIterator;
@@ -127,8 +154,11 @@ typedef struct FileIteratorRec_ {
 	void (*destroy)(FileIterator);	/**< 销毁文件迭代器 */
 } FileIteratorRec;
 
+/** 初始化主界面 */
+void UI_InitMainView( void );
+
 /** 初始化用户界面 */
-void UI_Init( void );
+int UI_Init( int argc, char **argv );
 
 void UI_Exit( void );
 
@@ -155,7 +185,7 @@ void UI_InitHomeView( void );
 void UI_ExitHomeView( void );
 
 /** 初始化图片视图 */
-void UI_InitPictureView( void );
+void UI_InitPictureView( int mode );
 
 /** 退出图片视图并销毁相关资源 */
 void UI_ExitPictureView( void );
@@ -187,5 +217,8 @@ void UI_HidePictureInfoView( void );
 void UI_UpdateSearchView( void );
 
 void UI_InitSearchView( void );
+
+/** 初始化启动画面 */
+void UI_InitSplashScreen( void );
 
 #endif

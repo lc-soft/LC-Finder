@@ -1,0 +1,172 @@
+name: English
+code: en-US
+strings:
+    button:
+        ok: Ok
+        cancel: Cancel
+        search: Search
+        clear: Clear
+        cleaning: Cleaning...
+        reset_password: Reset password
+    switch:
+        on: On
+        off: Off
+    dialog:
+        placeholder:
+            password: Password
+            confirm_password: Confirm password
+    sort:
+        header: Sort options
+        ctime_desc: Recently created
+        ctime_asc: Least recently created
+        mtime_desc: Recently updated
+        mtime_asc: Least recently updated
+        score_desc: Most score
+        score_asc: Fewest score
+    message:
+        password_error: 'Invalid password, please re-enter the correct password'
+        password_too_long: Password is too long
+        password_empty: Password can not be empty
+        passwords_not_match: Passwords not match
+    datetime:
+        format: 'DATE MM DD, YYYY hh:mm'
+        year_format: MM YYYY
+        month_format: DD MM
+        days:
+            0: Monday
+            1: Tuesday
+            2: Wednesday
+            3: Thursday
+            4: Friday
+            5: Saturday
+            6: Sunday
+        months:
+            0: January
+            1: February
+            2: March
+            3: April
+            4: May
+            5: June
+            6: July
+            7: August
+            8: September
+            9:  October
+            10: November
+            11: December
+    home:
+        title: Collection
+        pictures_count_stats: ', %d pictures'
+        message:
+            empty: No pictures
+    folders:
+        title: Folders
+        return: Return to source folder
+        message:
+            empty: No pictures or folders
+    search:
+        title: Search
+        placeholder:
+            search_input: 'search by tags, use spaces to separate tags.'
+        results: 
+            title: Search results
+        message:
+            empty_tags: No tags
+            empty_results: No results found
+    filesync:
+        title:
+            syncing: Syncing resources
+            finished: Resources sync done !
+        text:
+            scaning: 'scaning %d files'
+            saving: 'syncing %d/%d files'
+            finished: '%d files synced'
+    picture:
+        unknown: Unknown
+        browse_all: Browse all
+        message:
+            empty: There is nothing to show here
+            loading: Loading ...
+            unsupport: Cannot read this picture
+        dialog:
+            title:
+                add_tag: Add tags
+                delete_tag: Alert
+            placeholder:
+                input_tag: 'tag name, multiple tag names separated by space.'
+            text:
+                delete_tag: 'Delete the %s tag ?'
+        info:
+            title: File infomation
+            file_name: Name
+            file_date: Date
+            file_size: Size
+            file_score: Score
+            file_tags: Tags
+            image_resolution: Resolution
+            folder_path: Folder
+            open_folder: Open folder
+            add_tags: Add tags
+    browser:
+        text:
+            no_selected_items: No item selected
+            selected_items: 'Selected %d items'
+        progress:
+            deletion: 'Deleting %d of %d files.'
+            tags_addtion: 'Processing %d of %d files.'
+        dialog:
+            title:
+                delete: Delete files
+                confirm_delete: Delete this file?
+                add_tags: Add tags
+                deleting: Deleting ...
+                adding_tags: Adding tags ...
+            text:
+                delete: 'Delete the selected %d files ?'
+            placeholder: 'tag name, multiple tag names separated by space.'
+    settings:
+        title: Settings
+        thumb_cache:
+            title: Cache
+            stats: 'Current thumbnail cache has used %s space.'
+            description: >-
+                This application will automatically cache the thumbnail
+                when you browse the list of pictures, so that you can quickly
+                render thumbnail images in the next time you browse the pictures.
+        private_space:
+            title: Private space
+            sources_title: Private sources
+            password_title: Password
+            description: >-
+                Private space can be used to store some non-public resources,
+                The resources in it will not be displayed in the resource browser view,
+                And will not be included in the search results.
+            verify_dialog:
+                title: Verfiy password
+                text: Please enter the password for private space
+            new_dialog:
+                title: Create password
+                text: You need to set a new password for private space
+            reset_dialog:
+                title: Reset password
+                text: Reset the password for private space
+        trial_message: >-
+            This is a trial version, only for evaluation use,
+            if you think this application is useful to you, then it's a good
+            reason to purchase.
+            
+            Your gratitude and finance help will motivate
+            me to continue this application development.
+        language: Language
+        language_description: Change language
+        license: License
+        website: Website
+        feedback: Feedback
+        sourcecode: Source code
+        source_folders:
+            title: Sources
+            add_folder: Add folder
+            removing_dialog:
+                title: Remove this source folder ?
+                content: This source folder's files related infomation will be remove.
+        about: About
+        copyright: © 2017 LC's Software，All rights reserved.

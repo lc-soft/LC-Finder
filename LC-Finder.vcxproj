@@ -19,54 +19,66 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bridge_win32.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+    </ClCompile>
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\common.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_search.c" />
+    <ClCompile Include="src\lib\file_service.c" />
+    <ClCompile Include="src\lib\file_storage.c" />
+    <ClCompile Include="src\lib\i18n.c" />
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
-    <ClCompile Include="src\ui\browser.c" />
-    <ClCompile Include="src\ui\dialog_confirm.c" />
-    <ClCompile Include="src\ui\dialog_progress.c" />
-    <ClCompile Include="src\ui\dialog_prompt.c" />
-    <ClCompile Include="src\ui\filesync.c" />
-    <ClCompile Include="src\ui\progressbar.c" />
-    <ClCompile Include="src\ui\starrating.c" />
-    <ClCompile Include="src\ui\thumbview.c" />
-    <ClCompile Include="src\ui\timeseparator.c" />
-    <ClCompile Include="src\ui\view_folders.c" />
-    <ClCompile Include="src\ui\view_home.c" />
-    <ClCompile Include="src\ui\view_picture.c" />
-    <ClCompile Include="src\ui\view_picture_info.c" />
-    <ClCompile Include="src\ui\view_search.c" />
-    <ClCompile Include="src\ui\view_settings.c" />
-    <ClCompile Include="src\ui\sidebar.c" />
+    <ClCompile Include="src\ui\components\browser.c" />
+    <ClCompile Include="src\ui\components\dialog_alert.c" />
+    <ClCompile Include="src\ui\components\dialog_confirm.c" />
+    <ClCompile Include="src\ui\components\dialog_password.c" />
+    <ClCompile Include="src\ui\components\dialog_progress.c" />
+    <ClCompile Include="src\ui\components\dialog_prompt.c" />
+    <ClCompile Include="src\ui\components\dropdown.c" />
+    <ClCompile Include="src\ui\components\filesync.c" />
+    <ClCompile Include="src\ui\components\progressbar.c" />
+    <ClCompile Include="src\ui\components\sidebar.c" />
+    <ClCompile Include="src\ui\components\splashscreen.c" />
+    <ClCompile Include="src\ui\components\starrating.c" />
+    <ClCompile Include="src\ui\components\switch.c" />
+    <ClCompile Include="src\ui\components\textview_i18n.c" />
+    <ClCompile Include="src\ui\components\thumbview.c" />
+    <ClCompile Include="src\ui\components\timeseparator.c" />
     <ClCompile Include="src\ui\ui.c" />
+    <ClCompile Include="src\ui\views\folders.c" />
+    <ClCompile Include="src\ui\views\home.c" />
+    <ClCompile Include="src\ui\views\picture.c" />
+    <ClCompile Include="src\ui\views\picture_info.c" />
+    <ClCompile Include="src\ui\views\search.c" />
+    <ClCompile Include="src\ui\views\settings.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="res\ui-skin.css" />
-    <None Include="res\ui.css" />
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="res\ui-view-picture-info.xml" />
-    <Xml Include="res\ui-view-picture.xml" />
-    <Xml Include="res\ui.xml">
-      <SubType>Designer</SubType>
-    </Xml>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="include\bridge.h" />
     <ClInclude Include="include\browser.h" />
+    <ClInclude Include="include\build.h" />
     <ClInclude Include="include\common.h" />
     <ClInclude Include="include\dialog.h" />
+    <ClInclude Include="include\dropdown.h" />
     <ClInclude Include="include\file_cache.h" />
     <ClInclude Include="include\file_search.h" />
+    <ClInclude Include="include\file_service.h" />
+    <ClInclude Include="include\file_storage.h" />
     <ClInclude Include="include\finder.h" />
+    <ClInclude Include="include\i18n.h" />
     <ClInclude Include="include\progressbar.h" />
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\starrating.h" />
+    <ClInclude Include="include\switch.h" />
+    <ClInclude Include="include\textview_i18n.h" />
     <ClInclude Include="include\thumb_db.h" />
     <ClInclude Include="include\thumb_cache.h" />
     <ClInclude Include="include\thumbview.h" />
@@ -78,28 +90,30 @@
     <ResourceCompile Include="LC-Finder.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="lc-finder-icon.ico" />
+    <Image Include="LC-Finder.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LC_Finder</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>false</WholeProgramOptimization>
+    <WindowsAppContainer>false</WindowsAppContainer>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WindowsAppContainer>false</WindowsAppContainer>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -137,15 +151,16 @@
     </CustomBuildBeforeTargets>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <OutDir>$(SolutionDir)\bin\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\objs\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildBeforeTargets />
-    <CustomBuildAfterTargets />
-    <OutDir>$(SolutionDir)\bin\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</IntDir>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <OutDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\objs\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -166,15 +181,18 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <PrecompiledHeaderFile>brridge.hpp</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>user32.lib;Ole32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>msvcrtd</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -190,6 +208,11 @@
       <Message>
       </Message>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
+copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
+      <Message>Copying binary file to $(SolutionDir)app</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -197,7 +220,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -205,13 +228,15 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MinimalRebuild>true</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
-      <IgnoreSpecificDefaultLibraries>msvcrtd.lib</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>user32.lib;Ole32.lib;LCUI.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -227,6 +252,11 @@
       <Message>
       </Message>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
+copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
+      <Message>Copying binary file to $(SolutionDir)app</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

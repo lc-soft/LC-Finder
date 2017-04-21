@@ -1,0 +1,32 @@
+.panel .panel-header {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 56px;
+	padding: 8px 12px 0 12px;
+	position: absolute;
+	box-sizing: border-box;
+}
+.panel .panel-body {
+	padding-top: 56px;
+	height: 100%;
+	width: 100%;
+	box-sizing: border-box;
+}
+.panel .panel-content {
+	padding: 20px 20px 0 20px;
+	width: 100%;
+	box-sizing: border-box;
+}
+.panel .panel-content-wrapper {
+	width: 100%;
+	height: 100%;
+}
+.panel .panel-header .pull-right {
+	top: 8px;
+	right: 12px;
+}
+.panel .panel-header .panel-header-title {
+	font-size: 16px;
+	line-height: 48px;
+}

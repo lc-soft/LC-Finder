@@ -123,7 +123,7 @@ ThumbLinker ThumbCache_AddLinker( ThumbCache cache, void( *on_remove )(void*) )
 void ThumbCache_DeleteLinker( ThumbCache cache, ThumbLinker linker )
 {
 	LinkedList_Unlink( &cache->linkers, &linker->node );
-	LinkedList_Clear( &linker->links, OnDeleteThumbLink );
+	LinkedList_ClearData( &linker->links, OnDeleteThumbLink );
 	free( linker );
 }
 
@@ -149,7 +149,7 @@ int ThumbCache_Delete( ThumbCache cache, const char *path )
 		return -1;
 	}
 	LinkedList_Unlink( &cache->thumbs, &tdn->node );
-	LinkedList_Clear( &tdn->links, OnDirectDeleteThumbLink );
+	LinkedList_ClearData( &tdn->links, OnDirectDeleteThumbLink );
 	cache->size -= tdn->graph.mem_size;
 	Dict_Delete( cache->paths, path );
 	LCUIMutex_Unlock( &cache->mutex );

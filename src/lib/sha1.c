@@ -183,9 +183,9 @@ void SHA1Init( SHA1_CTX * context )
 }
 
 /* Run your data through this. */
-void SHA1Update( SHA1_CTX * context, const unsigned char *data, uint32_t len )
+void SHA1Update( SHA1_CTX * context, const unsigned char *data, size_t len )
 {
-	uint32_t i, j;
+	size_t i, j;
 	j = context->count[0];
 	if( (context->count[0] += len << 3) < j )
 		context->count[1]++;

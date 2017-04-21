@@ -1,0 +1,17 @@
+.alert {
+	top: 60px;
+	right: 20px;
+	position: absolute;
+	padding: 10px;
+	min-width: 164px;
+	background-color: #fafafa;
+	border: 1px solid #eee;
+}
+.alert .alert-title {
+	font-size: 16px;
+}
+.alert .alert-text {
+	color: #888;
+	font-size: 13px;
+	display: block;
+}

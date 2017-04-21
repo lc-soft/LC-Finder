@@ -1,0 +1,5 @@
+@each $key, $value in $mdi-icons {
+    .#{$mdi-css-prefix}-#{$key} {
+        content: char($value);
+    }
+}

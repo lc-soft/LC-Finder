@@ -1,0 +1,200 @@
+.theme-green .sidebar {
+  background-color: #fff;
+  border-right: 1px solid #DDDEDF;
+}
+.theme-green .sidebar .sidebar-item {
+  border-left: 2px solid transparent;
+}
+.theme-green .sidebar .sidebar-item .icon {
+  margin-left: -2px;
+}
+.theme-green .sidebar .sidebar-item:hover,
+.theme-green .sidebar sidebar-toggle:hover {
+  background-color: #fafafa;
+  border-color: #fafafa;
+}
+.theme-green .sidebar .active .text,
+.theme-green .sidebar .sidebar-item:active .text,
+.theme-green .sidebar sidebar-toggle:active .text {
+  color: #44BB55;
+}
+.theme-green .sidebar .sidebar-item:active,
+.theme-green .sidebar sidebar-toggle:active {
+  background-color: #ECF8EE;
+}
+.theme-green .sidebar .sidebar-item.active,
+.theme-green .sidebar .sidebar-item.active:hover {
+  background-color: #ECF8EE;
+  border-color: #44BB55;
+}
+.theme-green progress {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+.theme-green progressbar {
+  background-color: #44A340;
+}
+.theme-green .dialog-content progress {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.theme-green .view, .theme-green .subview {
+  background-color: #f5f7fa;
+}
+.theme-green .view-navbar {
+  background-color: #414849;
+}
+.theme-green .view-navbar .text {
+  color: #fff;
+}
+.theme-green .view-navbar .divider {
+  background-color: #373D3E;
+}
+.theme-green .view-navbar .view-navbar-btn:hover {
+  background-color: #4C5556;
+}
+.theme-green .view-navbar .view-navbar-btn:active, .theme-green .view-navbar .view-navbar-btn.active {
+  background-color: #616C6D;
+}
+.theme-green .view-navbar .view-navbar-btn:disabled, .theme-green .view-navbar .view-navbar-btn:disabled:hover, .theme-green .view-navbar .view-navbar-btn:disabled:active {
+  background-color: transparent;
+}
+.theme-green .view-navbar .view-navbar-btn:disabled .text, .theme-green .view-navbar .view-navbar-btn:disabled:hover .text, .theme-green .view-navbar .view-navbar-btn:disabled:active .text {
+  color: #727e80;
+}
+.theme-green .selection-mode .text.view-navbar-title {
+  color: #ddd;
+}
+.theme-green textview.btn-link, .theme-green textview-i18n.btn-link {
+  color: #44BB55;
+}
+.theme-green textview.btn-link:hover, .theme-green textview-i18n.btn-link:hover {
+  color: #2E7D39;
+}
+.theme-green .btn-link .text {
+  color: #44BB55;
+}
+.theme-green .btn-link:hover .text {
+  color: #2E7D39;
+}
+.theme-green textview .btn-link.selected, .theme-green textview-i18n .btn-link.selected {
+  color: #333;
+}
+.theme-green textview .btn-link.selected:active, .theme-green textview .btn-link.selected:hover, .theme-green textview-i18n .btn-link.selected:active, .theme-green textview-i18n .btn-link.selected:hover {
+  color: #333;
+}
+.theme-green .file-list .file-list-item-picture.selected .checkbox {
+  color: #fff;
+  border-color: #44BB55;
+  background-color: #44BB55;
+}
+.theme-green .file-list .file-list-item-folder:hover,
+.theme-green .file-list .file-list-item-picture.selected .picture-cover,
+.theme-green .file-list .file-list-item-picture:hover .picture-cover {
+  border-color: #44BB55;
+}
+.theme-green .tag-thumb-list-item-checkbox {
+  color: #44BB55;
+}
+.theme-green .tag-thumb-list-item-cover {
+  border: 2px solid #44BB55;
+}
+.theme-green textedit:focus {
+  box-shadow: 0 0 6px rgba(68, 187, 85, 0.4);
+  border-color: #44BB55;
+}
+.theme-green .source-list .source-list-item:hover {
+  background-color: #fdfdfd;
+}
+.theme-green .source-list .source-list-item:active {
+  background-color: #fafafa;
+}
+.theme-green .source-list .source-list-item .btn-delete:hover {
+  background-color: #fff;
+}
+.theme-green .source-list .source-list-item .btn-delete:active {
+  background-color: #fcfcfc;
+}
+.theme-green .message.inverted .text {
+  color: #fff;
+}
+.theme-green .icon.message.inverted .icon {
+  color: #555;
+}
+.theme-green .message progress {
+  bottom: 0;
+  height: 2px;
+  position: absolute;
+}
+.theme-green .message.box {
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+.theme-green.panel .panel-header {
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+.theme-green .btn-dropdown.active {
+  border-color: #44BB55;
+}
+.theme-green dropdown.checkable dropdown-item .icon {
+  color: #44BB55;
+}
+
+#picture-viewer-window.theme-green {
+  background-color: #222;
+}
+#picture-viewer-window.theme-green .window-navbar {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+#picture-viewer-window.theme-green .zoom-btn-group {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: transparent;
+  padding: 2px;
+}
+#picture-viewer-window.theme-green .icon-btn .icon, #picture-viewer-window.theme-green .icon-btn .text {
+  color: #fff;
+  background-color: transparent;
+}
+#picture-viewer-window.theme-green .icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+#picture-viewer-window.theme-green .icon-btn:active {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+#picture-viewer-window.theme-green .icon-btn:disabled .icon, #picture-viewer-window.theme-green .icon-btn:disabled:hover .icon, #picture-viewer-window.theme-green .icon-btn:disabled:active .icon {
+  color: #888;
+}
+#picture-viewer-window.theme-green .icon-btn:disabled, #picture-viewer-window.theme-green .icon-btn:disabled:hover, #picture-viewer-window.theme-green .icon-btn:disabled:active {
+  background-color: transparent;
+}
+
+#picture-info-panel.theme-green {
+  background-color: #323232;
+}
+#picture-info-panel.theme-green .text, #picture-info-panel.theme-green textview {
+  color: #fff;
+}
+#picture-info-panel.theme-green .btn-link .text {
+  color: #44BB55;
+}
+#picture-info-panel.theme-green .btn-link:hover .text {
+  color: #2E7D39;
+}
+#picture-info-panel.theme-green .info-item .info-item-name {
+  color: #888;
+}
+#picture-info-panel.theme-green .tag-list-item {
+  background-color: #4c4c4c;
+  border-color: #5b5b5b;
+}
+#picture-info-panel.theme-green .tag-list-item:hover {
+  background-color: #5a5a5a;
+  border-color: #6c6c6c;
+}
+#picture-info-panel.theme-green .tag-list-item .btn-delete {
+  color: #fff;
+}
+#picture-info-panel.theme-green .tag-list-item .btn-delete:hover {
+  color: #aaa;
+}
+#picture-info-panel.theme-green starrating .icon-star {
+  color: #44A340;
+}

@@ -1,0 +1,18 @@
+.text, textview-i18n, textview {
+	font-size: 14px;
+	font-family: Microsoft YaHei;
+}
+.text-muted {
+	color: #888;
+}
+.text-line {
+	width: 100%;
+	max-width: 440px;
+	margin-bottom: 5px;
+}
+.text-line .text {
+	display: inline-block;
+}
+.text-paragraph {
+	margin-bottom: 20px;
+}

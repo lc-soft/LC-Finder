@@ -1,0 +1,92 @@
+.btn {
+	display: inline-block;
+	padding: 8px 14px;
+
+	.text {
+		display: inline-block;
+	}
+	&:disabled {
+		background-color: #fff;
+		border: 1px solid #dedede;
+		.text {
+			color: #7B7B7B;
+		}
+	}
+}
+.btn-link {
+	padding: 0;
+	margin-right: 20px;
+}
+textview.btn-link, 
+textview-i18n.btn-link, 
+.btn-link .text {
+	color: #007acc;
+	padding: 0;
+}
+textview.btn-link:hover,
+textview-i18n.btn-link:hover,
+.btn-link:hover .text {
+	color: #23527c;
+}
+.btn-default {
+	background-color: #eee;
+	border: 2px solid #eee;
+}
+.btn-default:hover {
+	background-color: #ccc;
+	border-color: #aaa;
+}
+.btn-default:active {
+	background-color: #aaa;
+	border-color: #aaa;
+}
+.btn-basic {
+	border: 1px solid #eaeaea;
+	background-color: #fff;
+
+	&:hover {
+		border-color: #cbcbcb;
+		background-color: #e6e6e6;
+	}
+	&:active {
+		background-color: #d7d7d7;
+	}
+	&:disabled:hover,
+	&:disabled:active {
+		background-color: #fff;
+		border-color: #eaeaea;
+	}
+}
+.btn-dropdown {
+	border: 1px solid #ddd;
+	background-color: #fff;
+}
+.btn-dropdown .default.text {
+	min-width: 80px;
+	display: inline-block;
+}
+.btn-dropdown .icon {
+	display: inline-block;
+}
+.btn-dropdown:hover {
+	border-color: #bbb;
+}
+.btn-dropdown.active {
+	border-color: #aaa;
+}
+.disabled,
+.disabled:hover,
+.disabled:active {
+	background-color: #eee;
+}
+.disabled .text,
+.disabled:hover .text,
+.disabled:active .text {
+	color: #ccc;
+}
+.btn-group .btn {
+	display: inline-block;
+}
+.btn .icon-chevron-down {
+	margin-left: 10px;
+}

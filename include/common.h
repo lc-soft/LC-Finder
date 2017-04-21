@@ -37,7 +37,7 @@
 #ifndef LCFINDER_COMMON_H
 #define LCFINDER_COMMON_H
 
-#define PATH_LEN 2048
+#define PATH_LEN 256
 
 #ifdef _WIN32
 #include <io.h>
@@ -54,15 +54,25 @@
 #include <wchar.h>
 #include <stdint.h>
 
+LCUI_BEGIN_HEADER
+
 char *EncodeUTF8( const wchar_t *wstr );
+
+char *EncodeANSI( const wchar_t *wstr );
 
 wchar_t *DecodeUTF8( const char *str );
 
-void EncodeSHA1( char *hash_out, const char *str, int len );
+wchar_t *DecodeANSI( const char *str );
 
-void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, int len );
+void EncodeSHA1( char *hash_out, const char *str, size_t len );
 
-const char *getdirname( const char *path );
+void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, size_t len );
+
+int IsImageFile( const wchar_t *path );
+
+char *getdirname( const char *path );
+
+wchar_t *wgetdirname( const wchar_t *path );
 
 const char *getfilename( const char *path );
 
@@ -70,28 +80,30 @@ const wchar_t *wgetfilename( const wchar_t *path );
 
 int wgetfilestat( const wchar_t *wpath, struct stat *buf );
 
-int pathjoin( char *path, const char *path1, const char *path2 );
+size_t pathjoin( char *path, const char *path1, const char *path2 );
 
-int wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
+size_t wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
 
 /** 获取程序当前所在目录 */
-void wgetcurdir( wchar_t *path, int max_len );
+int wgetcurdir( wchar_t *path, int max_len );
 
 int wmkdir( wchar_t *wpath );
+
+int wchdir( wchar_t *wpath );
 
 Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
 		      void (*val_del)(void*, void*) );
 
 void StrDict_Release( Dict *d );
 
-/** 打开浏览器 */
-void wopenbrowser( const wchar_t *url );
-
-void wopenfilemanger( const wchar_t *filepath );
+/** 获取数字字符串，格式为：1,234,567,890 */
+int wgetnumberstr( wchar_t *str, int max_len, size_t number );
 
 int wgettimestr( wchar_t *str, int max_len, time_t time );
 
-int getsizestr( wchar_t *str, int max_len, int64_t size );
+int getsizestr( char *str, int64_t size );
+
+int wgetsizestr( wchar_t *str, int max_len, int64_t size );
 
 int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
 
@@ -105,5 +117,7 @@ int wcscasecmp( const wchar_t *str1, const wchar_t *str2 );
 int wmovefiletotrash( const wchar_t *wfilepath );
 
 int movefiletotrash( const char *filepath );
+
+LCUI_END_HEADER
 
 #endif
