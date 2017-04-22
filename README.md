@@ -7,8 +7,8 @@
 一个图形化的图片资源检索与管理工具，主要使用 C 语言编写，基于 [GNU通用公共许可协议](http://www.gnu.org/licenses/gpl-2.0.html) 
 发布。
 
-[![](https://lcui.lc-soft.io/static/images/showcase/lcfinder-001.jpg "效果图")](https://lcui.lc-soft.io/static/images/showcase/lcfinder-001.jpg)
-[![](https://lcui.lc-soft.io/static/images/showcase/lcfinder-004.jpg "效果图")](https://lcui.lc-soft.io/static/images/showcase/lcfinder-004.jpg)
+[![](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg)
+[![](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
 
 
 ## 功能及特性
@@ -26,7 +26,7 @@
 
 ``` text
 UWP              针对 UWP 平台的相关源代码及文件
-app              应用程序目录，编译生成后的最终文件都会输出到这里
+app              应用程序目录
   assets         应用程序资源文件
     views        视图描述文件
     stylesheets  界面样式
@@ -35,16 +35,16 @@ config           相关配置
 include          头文件
 src              源代码
   lib            基础功能库
-  scss           SCSS 文件，包含了界面样式
-    common       常用样式
+  scss           SCSS 文件，包含界面相关的样式
+    common       通用样式
       iconfont   图标样式
-    componets    界面组件样式
+    componets    组件样式
     themes       主题样式
     views        视图样式
-  ui             界面相关逻辑的实现代码
+  ui             界面
     views        视图控制器
-    widgets      界面组件
-vendor           第三方依赖文件
+    components   界面组件
+vendor           第三方依赖库
 ```
 
 ## 构建
