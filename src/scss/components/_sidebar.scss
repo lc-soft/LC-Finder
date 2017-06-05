@@ -8,11 +8,11 @@
 	position: absolute;
 
 	.sidebar-item {
-		width: 256px;
+		width: $sidebar-width;
 		padding: 8px 0;
 	}
 	.sidebar-header {
-		width: 256px;
+		width: $sidebar-width;
 	}
 	sidebar-toggle {
 		padding: 8px 0;
