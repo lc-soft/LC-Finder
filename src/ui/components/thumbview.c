@@ -216,7 +216,7 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 		return 0;
 	}
 	if( ctx->top_child->box.border.y > bottom ) {
-		node = Widget_GetNode( ctx->top_child );
+		node = &ctx->top_child->node;
 		ctx->top_child = NULL;
 		while( node ) {
 			w = node->data;
@@ -233,7 +233,7 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 		}
 	}
 	LinkedList_Init( &list );
-	node = Widget_GetNode( ctx->top_child );
+	node = &ctx->top_child->node;
 	while( node ) {
 		w = node->data;
 		if( w->box.border.y > bottom ) {

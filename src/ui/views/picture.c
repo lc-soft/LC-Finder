@@ -1325,7 +1325,7 @@ static void OnOpenDir( FileStatus *status, FileStream *stream, void *data )
 		}
 		++i;
 	}
-	if( pos > 0 && fs->iterator ) {
+	if( pos >= 0 && fs->iterator ) {
 		UI_SetPictureView( fs->iterator );
 		SetPicturePreloadList();
 	}
