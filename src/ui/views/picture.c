@@ -1095,6 +1095,12 @@ static void SetPicture( Picture pic, const wchar_t *file )
 	}
 }
 
+static void DirectSetPictureView( FileIterator iter )
+{
+	this_view.iterator = iter;
+	UpdateSwitchButtons();
+}
+
 /** 设置图片预加载列表 */
 static void SetPicturePreloadList( void )
 {
@@ -1318,15 +1324,19 @@ static void OnOpenDir( FileStatus *status, FileStream *stream, void *data )
 			fs->iterator = FileIterator_Create( fs, fidx );
 			pos = i;
 		}
+		if( pos < 0 && fs->iterator ) {
+			FileIterator_Update( fs->iterator );
+			DirectSetPictureView( fs->iterator );
+		}
 		if( pos >= 0 && i - pos > 2 ) {
-			UI_SetPictureView( fs->iterator );
 			SetPicturePreloadList();
 			pos = -1;
 		}
 		++i;
 	}
-	if( pos >= 0 && fs->iterator ) {
-		UI_SetPictureView( fs->iterator );
+	if( fs->iterator && pos >= 0 ) {
+		FileIterator_Update( fs->iterator );
+		DirectSetPictureView( fs->iterator );
 		SetPicturePreloadList();
 	}
 	fs->is_running = FALSE;
@@ -1669,10 +1679,7 @@ void UI_SetPictureView( FileIterator iter )
 		this_view.iterator->destroy( this_view.iterator );
 		this_view.iterator = NULL;
 	}
-	if( iter ) {
-		this_view.iterator = iter;
-	}
-	UpdateSwitchButtons();
+	DirectSetPictureView( iter );
 }
 
 void UI_ClosePictureView( void )
