@@ -199,8 +199,7 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(SolutionDir)..\LCUI\bin\$(Configuration)\LCUI.*" "$(SolutionDir)vendor\lib\"</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -209,8 +208,7 @@
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)..\LCUI\bin\$(Configuration)\LCUI.*" "$(SolutionDir)vendor\lib\"
-copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>
