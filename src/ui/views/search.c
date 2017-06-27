@@ -45,6 +45,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
+#include <LCUI/font/charset.h>
 #include "thumbview.h"
 #include "textview_i18n.h"
 #include "browser.h"

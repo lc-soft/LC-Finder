@@ -49,6 +49,7 @@
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include <LCUI/font/charset.h>
 #include "progressbar.h"
 #include "dialog.h"
 #include "i18n.h"
@@ -569,13 +570,13 @@ static void UpdatePicturePosition( Picture pic )
 	if( width <= pic->view->width ) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
 		this_view.drag.with_x = FALSE;
-		this_view.focus_x = roundi( width / 2.0 );
-		this_view.origin_focus_x = roundi( pic->data->width / 2.0 );
+		this_view.focus_x = iround( width / 2.0 );
+		this_view.origin_focus_x = iround( pic->data->width / 2.0 );
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	} else {
 		this_view.drag.with_x = TRUE;
 		x = (float)this_view.origin_focus_x;
-		this_view.focus_x = roundi( x * pic->scale );
+		this_view.focus_x = iround( x * pic->scale );
 		x = (float)this_view.focus_x - this_view.offset_x;
 		/* X坐标调整，确保查看器的图片浏览范围不超出图片 */
 		if( x < 0 ) {
@@ -595,8 +596,8 @@ static void UpdatePicturePosition( Picture pic )
 	/* 原理同上 */
 	if( height <= pic->view->height ) {
 		this_view.drag.with_y = FALSE;
-		this_view.focus_y = roundi( height / 2 );
-		this_view.origin_focus_y = roundi( pic->data->height / 2.0 );
+		this_view.focus_y = iround( height / 2 );
+		this_view.origin_focus_y = iround( pic->data->height / 2.0 );
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	} else {
 		this_view.drag.with_y = TRUE;
@@ -621,8 +622,8 @@ static void UpdatePicturePosition( Picture pic )
 /** 重置浏览区域的位置偏移量 */
 static void ResetOffsetPosition( void )
 {
-	this_view.offset_x = roundi(this_view.picture->view->width / 2);
-	this_view.offset_y = roundi(this_view.picture->view->height / 2);
+	this_view.offset_x = iround(this_view.picture->view->width / 2);
+	this_view.offset_y = iround(this_view.picture->view->height / 2);
 }
 
 /** 设置当前图片缩放比例 */
@@ -815,12 +816,12 @@ static void DragPicture( int mouse_x, int mouse_y )
 		}
 		if( x + pic->view->width > width ) {
 			x = width - pic->view->width;
-			this_view.focus_x = roundi( x + this_view.offset_x );
+			this_view.focus_x = iround( x + this_view.offset_x );
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_x, -x, px );
 		x = (float)(this_view.focus_x / pic->scale);
-		this_view.origin_focus_x = roundi( x );
+		this_view.origin_focus_x = iround( x );
 	} else {
 		SetStyle( sheet, key_background_position_x, 0.5, scale );
 	}
@@ -836,12 +837,12 @@ static void DragPicture( int mouse_x, int mouse_y )
 		}
 		if( y + pic->view->height > height ) {
 			y = height - pic->view->height;
-			this_view.focus_y = roundi( y + this_view.offset_y );
+			this_view.focus_y = iround( y + this_view.offset_y );
 		}
 		SetStyle( pic->view->custom_style,
 			  key_background_position_y, -y, px );
 		y = (float)(this_view.focus_y / pic->scale);
-		this_view.origin_focus_y = roundi( y );
+		this_view.origin_focus_y = iround( y );
 	} else {
 		SetStyle( sheet, key_background_position_y, 0.5, scale );
 	}
@@ -992,8 +993,8 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		this_view.offset_y = this_view.zoom.y;
 		this_view.focus_x = x + this_view.offset_x;
 		this_view.focus_y = y + this_view.offset_y;
-		x = roundi( this_view.focus_x / this_view.picture->scale );
-		y = roundi( this_view.focus_y / this_view.picture->scale );
+		x = iround( this_view.focus_x / this_view.picture->scale );
+		y = iround( this_view.focus_y / this_view.picture->scale );
 		this_view.origin_focus_x = x;
 		this_view.origin_focus_y = y;
 		scale = this_view.zoom.scale;
@@ -1146,12 +1147,11 @@ static void OnPictureProgress( float progress, void *data )
 	if( pic != this_view.picture ) {
 		return;
 	}
-	ProgressBar_SetValue( this_view.tip_progress, roundi( progress ) );
+	ProgressBar_SetValue( this_view.tip_progress, iround( progress ) );
 }
 
 static int LoadPictureAsync( Picture pic )
 {
-
 	wchar_t *wpath;
 	int storage = finder.storage_for_image;
 	if( !pic->file_for_load || !this_view.is_working ) {
@@ -1469,19 +1469,19 @@ static void SetPictureFocusPoint( Picture pic, int focus_x, int focus_y )
 		x = 0;
 	}
 	if( x + pic->view->width > width ) {
-		x = roundi( width - pic->view->width );
+		x = iround( width - pic->view->width );
 	}
 	if( y < 0 ) {
 		y = 0;
 	}
 	if( y + pic->view->height > height ) {
-		y = roundi( height - pic->view->height );
+		y = iround( height - pic->view->height );
 	}
 	/* 更新焦点位置 */
 	this_view.focus_x = x + this_view.offset_x;
 	this_view.focus_y = y + this_view.offset_y;
-	this_view.origin_focus_x = roundi( this_view.focus_x / pic->scale );
-	this_view.origin_focus_y = roundi( this_view.focus_y / pic->scale );
+	this_view.origin_focus_x = iround( this_view.focus_x / pic->scale );
+	this_view.origin_focus_y = iround( this_view.focus_y / pic->scale );
 	UpdatePicturePosition( pic );
 }
 
@@ -1511,19 +1511,19 @@ static void OnMouseWheel( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		x = 0;
 	}
 	if( x + pic->view->width > width ) {
-		x = roundi( width - pic->view->width );
+		x = iround( width - pic->view->width );
 	}
 	if( y < 0 ) {
 		y = 0;
 	}
 	if( y + pic->view->height > height ) {
-		y = roundi( height - pic->view->height );
+		y = iround( height - pic->view->height );
 	}
 	/* 更新焦点位置 */
 	this_view.focus_x = x + this_view.offset_x;
 	this_view.focus_y = y + this_view.offset_y;
-	this_view.origin_focus_x = roundi( this_view.focus_x / pic->scale );
-	this_view.origin_focus_y = roundi( this_view.focus_y / pic->scale );
+	this_view.origin_focus_x = iround( this_view.focus_x / pic->scale );
+	this_view.origin_focus_y = iround( this_view.focus_y / pic->scale );
 	if( e->wheel.delta < 0 ) {
 		SetPictureZoomOut( pic );
 	} else {

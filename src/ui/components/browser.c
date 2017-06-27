@@ -44,6 +44,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/button.h>
+#include <LCUI/font/charset.h>
 #include "thumbview.h"
 #include "textview_i18n.h"
 #include "progressbar.h"
