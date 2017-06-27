@@ -56,55 +56,6 @@ static struct SwitchModule {
 	int event_change;
 } self;
 
-static const char *switch_css = CodeToString(
-
-.switch {
-	height: 20px;
-	width: 44px;
-	display: inline-block;
-	border: 2px solid #c8d3d9;
-	background-color: #c8d3d9;
-}
-.switch .switch-bar {
-	left: 24px;
-	height: 100%;
-	width: 68px;
-	position: relative;
-}
-.switch .switch-slider {
-	width: 20px;
-	height: 100%;
-	background-color: #8c9da5;
-}
-.switch.checked {
-	border: 2px solid #80dea0;
-	background-color: #80dea0;
-}
-.switch.checked .switch-slider {
-	background-color: #44BB55;
-}
-.switch.checked .switch-bar {
-	left: 0;
-}
-.switch .switch-on-block,
-.switch .switch-off-block {
-	width: 24px;
-	color: #fff;
-	font-size: 16px;
-	text-align: center;
-}
-.switch .switch-on-block,
-.switch .switch-off-block,
-.switch .switch-slider {
-	display: inline-block;
-}
-.switch-text {
-	margin-left: 10px;
-	line-height: 24px;
-}
-
-);
-
 static void Switch_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUI_WidgetEventRec ev = {0};
@@ -177,5 +128,4 @@ void LCUIWidget_AddSwitch( void )
 	self.prototype->init = Switch_OnInit;
 	self.event_change = LCUIWidget_AllocEventId();
 	LCUIWidget_SetEventName( self.event_change, "change.switch" );
-	LCUI_LoadCSSString( switch_css, NULL );
 }

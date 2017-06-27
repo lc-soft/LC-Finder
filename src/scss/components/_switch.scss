@@ -1,0 +1,47 @@
+
+.switch {
+	height: 20px;
+	width: 44px;
+	display: inline-block;
+	border: 2px solid #c8d3d9;
+	background-color: #c8d3d9;
+
+  .switch-bar {
+    left: -24px;
+    height: 100%;
+    width: 68px;
+    position: relative;
+  }
+  .switch-slider {
+  	width: 20px;
+  	height: 100%;
+  	background-color: #8c9da5;
+  }
+  &.checked {
+  	border: 2px solid #80dea0;
+  	background-color: #80dea0;
+
+    .switch-slider {
+    	background-color: #44BB55;
+    }
+    .switch-bar {
+    	left: 0;
+    }
+  }
+  .switch-on-block,
+  .switch-off-block {
+  	width: 24px;
+  	color: #fff;
+  	font-size: 16px;
+  	text-align: center;
+  }
+  .switch-on-block,
+  .switch-off-block,
+  .switch-slider {
+  	display: inline-block;
+  }
+}
+.switch-text {
+	margin-left: 10px;
+	line-height: 24px;
+}
