@@ -1,7 +1,7 @@
 #!/bin/sh
 
 rootdir=`pwd`
-logfile=`pwd`/autogen.log
+logfile=`pwd`/setup.log
 tooldir=`pwd`/.tools
 echo > $logfile
 if [ ! -d ".repos" ]; then
@@ -35,6 +35,20 @@ if [ ! -f "configure" ]; then
 fi
 ./configure >> $logfile
 make >> $logfile
+
+cd ../
+if [ ! -d "libyaml" ]; then
+  git clone https://github.com/yaml/libyaml.git
+else
+  git pull origin master
+fi
+cd libyaml
+if [ ! -f "configure" ]; then
+  ./boostrap >> $logfile
+fi
+./configure >> $logfile
+make >> $logfile
+
 cd ../
 if [ ! -d "unqlite" ]; then
   git clone https://github.com/symisc/unqlite.git --branch master --depth 1
