@@ -277,7 +277,7 @@ static void FileScanner_Destroy( FileScanner scanner )
 static void OnTimeRangeClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	LCUI_Widget title = e->data;
-	FileBrowser_SetScroll( &this_view.browser, (int)title->box.graph.y );
+	FileBrowser_SetScroll( &this_view.browser, (int)title->box.canvas.y );
 	FileBrowser_SetButtonsDisabled( &this_view.browser, FALSE );
 	Widget_Hide( this_view.time_ranges->parent->parent );
 }
@@ -335,7 +335,7 @@ static void HomeView_SyncThread( void *arg )
 	scanner = &this_view.scanner;
 	LCUIMutex_Lock( &vs->mutex );
 	/* 等待缩略图列表部件准备完毕 */
-	while( this_view.items->state < WSTATE_READY ) {
+	while( this_view.items->state < LCUI_WSTATE_READY ) {
 		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
 	}
 	LCUIMutex_Unlock( &vs->mutex );
@@ -381,12 +381,6 @@ static void LoadCollectionFiles( void )
 	FileBrowser_Empty( &this_view.browser );
 	FileScanner_Start( &this_view.scanner );
 	LCUIMutex_Unlock( &this_view.viewsync.mutex );
-}
-
-/* 在缩略图列表部件准备完毕的时候 */
-static void OnThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	LCUICond_Signal( &this_view.viewsync.ready );
 }
 
 static void OnViewShow( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

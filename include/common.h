@@ -99,8 +99,6 @@ void StrDict_Release( Dict *d );
 /** 获取数字字符串，格式为：1,234,567,890 */
 int wgetnumberstr( wchar_t *str, int max_len, size_t number );
 
-int wgettimestr( wchar_t *str, int max_len, time_t time );
-
 int getsizestr( char *str, int64_t size );
 
 int wgetsizestr( wchar_t *str, int max_len, int64_t size );

@@ -168,7 +168,7 @@ int UI_Init( int argc, char **argv )
 	LCUIWidget_AddTextViewI18n();
 	LCUIWidget_AddSwitch();
 	LCUIWidget_AddDropdown();
-	LCUIDisplay_SetMode( LCDM_WINDOWED );
+	LCUIDisplay_SetMode( LCUI_DMODE_WINDOWED );
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUIDisplay_SetSize( 960, 640 );
 #endif

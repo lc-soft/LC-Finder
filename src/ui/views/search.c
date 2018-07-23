@@ -252,7 +252,7 @@ static void ViewSyncThread( void *arg )
 	scanner = &this_view.scanner;
 	LCUIMutex_Lock( &vs->mutex );
 	/* 等待缩略图列表部件准备完毕 */
-	while( this_view.view_files->state < WSTATE_READY ) {
+	while( this_view.view_files->state < LCUI_WSTATE_READY ) {
 		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
 	}
 	LCUIMutex_Unlock( &vs->mutex );
@@ -754,10 +754,10 @@ void UI_InitSearchView( void )
 	BindEvent( btn, "click", OnBtnHideReusltClick );
 	BindEvent( this_view.btn_search, "click", OnBtnSearchClick );
 	BindEvent( this_view.btn_search, "resize", OnBtnSearchResize );
-	if( this_view.btn_search->state == WSTATE_NORMAL ) {
+	if( this_view.btn_search->state == LCUI_WSTATE_NORMAL ) {
 		UpdateSearchInputSize( this_view.btn_search );
 	}
-	if( this_view.view_tags->state == WSTATE_NORMAL ) {
+	if( this_view.view_tags->state == LCUI_WSTATE_NORMAL ) {
 		UI_UpdateSearchView();
 	} else {
 		BindEvent( this_view.view_tags, "ready", OnTagThumbViewReady );

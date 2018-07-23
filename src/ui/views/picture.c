@@ -938,14 +938,14 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		LCUI_TouchPoint point;
 		point = &e->touch.points[0];
 		switch( point->state ) {
-		case WET_TOUCHDOWN: 
+		case LCUI_WEVENT_TOUCHDOWN: 
 			OnPictureTouchDown( point );
 			point_ids[0] = point->id;
 			break;
-		case WET_TOUCHMOVE:
+		case LCUI_WEVENT_TOUCHMOVE:
 			OnPictureTouchMove( point );
 			break;
-		case WET_TOUCHUP: 
+		case LCUI_WEVENT_TOUCHUP: 
 			OnPictureTouchUp( point ); 
 			point_ids[0] = -1;
 			break;
@@ -984,8 +984,8 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		this_view.zoom.is_running = TRUE;
 		this_view.zoom.x = x;
 		this_view.zoom.y = y;
-	} else if( points[0]->state == WET_TOUCHMOVE ||
-		   points[1]->state == WET_TOUCHMOVE ) {
+	} else if( points[0]->state == LCUI_WEVENT_TOUCHMOVE ||
+		   points[1]->state == LCUI_WEVENT_TOUCHMOVE ) {
 		/* 重新计算焦点位置 */
 		x = this_view.focus_x - this_view.offset_x;
 		y = this_view.focus_y - this_view.offset_y;
@@ -1004,14 +1004,14 @@ static void OnPictureTouch( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	for( i = 0; i < 2; ++i ) {
 		int j, id;
 		/* 如果当前用于控制缩放的触点已经释放，则找其它触点来代替 */
-		if( points[i]->state != WET_TOUCHUP ) {
+		if( points[i]->state != LCUI_WEVENT_TOUCHUP ) {
 			continue;
 		}
 		point_ids[i] = -1;
 		this_view.zoom.is_running = FALSE;
 		id = point_ids[i == 0 ? 1 : 0];
 		for( j = 0; j < e->touch.n_points; ++j ) {
-			if( e->touch.points[j].state == WET_TOUCHUP ||
+			if( e->touch.points[j].state == LCUI_WEVENT_TOUCHUP ||
 			    e->touch.points[j].id == id ) {
 				continue;
 			}
@@ -1546,13 +1546,13 @@ static void OnKeyDown( LCUI_SysEvent e, void *data )
 	int focus_x = this_view.focus_x;
 	int focus_y = this_view.focus_y;
 	switch( e->key.code ) {
-	case LCUIKEY_MINUS:
+	case LCUI_KEY_MINUS:
 		SetPictureZoomOut( this_view.picture );
 		break;
-	case LCUIKEY_EQUAL:
+	case LCUI_KEY_EQUAL:
 		SetPictureZoomIn( this_view.picture );
 		break;
-	case LCUIKEY_LEFT:
+	case LCUI_KEY_LEFT:
 		if( !this_view.is_zoom_mode ) {
 			OpenPrevPicture();
 			break;
@@ -1560,7 +1560,7 @@ static void OnKeyDown( LCUI_SysEvent e, void *data )
 		focus_x -= MOVE_STEP;
 		SetPictureFocusPoint( this_view.picture, focus_x, focus_y );
 		break;
-	case LCUIKEY_RIGHT:
+	case LCUI_KEY_RIGHT:
 		if( !this_view.is_zoom_mode ) {
 			OpenNextPicture();
 			break;
@@ -1568,14 +1568,14 @@ static void OnKeyDown( LCUI_SysEvent e, void *data )
 		focus_x += MOVE_STEP;
 		SetPictureFocusPoint( this_view.picture, focus_x, focus_y );
 		break;
-	case LCUIKEY_UP:
+	case LCUI_KEY_UP:
 		if( !this_view.is_zoom_mode ) {
 			break;
 		}
 		focus_y -= MOVE_STEP;
 		SetPictureFocusPoint( this_view.picture, focus_x, focus_y );
 		break;
-	case LCUIKEY_DOWN:
+	case LCUI_KEY_DOWN:
 		if( !this_view.is_zoom_mode ) {
 			break;
 		}

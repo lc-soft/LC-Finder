@@ -385,7 +385,7 @@ static void ViewSync_Thread( void *arg )
 	scanner = &this_view.scanner;
 	LCUIMutex_Lock( &vs->mutex );
 	/* 等待缩略图列表部件准备完毕 */
-	while( this_view.items->state < WSTATE_READY ) {
+	while( this_view.items->state < LCUI_WSTATE_READY ) {
 		LCUICond_TimedWait( &vs->ready, &vs->mutex, 100 );
 	}
 	LCUIMutex_Unlock( &vs->mutex );

@@ -54,8 +54,6 @@ void FileStorage_Close( int id );
 
 void FileStorage_Exit( void );
 
-static void OnResponse( FileResponse *response, void *data );
-
 int FileStorage_GetFile( int conn_id, const wchar_t *filename,
 			 HandlerOnGetFile callback, void *data );
 

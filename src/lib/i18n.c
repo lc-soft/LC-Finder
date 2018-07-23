@@ -350,9 +350,9 @@ int I18n_GetDefaultLanguage( char *lang, int max_len )
 
 #else
 
-int I18n_GetDefaultLanguage( char *lang )
+int I18n_GetDefaultLanguage( char *lang, int max_len )
 {
-	strcpy( lang, "en-US" );
+	strncpy( lang, "en-US", max_len );
 }
 
 #endif

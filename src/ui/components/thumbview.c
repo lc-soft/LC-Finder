@@ -220,7 +220,7 @@ static int ScrollLoading_OnUpdate( ScrollLoading ctx )
 		ctx->top_child = NULL;
 		while( node ) {
 			w = node->data;
-			if( w && w->state == WSTATE_NORMAL ) {
+			if( w && w->state == LCUI_WSTATE_NORMAL ) {
 				if( w->box.border.y < bottom ) {
 					ctx->top_child = w;
 					break;

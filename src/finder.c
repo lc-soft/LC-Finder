@@ -346,8 +346,8 @@ int64_t LCFinder_GetThumbDBTotalSize( void )
 	return sum_size;
 }
 
-void LCFinder_SwitchTask( FileSyncStatus s );
-void LCFinder_ScanDir( FileSyncStatus s, const wchar_t *path );
+static void LCFinder_SwitchTask( FileSyncStatus s );
+static void LCFinder_ScanDir( FileSyncStatus s, const wchar_t *path );
 
 static void LCFinder_OnScanFinished( FileSyncStatus s )
 {
