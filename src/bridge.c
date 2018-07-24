@@ -98,3 +98,19 @@ int MoveFileToTrash( const char *filepath )
 {
 	return -1;
 }
+
+void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
+{
+	return;
+}
+
+void RemoveFolderAccessW( const wchar_t *token )
+{
+	return;
+}
+
+void LCFinder_InitLicense( void )
+{
+	finder.license.is_active = TRUE;
+	finder.license.is_trial = FALSE;
+}

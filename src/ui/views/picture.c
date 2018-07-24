@@ -275,7 +275,8 @@ static void TaskForResetWidgetBackground( void *arg1, void *arg2 )
 	Widget_UnsetStyle( w, key_background_image );
 	Widget_UpdateStyle( w, FALSE );
 	if( image ) {
-		Graph_Delete( image );
+		Graph_Free( image );
+		free( image );
 	}
 }
 
@@ -1039,9 +1040,11 @@ static Picture CreatePicture( void )
 	pic->is_valid = FALSE;
 	pic->is_loading = FALSE;
 	pic->file_for_load = NULL;
-	pic->data = Graph_New();
+	pic->data = malloc( sizeof( LCUI_Graph ) );
 	pic->view = LCUIWidget_New( "picture" );
 	pic->min_scale = pic->scale = 1.0;
+
+	Graph_Init(pic->data);
 	Widget_Append( this_view.view_pictures, pic->view );
 	BindEvent( pic->view, "resize", OnPictureResize );
 	BindEvent( pic->view, "touch", OnPictureTouch );
@@ -1059,7 +1062,8 @@ static void DeletePicture( Picture pic )
 	LCUICond_Destroy( &pic->cond );
 	LCUIMutex_Destroy( &pic->mutex );
 	if( pic->data ) {
-		Graph_Delete( pic->data );
+		Graph_Free( pic->data );
+		free( pic->data );
 		pic->data = NULL;
 	}
 	if( pic->file_for_load ) {
@@ -1135,7 +1139,7 @@ static void OnPictureLoadDone( LCUI_Graph *img, void *data )
 	Picture pic = data;
 	LCUIMutex_Lock( &pic->mutex );
 	if( img ) {
-		pic->data = Graph_New();	
+		pic->data = malloc( sizeof( LCUI_Graph ) );
 		*pic->data = *img;
 		Graph_Init( img );
 		pic->is_valid = TRUE;
