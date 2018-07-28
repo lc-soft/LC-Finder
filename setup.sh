@@ -39,10 +39,11 @@ make >> $logfile
 cd ../
 if [ ! -d "libyaml" ]; then
   git clone https://github.com/yaml/libyaml.git
+  cd libyaml
 else
+  cd libyaml
   git pull origin master
 fi
-cd libyaml
 if [ ! -f "configure" ]; then
   ./boostrap >> $logfile
 fi
