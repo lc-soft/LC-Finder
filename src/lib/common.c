@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * common.c -- common function set.
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * common.c -- 一些通用的基础功能集
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -368,22 +368,6 @@ int wgetnumberstr( wchar_t *str, int max_len, size_t number )
 	str[max_len] = 0;
 	free( buf );
 	return len;
-}
-
-int wgettimestr( wchar_t *str, int max_len, time_t time )
-{
-	struct tm *t;
-	wchar_t *days[7] = {
-		L"星期一", L"星期二", L"星期三", L"星期四",
-		L"星期五", L"星期六", L"星期天"
-	};
-	t = localtime( &time );
-	if( !t ) {
-		return -1;
-	}
-	return swprintf( str, max_len, L"%d年%d月%d日，%ls %d:%d",
-			 1900 + t->tm_year, t->tm_mon + 1, t->tm_mday,
-			 days[t->tm_wday], t->tm_hour, t->tm_min );
 }
 
 int getsizestr( char *str, int64_t size )
