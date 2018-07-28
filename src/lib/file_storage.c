@@ -36,6 +36,7 @@
  * ****************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>

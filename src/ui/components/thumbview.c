@@ -1058,7 +1058,6 @@ static int RemoveThumbTask( LCUI_Widget w )
 
 static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	LCUI_Widget target;
 	ThumbViewItem data = Widget_GetData( w, self.item );
 	LinkedList *tasks = &data->view->thumb_tasks;
 	if( w->custom_style->sheet[key_background_image].is_valid ||
@@ -1070,7 +1069,6 @@ static void OnScrollLoad( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	if( tasks->length >= THUMB_TASK_MAX ) {
 		LinkedListNode *node = LinkedList_GetNode( tasks, -1 );
 		LinkedList_Unlink( tasks, node );
-		target = node->data;
 	}
 	LinkedList_Insert( &data->view->thumb_tasks, 0, w );
 	data->view->tasks[TASK_LOAD_THUMB].state = TASK_STATE_READY;
@@ -1195,17 +1193,6 @@ void ThumbView_SetStorage( LCUI_Widget w, int storage )
 	view->storage = storage;
 }
 
-static int OnCompareTaskTarget( void *data, const void *keydata )
-{
-	if( data < keydata ) {
-		return -1;
-	} else if( data == keydata ) {
-		return 0;
-	} else {
-		return 1;
-	}
-}
-
 static void ThumbView_ExecTask( LCUI_Widget w, int task )
 {
 	LCUI_Widget target;
@@ -1271,12 +1258,11 @@ static void ThumbView_TaskThread( void *arg )
 			LCUIMutex_Unlock( &view->tasks_mutex );
 		}
 		/* 检查自己及父级部件是否可见 */
-		for( parent = w; parent; parent->parent ) {
+		for( parent = w; parent; parent = parent->parent ) {
 			if( !parent->computed_style.visible ) {
 				shown = FALSE;
 				break;
 			}
-			parent = parent->parent;
 		}
 		/* 如果当前可见但之前不可见，则刷新当前可见区域内加载的缩略图 */
 		if( !parent && !shown ) {

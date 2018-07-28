@@ -34,6 +34,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <string.h>
 #include <stdlib.h>
 #include "finder.h"
 #include <LCUI/timer.h>
@@ -91,15 +92,6 @@ static void ParseCommandArguments( Arguments args, int argc, char **argv )
 		}
 	}
 	args->appname = argv[0];
-}
-
-static void onTimer( void *arg )
-{
-	//LCUI_Widget w = LCUIWidget_GetById( "debug-widget" );
-	//LCUI_PrintStyleSheet( w->style );
-	//LCUI_Widget w = LCUIWidget_GetById( "sidebar-btn-search" );
-	//LCUI_PrintStyleSheet( w->style );
-	Widget_PrintTree( NULL );
 }
 
 void UI_InitMainView( void )

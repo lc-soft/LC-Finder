@@ -37,6 +37,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "ui.h"
 #include "finder.h"

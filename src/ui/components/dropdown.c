@@ -34,9 +34,11 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <string.h>
 #include "finder.h"
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include <LCUI/gui/css_parser.h>
 #include "dropdown.h"
 
 typedef struct DropdownRec_ {

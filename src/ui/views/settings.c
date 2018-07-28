@@ -35,6 +35,7 @@
  * ****************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "finder.h"
 #include "ui.h"
@@ -228,7 +229,7 @@ static void OnBtnSettingsClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	TextViewI18n_Refresh( this_view.thumb_db_stats );
 }
 
-static void OnThumbDBDelDone( LCUI_Event e, void *arg )
+static void OnThumbDBDelDone( void *data, void *arg )
 {
 	TextViewI18n_Refresh( this_view.thumb_db_stats );
 }

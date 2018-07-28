@@ -471,7 +471,7 @@ static LCUI_Widget CreateTagWidget( DB_Tag tag )
 	return box;
 }
 
-static void OnTagUpdate( LCUI_Event e, void *arg )
+static void OnTagUpdate( void *data, void *arg )
 {
 	this_view.need_update = TRUE;
 }
@@ -773,5 +773,10 @@ void UI_InitSearchView( void )
 
 void UI_ExitSearchView( void )
 {
-	// ...
+	this_view.viewsync.is_running = FALSE;
+	FileScanner_Reset( &this_view.scanner );
+	LCUIThread_Join( this_view.viewsync.tid, NULL );
+	FileScanner_Destroy( &this_view.scanner );
+	LCUICond_Destroy( &this_view.viewsync.ready );
+	LCUIMutex_Destroy( &this_view.viewsync.mutex );
 }

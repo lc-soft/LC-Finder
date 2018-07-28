@@ -35,6 +35,7 @@
  * ****************************************************************************/
 
 #include "finder.h"
+#include <string.h>
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include "textview_i18n.h"

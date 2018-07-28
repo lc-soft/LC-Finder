@@ -38,6 +38,7 @@
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include <LCUI/gui/css_parser.h>
 
 static LCUI_WidgetPrototype prototype = NULL;
 

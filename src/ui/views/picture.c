@@ -37,6 +37,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "finder.h"
 #include "ui.h"
@@ -260,12 +261,6 @@ static FileIterator FileIterator_Create( FileScanner scanner, FileIndex fidx )
 	}
 	FileIterator_Update( iter );
 	return iter;
-}
-
-static void FileIndex_Delete( FileIndex fidx )
-{
-	free( fidx->name );
-	fidx->name = NULL;
 }
 
 static void TaskForResetWidgetBackground( void *arg1, void *arg2 )
@@ -706,7 +701,7 @@ static void ResetPictureSize( Picture pic )
 }
 
 /** 在返回按钮被点击的时候 */
-static OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnBtnBackClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	if( this_view.mode == MODE_SINGLE_PICVIEW ) {
 		LCUI_Widget btn_back, btn_back2;
@@ -770,8 +765,8 @@ static void UpdateGesture( int mouse_x, int mouse_y )
 	/* 只处理左右滑动 */
 	if( g->x != mouse_x ) {
 		/* 如果滑动方向不同 */
-		if( g->x > g->start_x && mouse_x < g->x ||
-		    g->x < g->start_x && mouse_x > g->x ) {
+		if( (g->x > g->start_x && mouse_x < g->x) ||
+		    (g->x < g->start_x && mouse_x > g->x) ) {
 			g->start_x = mouse_x;
 		}
 		g->x = mouse_x;
@@ -1292,7 +1287,7 @@ static void OnBtnResetClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	SetPictureScale( this_view.picture, scale );
 }
 
-static void OnOpenDir( FileStatus *status, FileStream *stream, void *data )
+static void OnOpenDir( FileStatus *status, FileStream stream, void *data )
 {
 	size_t len;
 	int i = 0, pos = -1;
@@ -1378,7 +1373,7 @@ static void FileScanner_Start( FileScanner scanner, const wchar_t *filepath )
 static void FileScanner_Exit( FileScanner scanner )
 {
 	scanner->is_running = FALSE;
-	LinkedList_ClearData( &scanner->files, FileIndex_Destroy );
+	LinkedList_ClearData( &scanner->files, FileIndex_OnDestroy );
 	free( scanner->file );
 	scanner->file = NULL;
 }
@@ -1702,6 +1697,9 @@ void UI_ClosePictureView( void )
 void UI_ExitPictureView( void )
 {
 	this_view.is_working = FALSE;
+	if (this_view.mode == MODE_SINGLE_PICVIEW) {
+		FileScanner_Exit(&this_view.scanner);
+	}
 	PictureLoader_Exit( &this_view.loader );
 	DeletePicture( this_view.pictures[0] );
 	DeletePicture( this_view.pictures[1] );

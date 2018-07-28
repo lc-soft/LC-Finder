@@ -35,6 +35,7 @@
  * ****************************************************************************/
 
 #include <yaml.h>
+#include <string.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
@@ -77,7 +78,7 @@ static char *yaml_token_getstr( yaml_token_t *token )
 	size_t len = token->data.scalar.length + 1;
 	char *str = malloc( sizeof( char ) * len );
 	if( str ) {
-		strncpy( str, token->data.scalar.value, len );
+		strncpy( str, (char*)token->data.scalar.value, len );
 		str[len - 1] = 0;
 	}
 	return str;
@@ -85,7 +86,7 @@ static char *yaml_token_getstr( yaml_token_t *token )
 
 static wchar_t *yaml_token_getwcs( yaml_token_t *token )
 {
-	char *str = token->data.scalar.value;
+	char *str = (char*)token->data.scalar.value;
 	size_t len = token->data.scalar.length + 1;
 	wchar_t *wcs = malloc( sizeof( wchar_t ) * len );
 	LCUI_DecodeString( wcs, str, (int)len, ENCODING_UTF8 );
@@ -194,7 +195,7 @@ Dict *I18n_LoadFile( const char *path )
 		LOG( "[i18n] failed to open file: %s\n", path );
 		return NULL;
 	}
-	yaml_parser_set_input_string( &parser, buffer, size );
+	yaml_parser_set_input_string( &parser, (unsigned char*)buffer, size );
 	do {
 		if( !yaml_parser_scan( &parser, &token ) ) {
 			LOG( "[i18n] error: %s\n", parser.problem );
@@ -353,6 +354,7 @@ int I18n_GetDefaultLanguage( char *lang, int max_len )
 int I18n_GetDefaultLanguage( char *lang, int max_len )
 {
 	strncpy( lang, "en-US", max_len );
+	return strlen(lang);
 }
 
 #endif

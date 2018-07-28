@@ -36,6 +36,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "ui.h"
 #include "finder.h"
@@ -88,7 +89,7 @@ typedef struct DialogDataPackRec_ {
 	LCUI_BOOL active;
 	LCUI_Thread thread;
 	FileBrowser browser;
-	const char **tagnames;
+	char * const *tagnames;
 	const wchar_t *text;
 	LCUI_ProgressDialog dialog;
 } DialogDataPackRec, *DialogDataPack;

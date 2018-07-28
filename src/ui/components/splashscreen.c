@@ -34,6 +34,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdlib.h>
 #include "finder.h"
 #include "ui.h"
 #include <LCUI/timer.h>

@@ -36,6 +36,8 @@
 #define DEBUG
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
@@ -62,9 +64,11 @@ typedef struct DirStatsRec_ {
 	Dict *deleted_files;	/**< 删除的文件 */
 } DirStatsRec, *DirStats;
 
-static unsigned int Dict_KeyHash( const wchar_t *buf )
+static unsigned int Dict_KeyHash( const void *key )
 {
 	unsigned int hash = 5381;
+	const wchar_t *buf = key;
+
 	while( *buf ) {
 		hash = ((hash << 5) + hash) + (*buf++);
 	}

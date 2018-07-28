@@ -122,7 +122,6 @@ STATIC_STR sql_get_dir_total = "SELECT COUNT(*) FROM dir;";
 STATIC_STR sql_get_tag_total = "SELECT COUNT(*) FROM tag;";
 STATIC_STR sql_del_dir = "DELETE FROM dir WHERE id = ?;";
 STATIC_STR sql_add_tag = "INSERT INTO tag(name) VALUES(?);";
-STATIC_STR sql_del_tag = "DELETE FROM tag WHERE id = %d;";
 STATIC_STR sql_del_file = "DELETE FROM file WHERE path = ?;";
 STATIC_STR sql_get_tag = "SELECT id FROM tag WHERE name = ?;";
 STATIC_STR sql_file_set_score = "UPDATE file SET score = ? WHERE id = ?;";
@@ -214,8 +213,8 @@ static void sqlite3_hasfile( sqlite3_context *ctx, int argc, sqlite3_value **arg
 	if( sqlite3_value_type( argv[1] ) != SQLITE_TEXT ) {
 		return;
 	}
-	dirpath = sqlite3_value_text( argv[0] );
-	filepath = sqlite3_value_text( argv[1] );
+	dirpath = (const char*)sqlite3_value_text( argv[0] );
+	filepath = (const char*)sqlite3_value_text( argv[1] );
 	sqlite3_result_int( ctx, DirHasFile( dirpath, filepath ) );
 }
 
@@ -283,11 +282,11 @@ static DB_Dir DB_LoadDir( sqlite3_stmt *stmt )
 	const unsigned char *text;
 	dir = malloc( sizeof( DB_DirRec ) );
 	dir->id = sqlite3_column_int( stmt, 0 );
-	dir->path = strdup( sqlite3_column_text( stmt, 1 ) );
+	dir->path = strdup( (const char*)sqlite3_column_text( stmt, 1 ) );
 	dir->visible = sqlite3_column_int( stmt, 3 );
 	text = sqlite3_column_text( stmt, 2 );
 	if( text ) {
-		dir->token = strdup( text );
+		dir->token = strdup( (const char *)text );
 	} else {
 		dir->token = NULL;
 	}
@@ -460,7 +459,7 @@ static DB_File DB_LoadFile( sqlite3_stmt *stmt )
 	file->id = sqlite3_column_int( stmt, 0 );
 	file->did = sqlite3_column_int( stmt, 1 );
 	file->score = sqlite3_column_int( stmt, 2 );
-	path = sqlite3_column_text( stmt, 3 );
+	path = (const char*)sqlite3_column_text( stmt, 3 );
 	file->width = sqlite3_column_int( stmt, 4 );
 	file->height = sqlite3_column_int( stmt, 5 );
 	file->create_time = sqlite3_column_int( stmt, 6 );
@@ -483,6 +482,7 @@ int DB_GetTags( DB_Tag **outlist )
 {
 	DB_Tag *list, tag;
 	sqlite3_stmt *stmt;
+	const char *name;
 	int ret, i, total = 0;
 	sqlite3_prepare_v2( self.db, sql_get_tag_total, -1, &stmt, NULL );
 	ret = sqlite3_step( stmt );
@@ -511,8 +511,9 @@ int DB_GetTags( DB_Tag **outlist )
 			list[i] = NULL;
 			break;
 		}
+		name = (const char*)sqlite3_column_text( stmt, 1 );
 		tag->id = sqlite3_column_int( stmt, 0 );
-		tag->name = strdup( sqlite3_column_text( stmt, 1 ) );
+		tag->name = strdup( name );
 		tag->count = sqlite3_column_int( stmt, 2 );
 		list[i] = tag;
 	}
@@ -570,7 +571,7 @@ size_t DBFile_GetTags( DB_File file, DB_Tag **outtags )
 		tags = newtags;
 		tag = malloc( sizeof( DB_TagRec ) );
 		tag->id = sqlite3_column_int( stmt, 0 );
-		name = sqlite3_column_text( stmt, 1 );
+		name = (const char*)sqlite3_column_text( stmt, 1 );
 		len = strlen( name ) + 1;
 		tag->name = malloc( len * sizeof( char ) );
 		strncpy( tag->name, name, len );
@@ -729,7 +730,7 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 			}
 			strcat( q->sql_terms, ") " );
 			strcpy( q->sql_having, buf_having );
-			sprintf( buf_having, "COUNT(ftr.tid) = %d ", 
+			sprintf( buf_having, "COUNT(ftr.tid) = %lu ", 
 				 terms->n_tags );
 			strcat( q->sql_having, buf_having );
 		}
@@ -742,9 +743,6 @@ DB_Query DB_NewQuery( const DB_QueryTerms terms )
 		strcpy( buf_groupby, ", " );
 	}
 	if( terms->dirpath ) {
-		char *path;
-		i = 2 * strlen( terms->dirpath );
-		path = malloc( i * sizeof( char ) );
 		strcat( q->sql_terms, buf_terms );
 		/* 如果是要在当前目录下的整个子级目录树中搜索文件 */
 		if( terms->for_tree ) {

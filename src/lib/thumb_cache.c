@@ -33,7 +33,10 @@
  * 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在 LICENSE 文件中，如果
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
+
 #define LCFINDER_THUMB_CACHE_C
+#include <stdlib.h>
+#include <string.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>

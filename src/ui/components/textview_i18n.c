@@ -34,6 +34,8 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdlib.h>
+#include <string.h>
 #include "finder.h"
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
@@ -139,7 +141,6 @@ static void TextViewI18n_SetAttr( LCUI_Widget w, const char *name,
 
 static void TextViewI18n_SetText( LCUI_Widget w, const char *text  )
 {
-	size_t len = strlen( text ) + 1;
 	TextViewI18n txt = Widget_GetData( w, self.prototype );
 
 	if( txt->text ) {

@@ -36,6 +36,8 @@
 
 #define LCFINDER_FILE_SERVICE_C
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
@@ -135,8 +137,9 @@ void FileStreamChunk_Destroy( FileStreamChunk *chunk )
 	}
 }
 
-static void FileStreamChunk_Release( FileStreamChunk *chunk )
+static void FileStreamChunk_Release( void *data )
 {
+	FileStreamChunk *chunk = data;
 	FileStreamChunk_Destroy( chunk );
 	free( chunk );
 }

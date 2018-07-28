@@ -174,7 +174,7 @@ void LCFinder_ReloadTags( void );
 
 void LCFinder_DeleteDir( DB_Dir dir );
 
-size_t LCFinder_DeleteFiles( const char **files, size_t nfiles,
+size_t LCFinder_DeleteFiles( char * const *files, size_t nfiles,
 			     int( *onstep )(void*, size_t, size_t),
 			     void *privdata );
 

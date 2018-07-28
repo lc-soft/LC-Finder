@@ -113,7 +113,6 @@ DB_Dir LCFinder_GetDir( const char *dirpath )
 
 static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 {
-	int len;
 	ThumbDB db;
 	char dbpath[PATH_LEN], path[PATH_LEN], name[44];
 
@@ -121,7 +120,7 @@ static wchar_t *LCFinder_CreateThumbDB( const char *dirpath )
 	EncodeSHA1( name, path, strlen(path) );
 	LCUI_EncodeString( dbpath, finder.thumbs_dir,
 			   PATH_LEN - 1, ENCODING_UTF8 );
-	len = pathjoin( dbpath, dbpath, name ) + 1;
+	pathjoin( dbpath, dbpath, name );
 	db = ThumbDB_Open( dbpath );
 	if( !db ) {
 		return NULL;
@@ -219,7 +218,7 @@ static void OnCloseFileCache( void *privdata, void *data )
 	SyncTask_Delete( data );
 }
 
-size_t LCFinder_DeleteFiles( const char **files, size_t nfiles,
+size_t LCFinder_DeleteFiles( char * const * files, size_t nfiles,
 			  int( *onstep )(void*, size_t, size_t),
 			  void *privdata )
 {
