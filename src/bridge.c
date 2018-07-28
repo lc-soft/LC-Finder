@@ -35,6 +35,9 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "finder.h"
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
@@ -42,74 +45,141 @@
 #include "ui.h"
 #include "dialog.h"
 
+#ifdef PLATFORM_LINUX
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#endif
+
+/* clang-format off */
+
 #define MAX_DIRPATH_LEN			2048
 #define DIALOG_TITLE_ADD_DIR		L"添加源文件夹"
 #define DIALOG_PLACEHOLDER_ADD_DIR	L"文件夹的位置"
+#define APP_FOLDER_NAME			"lc-finder"
+#define APP_OWNER_FOLDER_NAME		".lc-soft"
+/* clang-format on */
 
-static LCUI_BOOL CheckDir( const wchar_t *dirpath )
+static LCUI_BOOL CheckDir(const wchar_t *dirpath)
 {
-	if( wgetcharcount( dirpath, L":\"\'\\\n\r\t" ) > 0 ) {
+	if (wgetcharcount(dirpath, L":\"\'\\\n\r\t") > 0) {
 		return FALSE;
 	}
-	if( wcslen( dirpath ) >= MAX_DIRPATH_LEN ) {
+	if (wcslen(dirpath) >= MAX_DIRPATH_LEN) {
 		return FALSE;
 	}
 	return TRUE;
 }
 
-int SelectFolder( char *dirpath, int max_len )
+int SelectFolder(char *dirpath, int max_len)
 {
 	wchar_t wdirpath[MAX_DIRPATH_LEN];
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( 0 != LCUIDialog_Prompt( window, DIALOG_TITLE_ADD_DIR,
-				    DIALOG_PLACEHOLDER_ADD_DIR, NULL,
-				    wdirpath, MAX_DIRPATH_LEN, CheckDir ) ) {
+	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+	if (0 != LCUIDialog_Prompt(window, DIALOG_TITLE_ADD_DIR,
+				   DIALOG_PLACEHOLDER_ADD_DIR, NULL, wdirpath,
+				   MAX_DIRPATH_LEN, CheckDir)) {
 		return -1;
 	}
-	return LCUI_EncodeString( dirpath, wdirpath, max_len, ENCODING_UTF8 );
+	return LCUI_EncodeString(dirpath, wdirpath, max_len, ENCODING_UTF8);
 }
 
-int GetAppDataFolderW( wchar_t *buf, int max_len )
+int GetAppDataFolderW(wchar_t *buf, int max_len)
+{
+#ifdef PLATFORM_LINUX
+	int status;
+	struct passwd pwd;
+	struct passwd *result;
+	char *pwbuf, data_dir[PATH_LEN];
+	size_t pwbufsize, len;
+
+	pwbufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+	if (pwbufsize == -1) {
+		pwbufsize = 16384;
+	}
+	pwbuf = malloc(pwbufsize);
+	if (pwbuf == NULL) {
+		return -1;
+	}
+	getpwuid_r(getuid(), &pwd, pwbuf, pwbufsize, &result);
+	if (result == NULL) {
+		return -1;
+	}
+	pathjoin(data_dir, result->pw_dir, APP_OWNER_FOLDER_NAME);
+	status = mkdir(data_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	if (status != 0 && errno != EEXIST) {
+		return -1;
+	}
+	pathjoin(data_dir, data_dir, APP_FOLDER_NAME);
+	status = mkdir(data_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	if (status != 0 && errno != EEXIST) {
+		return -1;
+	}
+	len = LCUI_DecodeString(buf, data_dir, max_len, ENCODING_UTF8);
+	buf[len] = 0;
+	if (len > 0) {
+		return 0;
+	}
+	return -1;
+#else
+	return -1;
+#endif
+}
+
+int GetAppInstalledLocationW(wchar_t *buf, int max_len)
+{
+#ifdef PLATFORM_LINUX
+	size_t i;
+	char str[max_len + 1];
+	size_t len = readlink("/proc/self/exe", str, max_len);
+
+	if (len < 1) {
+		return -1;
+	}
+	str[len] = 0;
+	for (i = len; i > 1; --i) {
+		if (str[i] == '/') {
+			str[i] = 0;
+			break;
+		}
+	}
+	if (LCUI_DecodeString(buf, str, max_len, ENCODING_UTF8) > 0) {
+		return 0;
+	}
+	return -1;
+#else
+	return -1;
+#endif
+}
+
+void OpenUriW(const wchar_t *uri)
+{
+}
+
+void OpenFileManagerW(const wchar_t *filepath)
+{
+}
+
+int MoveFileToTrashW(const wchar_t *filepath)
 {
 	return -1;
 }
 
-int GetAppInstalledLocationW( wchar_t *buf, int max_len )
+int MoveFileToTrash(const char *filepath)
 {
 	return -1;
 }
 
-void OpenUriW( const wchar_t *uri )
-{
-
-}
-
-void OpenFileManagerW( const wchar_t *filepath )
-{
-
-}
-
-int MoveFileToTrashW( const wchar_t *filepath )
-{
-	return -1;
-}
-
-int MoveFileToTrash( const char *filepath )
-{
-	return -1;
-}
-
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
+void SelectFolderAsyncW(void (*callback)(const wchar_t *, const wchar_t *))
 {
 	return;
 }
 
-void RemoveFolderAccessW( const wchar_t *token )
+void RemoveFolderAccessW(const wchar_t *token)
 {
 	return;
 }
 
-void LCFinder_InitLicense( void )
+void LCFinder_InitLicense(void)
 {
 	finder.license.is_active = TRUE;
 	finder.license.is_trial = FALSE;
