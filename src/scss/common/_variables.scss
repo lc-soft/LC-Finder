@@ -1,3 +1,22 @@
 $navbar-height: 48px;
+
+$blue: #1890ff;
+$view-bg: #fff;
+$primary-color: $blue; 
+
+$sidebar-bg: #fafafa;
+$sidebar-border-color: #e5e5e5;
 $sidebar-width: 256px;
 $sidebar-min-width: 48px;
+$sidebar-font-size: 20px;
+$sidebar-icon-width: 48px;
+$sidebar-line-height: 28px;
+
+$sidebar-item-padding-x: 0;
+$sidebar-item-padding-y: 8px;
+$sidebar-item-hover-bg: rgba(0,0,0,0.04);
+$sidebar-item-active-bg: rgba(0,0,0,0.06);
+$sidebar-item-border-width: 3px;
+$sidebar-color: #707070;
+$sidebar-hover-color: #2e2e2e;
+$primary-active-color: $primary-color;

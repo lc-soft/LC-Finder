@@ -1,37 +1,7 @@
 $primary-color: #44BB55;
-$primary-dark-color: #44A340;
+$primary-dark-color: darken($primary-color, 10%);
 
 .theme-green {
-	.sidebar {
-		background-color: #fff;
-		border-right: 1px solid #DDDEDF;
-
-		.sidebar-item {
-			border-left: 2px solid transparent;
-		}
-		.sidebar-item .icon {
-			margin-left: -2px;
-		}
-		.sidebar-item:hover,
-		sidebar-toggle:hover {
-			background-color: #fafafa;
-			border-color: #fafafa;
-		}
-		.active .text,
-		.sidebar-item:active .text,
-		sidebar-toggle:active .text {
-			color: $primary-color;
-		}
-		.sidebar-item:active,
-		sidebar-toggle:active {
-			background-color: #ECF8EE;
-		}
-		.sidebar-item.active,
-		.sidebar-item.active:hover {
-			background-color: #ECF8EE;
-			border-color: $primary-color;
-		}
-	}
 	progress {
 		background-color: rgba(0,0,0,0.2);
 	}

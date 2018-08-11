@@ -1,6 +1,11 @@
-.text, textview-i18n, textview {
+@import "../../../.repos/lcui.css/src/scss/functions";
+@import "../../../.repos/lcui.css/src/scss/variables";
+
+#{$text-elements}, textview-i18n, .text, .icon {
 	font-size: 14px;
-	font-family: Microsoft YaHei;
+}
+textview-i18n {
+	font-family: $font-family-base;
 }
 .text-muted {
 	color: #888;

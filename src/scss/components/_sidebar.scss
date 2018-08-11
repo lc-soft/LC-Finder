@@ -1,51 +1,71 @@
-@import "variables";
-
 .sidebar {
 	width: $sidebar-width;
 	height: 100%;
 	z-index: 100;
-	background-color: #fff;
 	position: absolute;
+	background-color: $sidebar-bg;
+	border-right: 1px solid $sidebar-border-color;
+}
+.sidebar-item {
+	width: $sidebar-width;
+	padding: $sidebar-item-padding-y $sidebar-item-padding-x;
+	border-left: $sidebar-item-border-width solid transparent;
 
-	.sidebar-item {
-		width: $sidebar-width;
-		padding: 8px 0;
+	.icon {
+		margin-left: -$sidebar-item-border-width;
 	}
-	.sidebar-header {
-		width: $sidebar-width;
-	}
-	sidebar-toggle {
-		padding: 8px 0;
+}
+.sidebar-header {
+	width: $sidebar-width;
+}
+sidebar-toggle {
+	padding: $sidebar-item-padding-y $sidebar-item-padding-x;
+	display: inline-block;
+}
+.sidebar-title {
+	font-size: $sidebar-font-size;
+	line-height: $sidebar-icon-width;
+	display: inline-block;
+}
+.sidebar-item,
+sidebar-toggle {
+	.icon,
+	.text {
 		display: inline-block;
+		line-height: $sidebar-line-height;
+		color: $sidebar-color;
 	}
-	sidebar-toggle .icon,
-	.sidebar-item .icon,
-	.sidebar-item .text {
-		display: inline-block;
-		line-height: 28px;
-		color: #515253;
-	}
-	.sidebar-title {
-		font-size: 20px;
-		line-height: 48px;
-		display: inline-block;
-	}
-	.sidebar-item .icon,
-	sidebar-toggle .icon {
-		width: 48px;
-		font-size: 20px;
+	.icon {
+		width: $sidebar-icon-width;
+		font-size: $sidebar-font-size;
 		text-align: center;
-		padding: 2px 0 0 0;
 	}
-	.sidebar-item:hover .text,
-	.sidebar-item:active .text {
-		color: #262626;
+	&:hover {
+		border-color: $sidebar-item-hover-bg;
+		background-color: $sidebar-item-hover-bg;
 	}
-	.sidebar-item:hover, .sidebar sidebar-toggle:hover {
-		background-color: #fbfbfb;
+	&:active {
+		border-color: $sidebar-item-active-bg;
+		background-color: $sidebar-item-active-bg;
 	}
-	.sidebar-item:active, .sidebar sidebar-toggle:active {
-		background-color: #f3f3f3;
+	&:hover,
+	&:active {
+		.icon,
+		.text {
+			color: $sidebar-hover-color;
+		}
+	}
+	&:active {
+		color: $primary-active-color;
+	}
+	&.active {
+		border-color: $primary-active-color;
+		background-color: rgba($primary-active-color, 0.1);
+
+		.icon,
+		.text {
+			color: $primary-active-color;
+		}
 	}
 }
 .sidebar-mini {
