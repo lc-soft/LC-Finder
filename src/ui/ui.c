@@ -37,6 +37,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "finder.h"
+#include <LCUIEx.h>
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
@@ -47,7 +48,6 @@
 #include "timeseparator.h"
 #include "progressbar.h"
 #include "textview_i18n.h"
-#include "dropdown.h"
 #include "dialog.h"
 #include "switch.h"
 
@@ -153,13 +153,13 @@ int UI_Init( int argc, char **argv )
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUI_Init();
 #endif
+	LCUIEx_Init();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddStarRating();
 	LCUIWidget_AddProgressBar();
 	LCUIWidget_AddTimeSeparator();
 	LCUIWidget_AddTextViewI18n();
 	LCUIWidget_AddSwitch();
-	LCUIWidget_AddDropdown();
 	LCUIDisplay_SetMode( LCUI_DMODE_WINDOWED );
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUIDisplay_SetSize( 960, 640 );

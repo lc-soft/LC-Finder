@@ -47,7 +47,6 @@ typedef struct FileSortMethodRec_ {
 		SCORE_DESC,
 		SCORE_ASC
 	} value;
-
 } FileSortMethodRec, *FileSortMethod;
 
 /** 文件浏览器相关数据 */

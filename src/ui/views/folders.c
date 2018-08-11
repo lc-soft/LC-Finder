@@ -46,7 +46,6 @@
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
 #include "textview_i18n.h"
-#include "dropdown.h"
 #include "browser.h"
 #include "i18n.h"
 
@@ -538,6 +537,7 @@ static void InitFolderFilesSort( void )
 	const wchar_t *header = I18n_GetText( KEY_SORT_HEADER );
 	SelectWidget( menu, ID_DROPDOWN_FOLDER_FILES_SORT );
 	Widget_Empty( menu );
+	/*
 	Dropdown_SetHeaderW( menu, header );
 	for( i = 0; i < SORT_METHODS_LEN; ++i ) {
 		FileSortMethod sort = &sort_methods[i];
@@ -545,7 +545,7 @@ static void InitFolderFilesSort( void )
 		icon = LCUIWidget_New( "textview" );
 		text = LCUIWidget_New( "textview-i18n" );
 		TextViewI18n_SetKey( text, sort->name_key );
-		Widget_AddClass( icon, "icon icon icon-check" );
+		Widget_AddClass( icon, "icon icon-check" );
 		Widget_AddClass( text, "text" );
 		Widget_Append( item, icon );
 		Widget_Append( item, text );
@@ -554,9 +554,8 @@ static void InitFolderFilesSort( void )
 			this_view.selected_sort = item;
 		}
 	}
-	
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
-	UpdateQueryTerms();
+	UpdateQueryTerms();*/
 }
 
 static void OnLanguageChanged( void *privdata, void *data )
@@ -565,7 +564,8 @@ static void OnLanguageChanged( void *privdata, void *data )
 	const wchar_t *header;
 	header = I18n_GetText( KEY_SORT_HEADER );
 	SelectWidget( menu, ID_DROPDOWN_FOLDER_FILES_SORT );
-	Dropdown_SetHeaderW( menu, header );
+	/*
+	Dropdown_SetHeaderW( menu, header );*/
 }
 
 void UI_InitFoldersView( void )

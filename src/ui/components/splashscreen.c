@@ -79,7 +79,7 @@ void UI_InitSplashScreen( void )
 				 SV_ABSOLUTE, style );
 		Widget_SetStyle( self.screen, key_z_index, 1000, int );
 		Widget_Append( window, self.screen );
-		LCUITimer_Set( 1500, OnTimer, NULL, FALSE );
+		LCUI_SetTimeout(1500, OnTimer, NULL);
 	}
 	free( path );
 }

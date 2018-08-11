@@ -44,7 +44,6 @@
 #include <LCUI/gui/widget/textview.h>
 #include "switch.h"
 #include "dialog.h"
-#include "dropdown.h"
 #include "textview_i18n.h"
 #include "bridge.h"
 #include "i18n.h"
@@ -306,6 +305,7 @@ static void UI_InitLanguages( void )
 	Language *langs;
 	LCUI_Widget menu;
 	n = I18n_GetLanguages( &langs );
+	/**
 	SelectWidget( menu, ID_DROPDOWN_LANGUAGES );
 	SelectWidget( this_view.language, ID_TXT_CURRENT_LANGUAGE );
 	for( i = 0; i < n; ++i ) {
@@ -315,7 +315,7 @@ static void UI_InitLanguages( void )
 			TextView_SetText( this_view.language, lang->name );
 		}
 	}
-	BindEvent( menu, "change.dropdown", OnSelectLanguage );
+	BindEvent( menu, "change.dropdown", OnSelectLanguage );*/
 }
 
 static LCUI_BOOL OnCheckPassword( const char *password, const char *data )

@@ -1,292 +1,291 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <lcui-app>
+  <resource type="text/css" src="assets/stylesheets/lcui.css"/>
   <resource type="text/css" src="assets/stylesheets/main.css"/>
   <resource type="text/css" src="assets/stylesheets/themes/green.css"/>
-  <resource type="text/css" src="assets/stylesheets/iconfont.css"/>
-  <resource type="application/font-ttf" src="assets/iconfont.ttf"/>
   <ui>
-    <widget id="main-window" class="window theme-green">
-      <widget id="main-sidebar" class="sidebar sidebar-mini">
-        <widget class="sidebar-header">
-          <widget type="sidebar-toggle">
-            <widget type="textview" class="icon icon icon-menu"></widget>
-          </widget>
-          <widget type="textview" class="text sidebar-title">LC's Finder</widget>
-        </widget>
-        <widget id="sidebar-btn-search" class="sidebar-item">
-          <widget type="textview" class="text icon icon icon-magnify"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="search.title">搜索</widget>
-        </widget>
-        <widget id="sidebar-btn-home" class="sidebar-item active">
-          <widget type="textview" class="text icon icon icon-image-multiple"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="home.title">集锦</widget>
-        </widget>
-        <widget id="sidebar-btn-folders" class="sidebar-item">
-          <widget type="textview" class="text icon icon icon-folder-multiple-outline"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="folders.title">文件夹</widget>
-        </widget>
-        <widget id="sidebar-btn-settings" class="sidebar-item">
-          <widget type="textview" class="text icon icon icon-settings"></widget>
-          <widget type="textview-i18n" class="text" data-i18n-key="settings.title">设置</widget>
-        </widget>
-      </widget>
-      <widget id="view-home" class="view">
-        <widget class="view-navbar">
-          <widget id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="home.title">集锦</widget>
-          <widget class="pull-right on-selection-mode">
-            <widget id="btn-cancel-home-select" class="view-navbar-btn">
-              <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>
-            </widget>
-            <widget class="divider"></widget>
-            <widget id="btn-tag-home-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-tag-multiple"></widget>
-            </widget>
-            <widget id="btn-delete-home-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-delete"></widget>
-            </widget>
-          </widget>
-          <widget class="pull-right on-normal-mode">
-            <widget id="btn-select-home-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-checkbox-multiple-marked-outline"></widget>
-            </widget>
-            <widget id="btn-sync-home-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-sync"></widget>
-            </widget>
-          </widget>
-        </widget>
-        <widget class="view-body">
-          <widget id="view-home-content-wrapper" class="view-content-wrapper">
-            <widget id="view-home-progress" class="top-fixed" type="progress"></widget>
-            <widget id="view-home-content" class="view-content full-height">
-              <widget id="tip-empty-collection" class="floating center middle aligned icon message hide">
-                <widget type="textview" class="icon icon icon-image-multiple"></widget>
-                <widget type="textview-i18n" class="text" data-i18n-key="home.message.empty">未找到可读取的图片。</widget>
-              </widget>
-              <widget type="thumbview" id="home-collection-list" class="scrolllayer file-list"></widget>
-            </widget>
-            <widget type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
-            <widget id="view-time-range" class="view-time-range">
-              <widget id="view-time-range-content" class="view-content full-height">
-                <widget id="time-range-list" class="scrolllayer time-range-list"></widget>
-              </widget>
-              <widget type="scrollbar" data-parent="view-time-range-content" data-layer="time-range-list"/>
-            </widget>
-          </widget>
-        </widget>
-      </widget>
-      <widget id="view-search" class="view hide">
-        <widget class="view-navbar">
-          <widget type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.title">搜索</widget>
-        </widget>
-        <widget class="view-body">
-          <widget class="search-panel">
-            <widget class="search-input-group">
-              <widget id="input-search" type="textedit" class="search-input"></widget>
-              <widget id="btn-search-files" class="btn btn-basic">
-                <widget type="textview-i18n" class="text" data-i18n-key="button.search">搜索</widget>
-              </widget>
-            </widget>
-          </widget>
-          <widget class="view-content-wrapper">
-            <widget id="view-search-content" class="view-content full-height">
-              <widget id="tip-search-tags-empty" class="floating center middle aligned icon message hide">
-                <widget type="textview" class="icon icon icon-tag-multiple"></widget>
-                <widget type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</widget>
-              </widget>
-              <widget id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></widget>
-            </widget>
-            <widget type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
-          </widget>
-        </widget>
-        <widget id="view-search-result" class="subview hide">
-          <widget class="view-navbar">
-            <widget class="view-navbar-btn" id="btn-hide-search-result">
-              <widget type="textview" class="text icon icon icon-arrow-left"></widget>
-            </widget>
-            <widget id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.results.title">搜索结果</widget>
-            <widget id="view-search-result-count" type="textview" class="text view-navbar-text on-normal-mode"></widget>
-            <widget class="pull-right on-selection-mode">
-              <widget id="btn-cancel-search-select" class="view-navbar-btn">
-                <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>
-              </widget>
-              <widget class="divider"></widget>
-              <widget id="btn-tag-search-files" class="view-navbar-btn">
-                <widget type="textview" class="text icon icon icon-tag-multiple"></widget>
-              </widget>
-              <widget id="btn-delete-search-files" class="view-navbar-btn">
-                <widget type="textview" class="text icon icon icon-delete"></widget>
-              </widget>
-            </widget>
-            <widget class="pull-right on-normal-mode">
-              <widget id="btn-sort-search-files" class="view-navbar-btn">
-                <widget type="textview" class="text icon icon icon-sort"></widget>
-              </widget>
-              <widget id="btn-select-search-files" class="view-navbar-btn">
-                <widget type="textview" class="text icon icon icon-checkbox-multiple-marked-outline"></widget>
-              </widget>
-            </widget>
-          </widget>
-          <widget class="view-body">
-            <widget class="view-content-wrapper">
-              <widget id="view-search-result-content" class="view-content full-height">  
-                <widget id="tip-search-no-result" class="floating center middle aligned icon message hide">
-                  <widget type="textview" class="icon icon icon-file-hidden"></widget>
-                  <widget type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</widget>
-                </widget>
-                <widget id="view-search-files" type="thumbview" class="scrolllayer file-list"></widget>
-              </widget>
-              <widget type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
-            </widget>
-          </widget>
-          <widget id="dropdown-search-files-sort" type="dropdown" class="checkable" data-target="btn-sort-search-files" data-position="bottom right"></widget>
-        </widget>
-      </widget>
-      <widget id="view-folders" class="view hide">
-        <widget class="view-navbar">
-          <widget id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders.title">文件夹</widget>
-          <widget class="pull-right on-selection-mode">
-            <widget id="btn-cancel-folder-select" class="view-navbar-btn">
-              <widget type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</widget>
-            </widget>
-            <widget class="divider"></widget>
-            <widget id="btn-tag-folder-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-tag-multiple"></widget>
-            </widget>
-            <widget id="btn-delete-folder-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-delete"></widget>
-            </widget>
-          </widget>
-          <widget class="pull-right on-normal-mode">
-            <widget id="btn-sort-folder-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-sort"></widget>
-            </widget>
-            <widget id="btn-select-folder-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-checkbox-multiple-marked-outline"></widget>
-            </widget>
-            <widget id="btn-sync-folder-files" class="view-navbar-btn">
-              <widget type="textview" class="text icon icon icon-sync"></widget>
-            </widget>
-          </widget>
-        </widget>
-        <widget class="view-body">
-          <widget id="view-folders-info-box" class="folder-info-box">
-            <widget id="view-folders-info-box-name" type="textview" class="text folder-info-box-name"></widget>
-            <widget id="view-folders-info-box-path" type="textview" class="text folder-info-box-path"></widget>
-            <widget id="btn-return-root-folder" class="btn btn-link">
-              <widget type="textview-i18n" class="text" data-i18n-key="folders.return">返回到源文件夹</widget>
-            </widget>
-          </widget>
-          <widget id="view-folders-content-wrapper" class="view-content-wrapper">
-            <widget id="view-folders-content" class="view-content full-height">
-              <widget id="tip-empty-folder" class="floating center middle aligned icon message hide">
-                <widget type="textview" class="icon icon icon-folder-multiple-image"></widget>
-                <widget type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹</widget>
-              </widget>
-              <widget type="thumbview" id="current-file-list" class="scrolllayer file-list"></widget>
-            </widget>
-            <widget type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
-          </widget>
-        </widget>
-        <widget id="dropdown-folder-files-sort" type="dropdown" class="checkable" data-target="btn-sort-folder-files" data-position="bottom right"></widget>
-      </widget>
-      <widget id="view-settings" class="view hide">
-        <widget class="view-navbar">
-          <widget type="textview-i18n" class="text view-navbar-title" data-i18n-key="settings.title">设置</widget>
-        </widget>
-        <widget class="view-body">
-          <widget id="view-settings-content-wrapper" class="view-content-wrapper">
-            <widget id="view-settings-content" class="scrolllayer view-content">
-              <widget class="setting-group">
-                <widget type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache.title">缓存</widget>
-                <widget class="item-group">
-                  <widget class="text-line">
-                    <widget id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache.stats">当前缩略图缓存共占用 %s 的空间</widget>
-                  </widget>
-                  <widget class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache.description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</widget>
-                  <widget id="btn-clear-thumb-db" class="btn btn-default">
-                    <widget type="textview-i18n" class="text" data-i18n-key="button.clear">清除</widget>
-                  </widget>
-                </widget>
-              </widget>
-              <widget class="setting-group">
-                <widget type="textview-i18n" class="title" data-i18n-key="settings.language">语言</widget>
-                <widget class="item-group">
-                  <widget class="text-line">
-                    <widget type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</widget>
-                  </widget>
-                  <widget id="btn-change-language" class="btn btn-dropdown">
-                    <widget id="txt-current-language" type="textview" class="default text">简体中文</widget>
-                    <widget type="textview" class="icon icon icon-chevron-down"></widget>
-                  </widget>
-                </widget>
-              </widget>
-              <widget class="setting-group">
-                <widget type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</widget>
-                <widget class="source-list">
-                  <widget id="current-source-list"></widget>
-                  <widget id="btn-add-source" class="source-list-item">
-                    <widget type="textview" class="text icon icon icon-plus"></widget>
-                    <widget type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</widget>
-                  </widget>
-                </widget>
-              </widget>
-              <widget class="setting-group">
-                <widget type="textview-i18n" class="text title" data-i18n-key="settings.private_space.title">私人空间</widget>
-                <widget class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space.description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</widget>
-                <widget class="text-line">
-                  <widget id="switch-private-space-open" type="switch"></widget>
-                  <widget type="textview-i18n" class="text switch-text" data-i18n-key="switch.off" data-bind="switch"></widget>
-                </widget>
-              </widget>
-              <widget id="view-private-space" class="setting-group hide">
-                <widget class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.sources_title">私密源</widget>
-                <widget class="source-list">
-                  <widget id="current-private-source-list"></widget>
-                  <widget id="btn-add-private-source" class="source-list-item">
-                    <widget type="textview" class="text icon icon icon-plus"></widget>
-                    <widget type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</widget>
-                  </widget>
-                </widget>
-                <widget class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.password_title">密码</widget>
-                <widget id="btn-reset-password" class="btn btn-default">
-                  <widget type="textview-i18n" class="text" data-i18n-key="button.reset_password">重置密码</widget>
-                </widget>
-              </widget>
-              <widget class="setting-group">
-                <widget type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</widget>
-                <widget class="item-group">
-                  <widget type="textview" class="text">LC's Finder 0.1.0 Beta 1</widget>
-                  <widget id="txt-trial-license" type="textview-i18n" class="text text-line" data-i18n-key="settings.trial_message">当前是试用版，仅供评估使用，如果你认为此应用对你有用，可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。</widget>
-                  <widget type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2017 LC's Software，保留所有权利。</widget>
-                  <widget class="btn-group">
-                    <widget id="btn-open-license" class="btn btn-link">
-                      <widget type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</widget>
-                    </widget>
-                    <widget id="btn-open-website" class="btn btn-link">
-                      <widget type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</widget>
-                    </widget>
-                    <widget id="btn-open-feedback" class="btn btn-link">
-                      <widget type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</widget>
-                    </widget>
-                    <widget id="btn-open-sourcecode" class="btn btn-link">
-                      <widget type="textview-i18n" class="text" data-i18n-key="settings.sourcecode">源代码</widget>
-                    </widget>
-                  </widget>
-                </widget>
-              </widget>
-              <widget id="dropdown-languages" type="dropdown" data-target="btn-change-language"></widget>
-            </widget>
-            <widget type="scrollbar" data-parent="view-settings-content-wrapper" data-layer="view-settings-content"/>
-          </widget>
-        </widget>
-      </widget>
-      <widget class="alert alert-primary hide">
-        <widget class="alert-header">
-          <widget type="spin" class="ion ion-android-sync"></widget>
-          <widget id="file-sync-tip-title" type="textview-i18n" class="text alert-title" data-i18n-key="filesync.title.syncing">正在同步你的资源</widget>
-        </widget>
-        <widget id="file-sync-tip-stats" type="textview-i18n" class="text alert-text" data-i18n-key="filesync.text.scaning">已扫描 0 个文件</widget>
-      </widget>
-    </widget>
+    <w id="main-window" class="window theme-green">
+      <w id="main-sidebar" class="sidebar sidebar-mini">
+        <w class="sidebar-header">
+          <w type="sidebar-toggle">
+            <w type="icon" name="menu"></w>
+          </w>
+          <w type="textview" class="text sidebar-title">LC's Finder</w>
+        </w>
+        <w id="sidebar-btn-search" class="sidebar-item">
+          <w type="icon" name="magnify"></w>
+          <w type="textview-i18n" class="text" data-i18n-key="search.title">搜索</w>
+        </w>
+        <w id="sidebar-btn-home" class="sidebar-item active">
+          <w type="icon" name="image-multiple"></w>
+          <w type="textview-i18n" class="text" data-i18n-key="home.title">集锦</w>
+        </w>
+        <w id="sidebar-btn-folders" class="sidebar-item">
+          <w type="icon" name="folder-multiple-outline"></w>
+          <w type="textview-i18n" class="text" data-i18n-key="folders.title">文件夹</w>
+        </w>
+        <w id="sidebar-btn-settings" class="sidebar-item">
+          <w type="icon" name="settings"></w>
+          <w type="textview-i18n" class="text" data-i18n-key="settings.title">设置</w>
+        </w>
+      </w>
+      <w id="view-home" class="view">
+        <w class="view-navbar">
+          <w id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="home.title">集锦</w>
+          <w class="pull-right on-selection-mode">
+            <w id="btn-cancel-home-select" class="view-navbar-btn">
+              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+            </w>
+            <w class="divider"></w>
+            <w id="btn-tag-home-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="tag-multiple"></w>
+            </w>
+            <w id="btn-delete-home-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="delete"></w>
+            </w>
+          </w>
+          <w class="pull-right on-normal-mode">
+            <w id="btn-select-home-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+            </w>
+            <w id="btn-sync-home-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="sync"></w>
+            </w>
+          </w>
+        </w>
+        <w class="view-body">
+          <w id="view-home-content-wrapper" class="view-content-wrapper">
+            <w id="view-home-progress" class="top-fixed" type="progress"></w>
+            <w id="view-home-content" class="view-content full-height">
+              <w id="tip-empty-collection" class="floating center middle aligned icon message hide">
+                <w type="textview" class="icon icon icon-image-multiple"></w>
+                <w type="textview-i18n" class="text" data-i18n-key="home.message.empty">未找到可读取的图片。</w>
+              </w>
+              <w type="thumbview" id="home-collection-list" class="scrolllayer file-list"></w>
+            </w>
+            <w type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
+            <w id="view-time-range" class="view-time-range">
+              <w id="view-time-range-content" class="view-content full-height">
+                <w id="time-range-list" class="scrolllayer time-range-list"></w>
+              </w>
+              <w type="scrollbar" data-parent="view-time-range-content" data-layer="time-range-list"/>
+            </w>
+          </w>
+        </w>
+      </w>
+      <w id="view-search" class="view hide">
+        <w class="view-navbar">
+          <w type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.title">搜索</w>
+        </w>
+        <w class="view-body">
+          <w class="search-panel">
+            <w class="search-input-group">
+              <w id="input-search" type="textedit" class="search-input"></w>
+              <w id="btn-search-files" class="btn btn-basic">
+                <w type="textview-i18n" class="text" data-i18n-key="button.search">搜索</w>
+              </w>
+            </w>
+          </w>
+          <w class="view-content-wrapper">
+            <w id="view-search-content" class="view-content full-height">
+              <w id="tip-search-tags-empty" class="floating center middle aligned icon message hide">
+                <w type="textview" class="icon icon icon-tag-multiple"></w>
+                <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</w>
+              </w>
+              <w id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></w>
+            </w>
+            <w type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
+          </w>
+        </w>
+        <w id="view-search-result" class="subview hide">
+          <w class="view-navbar">
+            <w class="view-navbar-btn" id="btn-hide-search-result">
+              <w type="icon" class="text" name="arrow-left"></w>
+            </w>
+            <w id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.results.title">搜索结果</w>
+            <w id="view-search-result-count" type="textview" class="text view-navbar-text on-normal-mode"></w>
+            <w class="pull-right on-selection-mode">
+              <w id="btn-cancel-search-select" class="view-navbar-btn">
+                <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+              </w>
+              <w class="divider"></w>
+              <w id="btn-tag-search-files" class="view-navbar-btn">
+                <w type="icon" class="text" name="tag-multiple"></w>
+              </w>
+              <w id="btn-delete-search-files" class="view-navbar-btn">
+                <w type="icon" class="text" name="delete"></w>
+              </w>
+            </w>
+            <w class="pull-right on-normal-mode">
+              <w id="btn-sort-search-files" class="view-navbar-btn">
+                <w type="icon" class="text" name="sort"></w>
+              </w>
+              <w id="btn-select-search-files" class="view-navbar-btn">
+                <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+              </w>
+            </w>
+          </w>
+          <w class="view-body">
+            <w class="view-content-wrapper">
+              <w id="view-search-result-content" class="view-content full-height">  
+                <w id="tip-search-no-result" class="floating center middle aligned icon message hide">
+                  <w type="textview" class="icon icon icon-file-hidden"></w>
+                  <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</w>
+                </w>
+                <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
+              </w>
+              <w type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
+            </w>
+          </w>
+          <w id="dropdown-search-files-sort" type="dropdown" class="checkable" data-target="btn-sort-search-files" data-position="bottom right"></w>
+        </w>
+      </w>
+      <w id="view-folders" class="view hide">
+        <w class="view-navbar">
+          <w id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders.title">文件夹</w>
+          <w class="pull-right on-selection-mode">
+            <w id="btn-cancel-folder-select" class="view-navbar-btn">
+              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+            </w>
+            <w class="divider"></w>
+            <w id="btn-tag-folder-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="tag-multiple"></w>
+            </w>
+            <w id="btn-delete-folder-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="delete"></w>
+            </w>
+          </w>
+          <w class="pull-right on-normal-mode">
+            <w id="btn-sort-folder-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="sort"></w>
+            </w>
+            <w id="btn-select-folder-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+            </w>
+            <w id="btn-sync-folder-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="sync"></w>
+            </w>
+          </w>
+        </w>
+        <w class="view-body">
+          <w id="view-folders-info-box" class="folder-info-box">
+            <w id="view-folders-info-box-name" type="textview" class="text folder-info-box-name"></w>
+            <w id="view-folders-info-box-path" type="textview" class="text folder-info-box-path"></w>
+            <w id="btn-return-root-folder" class="btn btn-link">
+              <w type="textview-i18n" class="text" data-i18n-key="folders.return">返回到源文件夹</w>
+            </w>
+          </w>
+          <w id="view-folders-content-wrapper" class="view-content-wrapper">
+            <w id="view-folders-content" class="view-content full-height">
+              <w id="tip-empty-folder" class="floating center middle aligned icon message hide">
+                <w type="icon" name="folder-multiple-image"></w>
+                <w type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹</w>
+              </w>
+              <w type="thumbview" id="current-file-list" class="scrolllayer file-list"></w>
+            </w>
+            <w type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
+          </w>
+        </w>
+        <w id="dropdown-folder-files-sort" type="dropdown" class="checkable" data-target="btn-sort-folder-files" data-position="bottom right"></w>
+      </w>
+      <w id="view-settings" class="view hide">
+        <w class="view-navbar">
+          <w type="textview-i18n" class="text view-navbar-title" data-i18n-key="settings.title">设置</w>
+        </w>
+        <w class="view-body">
+          <w id="view-settings-content-wrapper" class="view-content-wrapper">
+            <w id="view-settings-content" class="scrolllayer view-content">
+              <w class="setting-group">
+                <w type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache.title">缓存</w>
+                <w class="item-group">
+                  <w class="text-line">
+                    <w id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache.stats">当前缩略图缓存共占用 %s 的空间</w>
+                  </w>
+                  <w class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache.description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</w>
+                  <w id="btn-clear-thumb-db" class="btn btn-default">
+                    <w type="textview-i18n" class="text" data-i18n-key="button.clear">清除</w>
+                  </w>
+                </w>
+              </w>
+              <w class="setting-group">
+                <w type="textview-i18n" class="title" data-i18n-key="settings.language">语言</w>
+                <w class="item-group">
+                  <w class="text-line">
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</w>
+                  </w>
+                  <w id="btn-change-language" class="btn btn-dropdown">
+                    <w id="txt-current-language" type="textview" class="default text">简体中文</w>
+                    <w type="textview" class="icon icon icon-chevron-down"></w>
+                  </w>
+                </w>
+              </w>
+              <w class="setting-group">
+                <w type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</w>
+                <w class="source-list">
+                  <w id="current-source-list"></w>
+                  <w id="btn-add-source" class="source-list-item">
+                    <w type="icon" class="text" name="plus"></w>
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                  </w>
+                </w>
+              </w>
+              <w class="setting-group">
+                <w type="textview-i18n" class="text title" data-i18n-key="settings.private_space.title">私人空间</w>
+                <w class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space.description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</w>
+                <w class="text-line">
+                  <w id="switch-private-space-open" type="switch"></w>
+                  <w type="textview-i18n" class="text switch-text" data-i18n-key="switch.off" data-bind="switch"></w>
+                </w>
+              </w>
+              <w id="view-private-space" class="setting-group hide">
+                <w class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.sources_title">私密源</w>
+                <w class="source-list">
+                  <w id="current-private-source-list"></w>
+                  <w id="btn-add-private-source" class="source-list-item">
+                    <w type="icon" class="text" name="plus"></w>
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                  </w>
+                </w>
+                <w class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.password_title">密码</w>
+                <w id="btn-reset-password" class="btn btn-default">
+                  <w type="textview-i18n" class="text" data-i18n-key="button.reset_password">重置密码</w>
+                </w>
+              </w>
+              <w class="setting-group">
+                <w type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</w>
+                <w class="item-group">
+                  <w type="textview" class="text">LC's Finder 0.1.0 Beta 1</w>
+                  <w id="txt-trial-license" type="textview-i18n" class="text text-line" data-i18n-key="settings.trial_message">当前是试用版，仅供评估使用，如果你认为此应用对你有用，可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。</w>
+                  <w type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2017 LC's Software，保留所有权利。</w>
+                  <w class="btn-group">
+                    <w id="btn-open-license" class="btn btn-link">
+                      <w type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</w>
+                    </w>
+                    <w id="btn-open-website" class="btn btn-link">
+                      <w type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</w>
+                    </w>
+                    <w id="btn-open-feedback" class="btn btn-link">
+                      <w type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</w>
+                    </w>
+                    <w id="btn-open-sourcecode" class="btn btn-link">
+                      <w type="textview-i18n" class="text" data-i18n-key="settings.sourcecode">源代码</w>
+                    </w>
+                  </w>
+                </w>
+              </w>
+              <w id="dropdown-languages" type="dropdown" data-target="btn-change-language"></w>
+            </w>
+            <w type="scrollbar" data-parent="view-settings-content-wrapper" data-layer="view-settings-content"/>
+          </w>
+        </w>
+      </w>
+      <w class="alert alert-primary hide">
+        <w class="alert-header">
+          <w type="spin" class="ion ion-android-sync"></w>
+          <w id="file-sync-tip-title" type="textview-i18n" class="text alert-title" data-i18n-key="filesync.title.syncing">正在同步你的资源</w>
+        </w>
+        <w id="file-sync-tip-stats" type="textview-i18n" class="text alert-text" data-i18n-key="filesync.text.scaning">已扫描 0 个文件</w>
+      </w>
+    </w>
   </ui>
 </lcui-app>

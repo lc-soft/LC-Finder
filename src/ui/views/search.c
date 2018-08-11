@@ -49,7 +49,6 @@
 #include "thumbview.h"
 #include "textview_i18n.h"
 #include "browser.h"
-#include "dropdown.h"
 #include "i18n.h"
 
 #define KEY_SORT_HEADER		"sort.header"
@@ -673,6 +672,7 @@ static void InitSearchResultsSort( void )
 	const wchar_t *header = I18n_GetText( KEY_SORT_HEADER );
 	SelectWidget( menu, ID_DROPDOWN_SEARCH_FILES_SORT );
 	Widget_Empty( menu );
+	/*
 	Dropdown_SetHeaderW( menu, header );
 	for( i = 0; i < SORT_METHODS_LEN; ++i ) {
 		FileSortMethod sort = &sort_methods[i];
@@ -690,7 +690,7 @@ static void InitSearchResultsSort( void )
 		}
 	}
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
-	UpdateQueryTerms();
+	UpdateQueryTerms();*/
 }
 
 static void UpdateSearchInput( void )
@@ -703,10 +703,10 @@ static void OnLanguageChanged( void *privdata, void *data )
 {
 	LCUI_Widget menu;
 	const wchar_t *header;
-	header = I18n_GetText( KEY_SORT_HEADER );
+	header = I18n_GetText( KEY_SORT_HEADER );/*
 	SelectWidget( menu, ID_DROPDOWN_SEARCH_FILES_SORT );
 	Dropdown_SetHeaderW( menu, header );
-	UpdateSearchInput();
+	UpdateSearchInput();*/
 }
 
 static void OnTagThumbViewReady( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )

@@ -7,10 +7,10 @@ dropdown.checkable dropdown-item {
 	padding-right: 20px;
 }
 dropdown.checkable dropdown-item .icon {
-	visible: false;
+	visibility: hidden;
 	margin-right: 5px;
 	font-size: 20px;
 }
 dropdown.checkable dropdown-item.active .icon {
-	visible: true;
+	visibility: visible;
 }
