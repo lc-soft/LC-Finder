@@ -56,15 +56,15 @@ sidebar-toggle {
 		}
 	}
 	&:active {
-		color: $primary-active-color;
+		color: $sidebar-item-active-color;
 	}
 	&.active {
-		border-color: $primary-active-color;
-		background-color: rgba($primary-active-color, 0.1);
+		border-color: $sidebar-item-active-color;
+		background-color: rgba($sidebar-item-active-color, 0.1);
 
 		.icon,
 		.text {
-			color: $primary-active-color;
+			color: $sidebar-item-active-color;
 		}
 	}
 }

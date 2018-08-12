@@ -1,22 +1,43 @@
-$navbar-height: 48px;
-
 $blue: #1890ff;
-$view-bg: #fff;
 $primary-color: $blue; 
 
+$gutter-width: 20px;
+$border-color: #eee;
+
+$view-bg: #fff;
+$view-navbar-bg: #fff;
+$view-navbar-border-color: $border-color;
+$view-navbar-font-size: 16px;
+$view-navbar-title-font-size: 18px;
+$view-navbar-line-height: 46px;
+$view-navbar-padding-y: 4px;
+$view-navbar-padding-x: 10px;
+$view-navbar-height: $view-navbar-line-height + $view-navbar-padding-y * 2;
+
+$view-navbar-btn-color: #707070;
+$view-navbar-btn-hover-color: #2e2e2e;
+$view-navbar-btn-font-size: $view-navbar-font-size;
+$view-navbar-btn-icon-font-size: 24px;
+$view-navbar-btn-icon-line-height: $view-navbar-btn-icon-font-size;
+$view-navbar-btn-spacing: 10px;
+$view-navbar-btn-padding-y: ($view-navbar-line-height - $view-navbar-btn-icon-line-height) / 2;
+
 $sidebar-bg: #fafafa;
-$sidebar-border-color: #e5e5e5;
+$sidebar-color: #707070;
+$sidebar-hover-color: #2e2e2e;
 $sidebar-width: 256px;
 $sidebar-min-width: 48px;
 $sidebar-font-size: 20px;
 $sidebar-icon-width: 48px;
 $sidebar-line-height: 28px;
+$sidebar-border-color: $border-color;
 
 $sidebar-item-padding-x: 0;
 $sidebar-item-padding-y: 8px;
 $sidebar-item-hover-bg: rgba(0,0,0,0.04);
 $sidebar-item-active-bg: rgba(0,0,0,0.06);
+$sidebar-item-active-color: $primary-color;
 $sidebar-item-border-width: 3px;
-$sidebar-color: #707070;
-$sidebar-hover-color: #2e2e2e;
-$primary-active-color: $primary-color;
+
+$divider-color: #aaa;
+$divider-margin-y: 12px;

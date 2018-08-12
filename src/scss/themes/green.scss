@@ -13,33 +13,6 @@ $primary-dark-color: darken($primary-color, 10%);
 			background-color: rgba(0,0,0,0.05);
 		}
 	}
-	.view, .subview {
-		background-color: #f5f7fa;
-	}
-	.view-navbar {
-		background-color: #414849;
-		.text {
-			color: #fff;
-		}
-		.divider {
-			background-color: #373D3E;
-		}
-		.view-navbar-btn {
-			&:hover {
-				background-color: #4C5556;
-			}
-			&:active, &.active {
-				background-color: #616C6D;
-			}
-			&:disabled, &:disabled:hover, &:disabled:active {
-				background-color: transparent;
-
-				.text {
-					color: #727e80;
-				}
-			}
-		}
-	}
 	.selection-mode .text.view-navbar-title {
 		color: #ddd;
 	}

@@ -32,7 +32,7 @@
       <w id="view-home" class="view">
         <w class="view-navbar">
           <w id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="home.title">集锦</w>
-          <w class="pull-right on-selection-mode">
+          <w class="view-navbar-actions pull-right on-selection-mode">
             <w id="btn-cancel-home-select" class="view-navbar-btn">
               <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
             </w>
@@ -44,7 +44,7 @@
               <w type="icon" class="text" name="delete"></w>
             </w>
           </w>
-          <w class="pull-right on-normal-mode">
+          <w class="view-navbar-actions pull-right on-normal-mode">
             <w id="btn-select-home-files" class="view-navbar-btn">
               <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
             </w>
@@ -63,12 +63,12 @@
               </w>
               <w type="thumbview" id="home-collection-list" class="scrolllayer file-list"></w>
             </w>
-            <w type="scrollbar" data-parent="view-home-content" data-layer="home-collection-list"/>
+            <w type="scrollbar" target="home-collection-list"/>
             <w id="view-time-range" class="view-time-range">
               <w id="view-time-range-content" class="view-content full-height">
                 <w id="time-range-list" class="scrolllayer time-range-list"></w>
               </w>
-              <w type="scrollbar" data-parent="view-time-range-content" data-layer="time-range-list"/>
+              <w type="scrollbar" target="time-range-list"/>
             </w>
           </w>
         </w>
@@ -94,7 +94,7 @@
               </w>
               <w id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></w>
             </w>
-            <w type="scrollbar" data-parent="view-search-content" data-layer="view-search-tags"/>
+            <w type="scrollbar" target="view-search-tags"/>
           </w>
         </w>
         <w id="view-search-result" class="subview hide">
@@ -134,7 +134,7 @@
                 </w>
                 <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
               </w>
-              <w type="scrollbar" data-parent="view-search-result-content" data-layer="view-search-files"/>
+              <w type="scrollbar" target="view-search-files"/>
             </w>
           </w>
           <w id="dropdown-search-files-sort" type="dropdown" class="checkable" data-target="btn-sort-search-files" data-position="bottom right"></w>
@@ -143,7 +143,7 @@
       <w id="view-folders" class="view hide">
         <w class="view-navbar">
           <w id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders.title">文件夹</w>
-          <w class="pull-right on-selection-mode">
+          <w class="view-navbar-actions pull-right on-selection-mode">
             <w id="btn-cancel-folder-select" class="view-navbar-btn">
               <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
             </w>
@@ -155,7 +155,7 @@
               <w type="icon" class="text" name="delete"></w>
             </w>
           </w>
-          <w class="pull-right on-normal-mode">
+          <w class="view-navbar-actions pull-right on-normal-mode">
             <w id="btn-sort-folder-files" class="view-navbar-btn">
               <w type="icon" class="text" name="sort"></w>
             </w>
@@ -183,7 +183,7 @@
               </w>
               <w type="thumbview" id="current-file-list" class="scrolllayer file-list"></w>
             </w>
-            <w type="scrollbar" data-parent="view-folders-content" data-layer="current-file-list"/>
+            <w type="scrollbar" target="current-file-list"/>
           </w>
         </w>
         <w id="dropdown-folder-files-sort" type="dropdown" class="checkable" data-target="btn-sort-folder-files" data-position="bottom right"></w>
@@ -275,7 +275,7 @@
               </w>
               <w id="dropdown-languages" type="dropdown" data-target="btn-change-language"></w>
             </w>
-            <w type="scrollbar" data-parent="view-settings-content-wrapper" data-layer="view-settings-content"/>
+            <w type="scrollbar" target="view-settings-content"/>
           </w>
         </w>
       </w>
