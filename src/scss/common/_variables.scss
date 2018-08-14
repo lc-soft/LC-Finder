@@ -42,3 +42,13 @@ $sidebar-item-border-width: 3px;
 
 $divider-color: #aaa;
 $divider-margin-y: 12px;
+
+$switch-height: 20px;
+$switch-border-width: 2px;
+$switch-slider-width: $switch-height - $switch-border-width * 2;
+$switch-icon-width: $switch-height + $switch-border-width * 2;
+$switch-icon-height: $switch-height - $switch-border-width * 2;
+$switch-bar-width: $switch-icon-width * 2 + $switch-slider-width;
+$switch-width: $switch-icon-width + $switch-slider-width + $switch-border-width * 2;
+$switch-checked-color: #44BB55;
+$switch-color: #8c9da5;

@@ -1,28 +1,27 @@
-
 .switch {
-	height: 20px;
-	width: 44px;
+	width: $switch-width;
+	height: $switch-height;
 	display: inline-block;
-	border: 2px solid #c8d3d9;
-	background-color: #c8d3d9;
+	border: $switch-border-width solid lighten($switch-color, 25%);
+	background-color: lighten($switch-color, 25%);
 
   .switch-bar {
-    left: -24px;
+    left: -$switch-icon-width;
     height: 100%;
-    width: 68px;
+    width: $switch-bar-width;
     position: relative;
   }
   .switch-slider {
-  	width: 20px;
+  	width: $switch-slider-width;
   	height: 100%;
-  	background-color: #8c9da5;
+  	background-color: $switch-color;
   }
   &.checked {
-  	border: 2px solid #80dea0;
-  	background-color: #80dea0;
+  	border-color:  lighten($switch-checked-color, 25%);
+  	background-color: lighten($switch-checked-color, 25%);
 
     .switch-slider {
-    	background-color: #44BB55;
+    	background-color: $switch-checked-color;
     }
     .switch-bar {
     	left: 0;
@@ -30,10 +29,11 @@
   }
   .switch-on-block,
   .switch-off-block {
-  	width: 24px;
+  	width: $switch-icon-width;
   	color: #fff;
-  	font-size: 16px;
+  	font-size: $switch-icon-height;
   	text-align: center;
+    line-height: $switch-icon-height;
   }
   .switch-on-block,
   .switch-off-block,
@@ -42,6 +42,6 @@
   }
 }
 .switch-text {
-	margin-left: 10px;
-	line-height: 24px;
+	margin-left: $spacing / 2;
+	line-height: $switch-height;
 }
