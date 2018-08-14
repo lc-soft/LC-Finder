@@ -43,11 +43,7 @@
 #include "common.h"
 #include "i18n.h"
 
-enum DictValueType {
-	NONE,
-	STRING,
-	DICT
-};
+enum DictValueType { NONE, STRING, DICT };
 
 typedef struct DictStringValueRec_ {
 	wchar_t *data;
@@ -67,76 +63,81 @@ struct DictValueRec_ {
 };
 
 static struct I18nModule {
-	int length;		/**< 语言列表的长度 */
-	Language *languages;	/**< 语言列表 */
-	Language language;	/**< 当前选中的语言 */
-	Dict *texts;		/**< 文本库 */
-} self = {0};
+	int length;          /**< 语言列表的长度 */
+	Language *languages; /**< 语言列表 */
+	Language language;   /**< 当前选中的语言 */
+	Dict *texts;         /**< 文本库 */
+} self = { 0 };
 
-static char *yaml_token_getstr( yaml_token_t *token )
+static char *yaml_token_getstr(yaml_token_t *token)
 {
-	size_t len = token->data.scalar.length + 1;
-	char *str = malloc( sizeof( char ) * len );
-	if( str ) {
-		strncpy( str, (char*)token->data.scalar.value, len );
-		str[len - 1] = 0;
+	size_t len = token->data.scalar.length;
+	char *str = malloc(sizeof(char) * (len + 1));
+	if (!str) {
+		abort();
 	}
+	strncpy(str, (char *)token->data.scalar.value, len);
+	str[len] = 0;
 	return str;
 }
 
-static wchar_t *yaml_token_getwcs( yaml_token_t *token )
+static wchar_t *yaml_token_getwcs(yaml_token_t *token)
 {
-	char *str = (char*)token->data.scalar.value;
-	size_t len = token->data.scalar.length + 1;
-	wchar_t *wcs = malloc( sizeof( wchar_t ) * len );
-	LCUI_DecodeString( wcs, str, (int)len, ENCODING_UTF8 );
+	char *str = (char *)token->data.scalar.value;
+	size_t len = token->data.scalar.length;
+	wchar_t *wcs = malloc(sizeof(wchar_t) * (len + 1));
+	len = LCUI_DecodeUTF8String(wcs, str, len);
+	if (len < 1) {
+		abort();
+	}
+	wcs[len] = 0;
 	return wcs;
 }
 
-static void DeleteDictValue( void *privdata, void *data )
+static void DeleteDictValue(void *privdata, void *data)
 {
 	DictValue value = data;
-	if( value->type == DICT ) {
-		Dict_Release( value->dict );
-	} else if( value->type == STRING ) {
-		free( value->string.data );
+	if (value->type == DICT) {
+		Dict_Release(value->dict);
+	} else if (value->type == STRING) {
+		free(value->string.data);
 	}
-	free( value->key );
-	free( data );
+	free(value->key);
+	free(data);
 }
 
-static Language I18n_AddLanguage( const char *path, Dict *dict )
+static Language I18n_AddLanguage(const char *path, Dict *dict)
 {
 	int i, pos;
 	DictValue name, code;
 	Language lang, *langs;
-	size_t len = strlen( path ) + 1;
-	lang = malloc( sizeof( LanguageRec ) );
-	name = Dict_FetchValue( dict, "name" );
-	code = Dict_FetchValue( dict, "code" );
-	if( !name || !code ) {
+	size_t len = strlen(path) + 1;
+	lang = malloc(sizeof(LanguageRec));
+	name = Dict_FetchValue(dict, "name");
+	code = Dict_FetchValue(dict, "code");
+	if (!name || !code) {
 		return NULL;
 	}
-	lang->filename = malloc( sizeof( char ) * len );
-	strncpy( lang->filename, path, len );
-	lang->name = EncodeUTF8( name->string.data );
-	lang->code = EncodeUTF8( code->string.data );
+	lang->filename = malloc(sizeof(char) * len);
+	strncpy(lang->filename, path, len);
+	lang->name = EncodeUTF8(name->string.data);
+	lang->code = EncodeUTF8(code->string.data);
 	len = self.length + 2;
-	langs = realloc( self.languages, sizeof( Language ) * len );
-	if( !langs ) {
+	langs = realloc(self.languages, sizeof(Language) * len);
+	if (!langs) {
 		return NULL;
 	}
 	langs[len - 1] = NULL;
-	for( i = 0, pos = -1; i < self.length; ++i ) {
-		if( strcmp( lang->code, langs[i]->code ) < 0 ) {
+	for (i = 0, pos = -1; i < self.length; ++i) {
+		if (strcmp(lang->code, langs[i]->code) < 0) {
 			pos = i;
 			break;
 		}
 	}
-	if( pos == -1 ) {
+	if (pos == -1) {
 		pos = self.length;
 	} else {
-		for( i = self.length; i > pos; --i ) {
+		for (i = self.length; i > pos; --i) {
 			langs[i] = langs[i - 1];
 		}
 	}
@@ -146,34 +147,34 @@ static Language I18n_AddLanguage( const char *path, Dict *dict )
 	return lang;
 }
 
-static char *LoadFileToBuffer( const char *path, size_t *size )
+static char *LoadFileToBuffer(const char *path, size_t *size)
 {
 	char *buffer, *p;
 	size_t buffer_size = 0, read_size = 256;
-	FILE *file = fopen( path, "rb" );
-	if( !file ) {
+	FILE *file = fopen(path, "rb");
+	if (!file) {
 		return NULL;
 	}
 	buffer = NULL;
-	while( !feof( file ) ) {
-		p = realloc( buffer, buffer_size + sizeof( char ) * 256 );
-		if( !p ) {
-			free( buffer );
-			fclose( file );
+	while (!feof(file)) {
+		p = realloc(buffer, buffer_size + sizeof(char) * 256);
+		if (!p) {
+			free(buffer);
+			fclose(file);
 			return NULL;
 		}
 		buffer = p;
 		p = buffer + buffer_size;
-		read_size = fread( p, sizeof( char ), 256, file );
+		read_size = fread(p, sizeof(char), 256, file);
 		buffer_size += read_size;
 	};
 	*size = buffer_size;
 	buffer[buffer_size] = 0;
-	fclose( file );
+	fclose(file);
 	return buffer;
 }
 
-Dict *I18n_LoadFile( const char *path )
+Dict *I18n_LoadFile(const char *path)
 {
 	size_t size;
 	char *buffer;
@@ -184,42 +185,46 @@ Dict *I18n_LoadFile( const char *path )
 	int state = 0;
 
 	parent_value = value = NULL;
-	parent_dict = dict = StrDict_Create( NULL, DeleteDictValue );
-	if( !yaml_parser_initialize( &parser ) ) {
-		LOG( "[i18n] failed to initialize parser!\n" );
+	parent_dict = dict = StrDict_Create(NULL, DeleteDictValue);
+	if (!yaml_parser_initialize(&parser)) {
+		LOG("[i18n] failed to initialize parser!\n");
 		return NULL;
 	}
-	LOG( "[i18n] load language file: %s\n", path );
-	buffer = LoadFileToBuffer( path, &size );
-	if( !buffer ) {
-		LOG( "[i18n] failed to open file: %s\n", path );
+	LOG("[i18n] load language file: %s\n", path);
+	buffer = LoadFileToBuffer(path, &size);
+	if (!buffer) {
+		LOG("[i18n] failed to open file: %s\n", path);
 		return NULL;
 	}
-	yaml_parser_set_input_string( &parser, (unsigned char*)buffer, size );
+	yaml_parser_set_input_string(&parser, (unsigned char *)buffer, size);
 	do {
-		if( !yaml_parser_scan( &parser, &token ) ) {
-			LOG( "[i18n] error: %s\n", parser.problem );
-			Dict_Release( dict );
+		if (!yaml_parser_scan(&parser, &token)) {
+			LOG("[i18n] error: %s\n", parser.problem);
+			Dict_Release(dict);
 			dict = NULL;
 			break;
 		}
-		switch( token.type ) {
-		case YAML_KEY_TOKEN: state = 0; break;
-		case YAML_VALUE_TOKEN: state = 1; break;
-		case YAML_BLOCK_MAPPING_START_TOKEN: 
-			if( !value ) {
+		switch (token.type) {
+		case YAML_KEY_TOKEN:
+			state = 0;
+			break;
+		case YAML_VALUE_TOKEN:
+			state = 1;
+			break;
+		case YAML_BLOCK_MAPPING_START_TOKEN:
+			if (!value) {
 				break;
 			}
 			value->type = DICT;
-			value->dict = StrDict_Create( NULL, DeleteDictValue );
+			value->dict = StrDict_Create(NULL, DeleteDictValue);
 			value->parent_value = parent_value;
 			parent_dict = value->dict;
 			parent_value = value;
 			break;
-		case YAML_BLOCK_END_TOKEN: 
-			if( parent_value ) {
+		case YAML_BLOCK_END_TOKEN:
+			if (parent_value) {
 				parent_value = parent_value->parent_value;
-				if(parent_value ) {
+				if (parent_value) {
 					parent_dict = parent_value->dict;
 				} else {
 					parent_dict = dict;
@@ -227,49 +232,50 @@ Dict *I18n_LoadFile( const char *path )
 			}
 			break;
 		case YAML_SCALAR_TOKEN:
-			if( state == 0 ) {
-				value = malloc( sizeof( DictValueRec ) );
+			if (state == 0) {
+				value = malloc(sizeof(DictValueRec));
 				value->type = NONE;
 				value->parent_dict = parent_dict;
 				value->parent_value = parent_value;
-				value->key = yaml_token_getstr( &token );
-				Dict_Add( parent_dict, value->key, value );
+				value->key = yaml_token_getstr(&token);
+				Dict_Add(parent_dict, value->key, value);
 				break;
 			}
 			value->type = STRING;
-			value->string.length = token.data.scalar.length;
-			value->string.data = yaml_token_getwcs( &token );
+			value->string.data = yaml_token_getwcs(&token);
+			value->string.length = wcslen(value->string.data);
 			break;
-		default: break;
+		default:
+			break;
 		}
-		if( token.type != YAML_STREAM_END_TOKEN ) {
-			yaml_token_delete( &token );
+		if (token.type != YAML_STREAM_END_TOKEN) {
+			yaml_token_delete(&token);
 		}
-	} while( token.type != YAML_STREAM_END_TOKEN );
-	yaml_token_delete( &token );
-	yaml_parser_delete( &parser );
-	free( buffer );
+	} while (token.type != YAML_STREAM_END_TOKEN);
+	yaml_token_delete(&token);
+	yaml_parser_delete(&parser);
+	free(buffer);
 	return dict;
 }
 
-Language I18n_LoadLanguage( const char *filename )
+Language I18n_LoadLanguage(const char *filename)
 {
 	Dict *dict;
 	Language lang;
-	dict = I18n_LoadFile( filename );
-	if( !dict ) {
+	dict = I18n_LoadFile(filename);
+	if (!dict) {
 		return NULL;
 	}
-	lang = I18n_AddLanguage( filename, dict );
-	Dict_Release( dict );
-	if( lang ) {
-		printf( "[i18n] language loaded, name: %s, code: %s\n", 
-			lang->name, lang->code );
+	lang = I18n_AddLanguage(filename, dict);
+	Dict_Release(dict);
+	if (lang) {
+		printf("[i18n] language loaded, name: %s, code: %s\n",
+		       lang->name, lang->code);
 	}
 	return lang;
 }
 
-const wchar_t *I18n_GetText( const char *keystr )
+const wchar_t *I18n_GetText(const char *keystr)
 {
 	int i;
 	char key[256];
@@ -277,56 +283,56 @@ const wchar_t *I18n_GetText( const char *keystr )
 	Dict *dict;
 	DictValue value;
 
-	if( !self.texts ) {
+	if (!self.texts) {
 		return NULL;
 	}
-	value = Dict_FetchValue( self.texts, "strings" );
-	if( !value || value->type != DICT ) {
+	value = Dict_FetchValue(self.texts, "strings");
+	if (!value || value->type != DICT) {
 		return NULL;
 	}
 	dict = value->dict;
-	for( i = 0, p = keystr, value = NULL; *p; ++p, ++i ) {
-		if( *p != '.' ) {
+	for (i = 0, p = keystr, value = NULL; *p; ++p, ++i) {
+		if (*p != '.') {
 			key[i] = *p;
 			continue;
 		}
 		key[i] = 0;
-		value = Dict_FetchValue( dict, key );
-		if( value && value->type == DICT ) {
+		value = Dict_FetchValue(dict, key);
+		if (value && value->type == DICT) {
 			dict = value->dict;
 		} else {
 			return NULL;
 		}
 		i = -1;
 	}
-	if( i > 0 ) {
+	if (i > 0) {
 		key[i] = 0;
-		value = Dict_FetchValue( dict, key );
+		value = Dict_FetchValue(dict, key);
 	}
-	if( value && value->type == STRING ) {
+	if (value && value->type == STRING) {
 		return value->string.data;
 	}
 	return NULL;
 }
 
-int I18n_GetLanguages( Language **languages )
+int I18n_GetLanguages(Language **languages)
 {
 	*languages = self.languages;
 	return self.length;
 }
 
-Language I18n_SetLanguage( const char *lang_code )
+Language I18n_SetLanguage(const char *lang_code)
 {
 	int i;
-	for( i = 0; i < self.length; ++i ) {
+	for (i = 0; i < self.length; ++i) {
 		Dict *dict;
 		Language lang;
 		lang = self.languages[i];
-		if( strcmp( lang->code, lang_code ) ) {
+		if (strcmp(lang->code, lang_code)) {
 			continue;
 		}
-		dict = I18n_LoadFile( lang->filename );
-		if( !dict ) {
+		dict = I18n_LoadFile(lang->filename);
+		if (!dict) {
 			break;
 		}
 		self.texts = dict;
@@ -340,21 +346,27 @@ Language I18n_SetLanguage( const char *lang_code )
 
 #include <windows.h>
 
-int I18n_GetDefaultLanguage( char *lang, int max_len )
+int I18n_GetDefaultLanguage(char *lang, int max_len)
 {
 	wchar_t buf[64] = L"en-US";
 #ifndef PLATFORM_WIN32_DESKTOP_XP
-	GetUserDefaultLocaleName( buf, 63 );
+	GetUserDefaultLocaleName(buf, 63);
 #endif
-	return LCUI_EncodeString( lang, buf, max_len, ENCODING_UTF8 );
+	return LCUI_EncodeString(lang, buf, max_len, ENCODING_UTF8);
 }
 
 #else
 
-int I18n_GetDefaultLanguage( char *lang, int max_len )
+int I18n_GetDefaultLanguage(char *lang, int max_len)
 {
-	strncpy( lang, "en-US", max_len );
-	return strlen(lang);
+	char buf[32] = "en-US";
+	const char *str = getenv("LANG");
+	if (str) {
+		strncpy(buf, str, 5);
+		buf[2] = '-';
+	}
+	strncpy(lang, buf, max_len);
+	return 5;
 }
 
 #endif

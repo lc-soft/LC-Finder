@@ -723,7 +723,6 @@ static int LCFinder_InitLanguage(void)
 		int len;
 		wchar_t *name, *p;
 		name = LCUI_GetFileNameW(entry);
-		_DEBUG_MSG("%S\n", name);
 		/* 忽略 . 开头的文件，包括 . 和 .. 文件夹 */
 		if (name[0] == '.') {
 			continue;
@@ -743,7 +742,7 @@ static int LCFinder_InitLanguage(void)
 		len = LCUI_EncodeString(file, lang_path, PATH_LEN - 1,
 					ENCODING_ANSI);
 		file[len] = 0;
-		LOG("[i18n] load file: %S\n", file);
+		LOG("[i18n] load file: %S\n", lang_path);
 		I18n_LoadLanguage(file);
 	}
 	LOG("[i18n] set language: %s\n", finder.config.language);

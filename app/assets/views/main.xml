@@ -213,10 +213,11 @@
                   <w class="text-line">
                     <w type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</w>
                   </w>
-                  <w id="btn-change-language" class="btn btn-dropdown">
+                  <w id="btn-change-language" class="btn" data-toggle="dropdown" data-target="dropdown-languages">
                     <w id="txt-current-language" type="textview" class="default text">简体中文</w>
                     <w type="textview" class="icon icon icon-chevron-down"></w>
                   </w>
+                  <w id="dropdown-languages" type="dropdown-menu"></w>
                 </w>
               </w>
               <w class="setting-group">
@@ -273,7 +274,6 @@
                   </w>
                 </w>
               </w>
-              <w id="dropdown-languages" type="dropdown" data-target="btn-change-language"></w>
             </w>
             <w type="scrollbar" target="view-settings-content"/>
           </w>
