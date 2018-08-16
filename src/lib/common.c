@@ -396,7 +396,7 @@ int getsizestr(char *str, int64_t size)
 	return sprintf(str, "%0.2f%s", num, units[i]);
 }
 
-int wgetsizestr(wchar_t *str, int max_len, int64_t size)
+int wgetsizestr(wchar_t *str, size_t max_len, int64_t size)
 {
 	int i;
 	double num;

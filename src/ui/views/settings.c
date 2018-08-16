@@ -223,8 +223,10 @@ static void RenderThumbDBSizeText(wchar_t *buf, const wchar_t *text, void *data)
 {
 	wchar_t size_str[128];
 	int64_t size = LCFinder_GetThumbDBTotalSize();
+
 	wgetsizestr(size_str, 127, size);
-	swprintf(buf, TXTFMT_BUF_MAX_LEN, text, size_str);
+	wcsncpy(buf, text, TXTFMT_BUF_MAX_LEN);
+	wcsreplace(buf, TXTFMT_BUF_MAX_LEN, L"%s", size_str);
 }
 
 static void OnBtnSettingsClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)

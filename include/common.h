@@ -101,7 +101,7 @@ int wgetnumberstr( wchar_t *str, int max_len, size_t number );
 
 int getsizestr( char *str, int64_t size );
 
-int wgetsizestr( wchar_t *str, int max_len, int64_t size );
+int wgetsizestr( wchar_t *str, size_t max_len, int64_t size );
 
 int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
 
