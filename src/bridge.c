@@ -44,6 +44,7 @@
 #include <LCUI/gui/widget.h>
 #include "ui.h"
 #include "dialog.h"
+#include "i18n.h"
 
 #ifdef PLATFORM_LINUX
 #include <unistd.h>
@@ -54,8 +55,8 @@
 /* clang-format off */
 
 #define MAX_DIRPATH_LEN			2048
-#define DIALOG_TITLE_ADD_DIR		L"添加源文件夹"
-#define DIALOG_PLACEHOLDER_ADD_DIR	L"文件夹的位置"
+#define KEY_ADD_FOLDER			"dialog.select_folder.title"
+#define KEY_FOLDER_PATH			"dialog.select_folder.placeholder"
 #define APP_FOLDER_NAME			"lc-finder"
 #define APP_OWNER_FOLDER_NAME		".lc-soft"
 /* clang-format on */
@@ -71,16 +72,16 @@ static LCUI_BOOL CheckDir(const wchar_t *dirpath)
 	return TRUE;
 }
 
-int SelectFolder(char *dirpath, int max_len)
+static size_t SelectFolderW(wchar_t *dirpath, size_t max_len)
 {
-	wchar_t wdirpath[MAX_DIRPATH_LEN];
+	const wchar_t *title = I18n_GetText(KEY_ADD_FOLDER);
+	const wchar_t *placeholder = I18n_GetText(KEY_FOLDER_PATH);
 	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_MAIN);
-	if (0 != LCUIDialog_Prompt(window, DIALOG_TITLE_ADD_DIR,
-				   DIALOG_PLACEHOLDER_ADD_DIR, NULL, wdirpath,
-				   MAX_DIRPATH_LEN, CheckDir)) {
-		return -1;
+	if (0 != LCUIDialog_Prompt(window, title, placeholder, NULL, dirpath,
+				   max_len, CheckDir)) {
+		return 0;
 	}
-	return LCUI_EncodeString(dirpath, wdirpath, max_len, ENCODING_UTF8);
+	return wcslen(dirpath);
 }
 
 int GetAppDataFolderW(wchar_t *buf, int max_len)
@@ -169,8 +170,21 @@ int MoveFileToTrash(const char *filepath)
 	return -1;
 }
 
+static void OnSelectFolderW(void (*callback)(const wchar_t *, const wchar_t *))
+{
+	size_t len;
+	wchar_t dirpath[MAX_DIRPATH_LEN + 1];
+
+	len = SelectFolderW(dirpath, MAX_DIRPATH_LEN);
+	if (len > 0) {
+		dirpath[len] = 0;
+		callback(dirpath, NULL);
+	}
+}
+
 void SelectFolderAsyncW(void (*callback)(const wchar_t *, const wchar_t *))
 {
+	LCUI_PostSimpleTask(OnSelectFolderW, callback, NULL);
 	return;
 }
 

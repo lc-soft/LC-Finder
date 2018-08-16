@@ -12,7 +12,10 @@ strings:
         on: On
         off: Off
     dialog:
-        placeholder:
+        select_folder:
+            title: Select folder
+            placeholder: Folder path
+        password:
             password: Password
             confirm_password: Confirm password
     sort:

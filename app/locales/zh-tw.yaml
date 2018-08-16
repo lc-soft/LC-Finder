@@ -12,7 +12,10 @@ strings:
         on: 開
         off: 關
     dialog:
-        placeholder:
+        select_folder:
+            title: 添加文件夾
+            placeholder: 文件夾的位置
+        password:
             password: 密碼
             confirm_password: 確認密碼
     sort:

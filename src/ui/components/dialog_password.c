@@ -54,8 +54,8 @@
 #define KEY_MSG_PWD_EMPTY	"message.password_empty"
 #define KEY_MSG_PWD_TOO_LONG	"message.password_too_long"
 #define KEY_MSG_PWD_NOT_MATCH	"message.passwords_not_match"
-#define KEY_TXT_PWD		"dialog.placeholder.password"
-#define KEY_TXT_PWD2		"dialog.placeholder.confirm_password"
+#define KEY_TXT_PWD		"dialog.password.password"
+#define KEY_TXT_PWD2		"dialog.password.confirm_password"
 #define PWD_MAX_LEN		48
 
 typedef struct DialogContextRec_ {
