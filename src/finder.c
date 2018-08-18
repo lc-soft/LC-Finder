@@ -353,6 +353,9 @@ static void LCFinder_ScanDir(FileSyncStatus s, const wchar_t *path);
 static void LCFinder_OnScanFinished(FileSyncStatus s)
 {
 	size_t i;
+	wchar_t *dirpath;
+
+	LOG("[scanner] task %lu finished\n", s->task_i);
 	if (s->task_i < finder.n_dirs - 1) {
 		s->task_i += 1;
 		if (s->task) {
@@ -366,7 +369,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 	}
 	DB_Begin();
 	s->state = STATE_SAVING;
-	LOG("\n\nstart sync\n");
+	LOG("[scanner] start sync, folders count: %lu\n", finder.n_dirs);
 	for (i = 0; i < finder.n_dirs; ++i) {
 		DirStatusDataPackRec pack;
 		pack.dir = finder.dirs[i];
@@ -375,15 +378,18 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 		}
 		pack.status = s;
 		s->task = s->tasks[i];
+		dirpath = DecodeUTF8(pack.dir->path);
+		LOG("[scanner] sync files from folder: %ls\n", dirpath);
 		SyncTask_InAddedFiles(s->task, SyncAddedFile, &pack);
 		SyncTask_InDeletedFiles(s->task, SyncDeletedFile, &pack);
 		SyncTask_InChangedFiles(s->task, SyncChangedFile, &pack);
 		SyncTask_Commit(s->task);
 		SyncTask_Delete(s->task);
 		s->task = NULL;
+		free(dirpath);
 	}
 	DB_Commit();
-	LOG("\n\nend sync\n");
+	LOG("[scanner] end sync\n");
 	s->state = STATE_FINISHED;
 	s->task = NULL;
 	s->task_i = 0;
@@ -417,20 +423,20 @@ finish:
 
 static void LCFinder_ScanFile(FileSyncStatus s, const wchar_t *path)
 {
+	size_t len;
 	FileSyncDataPack pack;
-	size_t len = wcslen(path);
+
 	pack = NEW(FileSyncDataPackRec, 1);
-	pack->path = malloc(sizeof(wchar_t) * (len + 1));
-	wcsncpy(pack->path, path, len);
+	pack->path = wcsdup2(path);
+	len = wcslen(pack->path);
 	if (path[len - 1] == PATH_SEP) {
-		len -= 1;
+		pack->path[len - 1] = 0;
 	}
 	pack->status = s;
-	pack->path[len] = 0;
 	pack->path_len = len;
 	pack->status->files += 1;
-	FileStorage_GetStatus(finder.storage, path, FALSE, LCFinder_OnScanFile,
-			      pack);
+	FileStorage_GetStatus(finder.storage, pack->path, FALSE,
+			      LCFinder_OnScanFile, pack);
 }
 
 static void LCFinder_OnScanDir(FileStatus *status, FileStream stream,
@@ -482,8 +488,10 @@ finish:
 
 static void LCFinder_ScanDir(FileSyncStatus s, const wchar_t *path)
 {
+	size_t len;
 	FileSyncDataPack pack;
-	size_t len = wcslen(path);
+
+	len = wcslen(path);
 	pack = NEW(FileSyncDataPackRec, 1);
 	pack->path = malloc(sizeof(wchar_t) * (len + 1));
 	wcsncpy(pack->path, path, len);
@@ -507,6 +515,7 @@ static void LCFinder_SwitchTask(FileSyncStatus s)
 		SyncTask_Start(s->task);
 		dir = finder.dirs[s->task_i];
 		path = DecodeUTF8(dir->path);
+		LOG("[scanner] task %lu started, path: %ls\n", s->task_i, path);
 		LCFinder_ScanDir(s, path);
 		free(path);
 	} else {
@@ -541,9 +550,10 @@ void LCFinder_SyncFilesAsync(FileSyncStatus s)
 		if (!dir) {
 			continue;
 		}
-		LCUI_DecodeString(path, dir->path, PATH_LEN - 1, ENCODING_UTF8);
+		LCUI_DecodeUTF8String(path, dir->path, PATH_LEN - 1);
 		s->tasks[i] = SyncTask_NewW(finder.fileset_dir, path);
 	}
+	LOG("[scanner] created %lu tasks\n", finder.n_dirs);
 	LCFinder_SwitchTask(s);
 }
 

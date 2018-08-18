@@ -126,6 +126,7 @@ typedef struct FileRequestHandler_ {
 } FileRequestHandler;
 
 enum FileStreamChunkType {
+	DATA_CHUNK_UNKNOWN,
 	DATA_CHUNK_REQUEST,
 	DATA_CHUNK_RESPONSE,
 	DATA_CHUNK_BUFFER,
