@@ -1,7 +1,7 @@
-﻿/* ***************************************************************************
- * i18n.h -- internationalization support module.
+/* ***************************************************************************
+ * i18n_datetime.h -- internationalization datetime processing.
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * i18n.h -- 国际化支持模块。
+ * i18n_detetime.h -- 国际化的日期处理
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,34 +34,19 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_I18N_H
-#define LCFINDER_I18N_H
+#ifndef LCFINDER_I18N_DATETIME_H
+#define LCFINDER_I18N_DATETIME_H
 
-typedef struct LanguageRec_ {
-	char *name;		/**< 语言名称  */
-	char *code;		/**< 语言代码，如：zh-cn、en */
-	char *filename;		/**< 语言文件 */
-} LanguageRec, *Language;
+/* clang-format off */
 
-/** 从文件中载入数据 */
-Dict *I18n_LoadFile( const char *path );
+#define KEY_MONTHS		"datetime.months"
+#define KEY_YEAR_FORMAT		"datetime.year_format"
+#define KEY_MONTH_FORMAT	"datetime.month_format"
 
-/** 获取与 key 对应的文本 */
-const wchar_t *I18n_GetText( const char *keystr );
+/* clang-format on */
 
-/** 从语言文件中载入数据 */
-Dict *I18n_LoadFile( const char *path );
+size_t FormatYearString(wchar_t *str, size_t max_len, struct tm *t);
 
-/** 获取全部语言信息列表 */
-int I18n_GetLanguages( Language **languages );
-
-/** 载入语言文件 */
-Language I18n_LoadLanguage( const char *filename );
-
-/** 设置当前语言 */
-Language I18n_SetLanguage( const char *lang_code );
-
-/** 获取系统默认的语言 */
-int I18n_GetDefaultLanguage( char *lang, int max_len );
+size_t FormatMonthString(wchar_t *str, size_t max_len, struct tm *t);
 
 #endif
