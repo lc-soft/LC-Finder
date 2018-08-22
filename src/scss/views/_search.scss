@@ -29,14 +29,14 @@
 	display: none;
 	position: absolute;
 	box-sizing: border-box;
-	border: 1px solid #ccc;
+	border: 2px solid $primary-color;
 	background-color: rgba(255,255,255,0.4);
 }
 .tag-thumb-list-item-checkbox {
 	display: none;
 	position: absolute;
 	font-size: 48px;
-	color: #888;
+	color: $primary-color;
 	text-align: center;
 	vertical-align: middle;
 	width: 100%;

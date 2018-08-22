@@ -171,7 +171,7 @@
           <w id="view-folders-info-box" class="folder-info-box">
             <w id="view-folders-info-box-name" type="textview" class="text folder-info-box-name"></w>
             <w id="view-folders-info-box-path" type="textview" class="text folder-info-box-path"></w>
-            <w id="btn-return-root-folder" class="btn btn-link">
+            <w id="btn-return-root-folder" class="link">
               <w type="textview-i18n" class="text" data-i18n-key="folders.return">返回到源文件夹</w>
             </w>
           </w>
@@ -259,16 +259,16 @@
                   <w id="txt-trial-license" type="textview-i18n" class="text text-line" data-i18n-key="settings.trial_message">当前是试用版，仅供评估使用，如果你认为此应用对你有用，可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。</w>
                   <w type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2017 LC's Software，保留所有权利。</w>
                   <w class="btn-group">
-                    <w id="btn-open-license" class="btn btn-link">
+                    <w id="btn-open-license" class="link">
                       <w type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</w>
                     </w>
-                    <w id="btn-open-website" class="btn btn-link">
+                    <w id="btn-open-website" class="link">
                       <w type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</w>
                     </w>
-                    <w id="btn-open-feedback" class="btn btn-link">
+                    <w id="btn-open-feedback" class="link">
                       <w type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</w>
                     </w>
-                    <w id="btn-open-sourcecode" class="btn btn-link">
+                    <w id="btn-open-sourcecode" class="link">
                       <w type="textview-i18n" class="text" data-i18n-key="settings.sourcecode">源代码</w>
                     </w>
                   </w>
@@ -279,12 +279,11 @@
           </w>
         </w>
       </w>
-      <w class="alert alert-primary hide">
-        <w class="alert-header">
-          <w type="spin" class="ion ion-android-sync"></w>
-          <w id="file-sync-tip-title" type="textview-i18n" class="text alert-title" data-i18n-key="filesync.title.syncing">正在同步你的资源</w>
+      <w class="app-alert">
+        <w class="alert alert-primary hide">
+          <w id="file-sync-tip-title" type="textview-i18n" class="alert-header text" data-i18n-key="filesync.title.syncing">正在同步你的资源</w>
+          <w id="file-sync-tip-stats" type="textview-i18n" class="text alert-text" data-i18n-key="filesync.text.scaning">已扫描 0 个文件</w>
         </w>
-        <w id="file-sync-tip-stats" type="textview-i18n" class="text alert-text" data-i18n-key="filesync.text.scaning">已扫描 0 个文件</w>
       </w>
     </w>
   </ui>

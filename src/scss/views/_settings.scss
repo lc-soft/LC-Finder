@@ -12,10 +12,10 @@
 		min-height: 24px;
 	}
 	&:hover {
-		background-color: #fafafa;
+		background-color: #fdfdfd;
 	}
 	&:active {
-		background-color: #f0f0f0;
+		background-color: #fafafa;
 	}
 	.icon {
 		font-size: 24px;
@@ -47,18 +47,22 @@
 			background-color: #eee;
 		}
 	}
+	.btn-delete:hover {
+		background-color: #fff;
+	}
+	.btn-delete:active {
+		background-color: #fcfcfc;
+	}
 }
 #view-settings-content.view-content {
 	padding-left: 0;
 }
 .setting-group {
 	width: 100%;
-	margin-bottom: 15px;
+	margin-bottom: $spacing;
 	padding-left: $gutter-width;
 
-	.btn-link {
-		padding-left: 0;
-		padding-right: 0;
+	.link {
 		margin-left: $spacing;
 
 		&:first-child {
