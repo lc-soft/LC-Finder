@@ -1,0 +1,16 @@
+.link {
+    display: inline-block;
+
+    &,
+    .icon,
+    .text {
+        color: $primary-color;
+
+        &:hover {
+            color: darken($primary-color, 10%);
+        }
+        &:active {
+            color: darken($primary-color, 20%);
+        }
+    }
+}

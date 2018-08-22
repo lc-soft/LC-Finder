@@ -1,32 +1,46 @@
-.panel .panel-header {
+.panel-header {
 	top: 0;
 	left: 0;
 	width: 100%;
-	height: 56px;
-	padding: 8px 12px 0 12px;
+	height: $panel-header-height;
+	padding: $view-navbar-padding-y $panel-header-padding-x;
 	position: absolute;
-	box-sizing: border-box;
+	border-bottom: 1px solid $border-color;
 }
-.panel .panel-body {
-	padding-top: 56px;
+.panel-header-title {
+	font-size: $panel-header-font-size;
+	line-height: $panel-header-line-height;
+}
+.panel-body {
+	padding-top: $panel-header-height;
 	height: 100%;
 	width: 100%;
-	box-sizing: border-box;
 }
-.panel .panel-content {
-	padding: 20px 20px 0 20px;
+.panel-content {
 	width: 100%;
-	box-sizing: border-box;
+	padding: $panel-content-padding-y $panel-content-padding-x;
 }
-.panel .panel-content-wrapper {
+.panel-content-wrapper {
 	width: 100%;
 	height: 100%;
 }
-.panel .panel-header .pull-right {
-	top: 8px;
-	right: 12px;
-}
-.panel .panel-header .panel-header-title {
-	font-size: 16px;
-	line-height: 48px;
+.panel-close-btn {
+	top: $panel-header-padding-y;
+	right: 0;
+	position: absolute;
+	
+	.icon {
+		font-size: $panel-header-font-size + 4px;
+		line-height: $panel-header-line-height;
+		width: $panel-header-line-height;
+		text-align: center;
+	}
+	&:hover {
+		.icon {
+			color: #666;
+		}
+	}
+	&:active {
+		background-color: #f8f8f8;
+	}
 }

@@ -1,9 +1,23 @@
+@import "../../../.repos/lcui.css/src/scss/functions";
+@import "../../../.repos/lcui.css/src/scss/variables";
+
 $blue: #1890ff;
-$primary-color: $blue; 
+$primary-color: $blue;
+
+$gray-100: #f8f9fa !default;
+$gray-200: #e9ecef !default;
+$gray-300: #dee2e6 !default;
+$gray-400: #ced4da !default;
+$gray-500: #adb5bd !default;
+$gray-600: #868e96 !default;
+$gray-700: #495057 !default;
+$gray-800: #343a40 !default;
+$gray-900: #212529 !default;
 
 $spacing: 15px;
 $gutter-width: 20px;
 $border-color: #eee;
+$font-size: 14px;
 
 $view-bg: #fff;
 $view-navbar-bg: #fff;
@@ -22,6 +36,21 @@ $view-navbar-btn-icon-font-size: 24px;
 $view-navbar-btn-icon-line-height: $view-navbar-btn-icon-font-size;
 $view-navbar-btn-spacing: 10px;
 $view-navbar-btn-padding-y: ($view-navbar-line-height - $view-navbar-btn-icon-line-height) / 2;
+
+$panel-header-height: $view-navbar-height;
+$panel-header-line-height: $view-navbar-line-height;
+$panel-header-padding-y: $view-navbar-padding-y;
+$panel-header-font-size: $view-navbar-font-size;
+$panel-header-padding-x: $spacing;
+$panel-content-padding-x: $spacing;
+$panel-content-padding-y: $spacing;
+
+$tag-margin-x: 5px;
+$tag-margin-y: 5px;
+$tag-padding-x: 8px;
+$tag-padding-y: 3px;
+$tag-color: $gray-700;
+$tag-font-size: $font-size - 1px;
 
 $sidebar-bg: #fafafa;
 $sidebar-color: #707070;

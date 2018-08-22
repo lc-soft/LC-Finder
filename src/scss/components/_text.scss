@@ -1,14 +1,11 @@
-@import "../../../.repos/lcui.css/src/scss/functions";
-@import "../../../.repos/lcui.css/src/scss/variables";
-
-#{$text-elements}, textview-i18n, .text, .icon {
+#{$text-elements}, textview-i18n, .text, .icon, .link {
 	font-size: 14px;
 }
-textview-i18n {
+textview-i18n, .link {
 	font-family: $font-family-base;
 }
 .text-muted {
-	color: #888;
+	color: $gray-600;
 }
 .text-line {
 	width: 100%;
