@@ -1,27 +1,29 @@
 .tag-thumb-list {
 	width: 100%;
 }
-.tag-thumb-list-item {
+.tag-thumb {
 	min-width: 100px;
-	min-height: 140px;
 	display: inline-block;
-	margin: 0 10px 10px 0;
+	margin: 0 $spacing $spacing 0;
+	box-sizing: border-box;
+}
+.tag-thumb-cover {
+	height: 162px;
 	background-color: #f0f0f0;
 	background-size: cover;
-	border: 1px solid #eee;
-	box-sizing: border-box;
 }
-.tag-thumb-list-item-info {
-	left: 0;
-	bottom: 0;
-	width: 100%;
-	min-height: 24px;
-	padding: 5px 10px;
-	position: absolute;
-	box-sizing: border-box;
-	background-color: rgba(0,0,0,0.4);
+.tag-thumb-info {
+	.text {
+		line-height: 18px;
+		font-weight: 500;
+		display: block;
+		padding: #{$spacing / 2} 0 0 0;
+	}
+	.count {
+		color: $gray-600;
+	}
 }
-.tag-thumb-list-item-cover {
+.tag-thumb-dimmer {
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -29,43 +31,26 @@
 	display: none;
 	position: absolute;
 	box-sizing: border-box;
-	border: 2px solid $primary-color;
-	background-color: rgba(255,255,255,0.4);
+	background-color: rgba(0,0,0,0.1);
 }
-.tag-thumb-list-item-checkbox {
-	display: none;
-	position: absolute;
+.tag-thumb-checkbox {
+	color: #fff;
+	width: 100%;
 	font-size: 48px;
-	color: $primary-color;
+	position: absolute;
 	text-align: center;
 	vertical-align: middle;
-	width: 100%;
 }
-.tag-thumb-list-item .mdi-checkbox-marked {
-	display: none;
-}
-.tag-thumb-list-item:hover .tag-thumb-list-item-cover {
+.tag-thumb:hover .tag-thumb-dimmer {
 	display: block;
 }
-thumbviewitem.selected {
-	.tag-thumb-list-item-checkbox {
+.tag-thumb.selected {
+	.tag-thumb-checkbox {
+		color: $primary-color;
+	}
+	.tag-thumb-dimmer {
 		display: block;
-	}
-	.tag-thumb-list-item-cover {
-		display: block;
-		background-color: rgba(255,255,255,0.8);
-	}
-}
-.tag-thumb-list-item-info {
-	.text {
-		color: #fff;
-		line-height: 18px;
-		display: inline-block;
-	}
-	.count {
-		position: absolute;
-		right: 10px;
-		top: 5px;
+		background-color: rgba(0,0,0,0.1);
 	}
 }
 .search-panel {
