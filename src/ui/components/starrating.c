@@ -40,16 +40,18 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/css_parser.h>
 
+/* clang-format off */
+
 static LCUI_WidgetPrototype prototype = NULL;
 
 static const char *starrating_css = CodeToString(
 
 starrating .star {
-width: 24px;
-height: 24px;
-font-size: 18px;
-line - height: 24px;
-display: inline-block;
+	width: 24px;
+	height: 24px;
+	font-size: 18px;
+	line-height: 24px;
+	display: inline-block;
 }
 
 );
@@ -59,103 +61,105 @@ typedef struct StarRatingRec_ {
 	int max_rating;
 } StarRatingRec, *StarRating;
 
-static void UpdateRating( LCUI_Widget w, int rating )
+/* clang-format on */
+
+static void UpdateRating(LCUI_Widget w, int rating)
 {
 	LCUI_Widget child;
 	LinkedListNode *node;
-	LinkedList_ForEach( node, &w->children ) {
+	for (LinkedList_Each(node, &w->children)) {
 		child = node->data;
-		if( child->index >= rating ) {
+		if (child->index >= rating) {
 			break;
 		}
-		Widget_AddClass( child, "icon-star" );
-		Widget_RemoveClass( child, "icon-star-outline" );
+		Widget_AddClass(child, "icon-star");
+		Widget_RemoveClass(child, "icon-star-outline");
 	}
-	for( ; node; node = node->next ) {
+	for (; node; node = node->next) {
 		child = node->data;
-		Widget_RemoveClass( child, "icon-star" );
-		Widget_AddClass( child, "icon-star-outline" );
+		Widget_RemoveClass(child, "icon-star");
+		Widget_AddClass(child, "icon-star-outline");
 	}
 }
 
-static void OnMouseMove( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	int ix, iy;
 	float x, y;
 	LCUI_Widget target;
-	Widget_GetOffset( w, NULL, &x, &y );
-	ix = e->motion.x - iround( x );
-	iy = e->motion.y - iround( y );
-	target = Widget_At( w, ix, iy );
-	if( !target ) {
+	Widget_GetOffset(w, NULL, &x, &y);
+	ix = e->motion.x - iround(x);
+	iy = e->motion.y - iround(y);
+	target = Widget_At(w, ix, iy);
+	if (!target) {
 		return;
 	}
-	UpdateRating( w, target->index + 1 );
+	UpdateRating(w, target->index + 1);
 }
 
-static void OnMouseDown( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	int ix, iy;
 	float x, y;
 	LCUI_Widget target;
-	StarRating data = Widget_GetData( w, prototype );
-	Widget_GetOffset( w, NULL, &x, &y );
-	ix = e->motion.x - iround( x );
-	iy = e->motion.y - iround( y );
-	target = Widget_At( w, ix, iy );
-	if( !target ) {
+	StarRating data = Widget_GetData(w, prototype);
+	Widget_GetOffset(w, NULL, &x, &y);
+	ix = e->motion.x - iround(x);
+	iy = e->motion.y - iround(y);
+	target = Widget_At(w, ix, iy);
+	if (!target) {
 		return;
 	}
 	data->rating = target->index + 1;
-	if( data->rating > data->max_rating ) {
+	if (data->rating > data->max_rating) {
 		data->rating = data->max_rating;
 	}
-	UpdateRating( w, data->rating );
+	UpdateRating(w, data->rating);
 }
 
-static void OnMouseOut( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnMouseOut(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	StarRating data = Widget_GetData( w, prototype );
-	UpdateRating( w, data->rating );
+	StarRating data = Widget_GetData(w, prototype);
+	UpdateRating(w, data->rating);
 }
 
-static void OnInit( LCUI_Widget w )
+static void OnInit(LCUI_Widget w)
 {
 	int i;
-	const size_t data_size = sizeof( StarRatingRec );
-	StarRating data = Widget_AddData( w, prototype, data_size );
+	const size_t data_size = sizeof(StarRatingRec);
+	StarRating data = Widget_AddData(w, prototype, data_size);
 
 	data->rating = 0;
 	data->max_rating = 5;
-	for( i = 0; i < data->max_rating; ++i ) {
-		LCUI_Widget child = LCUIWidget_New( "textview" );
-		Widget_AddClass( child, "star icon icon-star-outline" );
-		Widget_Append( w, child );
+	for (i = 0; i < data->max_rating; ++i) {
+		LCUI_Widget child = LCUIWidget_New("textview");
+		Widget_AddClass(child, "star icon icon-star-outline");
+		Widget_Append(w, child);
 	}
-	Widget_BindEvent( w, "mousemove", OnMouseMove, NULL, NULL );
-	Widget_BindEvent( w, "mousedown", OnMouseDown, NULL, NULL );
-	Widget_BindEvent( w, "mouseout", OnMouseOut, NULL, NULL );
+	Widget_BindEvent(w, "mousemove", OnMouseMove, NULL, NULL);
+	Widget_BindEvent(w, "mousedown", OnMouseDown, NULL, NULL);
+	Widget_BindEvent(w, "mouseout", OnMouseOut, NULL, NULL);
 }
 
-void StarRating_SetRating( LCUI_Widget w, int rating )
+void StarRating_SetRating(LCUI_Widget w, int rating)
 {
-	StarRating data = Widget_GetData( w, prototype );
-	if( rating > data->max_rating ) {
+	StarRating data = Widget_GetData(w, prototype);
+	if (rating > data->max_rating) {
 		rating = data->max_rating;
 	}
 	data->rating = rating;
-	UpdateRating( w, rating );
+	UpdateRating(w, rating);
 }
 
-int StarRating_GetRating( LCUI_Widget w )
+int StarRating_GetRating(LCUI_Widget w)
 {
-	StarRating data = Widget_GetData( w, prototype );
+	StarRating data = Widget_GetData(w, prototype);
 	return data->rating;
 }
 
-void LCUIWidget_AddStarRating( void )
+void LCUIWidget_AddStarRating(void)
 {
-	prototype = LCUIWidget_NewPrototype( "starrating", NULL );
+	prototype = LCUIWidget_NewPrototype("starrating", NULL);
 	prototype->init = OnInit;
-	LCUI_LoadCSSString( starrating_css, NULL );
+	LCUI_LoadCSSString(starrating_css, NULL);
 }
