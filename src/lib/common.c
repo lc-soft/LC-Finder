@@ -352,25 +352,31 @@ int wchdir(wchar_t *wpath)
 #endif
 }
 
-int wgetnumberstr(wchar_t *str, int max_len, size_t number)
+size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number)
 {
-	int right, j, k, len, buf_len, count;
-	wchar_t *buf = malloc(sizeof(wchar_t) * (max_len + 1));
-	len = swprintf(buf, max_len, L"%lu", number);
-	count = (int)ceil(len / 3.0 - 1.0);
-	buf_len = len + count;
-	max_len = max_len > buf_len ? buf_len : max_len;
-	for (k = 1, right = max_len - 1, j = len - 1; right >= 0; --right) {
-		if (right < max_len - 1 && count > 0 && k % 4 == 0) {
-			str[right] = L',';
+	wchar_t *buf;
+	size_t right, len;
+	size_t buf_right, buf_len;
+	size_t k, count;
+
+	buf = malloc(sizeof(wchar_t) * (max_len + 1));
+	buf_len = swprintf(buf, max_len, L"%lu", number);
+	count = (size_t)ceil(buf_len / 3.0 - 1.0);
+	len = buf_len + count;
+	max_len = min(max_len, len);
+
+	for (k = 1, right = max_len, buf_right = buf_len; right > 0;) {
+		if (count > 0 && k % 4 == 0) {
+			wcs[--right] = L',';
 			--count;
 			k = 1;
 		} else {
-			str[right] = buf[j--];
+			wcs[--right] = buf[--buf_right];
 			++k;
 		}
 	}
-	str[max_len] = 0;
+
+	wcs[max_len] = 0;
 	free(buf);
 	return len;
 }

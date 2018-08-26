@@ -56,65 +56,65 @@
 
 LCUI_BEGIN_HEADER
 
-char *EncodeUTF8( const wchar_t *wstr );
+char *EncodeUTF8(const wchar_t *wstr);
 
-char *EncodeANSI( const wchar_t *wstr );
+char *EncodeANSI(const wchar_t *wstr);
 
-wchar_t *DecodeUTF8( const char *str );
+wchar_t *DecodeUTF8(const char *str);
 
-wchar_t *DecodeANSI( const char *str );
+wchar_t *DecodeANSI(const char *str);
 
-void EncodeSHA1( char *hash_out, const char *str, size_t len );
+void EncodeSHA1(char *hash_out, const char *str, size_t len);
 
-void WEncodeSHA1( wchar_t *hash_out, const wchar_t *wstr, size_t len );
+void WEncodeSHA1(wchar_t *hash_out, const wchar_t *wstr, size_t len);
 
-int IsImageFile( const wchar_t *path );
+int IsImageFile(const wchar_t *path);
 
-char *getdirname( const char *path );
+char *getdirname(const char *path);
 
-wchar_t *wgetdirname( const wchar_t *path );
+wchar_t *wgetdirname(const wchar_t *path);
 
-const char *getfilename( const char *path );
+const char *getfilename(const char *path);
 
-const wchar_t *wgetfilename( const wchar_t *path );
+const wchar_t *wgetfilename(const wchar_t *path);
 
-int wgetfilestat( const wchar_t *wpath, struct stat *buf );
+int wgetfilestat(const wchar_t *wpath, struct stat *buf);
 
-size_t pathjoin( char *path, const char *path1, const char *path2 );
+size_t pathjoin(char *path, const char *path1, const char *path2);
 
-size_t wpathjoin( wchar_t *path, const wchar_t *path1, const wchar_t *path2 );
+size_t wpathjoin(wchar_t *path, const wchar_t *path1, const wchar_t *path2);
 
 /** 获取程序当前所在目录 */
-int wgetcurdir( wchar_t *path, int max_len );
+int wgetcurdir(wchar_t *path, int max_len);
 
-int wmkdir( wchar_t *wpath );
+int wmkdir(wchar_t *wpath);
 
-int wchdir( wchar_t *wpath );
+int wchdir(wchar_t *wpath);
 
-Dict *StrDict_Create( void *(*val_dup)(void*, const void*),
-		      void (*val_del)(void*, void*) );
+Dict *StrDict_Create(void *(*val_dup)(void *, const void *),
+		     void (*val_del)(void *, void *));
 
-void StrDict_Release( Dict *d );
+void StrDict_Release(Dict *d);
 
 /** 获取数字字符串，格式为：1,234,567,890 */
-int wgetnumberstr( wchar_t *str, int max_len, size_t number );
+size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number);
 
-int getsizestr( char *str, int64_t size );
+int getsizestr(char *str, int64_t size);
 
-int wgetsizestr( wchar_t *str, size_t max_len, int64_t size );
+int wgetsizestr(wchar_t *str, size_t max_len, int64_t size);
 
-int wgetdirpath( wchar_t *outpath, int max_len, const wchar_t *inpath );
+int wgetdirpath(wchar_t *outpath, int max_len, const wchar_t *inpath);
 
 /** 统计一个字符串中的指定字符的数量 */
-int wgetcharcount( const wchar_t *wstr, const wchar_t *chars );
+int wgetcharcount(const wchar_t *wstr, const wchar_t *chars);
 
 /** 忽略大小写对比宽字符串 */
-int wcscasecmp( const wchar_t *str1, const wchar_t *str2 );
+int wcscasecmp(const wchar_t *str1, const wchar_t *str2);
 
 /** 移动文件至回收站 */
-int wmovefiletotrash( const wchar_t *wfilepath );
+int wmovefiletotrash(const wchar_t *wfilepath);
 
-int movefiletotrash( const char *filepath );
+int movefiletotrash(const char *filepath);
 
 LCUI_END_HEADER
 
