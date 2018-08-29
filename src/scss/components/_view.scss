@@ -7,14 +7,6 @@
 	padding: 0 0 0 $sidebar-min-width;
 	box-sizing: border-box;
 	background-color: $view-bg;
-
-	.divider {
-		width: 1px;
-		display: inline-block;
-		background-color: $divider-color;
-		height: 100%;
-		margin: 0 $divider-margin-y;
-	}
 }
 .view-navbar {
 	top: 0;
@@ -26,8 +18,17 @@
 	background-color: $view-navbar-bg;
 	border-bottom: 1px solid $view-navbar-border-color;
 	box-sizing: border-box;
+
+	.divider {
+		width: 1px;
+		display: inline-block;
+		background-color: $divider-color;
+		height: 100%;
+		margin: 0 $divider-margin-y;
+	}
 }
 .view-navbar-actions {
+	position: absolute;
 	top: $view-navbar-padding-y;
 	right: $gutter-width;
 }
@@ -43,8 +44,7 @@
 }
 .view-navbar-btn {
 	display: inline-block;
-	padding: $view-navbar-btn-padding-y 0;
-	margin-left: $view-navbar-btn-spacing;
+	padding: $view-navbar-btn-padding-y $view-navbar-btn-padding-x;
 
 	.text,
 	.icon {
@@ -64,14 +64,16 @@
 		text-align: center;
 	}
 	&:hover {
+		background-color: #fbfbfb;
+
 		.text,
 		.icon {
 			color: $view-navbar-btn-hover-color;
 		}
 	}
-}
-.view-navbar-title {
-	display: inline-block;
+	&:active {
+		background-color: #f8f8f8;
+	}
 }
 .view-body {
 	height: 100%;
@@ -127,4 +129,11 @@
 	padding-left: $sidebar-min-width;
 	background-color: $view-bg;
 	box-sizing: border-box;
+
+	.view-navbar {
+		padding-left: $sidebar-min-width;
+	}
+	.view-navbar-title {
+		padding-left: $spacing / 2;
+	}
 }

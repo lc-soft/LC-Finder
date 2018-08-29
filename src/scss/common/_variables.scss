@@ -36,6 +36,7 @@ $view-navbar-btn-icon-font-size: 24px;
 $view-navbar-btn-icon-line-height: $view-navbar-btn-icon-font-size;
 $view-navbar-btn-spacing: 10px;
 $view-navbar-btn-padding-y: ($view-navbar-line-height - $view-navbar-btn-icon-line-height) / 2;
+$view-navbar-btn-padding-x: $spacing / 2;
 
 $panel-header-height: $view-navbar-height;
 $panel-header-line-height: $view-navbar-line-height;
@@ -69,7 +70,7 @@ $sidebar-item-active-bg: rgba(0,0,0,0.06);
 $sidebar-item-active-color: $primary-color;
 $sidebar-item-border-width: 3px;
 
-$divider-color: #aaa;
+$divider-color: $border-color;
 $divider-margin-y: 12px;
 
 $switch-height: 20px;

@@ -32,7 +32,7 @@
       <w id="view-home" class="view">
         <w class="view-navbar">
           <w id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="home.title">集锦</w>
-          <w class="view-navbar-actions pull-right on-selection-mode">
+          <w class="view-navbar-actions on-selection-mode">
             <w id="btn-cancel-home-select" class="view-navbar-btn">
               <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
             </w>
@@ -44,7 +44,7 @@
               <w type="icon" class="text" name="delete"></w>
             </w>
           </w>
-          <w class="view-navbar-actions pull-right on-normal-mode">
+          <w class="view-navbar-actions on-normal-mode">
             <w id="btn-select-home-files" class="view-navbar-btn">
               <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
             </w>
@@ -100,11 +100,11 @@
         <w id="view-search-result" class="subview hide">
           <w class="view-navbar">
             <w class="view-navbar-btn" id="btn-hide-search-result">
-              <w type="icon" class="text" name="arrow-left"></w>
+              <w type="icon" name="arrow-left"></w>
             </w>
-            <w id="view-search-result-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.results.title">搜索结果</w>
-            <w id="view-search-result-count" type="textview" class="text view-navbar-text on-normal-mode"></w>
-            <w class="pull-right on-selection-mode">
+            <w id="view-search-result-title" type="textview-i18n" class="view-navbar-title" data-i18n-key="search.results.title">搜索结果</w>
+            <w id="view-search-result-count" type="textview" class="view-navbar-text on-normal-mode"></w>
+            <w class="view-navbar-actions  on-selection-mode">
               <w id="btn-cancel-search-select" class="view-navbar-btn">
                 <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
               </w>
@@ -116,7 +116,7 @@
                 <w type="icon" class="text" name="delete"></w>
               </w>
             </w>
-            <w class="pull-right on-normal-mode">
+            <w class="view-navbar-actions on-normal-mode">
               <w id="btn-sort-search-files" class="view-navbar-btn">
                 <w type="icon" class="text" name="sort"></w>
               </w>
@@ -143,7 +143,7 @@
       <w id="view-folders" class="view hide">
         <w class="view-navbar">
           <w id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders.title">文件夹</w>
-          <w class="view-navbar-actions pull-right on-selection-mode">
+          <w class="view-navbar-actions on-selection-mode">
             <w id="btn-cancel-folder-select" class="view-navbar-btn">
               <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
             </w>
@@ -155,7 +155,7 @@
               <w type="icon" class="text" name="delete"></w>
             </w>
           </w>
-          <w class="view-navbar-actions pull-right on-normal-mode">
+          <w class="view-navbar-actions on-normal-mode">
             <w id="btn-sort-folder-files" class="view-navbar-btn">
               <w type="icon" class="text" name="sort"></w>
             </w>
