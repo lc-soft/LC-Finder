@@ -22,7 +22,7 @@ strings:
         item: '%S item'
         items: '%S items'
     sort:
-        header: Sort options
+        header: Sort by
         ctime_desc: Recently created
         ctime_asc: Least recently created
         mtime_desc: Recently updated

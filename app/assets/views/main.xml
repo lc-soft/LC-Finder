@@ -137,7 +137,7 @@
               <w type="scrollbar" target="view-search-files"/>
             </w>
           </w>
-          <w id="dropdown-search-files-sort" type="dropdown" class="checkable" data-target="btn-sort-search-files" data-position="bottom right"></w>
+          <w id="dropdown-search-files-sort" type="dropdown-menu" class="checkable" data-position="bottom right"></w>
         </w>
       </w>
       <w id="view-folders" class="view hide">
@@ -156,7 +156,7 @@
             </w>
           </w>
           <w class="view-navbar-actions on-normal-mode">
-            <w id="btn-sort-folder-files" class="view-navbar-btn">
+            <w class="view-navbar-btn" data-toggle="dropdown" data-target="dropdown-folder-files-sort">
               <w type="icon" class="text" name="sort"></w>
             </w>
             <w id="btn-select-folder-files" class="view-navbar-btn">
@@ -186,7 +186,7 @@
             <w type="scrollbar" target="current-file-list"/>
           </w>
         </w>
-        <w id="dropdown-folder-files-sort" type="dropdown" class="checkable" data-target="btn-sort-folder-files" data-position="bottom right"></w>
+        <w id="dropdown-folder-files-sort" type="dropdown-menu" class="checkable" data-position="bottom right"></w>
       </w>
       <w id="view-settings" class="view hide">
         <w class="view-navbar">

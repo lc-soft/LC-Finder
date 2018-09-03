@@ -59,7 +59,6 @@ typedef struct FileBrowserRec_ {
 	LCUI_Widget btn_cancel;			/**< “取消”按钮 */
 	LCUI_Widget btn_delete;			/**< “删除”按钮 */
 	LCUI_Widget btn_tag;			/**< “标签”按钮 */
-	LCUI_Widget btn_sort;			/**< ”排序“按钮 */
 	LCUI_Widget tip_empty;			/**< 当内容为空时显示的提示 */
 	Dict *file_indexes;			/**< 文件索引，以路径进行索引 */
 	LinkedList dirs;			/**< 目录列表 */

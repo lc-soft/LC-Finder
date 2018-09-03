@@ -114,7 +114,6 @@
 #define ID_BTN_OPEN_SOURCECODE		"btn-open-sourcecode"
 #define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
 #define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
-#define ID_BTN_FOLDER_FILES_SORT	"btn-sort-folder-files"
 #define ID_BTN_RESET_PASSWORD		"btn-reset-password"
 #define ID_TIP_HOME_EMPTY		"tip-empty-collection"
 #define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
