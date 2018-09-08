@@ -112,11 +112,11 @@
 }
 .view-content {
 	width: 100%;
-	padding: 15px 25px 0 25px;
+	padding: $spacing $gutter-width 0 $gutter-width;
 	box-sizing: border-box;
 }
 .item-group {
-	margin: 0 0 15px 0;
+	margin: 0 0 $spacing 0;
 	box-sizing: border-box;
 	width: 100%;
 }

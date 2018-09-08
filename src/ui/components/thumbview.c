@@ -61,8 +61,8 @@
 #define PICTURE_FIXED_HEIGHT	226
 /** 文件夹的右外边距，需要与 CSS 文件定义的样式一致 */
 #define FOLDER_MARGIN_RIGHT	10
-#define FOLDER_CLASS		"file-list-item-folder"
-#define PICTURE_CLASS		"file-list-item-picture"
+#define FOLDER_CLASS		"file-folder"
+#define PICTURE_CLASS		"file-picture"
 #define DIR_COVER_THUMB		"__dir_cover_thumb__"
 #define THUMB_MAX_WIDTH		240
 
