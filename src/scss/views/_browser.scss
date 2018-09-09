@@ -1,44 +1,46 @@
 .file-list {
 	width: 100%;
-	margin: 0 0 20px 0;
+	margin: 0 #{-$file-list-item-spacing} 20px #{-$file-list-item-spacing};
 
 	.divider {
 		width: 100%;
-		height: 10px;
+		height: $file-list-item-spacing * 2;
 		border: 0;
 		background-color: transparent;
 	}
 }
+
 .file-folder {
-	width: 300px;
-	height: 134px;
+	width: $file-folder-width;
+	height: $file-folder-height;
 	display: inline-block;
 	background-size: cover;
-	background-color: #f0f0f0;
+	background-color: $file-folder-bg;
 	background-position: top center;
-	margin: 0 10px 10px 0;
-	border: 1px solid #eee;
+	margin: $file-list-item-spacing;
 	box-sizing: border-box;
+	position: relative;
+	box-shadow: 0 0 2px rgba(0, 0 , 0, 0.1);
 
 	.info {
 		left: 0;
 		bottom: 0;
 		width: 100%;
-		height: 54px;
+		height: $file-folder-info-height;
 		position: absolute;
-		background-color: rgba(255,255,255,0.8);
-		border-top: 1px solid rgba(255,255,255,0.7);
-		padding: 10px 50px 10px 10px;
+		background-color: $file-folder-info-bg;
+		padding: $file-folder-padding;
+		padding-right: $file-folder-icon-size + $file-folder-padding;
 		box-sizing: border-box;
 
 		.icon {
-			top: 10px;
-			right: 10px;
-			width: 34px;
-			height: 34px;
-			font-size: 30px;
+			top: $file-folder-padding;
+			right: $file-folder-padding;
+			width: $file-folder-icon-size;
+			height: $file-folder-icon-size;
+			font-size: $file-folder-icon-font-size;
 			text-align: center;
-			line-height: 34px;
+			line-height: $file-folder-icon-size;
 			position: absolute;
 			color: $gray-600;
 		}
@@ -47,22 +49,29 @@
 			font-size: 13px;
 		}
 		.path, .name {
-			width: 190px;
+			line-height: $file-folder-info-line-height;
+			width: $file-folder-info-content-width;
 		}
 	}
 	&:hover {
-		border-color: $primary-color;
+		top: -2px;
+		box-shadow: 0 1px 5px rgba(0, 0 , 0, 0.1);
+	}
+	&:active {
+		top: 0;
+		opacity: 0.6;
 	}
 }
 .file-picture {
-	height: 226px;
-	width: 226px;
+	height: $file-picture-size;
+	width: $file-picture-size;
 	display: inline-block;
 	border: 1px solid rgba(0,0,0,0);
 	background-position: top center;
 	box-sizing: border-box;
 	background-size: cover;
 	background-color: #eee;
+	margin: $file-list-item-spacing;
 
 	.picture-cover {
 		top: 0;

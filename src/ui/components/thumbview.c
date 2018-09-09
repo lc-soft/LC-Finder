@@ -59,8 +59,8 @@
 #define FOLDER_MAX_WIDTH	388
 #define FOLDER_FIXED_HEIGHT	134
 #define PICTURE_FIXED_HEIGHT	226
-/** 文件夹的右外边距，需要与 CSS 文件定义的样式一致 */
-#define FOLDER_MARGIN_RIGHT	10
+/** 文件列表的外间距，需要与 CSS 文件定义的样式一致 */
+#define FILE_ITEM_MARGIN	6
 #define FOLDER_CLASS		"file-folder"
 #define PICTURE_CLASS		"file-picture"
 #define DIR_COVER_THUMB		"__dir_cover_thumb__"
@@ -695,11 +695,12 @@ void ThumbView_Unlock(LCUI_Widget w)
 /** 更新布局上下文，为接下来的子部件布局处理做准备 */
 static void ThumbView_UpdateLayoutContext(LCUI_Widget w)
 {
-	float max_width, n;
+	float max_width;
 	ThumbView view = Widget_GetData(w, self.main);
+
 	max_width = max(THUMBVIEW_MIN_WIDTH, w->parent->box.content.width);
-	n = (float)ceil(max_width / FOLDER_MAX_WIDTH);
-	view->layout.folders_per_row = (int)n;
+	max_width += FILE_ITEM_MARGIN * 2;
+	view->layout.folders_per_row = (int)ceil(max_width / FOLDER_MAX_WIDTH);
 	view->layout.max_width = max_width;
 	Widget_SetStyle(w, key_width, max_width, px);
 }
@@ -708,6 +709,7 @@ void ThumbView_Empty(LCUI_Widget w)
 {
 	ThumbView view;
 	LinkedListNode *node;
+
 	view = Widget_GetData(w, self.main);
 	view->is_loading = FALSE;
 	LCUIMutex_Lock(&view->tasks_mutex);
@@ -759,12 +761,16 @@ static void UpdateThumbRow(ThumbView view)
 		int w, h;
 		item = node->data;
 		data = Widget_GetData(item, self.item);
+		/* 确定合适的尺寸 */
 		w = data->file->width > 0 ? data->file->width : 226;
 		h = data->file->height > 0 ? data->file->height : 226;
-		thumb_width = PICTURE_FIXED_HEIGHT;
-		thumb_width = thumb_width * w / h;
-		width = overflow_width * thumb_width;
-		width /= view->layout.x;
+		/* 按高的比例，计算合适的缩略图宽度 */
+		thumb_width = 1.0f * PICTURE_FIXED_HEIGHT * w / h;
+		/* 加上外间距占用的宽度 */
+		thumb_width += FILE_ITEM_MARGIN * 2;
+		/* 按照溢出后的宽度，计算当前图片需要分摊的溢出宽度 */
+		width = overflow_width * thumb_width / view->layout.x;
+		thumb_width -= FILE_ITEM_MARGIN * 2;
 		/**
 		 * 以上按比例分配的扣除宽度有误差，通常会少扣除几个像素的
 		 * 宽度，这里用 rest_width 变量记录剩余待扣除的宽度，最
@@ -791,6 +797,7 @@ static void UpdatePictureSize(LCUI_Widget item)
 	float width, w = 226, h = 226;
 	ThumbViewItem data = Widget_GetData(item, self.item);
 	ThumbView view = data->view;
+
 	if (data->file->width > 0) {
 		w = (float)data->file->width;
 		h = (float)data->file->height;
@@ -798,7 +805,7 @@ static void UpdatePictureSize(LCUI_Widget item)
 	width = PICTURE_FIXED_HEIGHT * w / h;
 	SetStyle(item->custom_style, key_width, width, px);
 	Widget_UpdateStyle(item, FALSE);
-	view->layout.x += width;
+	view->layout.x += width + FILE_ITEM_MARGIN * 2;
 	LinkedList_Append(&view->layout.row, item);
 	/* 如果当前行图片总宽度超出最大宽度，则更新各个图片的宽度 */
 	if (view->layout.x >= view->layout.max_width) {
@@ -809,10 +816,10 @@ static void UpdatePictureSize(LCUI_Widget item)
 /* 根据当前布局更新文件夹尺寸 */
 static void UpdateFolderSize(LCUI_Widget item)
 {
-	int n;
 	float width;
 	ThumbViewItem data = Widget_GetData(item, self.item);
 	ThumbView view = data->view;
+
 	++view->layout.folder_count;
 	if (view->layout.max_width < THUMBVIEW_MIN_WIDTH) {
 		item->custom_style->sheet[key_width].is_valid = FALSE;
@@ -821,15 +828,9 @@ static void UpdateFolderSize(LCUI_Widget item)
 	} else {
 		Widget_RemoveClass(item, "full-width");
 	}
-	n = view->layout.folders_per_row;
-	width = view->layout.max_width;
-	width = (width - FOLDER_MARGIN_RIGHT * (n - 1)) / n;
-	/* 设置每行最后一个文件夹的右边距为 0px */
-	if (view->layout.folder_count % n == 0) {
-		Widget_SetStyle(item, key_margin_right, 0, px);
-	} else {
-		Widget_UnsetStyle(item, key_margin_right);
-	}
+
+	width = view->layout.max_width / view->layout.folders_per_row;
+	width -= FILE_ITEM_MARGIN * 2;
 	Widget_SetStyle(item, key_width, width, px);
 	Widget_UpdateStyle(item, FALSE);
 }

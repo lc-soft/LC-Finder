@@ -82,3 +82,16 @@ $switch-bar-width: $switch-icon-width * 2 + $switch-slider-width;
 $switch-width: $switch-icon-width + $switch-slider-width + $switch-border-width * 2;
 $switch-checked-color: #44BB55;
 $switch-color: #8c9da5;
+
+$file-list-item-spacing: 6px;
+$file-folder-bg: #f0f0f0;
+$file-folder-padding: 10px;
+$file-folder-info-bg: #fff;
+$file-folder-info-line-height: 18px;
+$file-folder-icon-size: 32px;
+$file-folder-icon-font-size: 30px;
+$file-folder-info-height: $file-folder-info-line-height * 2 + $file-folder-padding * 2;
+$file-folder-width: 300px;
+$file-folder-height: $file-folder-info-height + 80px;
+$file-folder-info-content-width: $file-folder-width - $file-folder-padding * 3 - $file-folder-icon-size;
+$file-picture-size: 226px;

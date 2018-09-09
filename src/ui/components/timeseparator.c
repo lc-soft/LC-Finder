@@ -92,11 +92,11 @@ static void RenderSubtitle(wchar_t *buf, const wchar_t *text, void *privdata)
 	    sep->end_time.tm_mon != sep->time.tm_mon ||
 	    sep->end_time.tm_mday != sep->time.tm_mday) {
 		FormatMonthString(end_str, 63, &sep->end_time);
-		swprintf(buf, TXTFMT_BUF_MAX_LEN - 1, L"%S - %S %S", start_str,
+		swprintf(buf, TXTFMT_BUF_MAX_LEN - 1, L"%ls - %ls %ls", start_str,
 			 end_str, stats);
 		return;
 	}
-	swprintf(buf, TXTFMT_BUF_MAX_LEN - 1, L"%S %S", start_str, stats);
+	swprintf(buf, TXTFMT_BUF_MAX_LEN - 1, L"%ls %ls", start_str, stats);
 }
 
 static void TimeSeparator_OnInit(LCUI_Widget w)

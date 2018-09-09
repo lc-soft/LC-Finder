@@ -130,7 +130,7 @@ static void OnSurfaceReady( LCUI_Event e, void *arg )
 static void UI_SetWindowIcon( void )
 {
 #ifdef PLATFORM_WIN32_DESKTOP
-	LCUIDisplay_BindEvent( DET_READY, OnSurfaceReady, NULL, NULL, NULL );
+	LCUIDisplay_BindEvent( LCUI_DEVENT_READY, OnSurfaceReady, NULL, NULL, NULL );
 #endif
 }
 

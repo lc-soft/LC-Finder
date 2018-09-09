@@ -100,7 +100,7 @@ static struct FileService {
 	LCUI_Thread thread;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
-	int backlog;
+	size_t backlog;
 	LinkedList requests;
 	LinkedList connections;
 } service;

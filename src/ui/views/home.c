@@ -66,7 +66,7 @@ typedef struct FileScannerRec_ {
 	LCUI_Mutex mutex;
 	LCUI_BOOL is_running;
 	LinkedList files;
-	int count, total;
+	size_t count, total;
 } FileScannerRec, *FileScanner;
 
 /** 视图同步功能的相关数据 */

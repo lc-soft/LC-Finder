@@ -69,7 +69,7 @@ static void UpdateRating(LCUI_Widget w, int rating)
 	LinkedListNode *node;
 	for (LinkedList_Each(node, &w->children)) {
 		child = node->data;
-		if (child->index >= rating) {
+		if (child->index >= (unsigned)rating) {
 			break;
 		}
 		Widget_AddClass(child, "icon-star");

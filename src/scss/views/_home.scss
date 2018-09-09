@@ -1,14 +1,16 @@
 time-separator {
-	width: 100%;
 	display: block;
-	margin-top: 30px;
+	margin-left: $file-list-item-spacing;
+	margin-right: $file-list-item-spacing;
+	margin-top: $spacing;
+	margin-bottom: 0;
 }
 time-separator:first-child {
 	margin-top: 0;
 }
 .time-separator-title {
 	font-size: 18px;
-	margin: 0 0 5px 0;
+	line-height: 24px;
 	display: block;
 }
 .time-separator-subtitle {
@@ -33,6 +35,6 @@ time-separator:first-child {
 	.time-range {
 		font-size: 18px;
 		display: block;
-		margin-bottom: 15px;
+		margin-bottom: $spacing;
 	}
 }
