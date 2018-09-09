@@ -96,9 +96,6 @@
     <ClCompile Include="src\ui\components\dialog_prompt.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\components\dropdown.c">
-      <Filter>源文件\ui\components</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\components\filesync.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
@@ -124,6 +121,12 @@
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\components\timeseparator.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\i18n_detetime.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\tagthumb.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
   </ItemGroup>
@@ -199,6 +202,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\file_storage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tagthumb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\i18n_datetime.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
