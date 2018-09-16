@@ -51,10 +51,9 @@ typedef struct FileSortMethodRec_ {
 
 /** 文件浏览器相关数据 */
 typedef struct FileBrowserRec_ {
-	const char *title_key;			/**< 标题文本的索引 key */
 	LCUI_Widget view;			/**< 视图 */
 	LCUI_Widget items;			/**< 缩略图列表 */
-	LCUI_Widget txt_title;			/**< 标题 */
+	LCUI_Widget txt_selection_stats;	/**< 已选文件的统计文本 */
 	LCUI_Widget btn_select;			/**< “选择”按钮 */
 	LCUI_Widget btn_cancel;			/**< “取消”按钮 */
 	LCUI_Widget btn_delete;			/**< “删除”按钮 */

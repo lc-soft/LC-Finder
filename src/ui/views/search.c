@@ -83,14 +83,17 @@ typedef struct ViewSyncRec_ {
 
 static struct SearchView {
 	LCUI_Widget input;
+	LCUI_Widget view;
 	LCUI_Widget view_tags;
-	LCUI_Widget view_result;
+	LCUI_Widget view_tags_wrapper;
+	LCUI_Widget view_results_wrapper;
 	LCUI_Widget view_files;
 	LCUI_Widget txt_count;
 	LCUI_Widget btn_search;
 	LCUI_Widget tip_empty_tags;
 	LCUI_Widget tip_empty_files;
 	LCUI_Widget selected_sort;
+	LCUI_Widget navbar_actions;
 	LCUI_BOOL need_update;
 	struct {
 		int count;
@@ -126,19 +129,6 @@ static void OnDeleteDBFile(void *arg)
 	DBFile_Release(arg);
 }
 
-static void SetSearchResultsCount(int count)
-{
-	wchar_t str[128], count_str[64];
-	get_human_number_wcs(count_str, 63, count);
-	swprintf(str, 255, L" (%ls)", count_str);
-	TextView_SetTextW(this_view.txt_count, str);
-	if (count > 0) {
-		Widget_Show(this_view.txt_count);
-	} else {
-		Widget_Hide(this_view.txt_count);
-	}
-}
-
 /** 扫描全部文件 */
 static int FileScanner_ScanAll(FileScanner scanner)
 {
@@ -164,7 +154,6 @@ static int FileScanner_ScanAll(FileScanner scanner)
 	query = DB_NewQuery(&this_view.terms);
 	count = total = DBQuery_GetTotalFiles(query);
 	scanner->total = total, scanner->count = 0;
-	SetSearchResultsCount(total);
 	while (scanner->is_running && count > 0) {
 		DB_DeleteQuery(query);
 		query = DB_NewQuery(&this_view.terms);
@@ -549,8 +538,9 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (tags.length == 0) {
 		return;
 	}
-	Widget_RemoveClass(this_view.view_result, "hide");
-	Widget_Show(this_view.view_result);
+	Widget_RemoveClass(this_view.view_results_wrapper, "hide");
+	Widget_AddClass(this_view.view_tags_wrapper, "hide");
+	Widget_RemoveClass(this_view.navbar_actions, "hide");
 	StartSearchFiles(&tags);
 	LinkedList_Clear(&tags, free);
 }
@@ -571,7 +561,7 @@ static void OnBtnHideReusltClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (this_view.need_update) {
 		UI_UpdateSearchView();
 	}
-	Widget_Hide(this_view.view_result);
+	Widget_Hide(this_view.view_results_wrapper);
 	ThumbView_Lock(this_view.view_files);
 	ThumbView_Empty(this_view.view_files);
 	ThumbView_Unlock(this_view.view_files);
@@ -706,42 +696,43 @@ static void OnTagThumbViewReady(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 void UI_InitSearchView(void)
 {
-	LCUI_Widget btns[6], title, btn;
+	LCUI_Widget title;
+	LCUI_Widget btns[6];
+
 	this_view.layout.count = 0;
 	this_view.layout.tags_per_row = 2;
 	LinkedList_Init(&this_view.tags);
 	FileScanner_Init(&this_view.scanner);
 	LCUICond_Init(&this_view.viewsync.ready);
 	LCUIMutex_Init(&this_view.viewsync.mutex);
+	SelectWidget(this_view.navbar_actions, ID_SEARCH_ACTIONS);
 	SelectWidget(btns[0], ID_BTN_SIDEBAR_SEEARCH);
 	SelectWidget(btns[1], ID_BTN_SELECT_SEARCH_FILES);
 	SelectWidget(btns[2], ID_BTN_CANCEL_SEARCH_SELECT);
 	SelectWidget(btns[3], ID_BTN_TAG_SEARCH_FILES);
 	SelectWidget(btns[4], ID_BTN_DELETE_SEARCH_FILES);
+	SelectWidget(title, ID_TXT_SEARCH_SELECTION_STATS);
 	SelectWidget(this_view.input, ID_INPUT_SEARCH);
-	SelectWidget(btn, ID_BTN_HIDE_SEARCH_RESULT);
-	SelectWidget(title, ID_TXT_VIEW_SEARCH_RESULT_TITLE);
-	SelectWidget(this_view.txt_count, ID_TXT_VIEW_SEARCH_RESULT_COUNT);
 	SelectWidget(this_view.tip_empty_tags, ID_TIP_SEARCH_TAGS_EMPTY);
 	SelectWidget(this_view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY);
 	SelectWidget(this_view.btn_search, ID_BTN_SEARCH_FILES);
 	SelectWidget(this_view.view_tags, ID_VIEW_SEARCH_TAGS);
-	SelectWidget(this_view.view_result, ID_VIEW_SEARCH_RESULT);
+	SelectWidget(this_view.view_tags_wrapper, ID_VIEW_SEARCH_TAGS_WRAPPER);
+	SelectWidget(this_view.view_results_wrapper, ID_VIEW_SEARCH_RESULTS_WRAPPER);
 	SelectWidget(this_view.view_files, ID_VIEW_SEARCH_FILES);
-	this_view.browser.title_key = KEY_TITLE;
+	SelectWidget(this_view.view, ID_VIEW_SEARCH);
 	this_view.browser.btn_select = btns[1];
 	this_view.browser.btn_cancel = btns[2];
 	this_view.browser.btn_tag = btns[3];
 	this_view.browser.btn_delete = btns[4];
-	this_view.browser.txt_title = title;
+	this_view.browser.txt_selection_stats = title;
+	this_view.browser.view = this_view.view;
 	this_view.browser.items = this_view.view_files;
-	this_view.browser.view = this_view.view_result;
 	ThumbView_SetCache(this_view.view_tags, finder.thumb_cache);
 	ThumbView_SetCache(this_view.view_files, finder.thumb_cache);
 	ThumbView_SetStorage(this_view.view_tags, finder.storage_for_thumb);
 	ThumbView_SetStorage(this_view.view_files, finder.storage_for_thumb);
 	BindEvent(btns[0], "click", OnBtnClick);
-	BindEvent(btn, "click", OnBtnHideReusltClick);
 	BindEvent(this_view.btn_search, "click", OnBtnSearchClick);
 	BindEvent(this_view.btn_search, "resize", OnBtnSearchResize);
 	if (this_view.btn_search->state == LCUI_WSTATE_NORMAL) {

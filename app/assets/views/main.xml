@@ -31,17 +31,18 @@
       </w>
       <w id="view-home" class="view">
         <w class="view-navbar">
-          <w id="view-home-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="home.title">集锦</w>
+          <w type="textview-i18n" class="text view-navbar-title on-normal-mode" data-i18n-key="home.title">集锦</w>
+          <w id="view-home-selection-stats" type="textview-i18n" class="view-navbar-text on-selection-mode"></w>
           <w class="view-navbar-actions on-selection-mode">
-            <w id="btn-cancel-home-select" class="view-navbar-btn">
-              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
-            </w>
-            <w class="divider"></w>
             <w id="btn-tag-home-files" class="view-navbar-btn">
               <w type="icon" class="text" name="tag-multiple"></w>
             </w>
             <w id="btn-delete-home-files" class="view-navbar-btn">
               <w type="icon" class="text" name="delete"></w>
+            </w>
+            <w class="divider"></w>
+            <w id="btn-cancel-home-select" class="view-navbar-btn">
+              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
             </w>
           </w>
           <w class="view-navbar-actions on-normal-mode">
@@ -74,20 +75,42 @@
         </w>
       </w>
       <w id="view-search" class="view hide">
-        <w class="view-navbar">
-          <w type="textview-i18n" class="text view-navbar-title" data-i18n-key="search.title">搜索</w>
-        </w>
-        <w class="view-body">
-          <w class="search-panel">
-            <w class="search-input-group">
-              <w id="input-search" type="textedit" class="search-input"></w>
-              <w id="btn-search-files" class="btn btn-basic">
-                <w type="textview-i18n" class="text" data-i18n-key="button.search">搜索</w>
-              </w>
+        <w class="view-navbar on-normal-mode">
+          <w class="search-input-group">
+            <w id="input-search" type="textedit" class="search-input"></w>
+            <w class="search-input-addon-group">
+              <w id="btn-clear-search" type="icon" class="icon-btn" name="close" />
+              <w id="btn-search-files" type="icon" class="icon-btn" name="magnify" />
             </w>
           </w>
-          <w class="view-content-wrapper">
-            <w id="view-search-content" class="view-content full-height">
+          <w id="view-search-actions" class="view-navbar-actions hide">
+            <w id="btn-sort-search-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="sort"></w>
+            </w>
+            <w id="btn-select-search-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+            </w>
+          </w>
+        </w>
+        <w class="view-navbar on-selection-mode">
+          <w id="view-search-selection-stats" type="textview-i18n" class="view-navbar-text"></w>
+          <w class="view-navbar-actions  on-selection-mode">
+            <w id="btn-tag-search-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="tag-multiple"></w>
+            </w>
+            <w id="btn-delete-search-files" class="view-navbar-btn">
+              <w type="icon" class="text" name="delete"></w>
+            </w>
+            <w class="divider"></w>
+            <w id="btn-cancel-search-select" class="view-navbar-btn">
+              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+            </w>
+          </w>
+        </w>
+        <w id="dropdown-search-files-sort" type="dropdown-menu" class="checkable" data-position="bottom right"></w>
+        <w class="view-body">
+          <w id="view-search-tags-wrapper" class="view-content-wrapper">
+            <w class="view-content full-height">
               <w id="tip-search-tags-empty" class="floating center middle aligned icon message hide">
                 <w type="textview" class="icon icon icon-tag-multiple"></w>
                 <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</w>
@@ -96,63 +119,32 @@
             </w>
             <w type="scrollbar" target="view-search-tags"/>
           </w>
-        </w>
-        <w id="view-search-result" class="subview hide">
-          <w class="view-navbar">
-            <w class="view-navbar-btn" id="btn-hide-search-result">
-              <w type="icon" name="arrow-left"></w>
+          <w id="view-search-results-wrapper" class="hide view-content-wrapper">
+            <w class="view-content full-height">
+              <w id="tip-search-no-result" class="floating center middle aligned icon message hide">
+                <w type="textview" class="icon icon icon-file-hidden"></w>
+                <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</w>
+              </w>
+              <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
             </w>
-            <w id="view-search-result-title" type="textview-i18n" class="view-navbar-title" data-i18n-key="search.results.title">搜索结果</w>
-            <w id="view-search-result-count" type="textview" class="view-navbar-text on-normal-mode"></w>
-            <w class="view-navbar-actions  on-selection-mode">
-              <w id="btn-cancel-search-select" class="view-navbar-btn">
-                <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
-              </w>
-              <w class="divider"></w>
-              <w id="btn-tag-search-files" class="view-navbar-btn">
-                <w type="icon" class="text" name="tag-multiple"></w>
-              </w>
-              <w id="btn-delete-search-files" class="view-navbar-btn">
-                <w type="icon" class="text" name="delete"></w>
-              </w>
-            </w>
-            <w class="view-navbar-actions on-normal-mode">
-              <w id="btn-sort-search-files" class="view-navbar-btn">
-                <w type="icon" class="text" name="sort"></w>
-              </w>
-              <w id="btn-select-search-files" class="view-navbar-btn">
-                <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
-              </w>
-            </w>
+            <w type="scrollbar" target="view-search-files"/>
           </w>
-          <w class="view-body">
-            <w class="view-content-wrapper">
-              <w id="view-search-result-content" class="view-content full-height">  
-                <w id="tip-search-no-result" class="floating center middle aligned icon message hide">
-                  <w type="textview" class="icon icon icon-file-hidden"></w>
-                  <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</w>
-                </w>
-                <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
-              </w>
-              <w type="scrollbar" target="view-search-files"/>
-            </w>
-          </w>
-          <w id="dropdown-search-files-sort" type="dropdown-menu" class="checkable" data-position="bottom right"></w>
         </w>
       </w>
       <w id="view-folders" class="view hide">
         <w class="view-navbar">
-          <w id="view-folders-title" type="textview-i18n" class="text view-navbar-title" data-i18n-key="folders.title">文件夹</w>
+          <w type="textview-i18n" class="text on-normal-mode view-navbar-title" data-i18n-key="folders.title">文件夹</w>
+          <w id="view-folders-selection-stats" type="textview-i18n" class="view-navbar-text on-selection-mode"></w>
           <w class="view-navbar-actions on-selection-mode">
-            <w id="btn-cancel-folder-select" class="view-navbar-btn">
-              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
-            </w>
-            <w class="divider"></w>
             <w id="btn-tag-folder-files" class="view-navbar-btn">
               <w type="icon" class="text" name="tag-multiple"></w>
             </w>
             <w id="btn-delete-folder-files" class="view-navbar-btn">
               <w type="icon" class="text" name="delete"></w>
+            </w>
+            <w class="divider"></w>
+            <w id="btn-cancel-folder-select" class="view-navbar-btn">
+              <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
             </w>
           </w>
           <w class="view-navbar-actions on-normal-mode">

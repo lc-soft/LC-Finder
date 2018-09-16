@@ -188,24 +188,22 @@ static void FileBrowser_UpdateSelectionUI( FileBrowser browser )
 	if( browser->selected_files.length > 0 ) {
 		Widget_SetDisabled( btn_del, FALSE );
 		Widget_SetDisabled( btn_add_tags, FALSE );
-		TextViewI18n_SetFormater( browser->txt_title, 
+		TextViewI18n_SetFormater( browser->txt_selection_stats, 
 					  RenderSelectedItemsText, browser );
-		TextViewI18n_SetKey( browser->txt_title, KEY_SELECTED_ITEMS );
+		TextViewI18n_SetKey( browser->txt_selection_stats, KEY_SELECTED_ITEMS );
 		return;
 	}
 	Widget_SetDisabled( btn_del, TRUE );
 	Widget_SetDisabled( btn_add_tags, TRUE );
-	TextViewI18n_SetFormater( browser->txt_title, NULL, NULL );
-	TextViewI18n_SetKey( browser->txt_title, KEY_NO_SELECTED_ITEMS );
-	TextViewI18n_Refresh( browser->txt_title );
+	TextViewI18n_SetFormater( browser->txt_selection_stats, NULL, NULL );
+	TextViewI18n_SetKey( browser->txt_selection_stats, KEY_NO_SELECTED_ITEMS );
+	TextViewI18n_Refresh( browser->txt_selection_stats );
 }
 
 static void FileBrowser_DisableSelectionMode( FileBrowser browser )
 {
 	FileBrowser_UpdateSelectionUI( browser );
 	Widget_RemoveClass( browser->view, "selection-mode" );
-	TextViewI18n_SetFormater( browser->txt_title, NULL, NULL );
-	TextViewI18n_SetKey( browser->txt_title, browser->title_key );
 	browser->is_selection_mode = FALSE;
 }
 

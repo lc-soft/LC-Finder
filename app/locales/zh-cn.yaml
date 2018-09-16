@@ -72,7 +72,7 @@ strings:
     search:
         title: 搜索
         placeholder:
-            search_input: 根据标签搜索图片，多个标签用空格隔开
+            search_input: 搜索图片
         results: 
             title: 搜索结果
         message:

@@ -72,7 +72,7 @@ strings:
     search:
         title: Search
         placeholder:
-            search_input: 'search by tags, use spaces to separate tags.'
+            search_input: 'Search pictures'
         results: 
             title: Search results
         message:

@@ -72,7 +72,7 @@ strings:
     search:
         title: 搜索
         placeholder:
-            search_input: 根據標籤搜索圖片，多個標籤用空格隔開
+            search_input: 搜索圖片
         results: 
             title: 搜索結果
         message:

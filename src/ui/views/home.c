@@ -422,10 +422,11 @@ void UI_InitHomeView(void)
 {
 	LCUI_Thread tid;
 	LCUI_Widget btn[5], title;
+
 	FileScanner_Init(&this_view.scanner);
 	LCUICond_Init(&this_view.viewsync.ready);
 	LCUIMutex_Init(&this_view.viewsync.mutex);
-	SelectWidget(title, ID_TXT_VIEW_HOME_TITLE);
+	SelectWidget(title, ID_TXT_HOME_SELECTION_STATS);
 	SelectWidget(this_view.view, ID_VIEW_HOME);
 	SelectWidget(this_view.items, ID_VIEW_HOME_COLLECTIONS);
 	SelectWidget(this_view.time_ranges, ID_VIEW_TIME_RANGE_LIST);
@@ -436,12 +437,11 @@ void UI_InitHomeView(void)
 	SelectWidget(btn[2], ID_BTN_CANCEL_HOME_SELECT);
 	SelectWidget(btn[3], ID_BTN_TAG_HOME_FILES);
 	SelectWidget(btn[4], ID_BTN_DELETE_HOME_FILES);
-	this_view.browser.title_key = KEY_TITLE;
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
 	this_view.browser.btn_delete = btn[4];
 	this_view.browser.btn_tag = btn[3];
-	this_view.browser.txt_title = title;
+	this_view.browser.txt_selection_stats = title;
 	this_view.browser.view = this_view.view;
 	this_view.browser.items = this_view.items;
 	this_view.browser.after_deleted = OnAfterDeleted;

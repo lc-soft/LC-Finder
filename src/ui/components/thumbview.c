@@ -692,14 +692,18 @@ void ThumbView_Unlock(LCUI_Widget w)
 	LCUIMutex_Unlock(&view->mutex);
 }
 
+static float ComputeLayoutMaxWidth(LCUI_Widget parent)
+{
+	float width = max(THUMBVIEW_MIN_WIDTH, parent->box.content.width);
+	return width + FILE_ITEM_MARGIN * 2;
+}
+
 /** 更新布局上下文，为接下来的子部件布局处理做准备 */
 static void ThumbView_UpdateLayoutContext(LCUI_Widget w)
 {
-	float max_width;
 	ThumbView view = Widget_GetData(w, self.main);
+	float max_width = ComputeLayoutMaxWidth(w->parent);
 
-	max_width = max(THUMBVIEW_MIN_WIDTH, w->parent->box.content.width);
-	max_width += FILE_ITEM_MARGIN * 2;
 	view->layout.folders_per_row = (int)ceil(max_width / FOLDER_MAX_WIDTH);
 	view->layout.max_width = max_width;
 	Widget_SetStyle(w, key_width, max_width, px);
@@ -1033,7 +1037,7 @@ static void OnResize(LCUI_Widget parent, LCUI_WidgetEvent e, void *arg)
 {
 	ThumbView view = Widget_GetData(e->data, self.main);
 	/* 如果父级部件的内容区宽度没有变化则不更新布局 */
-	if (parent->box.content.width == view->layout.max_width) {
+	if (ComputeLayoutMaxWidth(parent) == view->layout.max_width) {
 		return;
 	}
 	ThumbView_UpdateLayout(e->data, NULL);

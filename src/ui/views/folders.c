@@ -569,12 +569,14 @@ static void InitFolderFilesSort(void)
 
 void UI_InitFoldersView(void)
 {
-	LCUI_Widget btn[5], btn_return, title;
+	LCUI_Widget title;
+	LCUI_Widget btn[5], btn_return;
+
 	FileScanner_Init(&this_view.scanner);
 	LCUICond_Init(&this_view.viewsync.ready);
 	LCUIMutex_Init(&this_view.viewsync.mutex);
 	SelectWidget(this_view.items, ID_VIEW_FILE_LIST);
-	SelectWidget(title, ID_TXT_VIEW_FOLDERS_TITLE);
+	SelectWidget(title, ID_TXT_FOLDERS_SELECTION_STATS);
 	SelectWidget(btn[0], ID_BTN_SYNC_FOLDER_FILES);
 	SelectWidget(btn[1], ID_BTN_SELECT_FOLDER_FILES);
 	SelectWidget(btn[2], ID_BTN_CANCEL_FOLDER_SELECT);
@@ -590,8 +592,7 @@ void UI_InitFoldersView(void)
 	this_view.browser.btn_select = btn[1];
 	this_view.browser.btn_cancel = btn[2];
 	this_view.browser.btn_delete = btn[4];
-	this_view.browser.txt_title = title;
-	this_view.browser.title_key = KEY_TITLE;
+	this_view.browser.txt_selection_stats = title;
 	this_view.browser.view = this_view.view;
 	this_view.browser.items = this_view.items;
 	BindEvent(btn[0], "click", OnBtnSyncClick);
