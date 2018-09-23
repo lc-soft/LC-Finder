@@ -79,18 +79,17 @@ $search-input-icon-height: $search-input-line-height;
 .search-input-addon-group {
 	position: absolute;
 	top: $search-input-group-padding-y;
-	right: $search-input-padding-x;
-	border: 1px solid #f00;
+	right: $search-input-padding-x + 5px;
 	padding: $search-input-padding-y 0;
 
 	.icon-btn {
+		color: $gray-600;
 		font-size: 20px;
 		display: inline-block;
 		width: $search-input-icon-width;
 		height: $search-input-icon-height;
 		line-height: $search-input-icon-height;
 		text-align: center;
-		border: 1px solid #f00;
 		margin-left: $search-input-padding-x;
 
 		&:hover {

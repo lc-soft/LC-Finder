@@ -90,6 +90,7 @@ static struct SearchView {
 	LCUI_Widget view_files;
 	LCUI_Widget txt_count;
 	LCUI_Widget btn_search;
+	LCUI_Widget btn_clear;
 	LCUI_Widget tip_empty_tags;
 	LCUI_Widget tip_empty_files;
 	LCUI_Widget selected_sort;
@@ -106,7 +107,7 @@ static struct SearchView {
 	FileScannerRec scanner;
 	FileBrowserRec browser;
 	DB_QueryTermsRec terms;
-} this_view = { 0 };
+} view = { 0 };
 
 static FileSortMethodRec sort_methods[SORT_METHODS_LEN] = {
 	{ "sort.ctime_desc", CREATE_TIME_DESC },
@@ -136,7 +137,7 @@ static int FileScanner_ScanAll(FileScanner scanner)
 	DB_Query query;
 	DB_QueryTerms terms;
 	int i, total, count;
-	terms = &this_view.terms;
+	terms = &view.terms;
 	terms->offset = 0;
 	terms->limit = 100;
 	terms->tags = scanner->tags;
@@ -151,12 +152,12 @@ static int FileScanner_ScanAll(FileScanner scanner)
 			terms->dirs = NULL;
 		}
 	}
-	query = DB_NewQuery(&this_view.terms);
+	query = DB_NewQuery(&view.terms);
 	count = total = DBQuery_GetTotalFiles(query);
 	scanner->total = total, scanner->count = 0;
 	while (scanner->is_running && count > 0) {
 		DB_DeleteQuery(query);
-		query = DB_NewQuery(&this_view.terms);
+		query = DB_NewQuery(&view.terms);
 		if (count < terms->limit) {
 			i = count;
 		} else {
@@ -189,8 +190,8 @@ static void FileScanner_Init(FileScanner scanner)
 	LCUICond_Init(&scanner->cond);
 	LCUIMutex_Init(&scanner->mutex);
 	LinkedList_Init(&scanner->files);
-	this_view.scanner.tags = NULL;
-	this_view.scanner.n_tags = 0;
+	scanner->tags = NULL;
+	scanner->n_tags = 0;
 }
 
 /** 重置文件扫描 */
@@ -210,16 +211,16 @@ static void FileScanner_Reset(FileScanner scanner)
 static void FileScanner_Thread(void *arg)
 {
 	int count;
-	this_view.scanner.is_running = TRUE;
-	count = FileScanner_ScanAll(&this_view.scanner);
+	view.scanner.is_running = TRUE;
+	count = FileScanner_ScanAll(&view.scanner);
 	if (count > 0) {
-		Widget_AddClass(this_view.tip_empty_files, "hide");
-		Widget_Hide(this_view.tip_empty_files);
+		Widget_AddClass(view.tip_empty_files, "hide");
+		Widget_Hide(view.tip_empty_files);
 	} else {
-		Widget_RemoveClass(this_view.tip_empty_files, "hide");
-		Widget_Show(this_view.tip_empty_files);
+		Widget_RemoveClass(view.tip_empty_files, "hide");
+		Widget_Show(view.tip_empty_files);
 	}
-	this_view.scanner.is_running = FALSE;
+	view.scanner.is_running = FALSE;
 	LCUIThread_Exit(NULL);
 }
 
@@ -241,11 +242,11 @@ static void ViewSyncThread(void *arg)
 {
 	ViewSync vs;
 	FileScanner scanner;
-	vs = &this_view.viewsync;
-	scanner = &this_view.scanner;
+	vs = &view.viewsync;
+	scanner = &view.scanner;
 	LCUIMutex_Lock(&vs->mutex);
 	/* 等待缩略图列表部件准备完毕 */
-	while (this_view.view_files->state < LCUI_WSTATE_READY) {
+	while (view.view_files->state < LCUI_WSTATE_READY) {
 		LCUICond_TimedWait(&vs->ready, &vs->mutex, 100);
 	}
 	LCUIMutex_Unlock(&vs->mutex);
@@ -269,7 +270,7 @@ static void ViewSyncThread(void *arg)
 		}
 		LinkedList_Unlink(&scanner->files, node);
 		LCUIMutex_Unlock(&scanner->mutex);
-		FileBrowser_AppendPicture(&this_view.browser, node->data);
+		FileBrowser_AppendPicture(&view.browser, node->data);
 		LCUIMutex_Unlock(&vs->mutex);
 		LinkedListNode_Delete(node);
 	}
@@ -280,17 +281,42 @@ static void UpdateLayoutContext(void)
 {
 	double n;
 	float max_width;
-	max_width = this_view.view_tags->parent->box.content.width;
+	max_width = view.view_tags->parent->box.content.width;
 	n = max_width + TAG_MARGIN_RIGHT;
 	n = ceil(n / (TAG_MAX_WIDTH + TAG_MARGIN_RIGHT));
-	this_view.layout.max_width = max_width;
-	this_view.layout.tags_per_row = (int)n;
+	view.layout.max_width = max_width;
+	view.layout.tags_per_row = (int)n;
+}
+
+static void UpdateSearchResults(void)
+{
+	FileScanner_Reset(&view.scanner);
+	LCUIMutex_Lock(&view.viewsync.mutex);
+	FileBrowser_Empty(&view.browser);
+	FileScanner_Start(&view.scanner);
+	LCUIMutex_Unlock(&view.viewsync.mutex);
+}
+
+static void UpdateSearchInputPlaceholder(void)
+{
+	const wchar_t *text = I18n_GetText(KEY_INPUT_PLACEHOLDER);
+	TextEdit_SetPlaceHolderW(view.input, text);
+}
+
+static void UpdateSearchInputActions(void)
+{
+	size_t len = TextEdit_GetTextLength(view.input);
+	if (len > 0) {
+		Widget_Show(view.btn_clear);
+	} else {
+		Widget_Hide(view.btn_clear);
+	}
 }
 
 static void OnTagViewStartLayout(LCUI_Widget w)
 {
-	this_view.layout.count = 0;
-	this_view.layout.tags_per_row = 2;
+	view.layout.count = 0;
+	view.layout.tags_per_row = 2;
 	UpdateLayoutContext();
 }
 
@@ -300,7 +326,7 @@ static void AddTagToSearch(LCUI_Widget w)
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512];
-	for (LinkedList_Each(node, &this_view.tags)) {
+	for (LinkedList_Each(node, &view.tags)) {
 		TagItem item = node->data;
 		if (item->widget == w) {
 			tag = item->tag;
@@ -313,7 +339,7 @@ static void AddTagToSearch(LCUI_Widget w)
 	len = strlen(tag->name) + 1;
 	tagname = NEW(wchar_t, len);
 	LCUI_DecodeString(tagname, tag->name, len, ENCODING_UTF8);
-	len = TextEdit_GetTextW(this_view.input, 0, 511, text);
+	len = TextEdit_GetTextW(view.input, 0, 511, text);
 	if (len > 0 && wcsstr(text, tagname)) {
 		free(tagname);
 		return;
@@ -323,7 +349,8 @@ static void AddTagToSearch(LCUI_Widget w)
 	} else {
 		swprintf(text, 511, L" %ls", tagname);
 	}
-	TextEdit_AppendTextW(this_view.input, text);
+	TextEdit_AppendTextW(view.input, text);
+	UpdateSearchInputActions();
 	free(tagname);
 }
 
@@ -333,7 +360,7 @@ static void DeleteTagFromSearch(LCUI_Widget w)
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512], *p, *pend;
-	for (LinkedList_Each(node, &this_view.tags)) {
+	for (LinkedList_Each(node, &view.tags)) {
 		TagItem item = node->data;
 		if (item->widget == w) {
 			tag = item->tag;
@@ -346,7 +373,7 @@ static void DeleteTagFromSearch(LCUI_Widget w)
 	len = strlen(tag->name) + 1;
 	tagname = NEW(wchar_t, len);
 	taglen = LCUI_DecodeString(tagname, tag->name, len, ENCODING_UTF8);
-	len = TextEdit_GetTextW(this_view.input, 0, 511, text);
+	len = TextEdit_GetTextW(view.input, 0, 511, text);
 	if (len == 0) {
 		return;
 	}
@@ -362,7 +389,7 @@ static void DeleteTagFromSearch(LCUI_Widget w)
 		*p = *(p + taglen);
 	}
 	*pend = 0;
-	TextEdit_SetTextW(this_view.input, text);
+	TextEdit_SetTextW(view.input, text);
 	free(tagname);
 }
 
@@ -392,18 +419,18 @@ static void UpdateTagSize(LCUI_Widget w)
 {
 	int n;
 	float width;
-	++this_view.layout.count;
-	if (this_view.layout.count == 1) {
+	++view.layout.count;
+	if (view.layout.count == 1) {
 		UpdateLayoutContext();
 	}
-	if (this_view.layout.max_width < TAG_MARGIN_RIGHT) {
+	if (view.layout.max_width < TAG_MARGIN_RIGHT) {
 		return;
 	}
-	n = this_view.layout.tags_per_row;
-	width = this_view.layout.max_width;
+	n = view.layout.tags_per_row;
+	width = view.layout.max_width;
 	width = (width - TAG_MARGIN_RIGHT * (n - 1)) / n;
 	/* 设置每行最后一个文件夹的右边距为 0px */
-	if (this_view.layout.count % n == 0) {
+	if (view.layout.count % n == 0) {
 		Widget_SetStyle(w, key_margin_right, 0, px);
 	} else {
 		Widget_UnsetStyle(w, key_margin_right);
@@ -440,7 +467,7 @@ static LCUI_Widget CreateTagWidget(DB_Tag tag)
 	TagThumb_SetName(w, tag->name);
 	TagThumb_SetCount(w, tag->count);
 
-	Widget_Append(this_view.view_tags, w);
+	Widget_Append(view.view_tags, w);
 	Widget_BindEvent(w, "click", OnTagClick, tag, NULL);
 
 	ThumbViewItem_BindFile(w, file);
@@ -451,12 +478,12 @@ static LCUI_Widget CreateTagWidget(DB_Tag tag)
 
 static void OnTagUpdate(void *data, void *arg)
 {
-	this_view.need_update = TRUE;
+	view.need_update = TRUE;
 }
 
 static void OnBtnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (this_view.need_update) {
+	if (view.need_update) {
 		UI_UpdateSearchView();
 	}
 }
@@ -480,25 +507,16 @@ static void StartSearchFiles(LinkedList *tags)
 		}
 	}
 	newtags[n_tags] = NULL;
-	FileScanner_Reset(&this_view.scanner);
-	if (this_view.scanner.tags) {
-		free(this_view.scanner.tags);
+	FileScanner_Reset(&view.scanner);
+	if (view.scanner.tags) {
+		free(view.scanner.tags);
 	}
-	this_view.scanner.tags = newtags;
-	this_view.scanner.n_tags = n_tags;
-	LCUIMutex_Lock(&this_view.viewsync.mutex);
-	FileBrowser_Empty(&this_view.browser);
-	FileScanner_Start(&this_view.scanner);
-	LCUIMutex_Unlock(&this_view.viewsync.mutex);
-}
-
-static void UpdateSearchResults(void)
-{
-	FileScanner_Reset(&this_view.scanner);
-	LCUIMutex_Lock(&this_view.viewsync.mutex);
-	FileBrowser_Empty(&this_view.browser);
-	FileScanner_Start(&this_view.scanner);
-	LCUIMutex_Unlock(&this_view.viewsync.mutex);
+	view.scanner.tags = newtags;
+	view.scanner.n_tags = n_tags;
+	LCUIMutex_Lock(&view.viewsync.mutex);
+	FileBrowser_Empty(&view.browser);
+	FileScanner_Start(&view.scanner);
+	LCUIMutex_Unlock(&view.viewsync.mutex);
 }
 
 static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -509,7 +527,7 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	wchar_t wstr[512] = { 0 };
 	char *str, buf[512], *tagname;
 
-	len = TextEdit_GetTextW(this_view.input, 0, 511, wstr);
+	len = TextEdit_GetTextW(view.input, 0, 511, wstr);
 	if (len == 0) {
 		return;
 	}
@@ -538,42 +556,42 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (tags.length == 0) {
 		return;
 	}
-	Widget_RemoveClass(this_view.view_results_wrapper, "hide");
-	Widget_AddClass(this_view.view_tags_wrapper, "hide");
-	Widget_RemoveClass(this_view.navbar_actions, "hide");
+	Widget_RemoveClass(view.view_results_wrapper, "hide");
+	Widget_AddClass(view.view_tags_wrapper, "hide");
+	Widget_RemoveClass(view.navbar_actions, "hide");
 	StartSearchFiles(&tags);
 	LinkedList_Clear(&tags, free);
 }
 
-static void UpdateSearchInputSize(LCUI_Widget w)
+static void OnBtnClearClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	Widget_SetStyle(w->parent, key_padding_right, 9 + w->width, px);
-	Widget_UpdateStyle(w->parent, FALSE);
+	TextEdit_ClearText(view.input);
+	UpdateSearchInputPlaceholder();
 }
 
-static void OnBtnSearchResize(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+static void OnSearchInput(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	UpdateSearchInputSize(w);
+	UpdateSearchInputActions();
 }
 
 static void OnBtnHideReusltClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (this_view.need_update) {
+	if (view.need_update) {
 		UI_UpdateSearchView();
 	}
-	Widget_Hide(this_view.view_results_wrapper);
-	ThumbView_Lock(this_view.view_files);
-	ThumbView_Empty(this_view.view_files);
-	ThumbView_Unlock(this_view.view_files);
+	Widget_Hide(view.view_results_wrapper);
+	ThumbView_Lock(view.view_files);
+	ThumbView_Empty(view.view_files);
+	ThumbView_Unlock(view.view_files);
 }
 
 void UI_UpdateSearchView(void)
 {
 	size_t i, count;
 	LCFinder_ReloadTags();
-	this_view.layout.count = 0;
-	ThumbView_Empty(this_view.view_tags);
-	LinkedList_Clear(&this_view.tags, free);
+	view.layout.count = 0;
+	ThumbView_Empty(view.view_tags);
+	LinkedList_Clear(&view.tags, free);
 	for (i = 0, count = 0; i < finder.n_tags; ++i) {
 		TagItem item;
 		if (finder.tags[i]->count <= 0) {
@@ -582,49 +600,49 @@ void UI_UpdateSearchView(void)
 		item = NEW(TagItemRec, 1);
 		item->tag = finder.tags[i];
 		item->widget = CreateTagWidget(finder.tags[i]);
-		ThumbView_Append(this_view.view_tags, item->widget);
-		LinkedList_Append(&this_view.tags, item);
+		ThumbView_Append(view.view_tags, item->widget);
+		LinkedList_Append(&view.tags, item);
 		++count;
 	}
 	if (count > 0) {
-		Widget_Hide(this_view.tip_empty_tags);
-		Widget_AddClass(this_view.tip_empty_tags, "hide");
-		Widget_SetDisabled(this_view.btn_search, FALSE);
-		Widget_SetDisabled(this_view.input, FALSE);
+		Widget_Hide(view.tip_empty_tags);
+		Widget_AddClass(view.tip_empty_tags, "hide");
+		Widget_SetDisabled(view.btn_search, FALSE);
+		Widget_SetDisabled(view.input, FALSE);
 	} else {
-		TextEdit_ClearText(this_view.input);
-		Widget_Show(this_view.tip_empty_tags);
-		Widget_RemoveClass(this_view.tip_empty_tags, "hide");
-		Widget_SetDisabled(this_view.btn_search, TRUE);
-		Widget_SetDisabled(this_view.input, TRUE);
+		TextEdit_ClearText(view.input);
+		Widget_Show(view.tip_empty_tags);
+		Widget_RemoveClass(view.tip_empty_tags, "hide");
+		Widget_SetDisabled(view.btn_search, TRUE);
+		Widget_SetDisabled(view.input, TRUE);
 	}
-	this_view.need_update = FALSE;
+	view.need_update = FALSE;
 }
 
 static void UpdateQueryTerms(void)
 {
-	this_view.terms.modify_time = NONE;
-	this_view.terms.create_time = NONE;
-	this_view.terms.score = NONE;
-	switch (this_view.sort_mode) {
+	view.terms.modify_time = NONE;
+	view.terms.create_time = NONE;
+	view.terms.score = NONE;
+	switch (view.sort_mode) {
 	case CREATE_TIME_DESC:
-		this_view.terms.create_time = DESC;
+		view.terms.create_time = DESC;
 		break;
 	case CREATE_TIME_ASC:
-		this_view.terms.create_time = ASC;
+		view.terms.create_time = ASC;
 		break;
 	case SCORE_DESC:
-		this_view.terms.score = DESC;
+		view.terms.score = DESC;
 		break;
 	case SCORE_ASC:
-		this_view.terms.score = ASC;
+		view.terms.score = ASC;
 		break;
 	case MODIFY_TIME_ASC:
-		this_view.terms.modify_time = ASC;
+		view.terms.modify_time = ASC;
 		break;
 	case MODIFY_TIME_DESC:
 	default:
-		this_view.terms.modify_time = DESC;
+		view.terms.modify_time = DESC;
 		break;
 	}
 }
@@ -632,14 +650,14 @@ static void UpdateQueryTerms(void)
 static void OnSelectSortMethod(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	FileSortMethod sort = arg;
-	if (this_view.sort_mode == sort->value) {
+	if (view.sort_mode == sort->value) {
 		return;
 	}
-	this_view.sort_mode = sort->value;
-	if (this_view.selected_sort) {
-		Widget_RemoveClass(this_view.selected_sort, "active");
+	view.sort_mode = sort->value;
+	if (view.selected_sort) {
+		Widget_RemoveClass(view.selected_sort, "active");
 	}
-	this_view.selected_sort = e->target;
+	view.selected_sort = e->target;
 	Widget_AddClass(e->target, "active");
 	UpdateQueryTerms();
 	UpdateSearchResults();
@@ -664,19 +682,13 @@ static void InitSearchResultsSort(void)
 		Widget_AddClass( text, "text" );
 		Widget_Append( item, icon );
 		Widget_Append( item, text );
-		if( sort->value == this_view.sort_mode ) {
+		if( sort->value == view.sort_mode ) {
 			Widget_AddClass( item, "active" );
-			this_view.selected_sort = item;
+			view.selected_sort = item;
 		}
 	}
 	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
 	UpdateQueryTerms();*/
-}
-
-static void UpdateSearchInput(void)
-{
-	const wchar_t *text = I18n_GetText(KEY_INPUT_PLACEHOLDER);
-	TextEdit_SetPlaceHolderW(this_view.input, text);
 }
 
 static void OnLanguageChanged(void *privdata, void *data)
@@ -694,70 +706,90 @@ static void OnTagThumbViewReady(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	UI_UpdateSearchView();
 }
 
-void UI_InitSearchView(void)
+static void InitSearchInput(void)
+{
+	SelectWidget(view.input, ID_INPUT_SEARCH);
+	SelectWidget(view.btn_search, ID_BTN_SEARCH_FILES);
+	SelectWidget(view.btn_clear, ID_BTN_CLEAR_SEARCH);
+	BindEvent(view.btn_search, "click", OnBtnSearchClick);
+	BindEvent(view.btn_clear, "click", OnBtnClearClick);
+	BindEvent(view.input, "change", OnSearchInput);
+	UpdateSearchInputPlaceholder();
+	UpdateSearchInputActions();
+}
+
+static void InitView(void)
+{
+	SelectWidget(view.navbar_actions, ID_SEARCH_ACTIONS);
+	SelectWidget(view.tip_empty_tags, ID_TIP_SEARCH_TAGS_EMPTY);
+	SelectWidget(view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY);
+	SelectWidget(view.view_tags, ID_VIEW_SEARCH_TAGS);
+	SelectWidget(view.view_tags_wrapper, ID_VIEW_SEARCH_TAGS_WRAPPER);
+	SelectWidget(view.view_results_wrapper, ID_VIEW_SEARCH_RESULTS_WRAPPER);
+	SelectWidget(view.view_files, ID_VIEW_SEARCH_FILES);
+	SelectWidget(view.view, ID_VIEW_SEARCH);
+}
+
+static void InitBrowser(void)
 {
 	LCUI_Widget title;
 	LCUI_Widget btns[6];
 
-	this_view.layout.count = 0;
-	this_view.layout.tags_per_row = 2;
-	LinkedList_Init(&this_view.tags);
-	FileScanner_Init(&this_view.scanner);
-	LCUICond_Init(&this_view.viewsync.ready);
-	LCUIMutex_Init(&this_view.viewsync.mutex);
-	SelectWidget(this_view.navbar_actions, ID_SEARCH_ACTIONS);
-	SelectWidget(btns[0], ID_BTN_SIDEBAR_SEEARCH);
+	view.layout.count = 0;
+	view.layout.tags_per_row = 2;
+	SelectWidget(btns[0], ID_BTN_SIDEBAR_SEARCH);
 	SelectWidget(btns[1], ID_BTN_SELECT_SEARCH_FILES);
 	SelectWidget(btns[2], ID_BTN_CANCEL_SEARCH_SELECT);
 	SelectWidget(btns[3], ID_BTN_TAG_SEARCH_FILES);
 	SelectWidget(btns[4], ID_BTN_DELETE_SEARCH_FILES);
 	SelectWidget(title, ID_TXT_SEARCH_SELECTION_STATS);
-	SelectWidget(this_view.input, ID_INPUT_SEARCH);
-	SelectWidget(this_view.tip_empty_tags, ID_TIP_SEARCH_TAGS_EMPTY);
-	SelectWidget(this_view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY);
-	SelectWidget(this_view.btn_search, ID_BTN_SEARCH_FILES);
-	SelectWidget(this_view.view_tags, ID_VIEW_SEARCH_TAGS);
-	SelectWidget(this_view.view_tags_wrapper, ID_VIEW_SEARCH_TAGS_WRAPPER);
-	SelectWidget(this_view.view_results_wrapper, ID_VIEW_SEARCH_RESULTS_WRAPPER);
-	SelectWidget(this_view.view_files, ID_VIEW_SEARCH_FILES);
-	SelectWidget(this_view.view, ID_VIEW_SEARCH);
-	this_view.browser.btn_select = btns[1];
-	this_view.browser.btn_cancel = btns[2];
-	this_view.browser.btn_tag = btns[3];
-	this_view.browser.btn_delete = btns[4];
-	this_view.browser.txt_selection_stats = title;
-	this_view.browser.view = this_view.view;
-	this_view.browser.items = this_view.view_files;
-	ThumbView_SetCache(this_view.view_tags, finder.thumb_cache);
-	ThumbView_SetCache(this_view.view_files, finder.thumb_cache);
-	ThumbView_SetStorage(this_view.view_tags, finder.storage_for_thumb);
-	ThumbView_SetStorage(this_view.view_files, finder.storage_for_thumb);
+	view.browser.btn_select = btns[1];
+	view.browser.btn_cancel = btns[2];
+	view.browser.btn_tag = btns[3];
+	view.browser.btn_delete = btns[4];
+	view.browser.txt_selection_stats = title;
+	view.browser.view = view.view;
+	view.browser.items = view.view_files;
+	ThumbView_SetCache(view.view_tags, finder.thumb_cache);
+	ThumbView_SetCache(view.view_files, finder.thumb_cache);
+	ThumbView_SetStorage(view.view_tags, finder.storage_for_thumb);
+	ThumbView_SetStorage(view.view_files, finder.storage_for_thumb);
+	ThumbView_OnLayout(view.view_tags, OnTagViewStartLayout);
 	BindEvent(btns[0], "click", OnBtnClick);
-	BindEvent(this_view.btn_search, "click", OnBtnSearchClick);
-	BindEvent(this_view.btn_search, "resize", OnBtnSearchResize);
-	if (this_view.btn_search->state == LCUI_WSTATE_NORMAL) {
-		UpdateSearchInputSize(this_view.btn_search);
-	}
-	if (this_view.view_tags->state == LCUI_WSTATE_NORMAL) {
+	FileBrowser_Create(&view.browser);
+	if (view.view_tags->state == LCUI_WSTATE_NORMAL) {
 		UI_UpdateSearchView();
 	} else {
-		BindEvent(this_view.view_tags, "ready", OnTagThumbViewReady);
+		BindEvent(view.view_tags, "ready", OnTagThumbViewReady);
 	}
 	LCFinder_BindEvent(EVENT_TAG_UPDATE, OnTagUpdate, NULL);
 	LCFinder_BindEvent(EVENT_LANG_CHG, OnLanguageChanged, NULL);
-	ThumbView_OnLayout(this_view.view_tags, OnTagViewStartLayout);
-	LCUIThread_Create(&this_view.viewsync.tid, ViewSyncThread, NULL);
-	FileBrowser_Create(&this_view.browser);
+}
+
+static void InitFileScanner(void)
+{
+	LinkedList_Init(&view.tags);
+	FileScanner_Init(&view.scanner);
+	LCUICond_Init(&view.viewsync.ready);
+	LCUIMutex_Init(&view.viewsync.mutex);
+	LCUIThread_Create(&view.viewsync.tid, ViewSyncThread, NULL);
+}
+
+void UI_InitSearchView(void)
+{
+	InitView();
+	InitBrowser();
+	InitFileScanner();
+	InitSearchInput();
 	InitSearchResultsSort();
-	UpdateSearchInput();
 }
 
 void UI_ExitSearchView(void)
 {
-	this_view.viewsync.is_running = FALSE;
-	FileScanner_Reset(&this_view.scanner);
-	LCUIThread_Join(this_view.viewsync.tid, NULL);
-	FileScanner_Destroy(&this_view.scanner);
-	LCUICond_Destroy(&this_view.viewsync.ready);
-	LCUIMutex_Destroy(&this_view.viewsync.mutex);
+	view.viewsync.is_running = FALSE;
+	FileScanner_Reset(&view.scanner);
+	LCUIThread_Join(view.viewsync.tid, NULL);
+	FileScanner_Destroy(&view.scanner);
+	LCUICond_Destroy(&view.viewsync.ready);
+	LCUIMutex_Destroy(&view.viewsync.mutex);
 }
