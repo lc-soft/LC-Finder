@@ -61,6 +61,11 @@
 #define TAG_MARGIN_RIGHT	15
 #define SORT_METHODS_LEN	6
 
+typedef enum ViewState {
+	STATE_NORMAL,
+	STATE_SEARCH
+} ViewState;
+
 /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
 	LCUI_Thread tid;
@@ -102,6 +107,7 @@ static struct SearchView {
 		float max_width;
 	} layout;
 	int sort_mode;
+	ViewState state;
 	LinkedList tags;
 	ViewSyncRec viewsync;
 	FileScannerRec scanner;
@@ -481,7 +487,7 @@ static void OnTagUpdate(void *data, void *arg)
 	view.need_update = TRUE;
 }
 
-static void OnBtnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+static void OnSidebarBtnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	if (view.need_update) {
 		UI_UpdateSearchView();
@@ -536,8 +542,8 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (!str) {
 		return;
 	}
-	len = LCUI_EncodeString(str, wstr, len, ENCODING_UTF8);
 	LinkedList_Init(&tags);
+	len = LCUI_EncodeString(str, wstr, len, ENCODING_UTF8);
 	for (saving = FALSE, i = 0, j = 0; i <= len; ++i) {
 		if (str[i] != ' ' && str[i] != 0) {
 			saving = TRUE;
@@ -556,6 +562,7 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (tags.length == 0) {
 		return;
 	}
+	view.state = STATE_SEARCH;
 	Widget_RemoveClass(view.view_results_wrapper, "hide");
 	Widget_AddClass(view.view_tags_wrapper, "hide");
 	Widget_RemoveClass(view.navbar_actions, "hide");
@@ -563,26 +570,34 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LinkedList_Clear(&tags, free);
 }
 
+static void UpdateViewState(void)
+{
+	if (view.need_update) {
+		UI_UpdateSearchView();
+	}
+	if (view.state != STATE_NORMAL &&
+	    TextEdit_GetTextLength(view.input) < 1) {
+		Widget_AddClass(view.view_results_wrapper, "hide");
+		Widget_AddClass(view.navbar_actions, "hide");
+		Widget_RemoveClass(view.view_tags_wrapper, "hide");
+		ThumbView_Lock(view.view_files);
+		ThumbView_Empty(view.view_files);
+		ThumbView_Unlock(view.view_files);
+		view.state = STATE_NORMAL;
+	}
+}
+
 static void OnBtnClearClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	TextEdit_ClearText(view.input);
-	UpdateSearchInputPlaceholder();
+	UpdateSearchInputActions();
+	UpdateViewState();
 }
 
 static void OnSearchInput(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	UpdateSearchInputActions();
-}
-
-static void OnBtnHideReusltClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	if (view.need_update) {
-		UI_UpdateSearchView();
-	}
-	Widget_Hide(view.view_results_wrapper);
-	ThumbView_Lock(view.view_files);
-	ThumbView_Empty(view.view_files);
-	ThumbView_Unlock(view.view_files);
+	UpdateViewState();
 }
 
 void UI_UpdateSearchView(void)
@@ -720,6 +735,7 @@ static void InitSearchInput(void)
 
 static void InitView(void)
 {
+	view.state = STATE_NORMAL;
 	SelectWidget(view.navbar_actions, ID_SEARCH_ACTIONS);
 	SelectWidget(view.tip_empty_tags, ID_TIP_SEARCH_TAGS_EMPTY);
 	SelectWidget(view.tip_empty_files, ID_TIP_SEARCH_FILES_EMPTY);
@@ -755,7 +771,7 @@ static void InitBrowser(void)
 	ThumbView_SetStorage(view.view_tags, finder.storage_for_thumb);
 	ThumbView_SetStorage(view.view_files, finder.storage_for_thumb);
 	ThumbView_OnLayout(view.view_tags, OnTagViewStartLayout);
-	BindEvent(btns[0], "click", OnBtnClick);
+	BindEvent(btns[0], "click", OnSidebarBtnClick);
 	FileBrowser_Create(&view.browser);
 	if (view.view_tags->state == LCUI_WSTATE_NORMAL) {
 		UI_UpdateSearchView();
