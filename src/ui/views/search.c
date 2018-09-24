@@ -1,4 +1,4 @@
-/* ***************************************************************************
+﻿/* ***************************************************************************
  * view_search.c -- search view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -326,12 +326,22 @@ static void OnTagViewStartLayout(LCUI_Widget w)
 	UpdateLayoutContext();
 }
 
+static void UnselectAllTags(void)
+{
+	LinkedListNode *node;
+	for (LinkedList_Each(node, &view.tags)) {
+		TagItem item = node->data;
+		Widget_RemoveClass(item->widget, "selected");
+	}
+}
+
 static void AddTagToSearch(LCUI_Widget w)
 {
-	int len;
+	size_t len;
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512];
+
 	for (LinkedList_Each(node, &view.tags)) {
 		TagItem item = node->data;
 		if (item->widget == w) {
@@ -344,7 +354,7 @@ static void AddTagToSearch(LCUI_Widget w)
 	}
 	len = strlen(tag->name) + 1;
 	tagname = NEW(wchar_t, len);
-	LCUI_DecodeString(tagname, tag->name, len, ENCODING_UTF8);
+	LCUI_DecodeUTF8String(tagname, tag->name, len);
 	len = TextEdit_GetTextW(view.input, 0, 511, text);
 	if (len > 0 && wcsstr(text, tagname)) {
 		free(tagname);
@@ -366,6 +376,7 @@ static void DeleteTagFromSearch(LCUI_Widget w)
 	DB_Tag tag = NULL;
 	LinkedListNode *node;
 	wchar_t *tagname, text[512], *p, *pend;
+
 	for (LinkedList_Each(node, &view.tags)) {
 		TagItem item = node->data;
 		if (item->widget == w) {
@@ -378,7 +389,7 @@ static void DeleteTagFromSearch(LCUI_Widget w)
 	}
 	len = strlen(tag->name) + 1;
 	tagname = NEW(wchar_t, len);
-	taglen = LCUI_DecodeString(tagname, tag->name, len, ENCODING_UTF8);
+	taglen = LCUI_DecodeUTF8String(tagname, tag->name, len);
 	len = TextEdit_GetTextW(view.input, 0, 511, text);
 	if (len == 0) {
 		return;
@@ -388,8 +399,7 @@ static void DeleteTagFromSearch(LCUI_Widget w)
 		return;
 	}
 	/* 将标签名后面的空格数量也算入标签长度内，以清除多余空格 */
-	for (pend = p + taglen; *pend && *pend == L' '; ++pend, ++taglen)
-		;
+	for (pend = p + taglen; *pend && *pend == L' '; ++pend, ++taglen);
 	pend = &text[len - taglen];
 	for (; p < pend; ++p) {
 		*p = *(p + taglen);
@@ -577,6 +587,7 @@ static void UpdateViewState(void)
 	}
 	if (view.state != STATE_NORMAL &&
 	    TextEdit_GetTextLength(view.input) < 1) {
+		UnselectAllTags();
 		Widget_AddClass(view.view_results_wrapper, "hide");
 		Widget_AddClass(view.navbar_actions, "hide");
 		Widget_RemoveClass(view.view_tags_wrapper, "hide");
@@ -778,7 +789,6 @@ static void InitBrowser(void)
 		BindEvent(view.view_tags, "ready", OnTagThumbViewReady);
 	}
 	LCFinder_BindEvent(EVENT_TAG_UPDATE, OnTagUpdate, NULL);
-	LCFinder_BindEvent(EVENT_LANG_CHG, OnLanguageChanged, NULL);
 }
 
 static void InitFileScanner(void)
