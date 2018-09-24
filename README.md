@@ -10,7 +10,6 @@
 [![](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg)
 [![](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
 
-
 ## 功能及特性
 
 - 缩略图预览
@@ -20,7 +19,6 @@
 - 触控支持
 - 多语言支持
 - 支持 Windows 通用应用平台（UWP）
-
 
 ## 目录结构
 
@@ -54,6 +52,7 @@ vendor           第三方依赖库
 使用 VisualStudio 打开 `LC-Finder.sln` 文件，然后在界面顶部的菜单栏中选择 生成 -> 生成解决方案，成功生成后运行 app 目录下 `LC-Finder.exe`。
 
 ### Linux
+
 目前已经暂停对 Linux 的支持，如有需要可向 [LCUI](https://github.com/lc-soft/LCUI) 项目提供 Linux 端的支持方案。
 
 运行以下命令：
@@ -74,3 +73,15 @@ vendor           第三方依赖库
  * [unqlite](https://www.unqlite.org/) — 嵌入式的非关系型数据引擎，为缩略图缓存功能提供支持。
  
 通常 Github 上的 Releases 页面中会提供包含这些依赖库及头文件的压缩包，因此你不用再手动去编译这些依赖库。
+
+### 待办事项
+
+- [ ] 文档：更新自述文档，添加英文版
+- [ ] 修复：导航栏中的一个按钮被隐藏后，布局未更新
+- [ ] 修复：内存泄漏以及内存访问越界问题
+- [ ] 修复：有时会出现图标未载入的情况
+- [ ] 修复：缩略图视图下有一些图片未加载
+- [ ] 修复：标签列表视图和日期列表视图没有滚动条
+- [ ] 改进：改用 LevelDB 存储缩略图数据
+- [ ] 添加：添加界面缩放设置
+- [ ] 重构：处理老代码
