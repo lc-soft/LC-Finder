@@ -109,7 +109,11 @@ int MoveFileToTrashW( const wchar_t *filepath )
 
 static void OnLicenseChanged( void )
 {
+#ifndef _DEBUG
+	LicenseInformation ^license = CurrentAppSimulator::LicenseInformation;
+#else
 	LicenseInformation ^license = CurrentApp::LicenseInformation;
+#endif
 	finder.license.is_active = license->IsActive;
 	finder.license.is_trial = license->IsTrial;
 	LCFinder_TriggerEvent( EVENT_LICENSE_CHG, NULL );
@@ -117,7 +121,11 @@ static void OnLicenseChanged( void )
 
 void LCFinder_InitLicense( void )
 {
+#ifndef _DEBUG
+	LicenseInformation ^license = CurrentAppSimulator::LicenseInformation;
+#else
 	LicenseInformation ^license = CurrentApp::LicenseInformation;
+#endif
 	license->LicenseChanged += ref new LicenseChangedEventHandler( OnLicenseChanged );
 	finder.license.is_active = license->IsActive;
 	finder.license.is_trial = license->IsTrial;
