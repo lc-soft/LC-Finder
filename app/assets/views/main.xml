@@ -84,7 +84,7 @@
             </w>
           </w>
           <w id="view-search-actions" class="view-navbar-actions hide">
-            <w id="btn-sort-search-files" class="view-navbar-btn">
+            <w class="view-navbar-btn" data-toggle="dropdown" data-target="dropdown-search-files-sort">
               <w type="icon" class="text" name="sort"></w>
             </w>
             <w id="btn-select-search-files" class="view-navbar-btn">

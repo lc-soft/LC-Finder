@@ -1,4 +1,4 @@
-﻿/* ***************************************************************************
+/* ***************************************************************************
  * view_search.c -- search view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -664,16 +664,18 @@ static void UpdateQueryTerms(void)
 
 static void OnSelectSortMethod(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	FileSortMethod sort = arg;
+	FileSortMethod sort;
+
+	sort = (FileSortMethod)Widget_GetAttribute(e->target, "value");
 	if (view.sort_mode == sort->value) {
 		return;
 	}
 	view.sort_mode = sort->value;
 	if (view.selected_sort) {
-		Widget_RemoveClass(view.selected_sort, "active");
+		Widget_RemoveClass(view.selected_sort, "selected");
 	}
 	view.selected_sort = e->target;
-	Widget_AddClass(e->target, "active");
+	Widget_AddClass(e->target, "selected");
 	UpdateQueryTerms();
 	UpdateSearchResults();
 }
@@ -682,38 +684,35 @@ static void InitSearchResultsSort(void)
 {
 	int i;
 	LCUI_Widget menu, item, icon, text;
-	const wchar_t *header = I18n_GetText(KEY_SORT_HEADER);
+
 	SelectWidget(menu, ID_DROPDOWN_SEARCH_FILES_SORT);
 	Widget_Empty(menu);
-	/*
-	Dropdown_SetHeaderW( menu, header );
-	for( i = 0; i < SORT_METHODS_LEN; ++i ) {
+
+	item = LCUIWidget_New("textview-i18n");
+	TextViewI18n_SetKey(item, KEY_SORT_HEADER);
+	Widget_AddClass(item, "dropdown-header");
+	Widget_Append(menu, item);
+
+	for (i = 0; i < SORT_METHODS_LEN; ++i) {
 		FileSortMethod sort = &sort_methods[i];
-		item = Dropdown_AddItem( menu, sort );
-		icon = LCUIWidget_New( "textview" );
-		text = LCUIWidget_New( "textview-i18n" );
-		TextViewI18n_SetKey( text, sort->name_key );
-		Widget_AddClass( icon, "icon icon icon-check" );
-		Widget_AddClass( text, "text" );
-		Widget_Append( item, icon );
-		Widget_Append( item, text );
-		if( sort->value == view.sort_mode ) {
-			Widget_AddClass( item, "active" );
+		item = LCUIWidget_New(NULL);
+		icon = LCUIWidget_New("textview");
+		text = LCUIWidget_New("textview-i18n");
+		TextViewI18n_SetKey(text, sort->name_key);
+		Widget_SetAttributeEx(item, "value", sort, 0, NULL);
+		Widget_AddClass(item, "dropdown-item");
+		Widget_AddClass(icon, "icon icon-check");
+		Widget_AddClass(text, "text");
+		Widget_Append(item, icon);
+		Widget_Append(item, text);
+		Widget_Append(menu, item);
+		if (sort->value == finder.config.files_sort) {
+			Widget_AddClass(item, "selected");
 			view.selected_sort = item;
 		}
 	}
-	BindEvent( menu, "change.dropdown", OnSelectSortMethod );
-	UpdateQueryTerms();*/
-}
-
-static void OnLanguageChanged(void *privdata, void *data)
-{
-	LCUI_Widget menu;
-	const wchar_t *header;
-	header = I18n_GetText(KEY_SORT_HEADER); /*
-       SelectWidget( menu, ID_DROPDOWN_SEARCH_FILES_SORT );
-       Dropdown_SetHeaderW( menu, header );
-       UpdateSearchInput();*/
+	BindEvent(menu, "change.dropdown", OnSelectSortMethod);
+	UpdateQueryTerms();
 }
 
 static void OnTagThumbViewReady(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
