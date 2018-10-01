@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+  <ui>
+    <w id="view-settings" class="view hide">
+      <w class="view-navbar">
+        <w type="textview-i18n" class="text view-navbar-title" data-i18n-key="settings.title">设置</w>
+      </w>
+      <w class="view-body">
+        <w id="view-settings-content-wrapper" class="view-content-wrapper">
+          <w id="view-settings-content" class="scrolllayer view-content">
+            <w class="setting-group">
+              <w type="textview-i18n" class="text title" data-i18n-key="settings.thumb_cache.title">缓存</w>
+              <w class="item-group">
+                <w class="text-line">
+                  <w id="text-thumb-db-size" type="textview-i18n" class="text" data-i18n-key="settings.thumb_cache.stats">当前缩略图缓存共占用 %s 的空间</w>
+                </w>
+                <w class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.thumb_cache.description">本应用会在你浏览图片列表的时候自动缓存缩略图，以便在下次浏览图片时能够快速呈现缩略图。</w>
+                <w id="btn-clear-thumb-db" class="btn btn-default">
+                  <w type="textview-i18n" class="text" data-i18n-key="button.clear">清除</w>
+                </w>
+              </w>
+            </w>
+            <w class="setting-group">
+              <w type="textview-i18n" class="title" data-i18n-key="settings.language">语言</w>
+              <w class="item-group">
+                <w class="text-line">
+                  <w type="textview-i18n" class="text" data-i18n-key="settings.language_description">更改界面的显示语言</w>
+                </w>
+                <w id="btn-change-language" class="btn" data-toggle="dropdown" data-target="dropdown-languages">
+                  <w id="txt-current-language" type="textview" class="default text">简体中文</w>
+                  <w type="textview" class="icon icon icon-chevron-down"></w>
+                </w>
+                <w id="dropdown-languages" type="dropdown-menu"></w>
+              </w>
+            </w>
+            <w class="setting-group">
+              <w type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</w>
+              <w class="source-list">
+                <w id="current-source-list"></w>
+                <w id="btn-add-source" class="source-list-item">
+                  <w type="icon" class="text" name="plus"></w>
+                  <w type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                </w>
+              </w>
+            </w>
+            <w class="setting-group">
+              <w type="textview-i18n" class="text title" data-i18n-key="settings.private_space.title">私人空间</w>
+              <w class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space.description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</w>
+              <w class="text-line">
+                <w id="switch-private-space-open" type="switch"></w>
+                <w type="textview-i18n" class="text switch-text" data-i18n-key="switch.off" data-bind="switch"></w>
+              </w>
+            </w>
+            <w id="view-private-space" class="setting-group hide">
+              <w class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.sources_title">私密源</w>
+              <w class="source-list">
+                <w id="current-private-source-list"></w>
+                <w id="btn-add-private-source" class="source-list-item">
+                  <w type="icon" class="text" name="plus"></w>
+                  <w type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                </w>
+              </w>
+              <w class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.password_title">密码</w>
+              <w id="btn-reset-password" class="btn btn-default">
+                <w type="textview-i18n" class="text" data-i18n-key="button.reset_password">重置密码</w>
+              </w>
+            </w>
+            <w class="setting-group">
+              <w type="textview-i18n" class="text title" data-i18n-key="settings.about">关于此应用</w>
+              <w class="item-group">
+                <w type="textview" class="text">LC's Finder 0.2.0 Beta</w>
+                <w id="txt-trial-license" type="textview-i18n" class="text text-line" data-i18n-key="settings.trial_message">当前是试用版，仅供评估使用，如果你认为此应用对你有用，可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。</w>
+                <w type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2017 LC's Software，保留所有权利。</w>
+                <w class="btn-group">
+                  <w id="btn-open-license" class="link">
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.license">许可协议</w>
+                  </w>
+                  <w id="btn-open-website" class="link">
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.website">官方网站</w>
+                  </w>
+                  <w id="btn-open-feedback" class="link">
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.feedback">问题反馈</w>
+                  </w>
+                  <w id="btn-open-sourcecode" class="link">
+                    <w type="textview-i18n" class="text" data-i18n-key="settings.sourcecode">源代码</w>
+                  </w>
+                </w>
+              </w>
+            </w>
+          </w>
+          <w type="scrollbar" target="view-settings-content"/>
+        </w>
+      </w>
+    </w>
+  </ui>
+</lcui-app>

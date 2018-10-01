@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+  <ui>
+    <w id="main-sidebar" class="sidebar sidebar-mini">
+      <w class="sidebar-header">
+        <w type="sidebar-toggle">
+          <w type="icon" name="menu"></w>
+        </w>
+        <w type="textview" class="text sidebar-title">LC's Finder</w>
+      </w>
+      <w id="sidebar-btn-search" class="sidebar-item">
+        <w type="icon" name="magnify"></w>
+        <w type="textview-i18n" class="text" data-i18n-key="search.title">搜索</w>
+      </w>
+      <w id="sidebar-btn-home" class="sidebar-item active">
+        <w type="icon" name="image-multiple"></w>
+        <w type="textview-i18n" class="text" data-i18n-key="home.title">集锦</w>
+      </w>
+      <w id="sidebar-btn-folders" class="sidebar-item">
+        <w type="icon" name="folder-multiple-outline"></w>
+        <w type="textview-i18n" class="text" data-i18n-key="folders.title">文件夹</w>
+      </w>
+      <w id="sidebar-btn-settings" class="sidebar-item">
+        <w type="icon" name="settings"></w>
+        <w type="textview-i18n" class="text" data-i18n-key="settings.title">设置</w>
+      </w>
+    </w>
+  </ui>
+</lcui-app>

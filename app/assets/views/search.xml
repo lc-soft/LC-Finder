@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+  <ui>
+    <w id="view-search" class="view hide">
+      <w class="view-navbar on-normal-mode">
+        <w class="search-input-group">
+          <w id="input-search" type="textedit" class="search-input"></w>
+          <w class="search-input-addon-group">
+            <w id="btn-clear-search" type="icon" class="icon-btn" name="close" />
+            <w id="btn-search-files" type="icon" class="icon-btn" name="magnify" />
+          </w>
+        </w>
+        <w id="view-search-actions" class="view-navbar-actions hide">
+          <w class="view-navbar-btn" data-toggle="dropdown" data-target="dropdown-search-files-sort">
+            <w type="icon" class="text" name="sort"></w>
+          </w>
+          <w id="btn-select-search-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+          </w>
+        </w>
+      </w>
+      <w class="view-navbar on-selection-mode">
+        <w id="view-search-selection-stats" type="textview-i18n" class="view-navbar-text"></w>
+        <w class="view-navbar-actions  on-selection-mode">
+          <w id="btn-tag-search-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="tag-multiple"></w>
+          </w>
+          <w id="btn-delete-search-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="delete"></w>
+          </w>
+          <w class="divider"></w>
+          <w id="btn-cancel-search-select" class="view-navbar-btn">
+            <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+          </w>
+        </w>
+      </w>
+      <w id="dropdown-search-files-sort" type="dropdown-menu" class="checkable" data-position="bottom right"></w>
+      <w class="view-body">
+        <w id="view-search-tags-wrapper" class="view-content-wrapper">
+          <w class="view-content full-height">
+            <w id="tip-search-tags-empty" class="floating center middle aligned icon message hide">
+              <w type="textview" class="icon icon icon-tag-multiple"></w>
+              <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</w>
+            </w>
+            <w id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></w>
+          </w>
+          <w type="scrollbar" target="view-search-tags"/>
+        </w>
+        <w id="view-search-results-wrapper" class="hide view-content-wrapper">
+          <w class="view-content full-height">
+            <w id="tip-search-no-result" class="floating center middle aligned icon message hide">
+              <w type="textview" class="icon icon icon-file-hidden"></w>
+              <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</w>
+            </w>
+            <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
+          </w>
+          <w type="scrollbar" target="view-search-files"/>
+        </w>
+      </w>
+    </w>
+  </ui>
+</lcui-app>
