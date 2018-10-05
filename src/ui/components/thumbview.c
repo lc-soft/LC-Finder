@@ -698,6 +698,7 @@ void ThumbView_Empty(LCUI_Widget w)
 {
 	ThumbView view;
 	LinkedListNode *node;
+	LCUI_Widget child;
 
 	view = Widget_GetData(w, self.main);
 	view->is_loading = FALSE;
@@ -711,6 +712,12 @@ void ThumbView_Empty(LCUI_Widget w)
 	view->layout.folder_count = 0;
 	LinkedList_Clear(&view->thumb_tasks, NULL);
 	LinkedList_Clear(&view->layout.row, NULL);
+	for (LinkedList_Each(node, &w->children)) {
+		child = node->data;
+		if (Widget_CheckPrototype(child, self.item)) {
+			self.item->destroy(child);
+		}
+	}
 	for (LinkedList_Each(node, &view->files)) {
 		ThumbCache_Unlink(view->cache, view->linker, node->data);
 	}
@@ -1089,7 +1096,7 @@ LCUI_Widget ThumbView_AppendFolder(LCUI_Widget w, const char *filepath,
 	return item;
 }
 
-LCUI_Widget ThumbView_AppendPicture(LCUI_Widget w, DB_File file)
+LCUI_Widget ThumbView_AppendPicture(LCUI_Widget w, const DB_File file)
 {
 	LCUI_Widget item;
 	ThumbViewItem data;
@@ -1269,18 +1276,25 @@ static void ThumbViewItem_OnDestroy(LCUI_Widget w)
 {
 	ThumbViewItem item;
 	item = Widget_GetData(w, self.item);
+	if (item->view) {
 	RemoveThumbTask(w);
+	}
 	if (item->loader) {
 		ThumbLoader_Stop(item->loader);
 		item->loader = NULL;
 	}
+	if (item->unsetthumb) {
 	item->unsetthumb(w);
-	ThumbCache_Unlink(item->view->cache, item->view->linker, item->path);
+	}
+	if (item->path) {
+		ThumbCache_Unlink(item->view->cache, item->view->linker,
+				  item->path);
+	}
 	if (item->is_dir) {
 		if (item->path) {
 			free(item->path);
 		}
-	} else {
+	} else if(item->file) {
 		DBFile_Release(item->file);
 	}
 	item->file = NULL;

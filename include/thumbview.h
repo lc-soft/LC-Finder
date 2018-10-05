@@ -51,7 +51,7 @@ LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
 				    LCUI_BOOL show_path );
 
 /** 追加图片 */
-LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, DB_File file );
+LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const DB_File file );
 
 void ThumbViewItem_AppendToCover( LCUI_Widget item, LCUI_Widget child );
 
