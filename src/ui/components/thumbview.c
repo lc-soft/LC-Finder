@@ -1,4 +1,4 @@
-﻿/* ***************************************************************************
+/* ***************************************************************************
  * thumbview.c -- thumbnail list view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -254,7 +254,8 @@ static int ScrollLoading_OnUpdate(ScrollLoading ctx)
 		w = node->data;
 		Widget_TriggerEvent(w, &e, &count);
 	}
-	return list.length;
+	LinkedList_Clear(&list, NULL);
+	return count;
 }
 
 static void ScrollLoading_OnDelayUpdate(void *arg)
@@ -355,7 +356,7 @@ static int GetDirThumbFilePath(char *filepath, char *dirpath)
 
 static void ThumbViewItem_SetThumb(LCUI_Widget item, LCUI_Graph *thumb)
 {
-	SetStyle(item->custom_style, key_background_image, thumb, image);
+	Widget_SetStyle(item, key_background_image, thumb, image);
 	Widget_UpdateStyle(item, FALSE);
 }
 
@@ -1231,14 +1232,19 @@ static void ThumbView_ExecTask(LCUI_Widget w, int task)
 /** 任务处理线程 */
 static void ThumbView_TaskThread(void *arg)
 {
+	int i, count;
+
 	ThumbView view;
 	ThumbViewTask task;
-	LCUI_BOOL shown = TRUE;
+
 	LCUI_Widget parent, w = arg;
+	LCUI_BOOL visible, current_visible = FALSE;
+
 	view = Widget_GetData(w, self.main);
 	while (view->is_running) {
-		int i, count;
 		view->is_loading = TRUE;
+		visible = current_visible;
+		current_visible = Widget_IsVisible(w);
 		LCUIMutex_Lock(&view->mutex);
 		for (i = 0, count = 0; i < TASK_TOTAL; ++i) {
 			task = &view->tasks[i];
@@ -1269,15 +1275,14 @@ static void ThumbView_TaskThread(void *arg)
 		}
 		/* 检查自己及父级部件是否可见 */
 		for (parent = w; parent; parent = parent->parent) {
-			if (!parent->computed_style.visible) {
-				shown = FALSE;
+			if (!Widget_IsVisible(parent)) {
+				current_visible = FALSE;
 				break;
 			}
 		}
 		/* 如果当前可见但之前不可见，则刷新当前可见区域内加载的缩略图 */
-		if (!parent && !shown) {
+		if (current_visible && !visible) {
 			ScrollLoading_Update(view->scrollload);
-			shown = TRUE;
 		}
 	}
 }
