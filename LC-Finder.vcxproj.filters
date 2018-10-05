@@ -129,6 +129,9 @@
     <ClCompile Include="src\ui\components\tagthumb.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\animation.c">
+      <Filter>源文件\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -208,6 +211,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\i18n_datetime.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\animation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

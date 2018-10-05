@@ -34,6 +34,7 @@
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
+    <ClCompile Include="src\ui\animation.c" />
     <ClCompile Include="src\ui\components\browser.c" />
     <ClCompile Include="src\ui\components\dialog_alert.c" />
     <ClCompile Include="src\ui\components\dialog_confirm.c" />
@@ -63,6 +64,7 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\animation.h" />
     <ClInclude Include="include\bridge.h" />
     <ClInclude Include="include\browser.h" />
     <ClInclude Include="include\build.h" />

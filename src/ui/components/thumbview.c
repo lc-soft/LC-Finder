@@ -46,6 +46,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "thumbview.h"
+#include "animation.h"
 
 /* clang-format off */
 
@@ -53,8 +54,7 @@
 #define SCROLLLOADING_DELAY	500
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
-#define ANIMATION_DURATION	300
-#define ANIMATION_PAUSE		200
+#define ANIMATION_DURATION	1000
 #define THUMBVIEW_MIN_WIDTH	300
 #define FOLDER_MAX_WIDTH	388
 #define FOLDER_FIXED_HEIGHT	134
@@ -78,28 +78,12 @@ typedef struct ScrollLoadingRec_ {
 	LCUI_Widget top_child;		/**< 当前可见区域第一个子部件 */
 } ScrollLoadingRec, *ScrollLoading;
 
-enum AnimationType {
-	ANI_NONE,
-	ANI_FADEOUT,
-	ANI_FADEIN
-};
-
 /** 任务类型 */
 enum ThumbViewTaskType {
 	TASK_LOAD_THUMB, /**< 加载缩略图 */
 	TASK_LAYOUT,     /**< 处理布局 */
 	TASK_TOTAL
 };
-
-/** 动画相关数据 */
-typedef struct AnimationRec_ {
-	int type;
-	int timer;
-	int interval;
-	double opacity;
-	double opacity_delta;
-	LCUI_BOOL is_runing;
-} AnimationRec, *Animation;
 
 /** 缩略图列表布局功能的相关数据 */
 typedef struct LayoutContextRec_ {
@@ -957,57 +941,25 @@ static void OnDelayLayout(void *arg)
 	LCUICond_Signal(&view->tasks_cond);
 }
 
-static void OnFadeIn(void *arg)
+static void ThumbView_OnAnimationFinished(Animation ani)
 {
-	LCUI_Widget w = arg;
-	ThumbView view = Widget_GetData(w, self.main);
-	Animation ani = &view->animation;
-
-	ani->opacity += ani->opacity_delta;
-	if (ani->opacity >= 1.0) {
-		ani->opacity = 1.0;
-		ani->type = ANI_NONE;
-		ani->is_runing = FALSE;
-		LCUITimer_Free(ani->timer);
-		ani->timer = -1;
+	LCUI_Widget w = ani->data;
+	Widget_SetOpacity(w, 1.0f);
 	}
-	Widget_SetOpacity(w, (float)ani->opacity);
-}
 
-static void OnSetFadeIn(void *arg)
+static void ThumbView_OnAnimationFrame(Animation ani)
 {
-	LCUI_Widget w = arg;
-	ThumbView view = Widget_GetData(w, self.main);
-	Animation ani = &view->animation;
+	double opacity;
+	LCUI_Widget w = ani->data;
 
-	ani->timer = LCUI_SetInterval(ani->interval, OnFadeIn, arg);
+	if (ani->_progress <= 0.3) {
+		opacity = 1.0 - ani->_progress / 0.3;
+	} else if (ani->_progress <= 0.7) {
+		opacity = 0;
+	} else {
+		opacity = (ani->_progress - 0.7) / 0.3;
 }
-
-static void OnFadeOut(void *arg)
-{
-	LCUI_Widget w = arg;
-	ThumbView view = Widget_GetData(w, self.main);
-	Animation ani = &view->animation;
-
-	ani->opacity -= ani->opacity_delta;
-	if (ani->opacity <= 0.0) {
-		ani->opacity = 0.0;
-		ani->type = ANI_FADEIN;
-		LCUITimer_Free(ani->timer);
-		ani->timer = LCUI_SetTimeout(ANIMATION_PAUSE,
-					OnSetFadeIn, arg);
-	}
-	Widget_SetOpacity(w, (float)ani->opacity);
-}
-
-static void OnStartAnimation(void *arg)
-{
-	LCUI_Widget w = arg;
-	ThumbView view = Widget_GetData(w, self.main);
-	view->animation.type = ANI_FADEOUT;
-	view->animation.is_runing = TRUE;
-	view->animation.timer =
-	    LCUI_SetInterval(view->animation.interval, OnFadeOut, w);
+	Widget_SetOpacity(w, (float)opacity);
 }
 
 void ThumbView_UpdateLayout(LCUI_Widget w, LCUI_Widget start_child)
@@ -1016,13 +968,7 @@ void ThumbView_UpdateLayout(LCUI_Widget w, LCUI_Widget start_child)
 	if (view->layout.is_running) {
 		return;
 	}
-	view->animation.type = ANI_NONE;
-	if (view->animation.timer > 0) {
-		LCUITimer_Reset(view->animation.timer, ANIMATION_DELAY);
-	} else {
-		view->animation.timer =
-		    LCUI_SetTimeout(ANIMATION_DELAY, OnStartAnimation, w);
-	}
+	Animation_Play(&view->animation);
 	view->layout.start = start_child;
 	/* 如果已经有延迟布局任务，则重置该任务的定时 */
 	if (view->layout.is_delaying) {
@@ -1356,17 +1302,26 @@ static void ThumbView_OnReady(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	Widget_BindEvent(w->parent, "resize", OnResize, w, NULL);
 }
 
-static void ThumbView_OnInit(LCUI_Widget w)
+static void ThumbView_InitAnimation(LCUI_Widget w)
 {
-	const size_t data_size = sizeof(ThumbViewRec);
-	ThumbView view = Widget_AddData(w, self.main, data_size);
-	view->dbs = &finder.thumb_dbs;
-	view->is_loading = FALSE;
-	view->is_running = TRUE;
+	ThumbView view = Widget_GetData(w, self.main);
+	Animation ani = &view->animation;
+
+	memset(ani, 0, sizeof(AnimationRec));
+
+	ani->data = w;
+	ani->delay = ANIMATION_DELAY;
+	ani->duration = ANIMATION_DURATION / 2;
+	ani->on_frame = ThumbView_OnAnimationFrame;
+	ani->on_finished = ThumbView_OnAnimationFinished;
+}
+
+static void ThumbView_InitLayout(LCUI_Widget w)
+{
+	ThumbView view = Widget_GetData(w, self.main);
+
 	view->onlayout = NULL;
 	view->layout.x = 0;
-	view->cache = NULL;
-	view->linker = NULL;
 	view->layout.count = 0;
 	view->layout.max_width = 0;
 	view->layout.start = NULL;
@@ -1375,25 +1330,38 @@ static void ThumbView_OnInit(LCUI_Widget w)
 	view->layout.is_running = FALSE;
 	view->layout.is_delaying = FALSE;
 	view->layout.folders_per_row = 1;
-	view->animation.timer = -1;
-	view->animation.type = ANI_NONE;
-	view->animation.interval = 10;
-	view->animation.opacity = 1.0;
-	view->animation.is_runing = FALSE;
-	view->animation.opacity_delta =
-	    1.0 / (ANIMATION_DURATION / 2 / view->animation.interval);
-	memset(view->tasks, 0, sizeof(view->tasks));
-	LCUICond_Init(&view->tasks_cond);
-	LCUIMutex_Init(&view->tasks_mutex);
-	LCUIMutex_Init(&view->mutex);
-	LinkedList_Init(&view->files);
-	LinkedList_Init(&view->thumb_tasks);
 	LinkedList_Init(&view->layout.row);
 	LCUIMutex_Init(&view->layout.row_mutex);
+}
+
+static void ThumbView_InitTasks(LCUI_Widget w)
+{
+	ThumbView view = Widget_GetData(w, self.main);
+
+	LCUICond_Init(&view->tasks_cond);
+	LCUIMutex_Init(&view->tasks_mutex);
+	LinkedList_Init(&view->thumb_tasks);
+	memset(view->tasks, 0, sizeof(view->tasks));
+	LCUIThread_Create(&view->thread, ThumbView_TaskThread, w);
+}
+
+static void ThumbView_OnInit(LCUI_Widget w)
+{
+	const size_t data_size = sizeof(ThumbViewRec);
+	ThumbView view = Widget_AddData(w, self.main, data_size);
+	view->dbs = &finder.thumb_dbs;
+	view->is_loading = FALSE;
+	view->is_running = TRUE;
+	view->cache = NULL;
+	view->linker = NULL;
+	LCUIMutex_Init(&view->mutex);
+	LinkedList_Init(&view->files);
 	view->scrollload = ScrollLoading_New(w);
 	Widget_BindEvent(w, "ready", ThumbView_OnReady, NULL, NULL);
 	Widget_BindEvent(w, "remove", ThumbView_OnRemove, NULL, NULL);
-	LCUIThread_Create(&view->thread, ThumbView_TaskThread, w);
+	ThumbView_InitTasks(w);
+	ThumbView_InitLayout(w);
+	ThumbView_InitAnimation(w);
 }
 
 static void ThumbView_OnDestroy(LCUI_Widget w)
