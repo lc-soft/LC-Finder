@@ -37,6 +37,8 @@
 #ifndef LCFINDER_UI_H
 #define LCFINDER_UI_H
 
+#include "types.h"
+
 /* 一些元素的 ID，命名格式为：ID_类型_名称 */
 #define ID_WINDOW_MAIN			"main-window"
 #define ID_WINDOW_PCITURE_VIEWER	"picture-viewer-window"
@@ -143,18 +145,6 @@ enum UIMode {
 	MODE_FULL,
 	MODE_SINGLE_PICVIEW
 };
-
-/** 文件迭代器 */
-typedef struct FileIteratorRec_* FileIterator;
-typedef struct FileIteratorRec_ {
-	unsigned int index;		/**< 当前索引位置 */
-	unsigned int length;		/**< 文件列表总长度 */
-	void *privdata;			/**< 私有数据 */
-	char *filepath;			/**< 文件路径 */
-	void (*next)(FileIterator);	/**< 切换至下一个文件 */
-	void (*prev)(FileIterator);	/**< 切换至上一个文件 */
-	void (*destroy)(FileIterator);	/**< 销毁文件迭代器 */
-} FileIteratorRec;
 
 /** 初始化主界面 */
 void UI_InitMainView( void );

@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * view_picture_info.c -- picture info view
+ * picture_info.c -- picture info view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
@@ -18,7 +18,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * view_picture_info.c -- "图片信息" 视图
+ * picture_info.c -- "图片信息" 视图
  *
  * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
@@ -78,7 +78,7 @@ struct PictureInfoPanel {
 	DB_File file;
 	DB_Tag *tags;
 	int n_tags;
-} this_view = { 0 };
+} view = { 0 };
 
 typedef struct TagInfoPackRec_ {
 	LCUI_Widget widget;
@@ -153,22 +153,22 @@ static void OnBtnDeleteTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 	swprintf( buf, 255, text, name );
 	free( name );
 
-	if( !LCUIDialog_Confirm( this_view.window, title, buf ) ) {
+	if( !LCUIDialog_Confirm( view.window, title, buf ) ) {
 		return;
 	}
 	LCFinder_TriggerEvent( EVENT_TAG_UPDATE, pack->tag );
-	DBFile_RemoveTag( this_view.file, pack->tag );
+	DBFile_RemoveTag( view.file, pack->tag );
 	Widget_Destroy( pack->widget );
 	pack->tag->count -= 1;
-	for( i = 0; i < this_view.n_tags; ++i ) {
-		if( this_view.tags[i]->id != pack->tag->id ) {
+	for( i = 0; i < view.n_tags; ++i ) {
+		if( view.tags[i]->id != pack->tag->id ) {
 			return;
 		}
-		this_view.n_tags -= 1;
-		for( ; i < this_view.n_tags; ++i ) {
-			this_view.tags[i] = this_view.tags[i + 1];
+		view.n_tags -= 1;
+		for( ; i < view.n_tags; ++i ) {
+			view.tags[i] = view.tags[i + 1];
 		}
-		this_view.tags[this_view.n_tags] = NULL;
+		view.tags[view.n_tags] = NULL;
 	}
 }
 
@@ -179,15 +179,15 @@ static void PictureInfo_AppendTag( DB_Tag tag )
 	TagInfoPack pack;
 	LCUI_Widget box, txt_name, btn_del;
 
-	this_view.n_tags += 1;
-	size = (this_view.n_tags + 1) * sizeof( DB_Tag );
-	tags = realloc( this_view.tags, size );
+	view.n_tags += 1;
+	size = (view.n_tags + 1) * sizeof( DB_Tag );
+	tags = realloc( view.tags, size );
 	if( !tags ) {
-		this_view.n_tags -= 1;
+		view.n_tags -= 1;
 		return;
 	}
-	tags[this_view.n_tags - 1] = tag;
-	tags[this_view.n_tags] = NULL;
+	tags[view.n_tags - 1] = tag;
+	tags[view.n_tags] = NULL;
 	pack = NEW( TagInfoPackRec, 1 );
 	box = LCUIWidget_New( NULL );
 	txt_name = LCUIWidget_New( "textview" );
@@ -197,27 +197,27 @@ static void PictureInfo_AppendTag( DB_Tag tag )
 	TextView_SetText( txt_name, tag->name );
 	Widget_Append( box, txt_name );
 	Widget_Append( box, btn_del );
-	Widget_Append( this_view.view_tags, box );
+	Widget_Append( view.view_tags, box );
 	pack->widget = box;
 	pack->tag = tag;
-	this_view.tags = tags;
+	view.tags = tags;
 	Widget_BindEvent( btn_del, "click", OnBtnDeleteTagClick, pack, free );
 }
 
 static void OnSetRating( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
 	int rating = StarRating_GetRating( w );
-	DBFile_SetScore( this_view.file, rating );
+	DBFile_SetScore( view.file, rating );
 }
 
 static void OnBtnHideClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	Widget_Hide( this_view.panel );
+	Widget_Hide( view.panel );
 }
 
 static void OnBtnOpenDirClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
-	OpenFileManagerW( this_view.filepath );
+	OpenFileManagerW( view.filepath );
 }
 
 static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
@@ -239,14 +239,14 @@ static void OnBtnAddTagClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 		if( strlen( tagnames[i] ) == 0 ) {
 			continue;
 		}
-		tag = LCFinder_AddTagForFile( this_view.file, tagnames[i] );
+		tag = LCFinder_AddTagForFile( view.file, tagnames[i] );
 		if( tag ) {
-			for( j = 0; j < this_view.n_tags; ++j ) {
-				if( this_view.tags[j]->id == tag->id ) {
+			for( j = 0; j < view.n_tags; ++j ) {
+				if( view.tags[j]->id == tag->id ) {
 					break;
 				}
 			}
-			if( j >= this_view.n_tags ) {
+			if( j >= view.n_tags ) {
 				PictureInfo_AppendTag( tag );
 			}
 		}
@@ -262,30 +262,30 @@ void UI_InitPictureInfoView( void )
 	if( !box ) {
 		return;
 	}
-	Widget_Append( this_view.panel, box );
+	Widget_Append( view.panel, box );
 	Widget_Unwrap( box );
-	this_view.n_tags = 0;
-	this_view.tags = NULL;
-	this_view.filepath = NULL;
+	view.n_tags = 0;
+	view.tags = NULL;
+	view.filepath = NULL;
 	parent = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
 	btn_hide = LCUIWidget_GetById( ID_BTN_HIDE_PICTURE_INFO );
 	btn_open = LCUIWidget_GetById( ID_BTN_OPEN_PICTURE_DIR );
 	btn_add_tag = LCUIWidget_GetById( ID_BTN_ADD_PICTURE_TAG );
-	this_view.txt_fsize = LCUIWidget_GetById( ID_TXT_PICTURE_FILE_SIZE );
-	this_view.txt_size = LCUIWidget_GetById( ID_TXT_PICTURE_SIZE );
-	this_view.txt_name = LCUIWidget_GetById( ID_TXT_PICTURE_NAME );
-	this_view.txt_dirpath = LCUIWidget_GetById( ID_TXT_PICTURE_PATH );
-	this_view.txt_time = LCUIWidget_GetById( ID_TXT_PICTURE_TIME );
-	this_view.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
-	this_view.view_tags = LCUIWidget_GetById( ID_VIEW_PICTURE_TAGS );
-	this_view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
-	this_view.rating = LCUIWidget_GetById( ID_VIEW_PCITURE_RATING );
-	Widget_BindEvent( this_view.rating, "click", OnSetRating, NULL, NULL );
+	view.txt_fsize = LCUIWidget_GetById( ID_TXT_PICTURE_FILE_SIZE );
+	view.txt_size = LCUIWidget_GetById( ID_TXT_PICTURE_SIZE );
+	view.txt_name = LCUIWidget_GetById( ID_TXT_PICTURE_NAME );
+	view.txt_dirpath = LCUIWidget_GetById( ID_TXT_PICTURE_PATH );
+	view.txt_time = LCUIWidget_GetById( ID_TXT_PICTURE_TIME );
+	view.panel = LCUIWidget_GetById( ID_PANEL_PICTURE_INFO );
+	view.view_tags = LCUIWidget_GetById( ID_VIEW_PICTURE_TAGS );
+	view.window = LCUIWidget_GetById( ID_WINDOW_PCITURE_VIEWER );
+	view.rating = LCUIWidget_GetById( ID_VIEW_PCITURE_RATING );
+	Widget_BindEvent( view.rating, "click", OnSetRating, NULL, NULL );
 	Widget_BindEvent( btn_hide, "click", OnBtnHideClick, NULL, NULL );
 	Widget_BindEvent( btn_add_tag, "click", OnBtnAddTagClick, NULL, NULL );
 	Widget_BindEvent( btn_open, "click", OnBtnOpenDirClick, NULL, NULL );
-	Widget_Append( parent, this_view.panel );
-	Widget_Hide( this_view.panel );
+	Widget_Append( parent, view.panel );
+	Widget_Hide( view.panel );
 }
 
 static void OnGetFileStatus( FileStatus *status, void *data )
@@ -293,29 +293,29 @@ static void OnGetFileStatus( FileStatus *status, void *data )
 	wchar_t mtime_str[256], fsize_str[256];
 	const wchar_t *unknown = I18n_GetText( KEY_UNKNOWN );
 	if( !status ) {
-		TextView_SetTextW( this_view.txt_time, unknown );
-		TextView_SetTextW( this_view.txt_fsize, unknown );
-		TextView_SetTextW( this_view.txt_size, unknown );
+		TextView_SetTextW( view.txt_time, unknown );
+		TextView_SetTextW( view.txt_fsize, unknown );
+		TextView_SetTextW( view.txt_size, unknown );
 		return;
 	}
 	if( status->image ) {
 		wchar_t str[256];
-		this_view.width = status->image->width;
-		this_view.height = status->image->height;
+		view.width = status->image->width;
+		view.height = status->image->height;
 		swprintf( str, 256, L"%dx%d", 
 			  status->image->width, status->image->height );
-		TextView_SetTextW( this_view.txt_size, str );
+		TextView_SetTextW( view.txt_size, str );
 	} else {
-		TextView_SetTextW( this_view.txt_size, unknown );
+		TextView_SetTextW( view.txt_size, unknown );
 	}
-	this_view.size = status->size;
-	this_view.mtime = status->mtime;
-	wgetsizestr( fsize_str, 256, this_view.size );
-	if( wgettimestr( mtime_str, 256, this_view.mtime ) < 0 ) {
+	view.size = status->size;
+	view.mtime = status->mtime;
+	wgetsizestr( fsize_str, 256, view.size );
+	if( wgettimestr( mtime_str, 256, view.mtime ) < 0 ) {
 		wcscpy( mtime_str, unknown );
 	}
-	TextView_SetTextW( this_view.txt_time, mtime_str );
-	TextView_SetTextW( this_view.txt_fsize, fsize_str );
+	TextView_SetTextW( view.txt_time, mtime_str );
+	TextView_SetTextW( view.txt_fsize, fsize_str );
 }
 
 void UI_SetPictureInfoView( const char *filepath )
@@ -328,27 +328,27 @@ void UI_SetPictureInfoView( const char *filepath )
 	path = DecodeUTF8( filepath );
 	dirpath = wgetdirname( path );
 	FileStorage_GetStatus( storage, path, TRUE, OnGetFileStatus, NULL );
-	TextView_SetTextW( this_view.txt_dirpath, dirpath );
-	TextView_SetTextW( this_view.txt_name, wgetfilename( path ) );
-	if( this_view.filepath ) {
-		free( this_view.filepath );
+	TextView_SetTextW( view.txt_dirpath, dirpath );
+	TextView_SetTextW( view.txt_name, wgetfilename( path ) );
+	if( view.filepath ) {
+		free( view.filepath );
 	}
-	free( this_view.tags );
-	this_view.n_tags = 0;
-	this_view.tags = NULL;
-	this_view.filepath = path;
-	this_view.file = DB_GetFile( filepath );
-	Widget_Empty( this_view.view_tags );
+	free( view.tags );
+	view.n_tags = 0;
+	view.tags = NULL;
+	view.filepath = path;
+	view.file = DB_GetFile( filepath );
+	Widget_Empty( view.view_tags );
 	/* 当没有文件记录时，说明该文件并不是源文件夹内的文件，暂时禁用部分操作 */
-	if( !this_view.file ) {
-		Widget_Hide( this_view.view_tags->parent );
-		Widget_Hide( this_view.rating->parent );
+	if( !view.file ) {
+		Widget_Hide( view.view_tags->parent );
+		Widget_Hide( view.rating->parent );
 		return;
 	}
-	Widget_Show( this_view.view_tags->parent );
-	Widget_Show( this_view.rating->parent );
-	StarRating_SetRating( this_view.rating, this_view.file->score );
-	n = LCFinder_GetFileTags( this_view.file, &tags );
+	Widget_Show( view.view_tags->parent );
+	Widget_Show( view.rating->parent );
+	StarRating_SetRating( view.rating, view.file->score );
+	n = LCFinder_GetFileTags( view.file, &tags );
 	for( i = 0; i < n; ++i ) {
 		PictureInfo_AppendTag( tags[i] );
 	}
@@ -360,10 +360,10 @@ void UI_SetPictureInfoView( const char *filepath )
 
 void UI_ShowPictureInfoView( void )
 {
-	Widget_Show( this_view.panel );
+	Widget_Show( view.panel );
 }
 
 void UI_HidePictureInfoView( void )
 {
-	Widget_Hide( this_view.panel );
+	Widget_Hide( view.panel );
 }

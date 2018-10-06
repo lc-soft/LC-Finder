@@ -41,6 +41,7 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include "build.h"
+#include "types.h"
 #include "bridge.h"
 #include "common.h"
 #include "file_cache.h"

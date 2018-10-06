@@ -63,12 +63,6 @@
     <ClCompile Include="src\ui\views\home.c">
       <Filter>源文件\ui\views</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\views\picture.c">
-      <Filter>源文件\ui\views</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\views\picture_info.c">
-      <Filter>源文件\ui\views</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\views\search.c">
       <Filter>源文件\ui\views</Filter>
     </ClCompile>
@@ -131,6 +125,15 @@
     </ClCompile>
     <ClCompile Include="src\ui\animation.c">
       <Filter>源文件\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture_scanner.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture_info.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\picture.c">
+      <Filter>源文件\ui\views</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -214,6 +217,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\animation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\views\picture.h">
+      <Filter>源文件\ui\views</Filter>
+    </ClInclude>
+    <ClInclude Include="include\types.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
