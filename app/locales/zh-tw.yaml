@@ -19,8 +19,8 @@ strings:
             password: 密碼
             confirm_password: 確認密碼
     tagthumb:
-        item: '%s 項'
-        items: '%s 項'
+        item: '%ls 項'
+        items: '%ls 項'
     sort:
         header: 排序方式
         ctime_desc: 最近創建

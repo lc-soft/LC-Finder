@@ -19,8 +19,8 @@ strings:
             password: Password
             confirm_password: Confirm password
     tagthumb:
-        item: '%S item'
-        items: '%S items'
+        item: '%ls item'
+        items: '%ls items'
     sort:
         header: Sort by
         ctime_desc: Recently created
