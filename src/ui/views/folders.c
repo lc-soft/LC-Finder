@@ -99,7 +99,7 @@ static struct FoldersViewData {
 	FileBrowserRec browser;
 	DB_QueryTermsRec terms;
 	char *dirpath;
-} this_view = { 0 };
+} view = { 0 };
 
 #define SORT_METHODS_LEN 6
 
@@ -118,24 +118,24 @@ static void OnAddDir(void *privdata, void *data)
 {
 	DB_Dir dir = data;
 	_DEBUG_MSG("add dir: %s\n", dir->path);
-	if (!this_view.dir) {
-		this_view.folders_changed = TRUE;
+	if (!view.dir) {
+		view.folders_changed = TRUE;
 	}
 }
 
 static void OnFolderChange(void *privdata, void *data)
 {
-	this_view.folders_changed = TRUE;
+	view.folders_changed = TRUE;
 }
 
 static void OnViewShow(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (this_view.show_private_folders == finder.open_private_space &&
-	    !this_view.folders_changed) {
+	if (view.show_private_folders == finder.open_private_space &&
+	    !view.folders_changed) {
 		return;
 	}
-	this_view.show_private_folders = finder.open_private_space;
-	this_view.folders_changed = FALSE;
+	view.show_private_folders = finder.open_private_space;
+	view.folders_changed = FALSE;
 	OpenFolder(NULL);
 }
 
@@ -227,18 +227,18 @@ static void FileScanner_ScanFiles(FileScanner scanner)
 	DB_Query query;
 	FileEntry entry;
 	int i, count;
-	this_view.terms.limit = 50;
-	this_view.terms.offset = 0;
-	this_view.terms.dirpath = EncodeUTF8(scanner->dirpath);
-	query = DB_NewQuery(&this_view.terms);
+	view.terms.limit = 50;
+	view.terms.offset = 0;
+	view.terms.dirpath = EncodeUTF8(scanner->dirpath);
+	query = DB_NewQuery(&view.terms);
 	count = DBQuery_GetTotalFiles(query);
 	while (scanner->is_running && count > 0) {
 		DB_DeleteQuery(query);
-		query = DB_NewQuery(&this_view.terms);
-		if (count < this_view.terms.limit) {
+		query = DB_NewQuery(&view.terms);
+		if (count < view.terms.limit) {
 			i = count;
 		} else {
-			i = this_view.terms.limit;
+			i = view.terms.limit;
 		}
 		for (; scanner->is_running && i > 0; --i) {
 			file = DBQuery_FetchFile(query);
@@ -256,10 +256,10 @@ static void FileScanner_ScanFiles(FileScanner scanner)
 			LCUICond_Signal(&scanner->cond);
 			LCUIMutex_Unlock(&scanner->mutex);
 		}
-		count -= this_view.terms.limit;
-		this_view.terms.offset += this_view.terms.limit;
+		count -= view.terms.limit;
+		view.terms.offset += view.terms.limit;
 	}
-	free(this_view.terms.dirpath);
+	free(view.terms.dirpath);
 }
 
 static int FileScanner_LoadSourceDirs(FileScanner scanner)
@@ -333,11 +333,11 @@ static void FileScanner_Thread(void *arg)
 	}
 	_DEBUG_MSG("scan files: %d\n", scanner->files_count);
 	if (scanner->files_count > 0) {
-		Widget_AddClass(this_view.tip_empty, "hide");
-		Widget_Hide(this_view.tip_empty);
+		Widget_AddClass(view.tip_empty, "hide");
+		Widget_Hide(view.tip_empty);
 	} else {
-		Widget_RemoveClass(this_view.tip_empty, "hide");
-		Widget_Show(this_view.tip_empty);
+		Widget_RemoveClass(view.tip_empty, "hide");
+		Widget_Show(view.tip_empty);
 	}
 	scanner->is_running = FALSE;
 	LCUIThread_Exit(NULL);
@@ -369,7 +369,7 @@ static void OnItemClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 /** 在缩略图列表准备完毕的时候 */
 static void OnThumbViewReady(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	LCUICond_Signal(&this_view.viewsync.ready);
+	LCUICond_Signal(&view.viewsync.ready);
 }
 
 /** 视图同步线程 */
@@ -380,11 +380,11 @@ static void ViewSync_Thread(void *arg)
 	FileEntry entry;
 	FileScanner scanner;
 	LinkedListNode *node;
-	vs = &this_view.viewsync;
-	scanner = &this_view.scanner;
+	vs = &view.viewsync;
+	scanner = &view.scanner;
 	LCUIMutex_Lock(&vs->mutex);
 	/* 等待缩略图列表部件准备完毕 */
-	while (this_view.items->state < LCUI_WSTATE_READY) {
+	while (view.items->state < LCUI_WSTATE_READY) {
 		LCUICond_TimedWait(&vs->ready, &vs->mutex, 100);
 	}
 	LCUIMutex_Unlock(&vs->mutex);
@@ -413,17 +413,17 @@ static void ViewSync_Thread(void *arg)
 		    vs->prev_item_type != entry->is_dir) {
 			LCUI_Widget separator = LCUIWidget_New(NULL);
 			Widget_AddClass(separator, "divider");
-			FileBrowser_Append(&this_view.browser, separator);
+			FileBrowser_Append(&view.browser, separator);
 		}
 		vs->prev_item_type = entry->is_dir;
 		if (entry->is_dir) {
-			item = FileBrowser_AppendFolder(&this_view.browser,
+			item = FileBrowser_AppendFolder(&view.browser,
 							entry->path,
-							this_view.dir == NULL);
+							view.dir == NULL);
 			Widget_BindEvent(item, "click", OnItemClick, entry,
 					 NULL);
 		} else {
-			FileBrowser_AppendPicture(&this_view.browser,
+			FileBrowser_AppendPicture(&view.browser,
 						  entry->file);
 			free(node->data);
 		}
@@ -457,25 +457,25 @@ static void OpenFolder(const char *dirpath)
 		} else {
 			path[len] = 0;
 		}
-		TextView_SetText(this_view.info_name, getfilename(path));
-		TextView_SetText(this_view.info_path, path);
-		Widget_AddClass(this_view.view, "show-folder-info-box");
+		TextView_SetText(view.info_name, getfilename(path));
+		TextView_SetText(view.info_path, path);
+		Widget_AddClass(view.view, "show-folder-info-box");
 		free(dirs);
 	} else {
-		Widget_RemoveClass(this_view.view, "show-folder-info-box");
+		Widget_RemoveClass(view.view, "show-folder-info-box");
 	}
-	if (this_view.dirpath) {
-		free(this_view.dirpath);
-		this_view.dirpath = NULL;
+	if (view.dirpath) {
+		free(view.dirpath);
+		view.dirpath = NULL;
 	}
-	FileScanner_Reset(&this_view.scanner);
-	LCUIMutex_Lock(&this_view.viewsync.mutex);
-	this_view.dir = dir;
-	this_view.dirpath = path;
-	this_view.viewsync.prev_item_type = -1;
-	FileBrowser_Empty(&this_view.browser);
-	FileScanner_Start(&this_view.scanner, path);
-	LCUIMutex_Unlock(&this_view.viewsync.mutex);
+	FileScanner_Reset(&view.scanner);
+	LCUIMutex_Lock(&view.viewsync.mutex);
+	view.dir = dir;
+	view.dirpath = path;
+	view.viewsync.prev_item_type = -1;
+	FileBrowser_Empty(&view.browser);
+	FileScanner_Start(&view.scanner, path);
+	LCUIMutex_Unlock(&view.viewsync.mutex);
 	DEBUG_MSG("done\n");
 }
 
@@ -486,28 +486,28 @@ static void OnSyncDone(void *privdata, void *arg)
 
 static void UpdateQueryTerms(void)
 {
-	this_view.terms.modify_time = NONE;
-	this_view.terms.create_time = NONE;
-	this_view.terms.score = NONE;
+	view.terms.modify_time = NONE;
+	view.terms.create_time = NONE;
+	view.terms.score = NONE;
 	switch (finder.config.files_sort) {
 	case CREATE_TIME_DESC:
-		this_view.terms.create_time = DESC;
+		view.terms.create_time = DESC;
 		break;
 	case CREATE_TIME_ASC:
-		this_view.terms.create_time = ASC;
+		view.terms.create_time = ASC;
 		break;
 	case SCORE_DESC:
-		this_view.terms.score = DESC;
+		view.terms.score = DESC;
 		break;
 	case SCORE_ASC:
-		this_view.terms.score = ASC;
+		view.terms.score = ASC;
 		break;
 	case MODIFY_TIME_ASC:
-		this_view.terms.modify_time = ASC;
+		view.terms.modify_time = ASC;
 		break;
 	case MODIFY_TIME_DESC:
 	default:
-		this_view.terms.modify_time = DESC;
+		view.terms.modify_time = DESC;
 		break;
 	}
 }
@@ -521,13 +521,13 @@ static void OnSelectSortMethod(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 		return;
 	}
 	finder.config.files_sort = sort->value;
-	if (this_view.selected_sort) {
-		Widget_RemoveClass(this_view.selected_sort, "selected");
+	if (view.selected_sort) {
+		Widget_RemoveClass(view.selected_sort, "selected");
 	}
-	this_view.selected_sort = e->target;
+	view.selected_sort = e->target;
 	Widget_AddClass(e->target, "selected");
 	UpdateQueryTerms();
-	OpenFolder(this_view.dirpath);
+	OpenFolder(view.dirpath);
 	LCFinder_SaveConfig();
 }
 
@@ -559,7 +559,7 @@ static void InitFolderFilesSort(void)
 		Widget_Append(menu, item);
 		if (sort->value == finder.config.files_sort) {
 			Widget_AddClass(item, "selected");
-			this_view.selected_sort = item;
+			view.selected_sort = item;
 		}
 	}
 
@@ -572,10 +572,10 @@ void UI_InitFoldersView(void)
 	LCUI_Widget title;
 	LCUI_Widget btn[5], btn_return;
 
-	FileScanner_Init(&this_view.scanner);
-	LCUICond_Init(&this_view.viewsync.ready);
-	LCUIMutex_Init(&this_view.viewsync.mutex);
-	SelectWidget(this_view.items, ID_VIEW_FILE_LIST);
+	FileScanner_Init(&view.scanner);
+	LCUICond_Init(&view.viewsync.ready);
+	LCUIMutex_Init(&view.viewsync.mutex);
+	SelectWidget(view.items, ID_VIEW_FILE_LIST);
 	SelectWidget(title, ID_TXT_FOLDERS_SELECTION_STATS);
 	SelectWidget(btn[0], ID_BTN_SYNC_FOLDER_FILES);
 	SelectWidget(btn[1], ID_BTN_SELECT_FOLDER_FILES);
@@ -583,42 +583,42 @@ void UI_InitFoldersView(void)
 	SelectWidget(btn[3], ID_BTN_TAG_FOLDER_FILES);
 	SelectWidget(btn[4], ID_BTN_DELETE_FOLDER_FILES);
 	SelectWidget(btn_return, ID_BTN_RETURN_ROOT_FOLDER);
-	SelectWidget(this_view.view, ID_VIEW_FOLDERS);
-	SelectWidget(this_view.info, ID_VIEW_FOLDER_INFO);
-	SelectWidget(this_view.info_name, ID_VIEW_FOLDER_INFO_NAME);
-	SelectWidget(this_view.info_path, ID_VIEW_FOLDER_INFO_PATH);
-	SelectWidget(this_view.tip_empty, ID_TIP_FOLDERS_EMPTY);
-	this_view.browser.btn_tag = btn[3];
-	this_view.browser.btn_select = btn[1];
-	this_view.browser.btn_cancel = btn[2];
-	this_view.browser.btn_delete = btn[4];
-	this_view.browser.txt_selection_stats = title;
-	this_view.browser.view = this_view.view;
-	this_view.browser.items = this_view.items;
+	SelectWidget(view.view, ID_VIEW_FOLDERS);
+	SelectWidget(view.info, ID_VIEW_FOLDER_INFO);
+	SelectWidget(view.info_name, ID_VIEW_FOLDER_INFO_NAME);
+	SelectWidget(view.info_path, ID_VIEW_FOLDER_INFO_PATH);
+	SelectWidget(view.tip_empty, ID_TIP_FOLDERS_EMPTY);
+	view.browser.btn_tag = btn[3];
+	view.browser.btn_select = btn[1];
+	view.browser.btn_cancel = btn[2];
+	view.browser.btn_delete = btn[4];
+	view.browser.txt_selection_stats = title;
+	view.browser.view = view.view;
+	view.browser.items = view.items;
 	BindEvent(btn[0], "click", OnBtnSyncClick);
 	BindEvent(btn_return, "click", OnBtnReturnClick);
-	BindEvent(this_view.items, "ready", OnThumbViewReady);
-	BindEvent(this_view.view, "show.view", OnViewShow);
-	ThumbView_SetCache(this_view.items, finder.thumb_cache);
-	ThumbView_SetStorage(this_view.items, finder.storage_for_thumb);
-	LCUIThread_Create(&this_view.viewsync.tid, ViewSync_Thread, NULL);
+	BindEvent(view.items, "ready", OnThumbViewReady);
+	BindEvent(view.view, "show.view", OnViewShow);
+	ThumbView_SetCache(view.items, finder.thumb_cache);
+	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
+	LCUIThread_Create(&view.viewsync.tid, ViewSync_Thread, NULL);
 	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
 	LCFinder_BindEvent(EVENT_DIR_ADD, OnAddDir, NULL);
 	LCFinder_BindEvent(EVENT_DIR_DEL, OnFolderChange, NULL);
-	FileBrowser_Create(&this_view.browser);
-	this_view.is_activated = TRUE;
+	FileBrowser_Create(&view.browser);
+	view.is_activated = TRUE;
 	InitFolderFilesSort();
 	OpenFolder(NULL);
 }
 
 void UI_ExitFolderView(void)
 {
-	if (!this_view.is_activated) {
+	if (!view.is_activated) {
 		return;
 	}
-	this_view.viewsync.is_running = FALSE;
-	FileScanner_Reset(&this_view.scanner);
-	LCUIThread_Join(this_view.viewsync.tid, NULL);
-	FileScanner_Destroy(&this_view.scanner);
-	LCUIMutex_Unlock(&this_view.viewsync.mutex);
+	view.viewsync.is_running = FALSE;
+	FileScanner_Reset(&view.scanner);
+	LCUIThread_Join(view.viewsync.tid, NULL);
+	FileScanner_Destroy(&view.scanner);
+	LCUIMutex_Unlock(&view.viewsync.mutex);
 }

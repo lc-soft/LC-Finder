@@ -57,7 +57,7 @@
 
 /* 延时隐藏进度条 */
 #define HideProgressBar() \
-	LCUITimer_Set(1000, (FuncPtr)Widget_Hide, this_view.progressbar, FALSE)
+	LCUITimer_Set(1000, (FuncPtr)Widget_Hide, view.progressbar, FALSE)
 
 /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
@@ -92,7 +92,7 @@ static struct HomeCollectionView {
 	FileScannerRec scanner;
 	LinkedList separators;
 	FileBrowserRec browser;
-} this_view;
+} view;
 
 static void OnDeleteDBFile(void *arg)
 {
@@ -107,9 +107,9 @@ static void OnBtnSyncClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 static void DeleteTimeSeparator(LCUI_Widget sep)
 {
 	LinkedListNode *node;
-	for (LinkedList_Each(node, &this_view.separators)) {
+	for (LinkedList_Each(node, &view.separators)) {
 		if (node->data == sep) {
-			LinkedList_Unlink(&this_view.separators, node);
+			LinkedList_Unlink(&view.separators, node);
 			LinkedListNode_Delete(node);
 			break;
 		}
@@ -129,11 +129,11 @@ static void OnAfterDeleted(LCUI_Widget first)
 		w = Widget_GetPrev(w);
 	}
 	if (!sep) {
-		sep = LinkedList_Get(&this_view.separators, 0);
+		sep = LinkedList_Get(&view.separators, 0);
 	}
 	if (!sep) {
-		Widget_RemoveClass(this_view.tip_empty, "hide");
-		Widget_Show(this_view.tip_empty);
+		Widget_RemoveClass(view.tip_empty, "hide");
+		Widget_Show(view.tip_empty);
 		return;
 	}
 	w = Widget_GetNext(sep);
@@ -165,9 +165,9 @@ static void OnAfterDeleted(LCUI_Widget first)
 		DeleteTimeSeparator(sep);
 	}
 	/* 如果时间分割器数量为0，则说明当前缩略图列表为空 */
-	if (this_view.separators.length < 1) {
-		Widget_RemoveClass(this_view.tip_empty, "hide");
-		Widget_Show(this_view.tip_empty);
+	if (view.separators.length < 1) {
+		Widget_RemoveClass(view.tip_empty, "hide");
+		Widget_Show(view.tip_empty);
 	}
 }
 
@@ -195,9 +195,9 @@ static int FileScanner_ScanAll(FileScanner scanner)
 	query = DB_NewQuery(&terms);
 	count = total = DBQuery_GetTotalFiles(query);
 	scanner->total = total, scanner->count = 0;
-	ProgressBar_SetValue(this_view.progressbar, 0);
-	ProgressBar_SetMaxValue(this_view.progressbar, count);
-	Widget_Show(this_view.progressbar);
+	ProgressBar_SetValue(view.progressbar, 0);
+	ProgressBar_SetMaxValue(view.progressbar, count);
+	Widget_Show(view.progressbar);
 	_DEBUG_MSG("total: %d\n", count);
 	while (scanner->is_running && count > 0) {
 		DB_DeleteQuery(query);
@@ -249,16 +249,16 @@ static void FileScanner_Reset(FileScanner scanner)
 static void FileScanner_Thread(void *arg)
 {
 	int count;
-	this_view.scanner.is_running = TRUE;
-	count = FileScanner_ScanAll(&this_view.scanner);
+	view.scanner.is_running = TRUE;
+	count = FileScanner_ScanAll(&view.scanner);
 	if (count > 0) {
-		Widget_AddClass(this_view.tip_empty, "hide");
-		Widget_Hide(this_view.tip_empty);
+		Widget_AddClass(view.tip_empty, "hide");
+		Widget_Hide(view.tip_empty);
 	} else {
-		Widget_RemoveClass(this_view.tip_empty, "hide");
-		Widget_Show(this_view.tip_empty);
+		Widget_RemoveClass(view.tip_empty, "hide");
+		Widget_Show(view.tip_empty);
 	}
-	this_view.scanner.is_running = FALSE;
+	view.scanner.is_running = FALSE;
 	_DEBUG_MSG("total files: %d\n", count);
 	LCUIThread_Exit(NULL);
 }
@@ -279,20 +279,20 @@ static void FileScanner_Destroy(FileScanner scanner)
 static void OnTimeRangeClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LCUI_Widget title = e->data;
-	FileBrowser_SetScroll(&this_view.browser, (int)title->box.canvas.y);
-	FileBrowser_SetButtonsDisabled(&this_view.browser, FALSE);
-	Widget_Hide(this_view.time_ranges->parent->parent);
+	FileBrowser_SetScroll(&view.browser, (int)title->box.canvas.y);
+	FileBrowser_SetButtonsDisabled(&view.browser, FALSE);
+	Widget_Hide(view.time_ranges->parent->parent);
 }
 
 static void OnTimeTitleClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (this_view.selected_time) {
-		Widget_RemoveClass(this_view.selected_time, "selected");
+	if (view.selected_time) {
+		Widget_RemoveClass(view.selected_time, "selected");
 	}
-	this_view.selected_time = e->data;
+	view.selected_time = e->data;
 	Widget_AddClass(e->data, "selected");
-	FileBrowser_SetButtonsDisabled(&this_view.browser, TRUE);
-	Widget_Show(this_view.time_ranges->parent->parent);
+	FileBrowser_SetButtonsDisabled(&view.browser, TRUE);
+	Widget_Show(view.time_ranges->parent->parent);
 }
 
 static void RenderTime(wchar_t *buf, const wchar_t *text, void *privdata)
@@ -328,23 +328,23 @@ static void HomeView_AppendFile(DB_File file)
 
 	time = file->modify_time;
 	t = localtime(&time);
-	sep = LinkedList_Get(&this_view.separators,
-			     this_view.separators.length - 1);
+	sep = LinkedList_Get(&view.separators,
+			     view.separators.length - 1);
 	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
 	if (!sep || !TimeSeparator_CheckTime(sep, t)) {
 		sep = LCUIWidget_New("time-separator");
 		range = LCUIWidget_NewTimeRange(t);
 		TimeSeparator_SetTime(sep, t);
-		FileBrowser_Append(&this_view.browser, sep);
-		LinkedList_Append(&this_view.separators, sep);
+		FileBrowser_Append(&view.browser, sep);
+		LinkedList_Append(&view.separators, sep);
 		Widget_AddClass(range, "time-range link");
-		Widget_Append(this_view.time_ranges, range);
+		Widget_Append(view.time_ranges, range);
 		Widget_BindEvent(TimeSeparator_GetTitle(sep), "click",
 				 OnTimeTitleClick, range, NULL);
 		Widget_BindEvent(range, "click", OnTimeRangeClick, sep, NULL);
 	}
 	TimeSeparator_AddTime(sep, t);
-	FileBrowser_AppendPicture(&this_view.browser, file);
+	FileBrowser_AppendPicture(&view.browser, file);
 }
 
 /** 视图同步线程 */
@@ -353,18 +353,18 @@ static void HomeView_SyncThread(void *arg)
 	ViewSync vs;
 	FileScanner scanner;
 	LinkedListNode *node;
-	vs = &this_view.viewsync;
-	scanner = &this_view.scanner;
+	vs = &view.viewsync;
+	scanner = &view.scanner;
 	LCUIMutex_Lock(&vs->mutex);
 	/* 等待缩略图列表部件准备完毕 */
-	while (this_view.items->state < LCUI_WSTATE_READY) {
+	while (view.items->state < LCUI_WSTATE_READY) {
 		LCUICond_TimedWait(&vs->ready, &vs->mutex, 100);
 	}
 	LCUIMutex_Unlock(&vs->mutex);
 	vs->is_running = TRUE;
 	while (vs->is_running) {
 		LCUIMutex_Lock(&scanner->mutex);
-		if (this_view.browser.files.length >= this_view.scanner.total) {
+		if (view.browser.files.length >= view.scanner.total) {
 			HideProgressBar();
 		}
 		if (scanner->files.length == 0) {
@@ -386,8 +386,8 @@ static void HomeView_SyncThread(void *arg)
 		HomeView_AppendFile(node->data);
 		LCUIMutex_Unlock(&vs->mutex);
 		LinkedListNode_Delete(node);
-		ProgressBar_SetValue(this_view.progressbar,
-				     this_view.browser.files.length);
+		ProgressBar_SetValue(view.progressbar,
+				     view.browser.files.length);
 	}
 	LCUIMutex_Unlock(&scanner->mutex);
 }
@@ -395,21 +395,21 @@ static void HomeView_SyncThread(void *arg)
 /** 载入集锦中的文件列表 */
 static void LoadCollectionFiles(void)
 {
-	FileScanner_Reset(&this_view.scanner);
-	LCUIMutex_Lock(&this_view.viewsync.mutex);
-	LinkedList_Clear(&this_view.separators, NULL);
-	Widget_Empty(this_view.time_ranges);
-	FileBrowser_Empty(&this_view.browser);
-	FileScanner_Start(&this_view.scanner);
-	LCUIMutex_Unlock(&this_view.viewsync.mutex);
+	FileScanner_Reset(&view.scanner);
+	LCUIMutex_Lock(&view.viewsync.mutex);
+	LinkedList_Clear(&view.separators, NULL);
+	Widget_Empty(view.time_ranges);
+	FileBrowser_Empty(&view.browser);
+	FileScanner_Start(&view.scanner);
+	LCUIMutex_Unlock(&view.viewsync.mutex);
 }
 
 static void OnViewShow(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (this_view.show_private_files == finder.open_private_space) {
+	if (view.show_private_files == finder.open_private_space) {
 		return;
 	}
-	this_view.show_private_files = finder.open_private_space;
+	view.show_private_files = finder.open_private_space;
 	LoadCollectionFiles();
 }
 
@@ -423,51 +423,51 @@ void UI_InitHomeView(void)
 	LCUI_Thread tid;
 	LCUI_Widget btn[5], title;
 
-	FileScanner_Init(&this_view.scanner);
-	LCUICond_Init(&this_view.viewsync.ready);
-	LCUIMutex_Init(&this_view.viewsync.mutex);
+	FileScanner_Init(&view.scanner);
+	LCUICond_Init(&view.viewsync.ready);
+	LCUIMutex_Init(&view.viewsync.mutex);
 	SelectWidget(title, ID_TXT_HOME_SELECTION_STATS);
-	SelectWidget(this_view.view, ID_VIEW_HOME);
-	SelectWidget(this_view.items, ID_VIEW_HOME_COLLECTIONS);
-	SelectWidget(this_view.time_ranges, ID_VIEW_TIME_RANGE_LIST);
-	SelectWidget(this_view.progressbar, ID_VIEW_HOME_PROGRESS);
-	SelectWidget(this_view.tip_empty, ID_TIP_HOME_EMPTY);
+	SelectWidget(view.view, ID_VIEW_HOME);
+	SelectWidget(view.items, ID_VIEW_HOME_COLLECTIONS);
+	SelectWidget(view.time_ranges, ID_VIEW_TIME_RANGE_LIST);
+	SelectWidget(view.progressbar, ID_VIEW_HOME_PROGRESS);
+	SelectWidget(view.tip_empty, ID_TIP_HOME_EMPTY);
 	SelectWidget(btn[0], ID_BTN_SYNC_HOME_FILES);
 	SelectWidget(btn[1], ID_BTN_SELECT_HOME_FILES);
 	SelectWidget(btn[2], ID_BTN_CANCEL_HOME_SELECT);
 	SelectWidget(btn[3], ID_BTN_TAG_HOME_FILES);
 	SelectWidget(btn[4], ID_BTN_DELETE_HOME_FILES);
-	this_view.browser.btn_select = btn[1];
-	this_view.browser.btn_cancel = btn[2];
-	this_view.browser.btn_delete = btn[4];
-	this_view.browser.btn_tag = btn[3];
-	this_view.browser.txt_selection_stats = title;
-	this_view.browser.view = this_view.view;
-	this_view.browser.items = this_view.items;
-	this_view.browser.after_deleted = OnAfterDeleted;
-	FileBrowser_Create(&this_view.browser);
-	ThumbView_SetCache(this_view.items, finder.thumb_cache);
-	ThumbView_SetStorage(this_view.items, finder.storage_for_thumb);
-	Widget_Hide(this_view.time_ranges->parent->parent);
-	Widget_AddClass(this_view.time_ranges, "time-range-list");
+	view.browser.btn_select = btn[1];
+	view.browser.btn_cancel = btn[2];
+	view.browser.btn_delete = btn[4];
+	view.browser.btn_tag = btn[3];
+	view.browser.txt_selection_stats = title;
+	view.browser.view = view.view;
+	view.browser.items = view.items;
+	view.browser.after_deleted = OnAfterDeleted;
+	FileBrowser_Create(&view.browser);
+	ThumbView_SetCache(view.items, finder.thumb_cache);
+	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
+	Widget_Hide(view.time_ranges->parent->parent);
+	Widget_AddClass(view.time_ranges, "time-range-list");
 	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
 	LCUIThread_Create(&tid, HomeView_SyncThread, NULL);
-	BindEvent(this_view.view, "show.view", OnViewShow);
+	BindEvent(view.view, "show.view", OnViewShow);
 	BindEvent(btn[0], "click", OnBtnSyncClick);
-	this_view.viewsync.tid = tid;
-	this_view.is_activated = TRUE;
+	view.viewsync.tid = tid;
+	view.is_activated = TRUE;
 	LoadCollectionFiles();
 }
 
 void UI_ExitHomeView(void)
 {
-	if (!this_view.is_activated) {
+	if (!view.is_activated) {
 		return;
 	}
-	this_view.viewsync.is_running = FALSE;
-	FileScanner_Reset(&this_view.scanner);
-	LCUIThread_Join(this_view.viewsync.tid, NULL);
-	FileScanner_Destroy(&this_view.scanner);
-	LCUICond_Destroy(&this_view.viewsync.ready);
-	LCUIMutex_Destroy(&this_view.viewsync.mutex);
+	view.viewsync.is_running = FALSE;
+	FileScanner_Reset(&view.scanner);
+	LCUIThread_Join(view.viewsync.tid, NULL);
+	FileScanner_Destroy(&view.scanner);
+	LCUICond_Destroy(&view.viewsync.ready);
+	LCUIMutex_Destroy(&view.viewsync.mutex);
 }

@@ -66,7 +66,7 @@ static struct SettingsViewData {
 	LCUI_Widget thumb_db_stats;
 	LCUI_Widget language;
 	Dict *dirpaths;
-} this_view;
+} view;
 
 static struct PrivateSpaceViewData {
 	LCUI_Widget view;
@@ -114,7 +114,7 @@ static void OnDelDir(void *privdata, void *arg)
 	DB_Dir dir = arg;
 	LCUI_Widget item;
 	if (dir->visible) {
-		dirpaths = this_view.dirpaths;
+		dirpaths = view.dirpaths;
 	} else {
 		dirpaths = private_space_view.dirpaths;
 	}
@@ -130,8 +130,8 @@ static void OnAddDir(void *privdata, void *arg)
 	DB_Dir dir = arg;
 	LCUI_Widget item = NewDirListItem(dir);
 	if (dir->visible) {
-		Widget_Append(this_view.source_dirs, item);
-		Dict_Add(this_view.dirpaths, dir->path, item);
+		Widget_Append(view.source_dirs, item);
+		Dict_Add(view.dirpaths, dir->path, item);
 	} else {
 		Widget_Append(private_space_view.source_dirs, item);
 		Dict_Add(private_space_view.dirpaths, dir->path, item);
@@ -143,14 +143,14 @@ static void UI_InitDirList(void)
 {
 	size_t i;
 	LCUI_Widget item;
-	this_view.dirpaths = StrDict_Create(NULL, NULL);
+	view.dirpaths = StrDict_Create(NULL, NULL);
 	for (i = 0; i < finder.n_dirs; ++i) {
 		if (!finder.dirs[i]->visible) {
 			continue;
 		}
 		item = NewDirListItem(finder.dirs[i]);
-		Widget_Append(this_view.source_dirs, item);
-		Dict_Add(this_view.dirpaths, finder.dirs[i]->path, item);
+		Widget_Append(view.source_dirs, item);
+		Dict_Add(view.dirpaths, finder.dirs[i]->path, item);
 	}
 }
 
@@ -231,12 +231,12 @@ static void RenderThumbDBSizeText(wchar_t *buf, const wchar_t *text, void *data)
 
 static void OnBtnSettingsClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	TextViewI18n_Refresh(this_view.thumb_db_stats);
+	TextViewI18n_Refresh(view.thumb_db_stats);
 }
 
 static void OnThumbDBDelDone(void *data, void *arg)
 {
-	TextViewI18n_Refresh(this_view.thumb_db_stats);
+	TextViewI18n_Refresh(view.thumb_db_stats);
 }
 
 /** 在“清除”按钮被点击时 */
@@ -297,7 +297,7 @@ static void OnSelectLanguage(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	const Language lang = I18n_SetLanguage(code);
 	if (lang) {
 		LCUIWidget_RefreshTextViewI18n();
-		TextView_SetText(this_view.language, lang->name);
+		TextView_SetText(view.language, lang->name);
 		strcpy(finder.config.language, lang->code);
 		LCFinder_SaveConfig();
 		LCFinder_TriggerEvent(EVENT_LANG_CHG, lang);
@@ -314,7 +314,7 @@ static void UI_InitLanguages(void)
 
 	n = I18n_GetLanguages(&langs);
 	SelectWidget(menu, ID_DROPDOWN_LANGUAGES);
-	SelectWidget(this_view.language, ID_TXT_CURRENT_LANGUAGE);
+	SelectWidget(view.language, ID_TXT_CURRENT_LANGUAGE);
 	for (i = 0; i < n; ++i) {
 		lang = langs[i];
 		item = LCUIWidget_New("textview");
@@ -323,7 +323,7 @@ static void UI_InitLanguages(void)
 		Widget_Append(menu, item);
 		TextView_SetText(item, lang->name);
 		if (strcmp(finder.config.language, lang->code) == 0) {
-			TextView_SetText(this_view.language, lang->name);
+			TextView_SetText(view.language, lang->name);
 		}
 	}
 	BindEvent(menu, "change.dropdown", OnSelectLanguage);
@@ -435,8 +435,8 @@ static void OnLicenseChange(void *privdata, void *data)
 void UI_InitSettingsView(void)
 {
 	LCUI_Widget btn, switcher;
-	SelectWidget(this_view.source_dirs, ID_VIEW_SOURCE_LIST);
-	SelectWidget(this_view.thumb_db_stats, ID_TXT_THUMB_DB_SIZE);
+	SelectWidget(view.source_dirs, ID_VIEW_SOURCE_LIST);
+	SelectWidget(view.thumb_db_stats, ID_TXT_THUMB_DB_SIZE);
 	SelectWidget(switcher, ID_SWITCH_PRIVATE_SPACE);
 	BindEvent(switcher, "change.switch", OnPrivateSpaceSwitchCahnge);
 	SelectWidget(btn, ID_BTN_ADD_SOURCE);
@@ -454,9 +454,9 @@ void UI_InitSettingsView(void)
 	SelectWidget(btn, ID_BTN_OPEN_SOURCECODE);
 	BindEvent(btn, "click", OnBtnSourceCodeClick);
 	LCFinder_BindEvent(EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL);
-	TextViewI18n_SetFormater(this_view.thumb_db_stats,
+	TextViewI18n_SetFormater(view.thumb_db_stats,
 				 RenderThumbDBSizeText, NULL);
-	TextViewI18n_Refresh(this_view.thumb_db_stats);
+	TextViewI18n_Refresh(view.thumb_db_stats);
 	LCFinder_BindEvent(EVENT_DIR_ADD, OnAddDir, NULL);
 	LCFinder_BindEvent(EVENT_DIR_DEL, OnDelDir, NULL);
 	LCFinder_BindEvent(EVENT_LICENSE_CHG, OnLicenseChange, NULL);
