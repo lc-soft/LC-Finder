@@ -1,8 +1,10 @@
 .message.box {
-	width: 100%;
-	max-width: 120px;
 	padding: 15px 25px;
 	background-color: rgba(255,255,255,0.8);
+
+	progress {
+		background-color: rgba(255,255,255,0.5);
+	}
 }
 .message .text {
 	color: #ccc;
