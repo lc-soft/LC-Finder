@@ -37,6 +37,13 @@
 #ifndef LCFINDER_PICTURE_VIEW_H
 #define LCFINDER_PICTURE_VIEW_H
 
+typedef struct PictureLoaderConfigRec_ {
+	int storage;
+	void(*on_start)(void*);
+	void(*on_progress)(void*, float);
+	void(*on_load)(void*, LCUI_Graph*);
+} PictureLoaderConfigRec, *PictureLoaderConfig;
+
 void *PictureView_CreateScanner(int storage);
 
 int PictureView_OpenScanner(void *scanner, const wchar_t *filepath,
@@ -46,5 +53,14 @@ int PictureView_OpenScanner(void *scanner, const wchar_t *filepath,
 void PictureView_CloseScanner(void *scanner);
 
 void PictureView_FreeScanner(void *scanner);
+
+void PictureView_ResetLoader(void *loader);
+
+void PictureView_SetLoaderTask(void *loader, int key,
+			       const wchar_t *file, void *data);
+
+void *PictureView_CreateLoader(PictureLoaderConfig config);
+
+void PictureView_FreeLoader(void *loader);
 
 #endif

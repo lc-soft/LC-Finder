@@ -47,6 +47,7 @@
 #include "types.h"
 #include "common.h"
 #include "file_storage.h"
+#include "picture.h"
 
 /** 文件索引记录 */
 typedef struct FileIndexRec_ {

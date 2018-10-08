@@ -56,6 +56,7 @@
     <ClCompile Include="src\ui\views\home.c" />
     <ClCompile Include="src\ui\views\picture.c" />
     <ClCompile Include="src\ui\views\picture_info.c" />
+    <ClCompile Include="src\ui\views\picture_loader.c" />
     <ClCompile Include="src\ui\views\picture_scanner.c" />
     <ClCompile Include="src\ui\views\search.c" />
     <ClCompile Include="src\ui\views\settings.c" />
