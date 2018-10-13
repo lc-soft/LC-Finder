@@ -164,7 +164,7 @@ int UI_Init( int argc, char **argv )
 	LCUIWidget_AddStarRating();
 	LCUIDisplay_SetMode( LCUI_DMODE_WINDOWED );
 #ifndef PLATFORM_WIN32_PC_APP
-	LCUIDisplay_SetSize( 960, 640 );
+	LCUIDisplay_SetSize( 1280, 740 );
 #endif
 	box = LCUIBuilder_LoadFile( FILE_MAIN_VIEW );
 	if( !box ) {
