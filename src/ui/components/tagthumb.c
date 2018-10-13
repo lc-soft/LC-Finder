@@ -39,12 +39,15 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/css_parser.h>
+#include "textview_i18n.h"
 #include "i18n.h"
 
 #define KEY_ITEM "tagthumb.item"
 #define KEY_ITEMS "tagthumb.items"
 
 typedef struct TagThumbRec_ {
+	size_t count;
+
 	LCUI_Widget cover;
 	LCUI_Widget txt_name;
 	LCUI_Widget txt_count;
@@ -53,6 +56,21 @@ typedef struct TagThumbRec_ {
 static struct TagThumbModule {
 	LCUI_WidgetPrototype proto;
 } self;
+
+static void TagThumb_RenderCount(wchar_t *out, const wchar_t *str, void *data)
+{
+	TagThumb that = data;
+	const wchar_t *template;
+	wchar_t numstr[32] = { 0 };
+
+	get_human_number_wcs(numstr, 63, that->count);
+	if (that->count > 1) {
+		template = I18n_GetText(KEY_ITEMS);
+	} else {
+		template = I18n_GetText(KEY_ITEM);
+	}
+	swprintf(out, 48, template, numstr);
+}
 
 static void TagThumb_OnInit(LCUI_Widget w)
 {
@@ -63,7 +81,7 @@ static void TagThumb_OnInit(LCUI_Widget w)
 
 	that->cover = LCUIWidget_New(NULL);
 	that->txt_name = LCUIWidget_New("textview");
-	that->txt_count = LCUIWidget_New("textview");
+	that->txt_count = LCUIWidget_New("textview-i18n");
 
 	Widget_AddClass(w, "tag-thumb");
 	Widget_AddClass(info, "tag-thumb-info");
@@ -72,6 +90,9 @@ static void TagThumb_OnInit(LCUI_Widget w)
 	Widget_AddClass(check, "icon icon-checkbox-marked-circle tag-thumb-checkbox");
 	Widget_AddClass(that->txt_name, "text name");
 	Widget_AddClass(that->txt_count, "text count");
+
+	TextViewI18n_SetKey(that->txt_count, KEY_ITEMS);
+	TextViewI18n_SetFormater(that->txt_count, TagThumb_RenderCount, that);
 
 	Widget_Append(dimmer, check);
 	Widget_Append(that->cover, dimmer);
@@ -92,18 +113,11 @@ void TagThumb_SetName(LCUI_Widget w, const char *name)
 void TagThumb_SetCount(LCUI_Widget w, size_t count)
 {
 	TagThumb that;
-	const wchar_t *template;
-	wchar_t str[48], numstr[32] = { 0 };
 
 	that = Widget_GetData(w, self.proto);
-	get_human_number_wcs(numstr, 63, count);
-	if (count > 1) {
-		template = I18n_GetText(KEY_ITEMS);
-	} else {
-		template = I18n_GetText(KEY_ITEM);
-	}
-	swprintf(str, 48, template, numstr);
-	TextView_SetTextW(that->txt_count, str);
+	that->count = count;
+
+	TextViewI18n_Refresh(that->txt_count);
 }
 
 void TagThumb_SetCover(LCUI_Widget w, LCUI_Graph *cover)

@@ -739,6 +739,11 @@ static void InitSearchInput(void)
 	BindEvent(view.btn_search, "click", OnBtnSearchClick);
 	BindEvent(view.btn_clear, "click", OnBtnClearClick);
 	BindEvent(view.input, "change", OnSearchInput);
+	LCFinder_BindEvent(
+		EVENT_LANG_CHG,
+		(LCFinder_EventHandler)UpdateSearchInputPlaceholder, 
+		NULL
+	);
 	UpdateSearchInputPlaceholder();
 	UpdateSearchInputActions();
 }
