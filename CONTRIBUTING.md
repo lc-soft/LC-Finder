@@ -28,6 +28,7 @@
   - [LCUI.css](https://github.com/lc-ui/lcui.css)
   - [sqlite3](https://www.sqlite.org/)
   - [unqlite](https://www.unqlite.org/)
+  - [libyaml](https://github.com/yaml/libyaml)
 
 最后，运行如下命令安装全部依赖：
 
