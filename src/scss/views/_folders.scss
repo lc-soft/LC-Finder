@@ -14,7 +14,7 @@
 	background-color: #fff;
 }
 .folder-info-box-name {
-	font-size: 18px;
+	font-size: $folder-info-box-name-size;
 	display: block;
 }
 .folder-info-box-path {
@@ -23,7 +23,7 @@
 }
 .show-folder-info-box {
 	.view-body {
-		padding-top: $view-navbar-height + 90px;
+		padding-top: $view-navbar-height + $folder-info-box-height;
 	}
 	.folder-info-box {
 		display: block;

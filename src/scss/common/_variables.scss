@@ -95,3 +95,6 @@ $file-folder-width: 300px;
 $file-folder-height: $file-folder-info-height + 80px;
 $file-folder-info-content-width: $file-folder-width - $file-folder-padding * 3 - $file-folder-icon-size;
 $file-picture-size: 226px;
+
+$folder-info-box-name-size: 18px;
+$folder-info-box-height: $spacing * 2 + $line-height-base * 2 * $font-size + $folder-info-box-name-size * $line-height-base;
