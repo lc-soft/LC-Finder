@@ -49,21 +49,25 @@
 #define LCFINDER_NAME		L"LC's Finder"
 #define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
 #define LCFINDER_VER_MAJOR	0
-#define LCFINDER_VER_MINOR	1
+#define LCFINDER_VER_MINOR	2
 #define LCFINDER_VER_REVISION	0
 #define LCFINDER_VER_TYPE	VERSION_BETA
 
+#define LCFINDER_USE_UNQLITE
+
 #ifdef _WIN32
-#define PLATFORM_WIN32
+#	define PLATFORM_WIN32
+#	undef LCFINDER_USE_UNQLITE
+#	define LCFINDER_USE_LEVELDB
 // 如果需要编译成 Windows XP 系统上能跑的版本的话
 //#define PLATFORM_WIN32_DESKTOP_XP
-#if (WINAPI_PARTITION_PC_APP == 1)
-#define PLATFORM_WIN32_PC_APP
+#	if (WINAPI_PARTITION_PC_APP == 1)
+#		define PLATFORM_WIN32_PC_APP
+#	else
+#		define PLATFORM_WIN32_DESKTOP
+#	endif
 #else
-#define PLATFORM_WIN32_DESKTOP
-#endif
-#else
-#define PLATFORM_LINUX
+#	define PLATFORM_LINUX
 #endif
 
 enum VersionType {

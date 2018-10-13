@@ -135,6 +135,12 @@
     <ClCompile Include="src\ui\views\picture.c">
       <Filter>源文件\ui\views</Filter>
     </ClCompile>
+    <ClCompile Include="file_cache_unqlite.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="file_cache_leveldb.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />

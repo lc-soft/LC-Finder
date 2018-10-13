@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="file_cache_leveldb.c" />
+    <ClCompile Include="file_cache_unqlite.c" />
     <ClCompile Include="src\bridge_win32.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
@@ -199,7 +201,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\;$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PreLinkEvent>
@@ -242,7 +244,7 @@ copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\;$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>

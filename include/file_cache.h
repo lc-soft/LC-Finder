@@ -37,6 +37,8 @@
 #ifndef LCFINDER_FILE_CACHE_H
 #define LCFINDER_FILE_CACHE_H
 
+#include <wchar.h>
+
 typedef enum {
 	STATE_NONE,
 	STATE_STARTED,
@@ -44,11 +46,17 @@ typedef enum {
 	STATE_FINISHED
 } SyncTaskState;
 
-typedef struct FileInfoRec_ {
+typedef struct FileCacheInfoRec_ {
 	wchar_t *path;		/**< 文件路径 */
 	unsigned int ctime;	/**< 创建时间 */
 	unsigned int mtime;	/**< 修改时间 */
-} FileInfoRec, *FileInfo;
+} FileCacheInfoRec, *FileCacheInfo;
+
+ /** 文件状态信息 */
+typedef struct FileCacheTimeRec_ {
+	unsigned int ctime;	/**< 创建时间 */
+	unsigned int mtime;	/**< 修改时间 */
+} FileCacheTimeRec, *FileCacheTime;
 
 /** 文件列表同步任务 */
 typedef struct SyncTaskRec_ {
@@ -63,7 +71,23 @@ typedef struct SyncTaskRec_ {
 	unsigned long int deleted_files;	/**< 当前缓存的删除的文件数量 */
 } SyncTaskRec, *SyncTask;
 
-typedef void(*FileInfoHanlder)(void*, const FileInfo);
+typedef void(*FileInfoHanlder)(void*, const FileCacheInfo);
+
+#ifdef HAVE_FILECACHE
+typedef struct FileCacheRec_* FileCache;
+#else
+typedef void* FileCache;
+#endif
+
+FileCache FileCache_Open(const char *file);
+
+void FileCache_Close(FileCache db);
+
+size_t FileCache_ReadAll(FileCache db, FileInfoHanlder handler, void *data);
+
+int FileCache_Put(FileCache db, const wchar_t *path, FileCacheTime time);
+
+int FileCache_Delete(FileCache db, const wchar_t *path);
 
 SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
 

@@ -262,7 +262,7 @@ size_t LCFinder_DeleteFiles(char *const *files, size_t nfiles,
 	return i;
 }
 
-static void SyncAddedFile(void *data, const FileInfo info)
+static void SyncAddedFile(void *data, const FileCacheInfo info)
 {
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
@@ -274,7 +274,7 @@ static void SyncAddedFile(void *data, const FileInfo info)
 	// wprintf(L"sync: add file: %s, ctime: %d\n", wpath, ctime);
 }
 
-static void SyncChangedFile(void *data, const FileInfo info)
+static void SyncChangedFile(void *data, const FileCacheInfo info)
 {
 	char path[PATH_LEN];
 	int ctime = (int)info->ctime;
@@ -285,7 +285,7 @@ static void SyncChangedFile(void *data, const FileInfo info)
 	DB_UpdateFileTime(pack->dir, path, ctime, mtime);
 }
 
-static void SyncDeletedFile(void *data, const FileInfo info)
+static void SyncDeletedFile(void *data, const FileCacheInfo info)
 {
 	char path[PATH_LEN];
 	DirStatusDataPack pack = data;
