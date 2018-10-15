@@ -333,16 +333,21 @@ size_t LCFinder_GetSourceDirList(DB_Dir **outdirs)
 int64_t LCFinder_GetThumbDBTotalSize(void)
 {
 	size_t i;
-	struct stat buf;
-	int64_t sum_size;
+	int64_t sum_size, size;
+	char *path;
 
 	for (i = 0, sum_size = 0; i < finder.n_dirs; ++i) {
 		if (!finder.thumb_paths[i]) {
 			continue;
 		}
-		if (wgetfilestat(finder.thumb_paths[i], &buf) == 0) {
-			sum_size += buf.st_size;
+		path = EncodeANSI(finder.thumb_paths[i]);
+		if (!path) {
+			continue;
 		}
+		if (ThumbDB_GetSize(path, &size) == 0) {
+			sum_size += size;
+		}
+		free(path);
 	}
 	return sum_size;
 }
@@ -715,11 +720,14 @@ static int LCFinder_InitThumbCache(void)
 /** 初始化语言文件列表 */
 static int LCFinder_InitLanguage(void)
 {
-	int dir_len;
-	char file[PATH_LEN];
+	size_t len;
+	size_t dir_len;
+	wchar_t *name, *p;
 	wchar_t *wfile, lang_path[PATH_LEN];
-	LCUI_DirEntry *entry;
+	char file[PATH_LEN];
+
 	LCUI_Dir dir;
+	LCUI_DirEntry *entry;
 
 	dir_len = wpathjoin(lang_path, finder.work_dir, LANG_DIR);
 	LOG("[i18n] open directory: %S\n", lang_path);
@@ -730,8 +738,6 @@ static int LCFinder_InitLanguage(void)
 	lang_path[dir_len++] = PATH_SEP;
 	wfile = lang_path + dir_len;
 	while ((entry = LCUI_ReadDir(&dir))) {
-		int len;
-		wchar_t *name, *p;
 		name = LCUI_GetFileNameW(entry);
 		/* 忽略 . 开头的文件，包括 . 和 .. 文件夹 */
 		if (name[0] == '.') {
@@ -820,14 +826,16 @@ void LCFinder_ClearThumbDB(void)
 {
 	size_t i;
 	wchar_t *path;
+	char *apath;
+
 	Dict_Release(finder.thumb_dbs);
 	for (i = 0; i < finder.n_dirs; ++i) {
 		path = finder.thumb_paths[i];
+		apath = EncodeANSI(path);
 		finder.thumb_paths[i] = NULL;
-#ifdef _WIN32
-		_wremove(path);
-#endif
+		ThumbDB_DestroyDB(apath);
 		free(path);
+		free(apath);
 	}
 	free(finder.thumb_paths);
 	finder.thumb_paths = NULL;

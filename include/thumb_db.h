@@ -37,10 +37,20 @@
 #ifndef LCFINDER_THUMB_DB_H
 #define LCFINDER_THUMB_DB_H
 
-#ifndef LCFINDER_THUMB_DB_C
+#include <stdint.h>
+#include <LCUI_Build.h>
+#include <LCUI/types.h>
+
+#ifndef HAVE_THUMB_DB
 typedef void* ThumbDB;
 #else
-typedef struct ThumbDBRec_ *ThumbDB;
+typedef struct ThumbDBRec_* ThumbDB;
+#endif
+
+#ifndef HAVE_THUMB_DB_ENGINE
+typedef void* ThumbDBEngine;
+#else
+typedef struct ThumbDBEngineRec_* ThumbDBEngine;
 #endif
 
 typedef struct ThumbDatakRec_ {
@@ -51,15 +61,19 @@ typedef struct ThumbDatakRec_ {
 } ThumbDataRec, *ThumbData;
 
 /** 新建一个缩略图数据库实例 */
-ThumbDB ThumbDB_Open( const char *filepath );
+ThumbDB ThumbDB_Open(const char *filepath);
 
 /** 销毁缩略图数据库实例 */
-void ThumbDB_Close( ThumbDB tdb );
+void ThumbDB_Close(ThumbDB tdb);
+
+int ThumbDB_GetSize(const char *filepath, int64_t *size);
+
+int ThumbDB_DestroyDB(const char *filepath);
 
 /** 从数据库中载入指定文件路径的缩略图数据 */
-int ThumbDB_Load( ThumbDB tdb, const char *filepath, ThumbData data );
+int ThumbDB_Load(ThumbDB tdb, const char *filepath, ThumbData data);
 
 /** 将缩略图数据保存至缓存中 */
-int ThumbDB_Save( ThumbDB tdb, const char *filepath, ThumbData data );
+int ThumbDB_Save(ThumbDB tdb, const char *filepath, ThumbData data);
 
 #endif

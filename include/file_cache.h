@@ -73,62 +73,46 @@ typedef struct SyncTaskRec_ {
 
 typedef void(*FileInfoHanlder)(void*, const FileCacheInfo);
 
-#ifdef HAVE_FILECACHE
-typedef struct FileCacheRec_* FileCache;
-#else
-typedef void* FileCache;
-#endif
-
-FileCache FileCache_Open(const char *file);
-
-void FileCache_Close(FileCache db);
-
-size_t FileCache_ReadAll(FileCache db, FileInfoHanlder handler, void *data);
-
-int FileCache_Put(FileCache db, const wchar_t *path, FileCacheTime time);
-
-int FileCache_Delete(FileCache db, const wchar_t *path);
-
-SyncTask SyncTask_New( const char *data_dir, const char *scan_dir );
+SyncTask SyncTask_New(const char *data_dir, const char *scan_dir);
 
 /** 新建同步任务 */
-SyncTask SyncTask_NewW( const wchar_t *data_dir, const wchar_t *scan_dir );
+SyncTask SyncTask_NewW(const wchar_t *data_dir, const wchar_t *scan_dir);
 
 /** 添加文件至缓存 */
-int SyncTask_AddFileW( SyncTask t, const wchar_t *path,
-		       unsigned int ctime, unsigned int mtime );
+int SyncTask_AddFileW(SyncTask t, const wchar_t *path,
+		      unsigned int ctime, unsigned int mtime);
 
 /** 打开缓存 */
-int SyncTask_OpenCacheW( SyncTask t, const wchar_t *path );
+int SyncTask_OpenCacheW(SyncTask t, const wchar_t *path);
 
 /** 从缓存中删除一个文件记录 */
-int SyncTask_DeleteFileW( SyncTask t, const wchar_t *filepath );
+int SyncTask_DeleteFileW(SyncTask t, const wchar_t *filepath);
 
 /** 清除缓存 */
-void SyncTask_ClearCache( SyncTask t );
+void SyncTask_ClearCache(SyncTask t);
 
 /** 关闭缓存 */
-void SyncTask_CloseCache( SyncTask t );
+void SyncTask_CloseCache(SyncTask t);
 
 /** 删除同步任务 */
-void SyncTask_Delete( SyncTask t );
+void SyncTask_Delete(SyncTask t);
 
 /** 遍历每个新增的文件 */
-int SyncTask_InAddedFiles( SyncTask t, FileInfoHanlder func, void *func_data );
+int SyncTask_InAddedFiles(SyncTask t, FileInfoHanlder func, void *func_data);
 
 /** 遍历每个已修改的文件 */
-int SyncTask_InChangedFiles( SyncTask t, FileInfoHanlder func, void *func_data );
+int SyncTask_InChangedFiles(SyncTask t, FileInfoHanlder func, void *func_data);
 
 /** 遍历每个已删除的文件 */
-int SyncTask_InDeletedFiles( SyncTask t, FileInfoHanlder func, void *func_data );
+int SyncTask_InDeletedFiles(SyncTask t, FileInfoHanlder func, void *func_data);
 
 /** 开始同步文件列表 */
-int SyncTask_Start( SyncTask t );
+int SyncTask_Start(SyncTask t);
 
 /** 结束同步文件列表 */
-void SyncTask_Finish( SyncTask t );
+void SyncTask_Finish(SyncTask t);
 
 /** 提交变更后文件列表至缓存数据库中 */
-void SyncTask_Commit( SyncTask t );
+void SyncTask_Commit(SyncTask t);
 
 #endif

@@ -43,12 +43,20 @@
 #include <LCUI/LCUI.h>
 #include <LCUI/font/charset.h>
 
+#include "kvdb.h"
 #include "common.h"
 #include "file_cache.h"
 
 #define MAX_PATH_LEN	2048
 #define WCSLEN(STR)	(sizeof( STR ) / sizeof( wchar_t ))
 #define GetDirStats(T)	(DirStats)(((char*)(T)) + sizeof(SyncTaskRec))
+
+typedef kvdb_t* FileCache;
+
+typedef struct FileInfoHanlderPackRec_ {
+	void *data;
+	FileInfoHanlder handler;
+} FileInfoHanlderPackRec, *FileInfoHanlderPack;
 
 /** 文件夹内的文件变更状态统计 */
 typedef struct DirStatsRec_ {
@@ -119,6 +127,44 @@ static DictType FilesDict = {
 	FilesDict_ValDestructor
 };
 
+static void FileCache_OnFetch(const char *key, size_t keylen,
+			      const char *val, size_t vallen, void *data)
+{
+	FileCacheInfo info;
+	FileCacheTime value = (FileCacheTime)val;
+	FileInfoHanlderPack pack = data;
+
+	info = malloc(sizeof(FileCacheInfoRec));
+	info->path = malloc(keylen);
+	info->mtime = value->mtime;
+	info->ctime = value->ctime;
+
+	keylen /= sizeof(wchar_t);
+	wcsncpy(info->path, (const wchar_t*)key, keylen);
+	info->path[keylen] = 0;
+
+	pack->handler(pack->data, info);
+}
+
+size_t FileCache_ReadAll(FileCache cache, FileInfoHanlder handler, void *data)
+{
+	FileInfoHanlderPackRec pack = { data, handler };
+	return kvdb_each(cache, FileCache_OnFetch, &pack);
+}
+
+int FileCache_Put(FileCache cache, const wchar_t *path, FileCacheTime time)
+{
+	return kvdb_put(cache, (const char*)path,
+			wcslen(path) * sizeof(wchar_t), (char*)time,
+			sizeof(FileCacheTimeRec));
+}
+
+int FileCache_Delete(FileCache cache, const wchar_t *path)
+{
+	return kvdb_delete(cache, (const char*)path,
+			   wcslen(path) * sizeof(wchar_t));
+}
+
 SyncTask SyncTask_New(const char *data_dir, const char *scan_dir)
 {
 	SyncTask t;
@@ -172,17 +218,12 @@ SyncTask SyncTask_NewW(const wchar_t *data_dir, const wchar_t *scan_dir)
 
 void SyncTask_ClearCache(SyncTask t)
 {
-#ifdef _WIN32
-	_wremove(t->file);
-	_wremove(t->tmpfile);
-#else
-	char *file = EncodeUTF8(t->file);
-	char *tmpfile = EncodeUTF8(t->tmpfile);
-	remove(file);
-	remove(tmpfile);
+	char *file = EncodeANSI(t->file);
+	char *tmpfile = EncodeANSI(t->tmpfile);
+	kvdb_destroy_db(file);
+	kvdb_destroy_db(tmpfile);
 	free(file);
 	free(tmpfile);
-#endif
 }
 
 void SyncTask_Delete(SyncTask t)
@@ -237,18 +278,12 @@ int SyncTask_InDeletedFiles(SyncTask t, FileInfoHanlder func, void *func_data)
 int SyncTask_OpenCacheW(SyncTask t, const wchar_t *path)
 {
 	DirStats ds;
-	size_t len;
 	char *dbfile;
 
 	ds = GetDirStats(t);
 	path = path ? path : t->file;
-	len = LCUI_EncodeUTF8String(NULL, path, 0) + 1;
-	dbfile = malloc(sizeof(char)*len);
-	if (!dbfile) {
-		return -ENOMEM;
-	}
-	LCUI_EncodeString(dbfile, path, len, ENCODING_UTF8);
-	ds->db = FileCache_Open(dbfile);
+	dbfile = EncodeANSI(path);
+	ds->db = kvdb_open(dbfile);
 	free(dbfile);
 	if (!ds->db) {
 		return -1;
@@ -259,7 +294,7 @@ int SyncTask_OpenCacheW(SyncTask t, const wchar_t *path)
 void SyncTask_CloseCache(SyncTask t)
 {
 	DirStats ds = GetDirStats(t);
-	FileCache_Close(ds->db);
+	kvdb_close(ds->db);
 }
 
 static void SyncTask_OnLoadFile(void *data, const FileCacheInfo info)
@@ -353,17 +388,10 @@ void SyncTask_Finish(SyncTask t)
 void SyncTask_Commit(SyncTask t)
 {
 	DirStats ds = GetDirStats(t);
-#ifdef _WIN32
-	FileCache_Close(ds->db);
-	_wremove(t->file);
-	_wrename(t->tmpfile, t->file);
-#else
-	char *file = EncodeUTF8(t->file);
-	char *tmpfile = EncodeUTF8(t->tmpfile);
-	FileCache_Close(ds->db);
-	remove(file);
+	char *file = EncodeANSI(t->file);
+	char *tmpfile = EncodeANSI(t->tmpfile);
+	kvdb_destroy_db(file);
 	rename(tmpfile, file);
 	free(file);
 	free(tmpfile);
-#endif
 }
