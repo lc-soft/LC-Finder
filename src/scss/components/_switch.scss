@@ -16,6 +16,9 @@
   	height: 100%;
   	background-color: $switch-color;
   }
+  &:hover {
+  	border-color: $switch-checked-color;
+  }
   &.checked {
   	border-color:  lighten($switch-checked-color, 25%);
   	background-color: lighten($switch-checked-color, 25%);

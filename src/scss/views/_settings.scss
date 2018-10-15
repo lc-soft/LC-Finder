@@ -12,10 +12,10 @@
 		min-height: 24px;
 	}
 	&:hover {
-		background-color: #fdfdfd;
+		background-color: #f9f9f9;
 	}
 	&:active {
-		background-color: #fafafa;
+		background-color: #f4f4f4;
 	}
 	.icon {
 		font-size: 24px;
@@ -41,17 +41,11 @@
 		vertical-align: middle;
 
 		&:hover {
-			background-color: #f3f3f3;
+			background-color: #f4f4f4;
 		}
 		&:active {
 			background-color: #eee;
 		}
-	}
-	.btn-delete:hover {
-		background-color: #fff;
-	}
-	.btn-delete:active {
-		background-color: #fcfcfc;
 	}
 }
 #view-settings-content.view-content {
