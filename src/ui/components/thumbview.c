@@ -141,7 +141,6 @@ typedef struct ThumbViewRec_ {
 	Dict **dbs;				/**< 缩略图数据库字典，以目录路径进行索引 */
 	ThumbCache cache;			/**< 缩略图缓存 */
 	ThumbLinker linker;			/**< 缩略图链接器 */
-	LinkedList files;			/**< 当前视图下的文件列表 */
 	LinkedList thumb_tasks;			/**< 缩略图加载任务队列 */
 	LCUI_Cond tasks_cond;			/**< 任务队列条件变量 */
 	LCUI_Mutex tasks_mutex;			/**< 任务队列互斥锁 */
@@ -718,10 +717,6 @@ void ThumbView_Empty(LCUI_Widget w)
 			self.item->destroy(child);
 		}
 	}
-	for (LinkedList_Each(node, &view->files)) {
-		ThumbCache_Unlink(view->cache, view->linker, node->data);
-	}
-	LinkedList_Clear(&view->files, NULL);
 	Widget_Empty(w);
 	LCUICond_Signal(&view->tasks_cond);
 	LCUIMutex_Unlock(&view->layout.row_mutex);
@@ -1092,7 +1087,6 @@ LCUI_Widget ThumbView_AppendFolder(LCUI_Widget w, const char *filepath,
 		data->view->layout.current = w;
 		UpdateFolderSize(item);
 	}
-	LinkedList_Append(&data->view->files, data->path);
 	return item;
 }
 
@@ -1119,7 +1113,6 @@ LCUI_Widget ThumbView_AppendPicture(LCUI_Widget w, const DB_File file)
 		data->view->layout.current = w;
 		UpdatePictureSize(item);
 	}
-	LinkedList_Append(&data->view->files, data->path);
 	return item;
 }
 
@@ -1369,7 +1362,6 @@ static void ThumbView_OnInit(LCUI_Widget w)
 	view->cache = NULL;
 	view->linker = NULL;
 	LCUIMutex_Init(&view->mutex);
-	LinkedList_Init(&view->files);
 	view->scrollload = ScrollLoading_New(w);
 	Widget_BindEvent(w, "ready", ThumbView_OnReady, NULL, NULL);
 	Widget_BindEvent(w, "remove", ThumbView_OnRemove, NULL, NULL);
