@@ -361,7 +361,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 	wchar_t *dirpath;
 
 	LOG("[scanner] task %lu finished\n", s->task_i);
-	if (finder.n_dirs > 0 && s->task_i < finder.n_dirs - 1) {
+	if (finder.n_dirs > 0) {
 		s->task_i += 1;
 		if (s->task) {
 			s->added_files += s->task->added_files;
@@ -369,8 +369,10 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 			s->changed_files += s->task->changed_files;
 			SyncTask_Finish(s->task);
 		}
-		LCFinder_SwitchTask(s);
-		return;
+		if (s->task_i < finder.n_dirs) {
+			LCFinder_SwitchTask(s);
+			return;
+		}
 	}
 	DB_Begin();
 	s->state = STATE_SAVING;

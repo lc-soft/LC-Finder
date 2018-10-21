@@ -113,6 +113,6 @@ int SyncTask_Start(SyncTask t);
 void SyncTask_Finish(SyncTask t);
 
 /** 提交变更后文件列表至缓存数据库中 */
-void SyncTask_Commit(SyncTask t);
+int SyncTask_Commit(SyncTask t);
 
 #endif

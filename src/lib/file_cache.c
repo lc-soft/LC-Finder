@@ -135,7 +135,7 @@ static void FileCache_OnFetch(const char *key, size_t keylen,
 	FileInfoHanlderPack pack = data;
 
 	info = malloc(sizeof(FileCacheInfoRec));
-	info->path = malloc(keylen);
+	info->path = malloc(keylen + sizeof(wchar_t));
 	info->mtime = value->mtime;
 	info->ctime = value->ctime;
 
@@ -169,12 +169,9 @@ SyncTask SyncTask_New(const char *data_dir, const char *scan_dir)
 {
 	SyncTask t;
 	wchar_t *wcs_data_dir, *wcs_scan_dir;
-	size_t len1 = strlen(data_dir) + 1;
-	size_t len2 = strlen(scan_dir) + 1;
-	wcs_data_dir = malloc(sizeof(wchar_t)*len1);
-	wcs_scan_dir = malloc(sizeof(wchar_t)*len2);
-	LCUI_DecodeString(wcs_data_dir, data_dir, len1, ENCODING_UTF8);
-	LCUI_DecodeString(wcs_scan_dir, scan_dir, len2, ENCODING_UTF8);
+
+	wcs_data_dir = DecodeUTF8(data_dir);
+	wcs_scan_dir = DecodeUTF8(scan_dir);
 	t = SyncTask_NewW(wcs_data_dir, wcs_scan_dir);
 	free(wcs_data_dir);
 	free(wcs_scan_dir);
@@ -385,13 +382,18 @@ void SyncTask_Finish(SyncTask t)
 	SyncTask_CloseCache(t);
 }
 
-void SyncTask_Commit(SyncTask t)
+int SyncTask_Commit(SyncTask t)
 {
+	int ret;
 	DirStats ds = GetDirStats(t);
 	char *file = EncodeANSI(t->file);
 	char *tmpfile = EncodeANSI(t->tmpfile);
 	kvdb_destroy_db(file);
-	rename(tmpfile, file);
+	ret = rename(tmpfile, file);
+	if (ret != 0) {
+		_DEBUG_MSG("%s\n", strerror(errno));
+	}
 	free(file);
 	free(tmpfile);
+	return ret;
 }
