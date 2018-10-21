@@ -43,30 +43,32 @@ typedef void* ThumbLinker;
 #endif
 
 /** 新建一个缩略图缓存 */
-ThumbCache ThumbCache_New( size_t max_size );
+ThumbCache ThumbCache_New(size_t max_size);
+
+void ThumbCache_Destroy(ThumbCache cache);
 
 /** 添加缩略图链接器 */
-ThumbLinker ThumbCache_AddLinker( ThumbCache cache, void( *on_remove )(void*) );
+ThumbLinker ThumbCache_AddLinker(ThumbCache cache, void(*on_remove)(void*));
 
 /** 删除缩略图链接器 */
-void ThumbCache_DeleteLinker( ThumbCache cache, ThumbLinker linker );
+void ThumbLinker_Destroy(ThumbLinker linker);
 
 /** 直接从缩略图缓存中取缩略图 */
-LCUI_Graph *ThumbCache_Get( ThumbCache cache, const char *path );
+LCUI_Graph *ThumbCache_Get(ThumbCache cache, const char *path);
 
 /** 从缩略图缓存中删除缩略图 */
-int ThumbCache_Delete( ThumbCache cache, const char *path );
+int ThumbCache_Delete(ThumbCache cache, const char *path);
 
 /** 将缩略图添加至缩略图缓存中 */
-LCUI_Graph *ThumbCache_Add( ThumbCache cache, const char *path,
-			    LCUI_Graph *thumb );
+LCUI_Graph *ThumbCache_Add(ThumbCache cache, const char *path,
+			   LCUI_Graph *thumb);
 
 /** 链接到缩略图，并获取缩略图 */
-LCUI_Graph *ThumbCache_Link( ThumbCache cache, const char *path,
-			     ThumbLinker linker, void *privdata );
+LCUI_Graph *ThumbLinker_Link(ThumbLinker linker, const char *path,
+			     void *privdata);
 
 
 /** 解除缩略图链接 */
-int ThumbCache_Unlink( ThumbCache cache, ThumbLinker linker, const char *path );
+int ThumbLinker_Unlink(ThumbLinker linker, const char *path);
 
 #endif

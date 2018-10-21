@@ -361,7 +361,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 	wchar_t *dirpath;
 
 	LOG("[scanner] task %lu finished\n", s->task_i);
-	if (s->task_i < finder.n_dirs - 1) {
+	if (finder.n_dirs > 0 && s->task_i < finder.n_dirs - 1) {
 		s->task_i += 1;
 		if (s->task) {
 			s->added_files += s->task->added_files;
@@ -692,7 +692,7 @@ error:
 	return 1;
 }
 
-static void LCFinder_ExitFileDB(void)
+static void LCFinder_FreeFileDB(void)
 {
 	size_t i;
 	for (i = 0; i < finder.n_dirs; ++i) {
@@ -715,6 +715,12 @@ static int LCFinder_InitThumbCache(void)
 		return -1;
 	}
 	return 0;
+}
+
+static void LCFinder_FreeThumbCache(void)
+{
+	ThumbCache_Destroy(finder.thumb_cache);
+	finder.thumb_cache = NULL;
 }
 
 /** 初始化语言文件列表 */
@@ -774,6 +780,11 @@ static int LCFinder_InitLanguage(void)
 	return -1;
 }
 
+static void LCFinder_FreeLanguage(void)
+{
+	I18n_Clear();
+}
+
 static void ThumbDBDict_ValDel(void *privdata, void *val)
 {
 	ThumbDB_Close(val);
@@ -803,14 +814,14 @@ static int LCFinder_InitThumbDB(void)
 }
 
 /** 退出缩略图数据库 */
-static void LCFinder_ExitThumbDB(void)
+static void LCFinder_FreeThumbDB(void)
 {
 	size_t i;
 	if (!finder.thumb_dbs) {
 		return;
 	}
 	LOG("[thumbdb] exit ..\n");
-	Dict_Release(finder.thumb_dbs);
+	StrDict_Release(finder.thumb_dbs);
 	for (i = 0; i < finder.n_dirs; ++i) {
 		free(finder.thumb_paths[i]);
 		finder.thumb_paths[i] = NULL;
@@ -861,13 +872,13 @@ error:
 	return -1;
 }
 
-static void LCFinder_ExitFileStorage(void)
+static void LCFinder_FreeFileStorage(void)
 {
 	FileStorage_Close(finder.storage);
 	FileStorage_Close(finder.storage_for_image);
 	FileStorage_Close(finder.storage_for_thumb);
 	FileStorage_Close(finder.storage_for_scan);
-	FileStorage_Exit();
+	FileStorage_Free();
 }
 
 int LCFinder_SaveConfig(void)
@@ -954,11 +965,6 @@ static void LCFinder_InitEvent(void)
 	finder.trigger = EventTrigger();
 }
 
-static void LCFinder_OnExit(LCUI_SysEvent e, void *arg)
-{
-	LCFinder_Exit();
-}
-
 #ifdef PLATFORM_WIN32
 static void LoggerHandler(const char *str)
 {
@@ -988,7 +994,6 @@ int LCFinder_Init(int argc, char **argv)
 	ASSERT(LCFinder_InitThumbCache() == 0);
 	ASSERT(LCFinder_InitFileStorage() == 0);
 	ASSERT(UI_Init(argc, argv) == 0);
-	LCUI_BindEvent(LCUI_QUIT, LCFinder_OnExit, NULL, NULL);
 	finder.state = FINDER_STATE_ACTIVATED;
 	return 0;
 
@@ -999,19 +1004,24 @@ error:
 
 void LCFinder_Exit(void)
 {
-	UI_Exit();
-	LCFinder_ExitThumbDB();
-	LCFinder_ExitFileStorage();
-	LCFinder_ExitFileDB();
+	UI_Free();
+	LCFinder_FreeThumbDB();
+	LCFinder_FreeFileStorage();
+	LCFinder_FreeFileDB();
+	LCFinder_FreeLanguage();
+	LCFinder_FreeThumbCache();
 }
 
 int LCFinder_Run(void)
 {
+	int ret;
 	if (finder.state != FINDER_STATE_ACTIVATED) {
 		LCFinder_Exit();
 		return -1;
 	}
-	return UI_Run();
+	ret = UI_Run();
+	LCFinder_Exit();
+	return ret;
 }
 
 #ifndef PLATFORM_WIN32_PC_APP

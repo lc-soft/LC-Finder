@@ -1517,7 +1517,7 @@ void UI_ClosePictureView(void)
 	UI_SetPictureView(NULL);
 }
 
-void UI_ExitPictureView(void)
+void UI_FreePictureView(void)
 {
 	view.is_working = FALSE;
 	if (view.mode == MODE_SINGLE_PICVIEW) {

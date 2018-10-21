@@ -208,9 +208,9 @@ int UI_Run( void )
 	return LCUI_Main();
 }
 
-void UI_Exit( void )
+void UI_Free( void )
 {
-	UI_ExitHomeView();
-	UI_ExitFolderView();
-	UI_ExitPictureView();
+	UI_FreeHomeView();
+	UI_FreeFoldersView();
+	UI_FreePictureView();
 }

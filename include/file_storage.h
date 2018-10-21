@@ -52,7 +52,7 @@ int FileStorage_Connect( void );
 
 void FileStorage_Close( int id );
 
-void FileStorage_Exit( void );
+void FileStorage_Free( void );
 
 int FileStorage_GetFile( int conn_id, const wchar_t *filename,
 			 HandlerOnGetFile callback, void *data );

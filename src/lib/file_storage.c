@@ -100,6 +100,7 @@ int FileStorage_Connect(void)
 {
 	int ret;
 	ASSIGN(conn, FileStorageConnection);
+
 	conn->active = FALSE;
 	conn->client = FileClient_Create();
 	ret = FileClient_Connect(conn->client);
@@ -127,8 +128,9 @@ void FileStorage_Close(int id)
 	}
 }
 
-void FileStorage_Exit(void)
+void FileStorage_Free(void)
 {
+	LinkedList_ClearData(&self.clients, free);
 	FileService_Close();
 }
 

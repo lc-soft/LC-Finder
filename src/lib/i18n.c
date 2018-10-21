@@ -63,10 +63,10 @@ struct DictValueRec_ {
 };
 
 static struct I18nModule {
-	int length;          /**< 语言列表的长度 */
-	Language *languages; /**< 语言列表 */
-	Language language;   /**< 当前选中的语言 */
-	Dict *texts;         /**< 文本库 */
+	int length;		/**< 语言列表的长度 */
+	Language *languages;	/**< 语言列表 */
+	Language language;	/**< 当前选中的语言 */
+	Dict *texts;		/**< 文本库 */
 } self = { 0 };
 
 static char *yaml_token_getstr(yaml_token_t *token)
@@ -98,7 +98,7 @@ static void DeleteDictValue(void *privdata, void *data)
 {
 	DictValue value = data;
 	if (value->type == DICT) {
-		Dict_Release(value->dict);
+		StrDict_Release(value->dict);
 	} else if (value->type == STRING) {
 		free(value->string.data);
 	}
@@ -200,7 +200,7 @@ Dict *I18n_LoadFile(const char *path)
 	do {
 		if (!yaml_parser_scan(&parser, &token)) {
 			LOG("[i18n] error: %s\n", parser.problem);
-			Dict_Release(dict);
+			StrDict_Release(dict);
 			dict = NULL;
 			break;
 		}
@@ -258,6 +258,26 @@ Dict *I18n_LoadFile(const char *path)
 	return dict;
 }
 
+void I18n_Clear(void)
+{
+	int i;
+	Language lang;
+	for (i = 0; i < self.length; ++i) {
+		lang = self.languages[i];
+		self.languages[i] = NULL;
+		free(lang->code);
+		free(lang->filename);
+		free(lang->name);
+		free(lang);
+	}
+	free(self.languages);
+	StrDict_Release(self.texts);
+	self.languages = NULL;
+	self.language = NULL;
+	self.texts = NULL;
+	self.length = 0;
+}
+
 Language I18n_LoadLanguage(const char *filename)
 {
 	Dict *dict;
@@ -267,7 +287,7 @@ Language I18n_LoadLanguage(const char *filename)
 		return NULL;
 	}
 	lang = I18n_AddLanguage(filename, dict);
-	Dict_Release(dict);
+	StrDict_Release(dict);
 	if (lang) {
 		printf("[i18n] language loaded, name: %s, code: %s\n",
 		       lang->name, lang->code);
@@ -334,6 +354,9 @@ Language I18n_SetLanguage(const char *lang_code)
 		dict = I18n_LoadFile(lang->filename);
 		if (!dict) {
 			break;
+		}
+		if (self.texts) {
+			Dict_Release(dict);
 		}
 		self.texts = dict;
 		self.language = lang;

@@ -611,7 +611,7 @@ void UI_InitFoldersView(void)
 	OpenFolder(NULL);
 }
 
-void UI_ExitFolderView(void)
+void UI_FreeFoldersView(void)
 {
 	if (!view.is_activated) {
 		return;

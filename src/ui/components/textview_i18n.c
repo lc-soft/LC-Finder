@@ -81,6 +81,14 @@ static void TextViewI18n_Destroy(LCUI_Widget w)
 {
 	TextViewI18n txt = Widget_GetData(w, self.prototype);
 	LinkedList_Unlink(&self.textviews, &txt->node);
+	if (txt->key) {
+		free(txt->key);
+	}
+	if (txt->text) {
+		free(txt->text);
+	}
+	txt->key = NULL;
+	txt->text = NULL;
 	w->proto->proto->destroy(w);
 }
 

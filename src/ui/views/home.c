@@ -194,13 +194,15 @@ static int FileScanner_ScanAll(FileScanner scanner)
 	}
 	query = DB_NewQuery(&terms);
 	count = total = DBQuery_GetTotalFiles(query);
-	scanner->total = total, scanner->count = 0;
+	scanner->total = total;
+	scanner->count = 0;
+	DB_DeleteQuery(query);
+
 	ProgressBar_SetValue(view.progressbar, 0);
 	ProgressBar_SetMaxValue(view.progressbar, count);
 	Widget_Show(view.progressbar);
 	_DEBUG_MSG("total: %d\n", count);
 	while (scanner->is_running && count > 0) {
-		DB_DeleteQuery(query);
 		query = DB_NewQuery(&terms);
 		i = count < terms.limit ? count : terms.limit;
 		for (; scanner->is_running && i > 0; --i) {
@@ -216,6 +218,7 @@ static int FileScanner_ScanAll(FileScanner scanner)
 		}
 		count -= terms.limit;
 		terms.offset += terms.limit;
+		DB_DeleteQuery(query);
 	}
 	if (terms.dirs) {
 		free(terms.dirs);
@@ -459,7 +462,7 @@ void UI_InitHomeView(void)
 	LoadCollectionFiles();
 }
 
-void UI_ExitHomeView(void)
+void UI_FreeHomeView(void)
 {
 	if (!view.is_activated) {
 		return;

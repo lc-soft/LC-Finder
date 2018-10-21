@@ -65,11 +65,11 @@ typedef struct FileStreamRec_ {
 	FileStreamChunk *chunk; /**< 当前操作的数据块 */
 } FileStreamRec;
 
-typedef struct ConnectionRecord_ {
+typedef struct ConnectionHubRec_ {
 	unsigned int id;
 	FileStream streams[2];
 	LinkedListNode node;
-} ConnectionRecord;
+} ConnectionHubRec, *ConnectionHub;
 
 typedef struct ConnectionRec_ {
 	unsigned int id;
@@ -135,6 +135,11 @@ static void FileStreamChunk_Release(void *data)
 	FileStreamChunk *chunk = data;
 	FileStreamChunk_Destroy(chunk);
 	free(chunk);
+}
+
+static void FileClientTask_Destroy(FileClientTask *task)
+{
+	free(task);
 }
 
 FileStream FileStream_Create(void)
@@ -434,6 +439,11 @@ void Connection_Close(Connection conn)
 
 void Connection_Destroy(Connection conn)
 {
+	LCUIMutex_Destroy(&conn->mutex);
+	LCUICond_Destroy(&conn->cond);
+	conn->input = NULL;
+	conn->output = NULL;
+	free(conn);
 }
 
 static int FileService_GetFileImageStatus(FileRequest *request,
@@ -728,28 +738,41 @@ int FileService_Listen(int backlog)
 	return service.requests.length;
 }
 
+ConnectionHub ConnectionHub_Create(void)
+{
+	static unsigned base_id = 0;
+	ConnectionHub conn = NEW(ConnectionHubRec, 1);
+
+	conn->streams[0] = FileStream_Create();
+	conn->streams[1] = FileStream_Create();
+	conn->node.data = conn;
+	conn->id = ++base_id;
+	return conn;
+}
+
+void ConnectionHub_Destroy(ConnectionHub conn)
+{
+	FileStream_Destroy(conn->streams[0]);
+	FileStream_Destroy(conn->streams[1]);
+	free(conn);
+}
+
 Connection FileService_Accept(void)
 {
-	LinkedListNode *node;
-	ConnectionRecord *conn;
-	static unsigned base_id = 0;
+	ConnectionHub conn;
 	Connection conn_client, conn_service;
+
 	if (!service.active) {
 		return NULL;
 	}
 	LCUIMutex_Lock(&service.mutex);
-	node = LinkedList_GetNode(&service.requests, 0);
-	LinkedList_Unlink(&service.requests, node);
+	conn_client = LinkedList_Get(&service.requests, 0);
+	LinkedList_Delete(&service.requests, 0);
 	LCUICond_Signal(&service.cond);
 	LCUIMutex_Unlock(&service.mutex);
-	conn_client = node->data;
-	conn = NEW(ConnectionRecord, 1);
+	conn = ConnectionHub_Create();
 	conn_service = Connection_Create();
-	conn->streams[0] = FileStream_Create();
-	conn->streams[1] = FileStream_Create();
 	LCUIMutex_Lock(&conn_client->mutex);
-	conn->id = ++base_id;
-	conn->node.data = conn;
 	conn_client->id = conn->id;
 	conn_client->closed = FALSE;
 	conn_service->id = conn->id;
@@ -804,6 +827,11 @@ void FileService_Close(void)
 	service.active = FALSE;
 	LCUICond_Signal(&service.cond);
 	LCUIMutex_Unlock(&service.mutex);
+	if (service.thread) {
+		LCUIThread_Join(service.thread, NULL);
+	}
+	LinkedList_Clear(&service.requests, Connection_Destroy);
+	LinkedList_ClearData(&service.connections, ConnectionHub_Destroy);
 }
 
 void FileService_Init(void)
@@ -932,6 +960,17 @@ int FileClient_Connect(FileClient client)
 
 void FileClient_Destroy(FileClient client)
 {
+	client->active = FALSE;
+	LCUIThread_Join(client->thread, NULL);
+	if (client->connection) {
+		Connection_Destroy(client->connection);
+	}
+	LinkedList_Clear(&client->tasks, FileClientTask_Destroy);
+	LCUICond_Destroy(&client->cond);
+	LCUIMutex_Destroy(&client->mutex);
+	client->connection = NULL;
+	client->thread = 0;
+	free(client);
 }
 
 void FileClient_Run(FileClient client)
@@ -976,8 +1015,10 @@ void FileClient_Run(FileClient client)
 		}
 		response.stream = conn->input;
 		task->handler.callback(&response, task->handler.data);
+		FileClientTask_Destroy(task);
 	}
 	LOG("[file client] work stopped\n");
+	LCUIThread_Exit(NULL);
 }
 
 static void FileClient_Thread(void *arg)
