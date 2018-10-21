@@ -73,13 +73,20 @@ static struct HomeCollectionView {
 	LCUI_Widget tip_empty;
 	LCUI_Widget progressbar;
 
+	/** 文件列表，供视图渲染 */
 	LinkedList files;
+	/** 文件暂存区域，用于存放已扫描到的文件 */
 	FileStage stage;
+	/** 文件扫描器线程 */
 	LCUI_Thread scanner_thread;
+	/**< 文件扫描器是否在运行 */
 	LCUI_BOOL scanner_running;
+	/**< 定时器，用于定时处理暂存区域内的文件，将他们渲染到视图中 */
 	int scanner_timer;
 
+	/**< 时间分割器列表 */
 	LinkedList separators;
+	/**< 文件浏览器数据 */
 	FileBrowserRec browser;
 } view;
 
@@ -325,6 +332,7 @@ static void HomeView_InitScanner(void)
 	view.stage = FileStage_Create();
 	view.scanner_running = FALSE;
 	view.scanner_timer = 0;
+	LinkedList_Init(&view.files);
 }
 
 static void HomeView_StopScanner(void)
@@ -337,7 +345,6 @@ static void HomeView_StopScanner(void)
 		LCUITimer_Free(view.scanner_timer);
 		view.scanner_timer = 0;
 	}
-	FileStage_Commit(view.stage);
 	FileStage_GetFiles(view.stage, &view.files);
 	LinkedList_Clear(&view.files, OnDeleteDBFile);
 }

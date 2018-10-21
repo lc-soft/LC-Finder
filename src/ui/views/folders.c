@@ -39,36 +39,27 @@
 #include <string.h>
 #include "ui.h"
 #include "finder.h"
-#include "file_storage.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
+#include "file_storage.h"
+#include "file_stage.h"
 #include "thumbview.h"
 #include "textview_i18n.h"
 #include "browser.h"
 #include "i18n.h"
 
-#define KEY_SORT_HEADER "sort.header"
-#define KEY_TITLE "folders.title"
-#define THUMB_CACHE_SIZE (20 * 1024 * 1024)
-
-/** 视图同步功能的相关数据 */
-typedef struct ViewSyncRec_ {
-	LCUI_Thread tid;
-	LCUI_BOOL is_running;
-	LCUI_Mutex mutex;
-	LCUI_Cond ready;
-	int prev_item_type;
-} ViewSyncRec, *ViewSync;
+#define KEY_SORT_HEADER		"sort.header"
+#define KEY_TITLE		"folders.title"
+#define THUMB_CACHE_SIZE	(20 * 1024 * 1024)
 
 /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
-	size_t files_count;
+	int timer;
+	FileStage stage;
 	LCUI_Thread tid;
-	LCUI_Cond cond;
 	LCUI_Cond cond_scan;
-	LCUI_Mutex mutex;
 	LCUI_Mutex mutex_scan;
 	LCUI_BOOL is_running;
 	LCUI_BOOL is_async_scaning;
@@ -94,7 +85,7 @@ static struct FoldersViewData {
 	LCUI_Widget selected_sort;
 	LCUI_BOOL show_private_folders;
 	LCUI_BOOL folders_changed;
-	ViewSyncRec viewsync;
+	int prev_item_type;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
 	DB_QueryTermsRec terms;
@@ -155,8 +146,7 @@ static void OnDeleteFileEntry(void *arg)
 	if (entry->is_dir) {
 		free(entry->path);
 	} else {
-		free(entry->file->path);
-		free(entry->file);
+		DBFile_Release(entry->file);
 	}
 	free(entry);
 }
@@ -167,7 +157,7 @@ static void FileScanner_OnGetDirs(FileStatus *status, FileStream stream,
 	char *dirpath;
 	size_t len, dirpath_len;
 	FileScanner scanner = data;
-	FileEntry file_entry;
+	FileEntry entry;
 
 	LCUIMutex_Lock(&scanner->mutex_scan);
 	if (!status || !stream) {
@@ -192,18 +182,15 @@ static void FileScanner_OnGetDirs(FileStatus *status, FileStream stream,
 			continue;
 		}
 		buf[len - 1] = 0;
-		file_entry = NEW(FileEntryRec, 1);
-		file_entry->is_dir = TRUE;
-		file_entry->file = NULL;
+		entry = NEW(FileEntryRec, 1);
+		entry->is_dir = TRUE;
+		entry->file = NULL;
 		len = len + dirpath_len;
-		file_entry->path = malloc(sizeof(char) * len);
-		pathjoin(file_entry->path, dirpath, buf + 1);
-		LCUIMutex_Lock(&scanner->mutex);
-		LinkedList_Append(&scanner->files, file_entry);
-		scanner->files_count += 1;
-		LCUICond_Signal(&scanner->cond);
-		LCUIMutex_Unlock(&scanner->mutex);
+		entry->path = malloc(sizeof(char) * len);
+		pathjoin(entry->path, dirpath, buf + 1);
+		FileStage_AddFile(scanner->stage, entry);
 	}
+	FileStage_Commit(scanner->stage);
 	scanner->is_async_scaning = FALSE;
 	LCUICond_Signal(&scanner->cond_scan);
 	LCUIMutex_Unlock(&scanner->mutex_scan);
@@ -221,26 +208,24 @@ static void FileScanner_ScanDirs(FileScanner scanner)
 	LCUIMutex_Unlock(&scanner->mutex_scan);
 }
 
-static void FileScanner_ScanFiles(FileScanner scanner)
+static size_t FileScanner_ScanFiles(FileScanner scanner)
 {
 	DB_File file;
 	DB_Query query;
 	FileEntry entry;
-	int i, count;
-	view.terms.limit = 50;
+	size_t i, count, total;
+
+	view.terms.limit = 512;
 	view.terms.offset = 0;
 	view.terms.dirpath = EncodeUTF8(scanner->dirpath);
+
 	query = DB_NewQuery(&view.terms);
-	count = DBQuery_GetTotalFiles(query);
-	while (scanner->is_running && count > 0) {
-		DB_DeleteQuery(query);
+	total = DBQuery_GetTotalFiles(query);
+	DB_DeleteQuery(query);
+
+	for (count = 0; scanner->is_running;) {
 		query = DB_NewQuery(&view.terms);
-		if (count < view.terms.limit) {
-			i = count;
-		} else {
-			i = view.terms.limit;
-		}
-		for (; scanner->is_running && i > 0; --i) {
+		for (i = 0; scanner->is_running; ++count, ++i) {
 			file = DBQuery_FetchFile(query);
 			if (!file) {
 				break;
@@ -250,23 +235,24 @@ static void FileScanner_ScanFiles(FileScanner scanner)
 			entry->file = file;
 			entry->path = file->path;
 			DEBUG_MSG("file: %s\n", file->path);
-			LCUIMutex_Lock(&scanner->mutex);
-			LinkedList_Append(&scanner->files, entry);
-			scanner->files_count += 1;
-			LCUICond_Signal(&scanner->cond);
-			LCUIMutex_Unlock(&scanner->mutex);
+			FileStage_AddFile(scanner->stage, entry);
 		}
-		count -= view.terms.limit;
 		view.terms.offset += view.terms.limit;
+		FileStage_Commit(scanner->stage);
+		DB_DeleteQuery(query);
+		if (i < view.terms.limit) {
+			break;
+		}
 	}
+	FileStage_Commit(scanner->stage);
 	free(view.terms.dirpath);
+	return count;
 }
 
 static int FileScanner_LoadSourceDirs(FileScanner scanner)
 {
-	int i, n;
+	size_t i, n;
 	DB_Dir *dirs;
-	LCUIMutex_Lock(&scanner->mutex);
 	n = LCFinder_GetSourceDirList(&dirs);
 	for (i = 0; i < n; ++i) {
 		FileEntry entry = NEW(FileEntryRec, 1);
@@ -275,27 +261,75 @@ static int FileScanner_LoadSourceDirs(FileScanner scanner)
 		strcpy(path, dirs[i]->path);
 		entry->path = path;
 		entry->is_dir = TRUE;
-		LinkedList_Append(&scanner->files, entry);
-		scanner->files_count += 1;
+		FileStage_AddFile(scanner->stage, entry);
 	}
-	LCUICond_Signal(&scanner->cond);
-	LCUIMutex_Unlock(&scanner->mutex);
+	FileStage_Commit(scanner->stage);
 	free(dirs);
 	return n;
+}
+
+static void OnItemClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	FileEntry entry = e->data;
+	DEBUG_MSG("open file: %s\n", path);
+	if (entry->is_dir) {
+		OpenFolder(entry->path);
+	}
+}
+
+static void FoldersView_AppendFile(FileEntry entry)
+{
+	LCUI_Widget item, separator;
+
+	if (view.prev_item_type != -1 &&
+	    view.prev_item_type != entry->is_dir) {
+		separator = LCUIWidget_New(NULL);
+		Widget_AddClass(separator, "divider");
+		FileBrowser_Append(&view.browser, separator);
+	}
+	view.prev_item_type = entry->is_dir;
+	if (entry->is_dir) {
+		item = FileBrowser_AppendFolder(&view.browser,
+						entry->path,
+						view.dir == NULL);
+		Widget_BindEvent(item, "click", OnItemClick, entry, NULL);
+	} else {
+		FileBrowser_AppendPicture(&view.browser,
+					  entry->file);
+	}
+}
+
+static void FoldersView_AppendFiles(void *unused)
+{
+	LinkedList files;
+	LinkedListNode *node;
+	FileScanner scanner = &view.scanner;
+
+	view.prev_item_type = -1;
+	LinkedList_Init(&files);
+	FileStage_GetFiles(scanner->stage, &files);
+	for (LinkedList_Each(node, &files)) {
+		FoldersView_AppendFile(node->data);
+	}
+	LinkedList_Concat(&scanner->files, &files);
+	if (!scanner->is_running) {
+		scanner->timer = 0;
+		return;
+	}
+	scanner->timer = LCUI_SetTimeout(200, FoldersView_AppendFiles, NULL);
 }
 
 /** 初始化文件扫描 */
 static void FileScanner_Init(FileScanner scanner)
 {
-	LCUICond_Init(&scanner->cond);
-	LCUICond_Init(&scanner->cond_scan);
-	LCUIMutex_Init(&scanner->mutex);
-	LCUIMutex_Init(&scanner->mutex_scan);
-	LinkedList_Init(&scanner->files);
-	scanner->files_count = 0;
+	scanner->timer = 0;
+	scanner->stage = FileStage_Create();
 	scanner->is_async_scaning = FALSE;
 	scanner->is_running = FALSE;
 	scanner->dirpath = NULL;
+	LCUICond_Init(&scanner->cond_scan);
+	LCUIMutex_Init(&scanner->mutex_scan);
+	LinkedList_Init(&scanner->files);
 }
 
 /** 重置文件扫描 */
@@ -305,34 +339,34 @@ static void FileScanner_Reset(FileScanner scanner)
 		scanner->is_running = FALSE;
 		LCUIThread_Join(scanner->tid, NULL);
 	}
-	LCUIMutex_Lock(&scanner->mutex);
+	if (scanner->timer) {
+		LCUITimer_Free(scanner->timer);
+		scanner->timer = 0;
+	}
+	FileStage_GetFiles(scanner->stage, &scanner->files);
 	LinkedList_Clear(&scanner->files, OnDeleteFileEntry);
-	scanner->files_count = 0;
-	LCUICond_Signal(&scanner->cond);
-	LCUIMutex_Unlock(&scanner->mutex);
 }
 
 static void FileScanner_Destroy(FileScanner scanner)
 {
 	FileScanner_Reset(scanner);
-	LCUICond_Destroy(&scanner->cond);
+	FileStage_Destroy(scanner->stage);
 	LCUICond_Destroy(&scanner->cond_scan);
-	LCUIMutex_Destroy(&scanner->mutex);
 	LCUIMutex_Destroy(&scanner->mutex_scan);
 }
 
 static void FileScanner_Thread(void *arg)
 {
+	size_t count;
 	FileScanner scanner = arg;
-	scanner->is_running = TRUE;
 	if (scanner->dirpath) {
 		FileScanner_ScanDirs(scanner);
-		FileScanner_ScanFiles(scanner);
+		count = FileScanner_ScanFiles(scanner);
 	} else {
-		FileScanner_LoadSourceDirs(scanner);
+		count = FileScanner_LoadSourceDirs(scanner);
 	}
-	_DEBUG_MSG("scan files: %d\n", scanner->files_count);
-	if (scanner->files_count > 0) {
+	_DEBUG_MSG("scan files: %lu\n", scanner->files.length);
+	if (count > 0) {
 		Widget_AddClass(view.tip_empty, "hide");
 		Widget_Hide(view.tip_empty);
 	} else {
@@ -346,6 +380,7 @@ static void FileScanner_Thread(void *arg)
 /** 开始扫描 */
 static void FileScanner_Start(FileScanner scanner, char *path)
 {
+	FileScanner_Reset(scanner);
 	if (scanner->dirpath) {
 		free(scanner->dirpath);
 	}
@@ -354,83 +389,9 @@ static void FileScanner_Start(FileScanner scanner, char *path)
 	} else {
 		scanner->dirpath = NULL;
 	}
+	scanner->is_running = TRUE;
 	LCUIThread_Create(&scanner->tid, FileScanner_Thread, scanner);
-}
-
-static void OnItemClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	FileEntry entry = e->data;
-	DEBUG_MSG("open file: %s\n", path);
-	if (entry->is_dir) {
-		OpenFolder(entry->path);
-	}
-}
-
-/** 在缩略图列表准备完毕的时候 */
-static void OnThumbViewReady(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	LCUICond_Signal(&view.viewsync.ready);
-}
-
-/** 视图同步线程 */
-static void ViewSync_Thread(void *arg)
-{
-	ViewSync vs;
-	LCUI_Widget item;
-	FileEntry entry;
-	FileScanner scanner;
-	LinkedListNode *node;
-	vs = &view.viewsync;
-	scanner = &view.scanner;
-	LCUIMutex_Lock(&vs->mutex);
-	/* 等待缩略图列表部件准备完毕 */
-	while (view.items->state < LCUI_WSTATE_READY) {
-		LCUICond_TimedWait(&vs->ready, &vs->mutex, 100);
-	}
-	LCUIMutex_Unlock(&vs->mutex);
-	vs->prev_item_type = -1;
-	vs->is_running = TRUE;
-	while (vs->is_running) {
-		LCUIMutex_Lock(&scanner->mutex);
-		if (scanner->files.length == 0) {
-			LCUICond_Wait(&scanner->cond, &scanner->mutex);
-			if (!vs->is_running) {
-				LCUIMutex_Unlock(&scanner->mutex);
-				break;
-			}
-		}
-		LCUIMutex_Lock(&vs->mutex);
-		node = LinkedList_GetNode(&scanner->files, 0);
-		if (!node) {
-			LCUIMutex_Unlock(&vs->mutex);
-			LCUIMutex_Unlock(&scanner->mutex);
-			continue;
-		}
-		entry = node->data;
-		LinkedList_Unlink(&scanner->files, node);
-		LCUIMutex_Unlock(&scanner->mutex);
-		if (vs->prev_item_type != -1 &&
-		    vs->prev_item_type != entry->is_dir) {
-			LCUI_Widget separator = LCUIWidget_New(NULL);
-			Widget_AddClass(separator, "divider");
-			FileBrowser_Append(&view.browser, separator);
-		}
-		vs->prev_item_type = entry->is_dir;
-		if (entry->is_dir) {
-			item = FileBrowser_AppendFolder(&view.browser,
-							entry->path,
-							view.dir == NULL);
-			Widget_BindEvent(item, "click", OnItemClick, entry,
-					 NULL);
-		} else {
-			FileBrowser_AppendPicture(&view.browser,
-						  entry->file);
-			free(node->data);
-		}
-		LinkedListNode_Delete(node);
-		LCUIMutex_Unlock(&vs->mutex);
-	}
-	LCUIThread_Exit(NULL);
+	scanner->timer = LCUI_SetTimeout(200, FoldersView_AppendFiles, NULL);
 }
 
 static void OpenFolder(const char *dirpath)
@@ -469,13 +430,11 @@ static void OpenFolder(const char *dirpath)
 		view.dirpath = NULL;
 	}
 	FileScanner_Reset(&view.scanner);
-	LCUIMutex_Lock(&view.viewsync.mutex);
 	view.dir = dir;
 	view.dirpath = path;
-	view.viewsync.prev_item_type = -1;
+	view.prev_item_type = -1;
 	FileBrowser_Empty(&view.browser);
 	FileScanner_Start(&view.scanner, path);
-	LCUIMutex_Unlock(&view.viewsync.mutex);
 	DEBUG_MSG("done\n");
 }
 
@@ -567,15 +526,24 @@ static void InitFolderFilesSort(void)
 	UpdateQueryTerms();
 }
 
-void UI_InitFoldersView(void)
+static void FoldersView_InitBase(void)
+{
+	SelectWidget(view.items, ID_VIEW_FILE_LIST);
+	SelectWidget(view.view, ID_VIEW_FOLDERS);
+	SelectWidget(view.info, ID_VIEW_FOLDER_INFO);
+	SelectWidget(view.info_name, ID_VIEW_FOLDER_INFO_NAME);
+	SelectWidget(view.info_path, ID_VIEW_FOLDER_INFO_PATH);
+	SelectWidget(view.tip_empty, ID_TIP_FOLDERS_EMPTY);
+	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
+	LCFinder_BindEvent(EVENT_DIR_ADD, OnAddDir, NULL);
+	LCFinder_BindEvent(EVENT_DIR_DEL, OnFolderChange, NULL);
+}
+
+static void FoldersView_InitBrowser(void)
 {
 	LCUI_Widget title;
 	LCUI_Widget btn[5], btn_return;
 
-	FileScanner_Init(&view.scanner);
-	LCUICond_Init(&view.viewsync.ready);
-	LCUIMutex_Init(&view.viewsync.mutex);
-	SelectWidget(view.items, ID_VIEW_FILE_LIST);
 	SelectWidget(title, ID_TXT_FOLDERS_SELECTION_STATS);
 	SelectWidget(btn[0], ID_BTN_SYNC_FOLDER_FILES);
 	SelectWidget(btn[1], ID_BTN_SELECT_FOLDER_FILES);
@@ -583,11 +551,9 @@ void UI_InitFoldersView(void)
 	SelectWidget(btn[3], ID_BTN_TAG_FOLDER_FILES);
 	SelectWidget(btn[4], ID_BTN_DELETE_FOLDER_FILES);
 	SelectWidget(btn_return, ID_BTN_RETURN_ROOT_FOLDER);
-	SelectWidget(view.view, ID_VIEW_FOLDERS);
-	SelectWidget(view.info, ID_VIEW_FOLDER_INFO);
-	SelectWidget(view.info_name, ID_VIEW_FOLDER_INFO_NAME);
-	SelectWidget(view.info_path, ID_VIEW_FOLDER_INFO_PATH);
-	SelectWidget(view.tip_empty, ID_TIP_FOLDERS_EMPTY);
+	BindEvent(btn[0], "click", OnBtnSyncClick);
+	BindEvent(btn_return, "click", OnBtnReturnClick);
+
 	view.browser.btn_tag = btn[3];
 	view.browser.btn_select = btn[1];
 	view.browser.btn_cancel = btn[2];
@@ -595,16 +561,16 @@ void UI_InitFoldersView(void)
 	view.browser.txt_selection_stats = title;
 	view.browser.view = view.view;
 	view.browser.items = view.items;
-	BindEvent(btn[0], "click", OnBtnSyncClick);
-	BindEvent(btn_return, "click", OnBtnReturnClick);
-	BindEvent(view.items, "ready", OnThumbViewReady);
-	BindEvent(view.view, "show.view", OnViewShow);
 	ThumbView_SetCache(view.items, finder.thumb_cache);
 	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
-	LCUIThread_Create(&view.viewsync.tid, ViewSync_Thread, NULL);
-	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
-	LCFinder_BindEvent(EVENT_DIR_ADD, OnAddDir, NULL);
-	LCFinder_BindEvent(EVENT_DIR_DEL, OnFolderChange, NULL);
+}
+
+void UI_InitFoldersView(void)
+{
+	FoldersView_InitBase();
+	FoldersView_InitBrowser();
+	FileScanner_Init(&view.scanner);
+	BindEvent(view.view, "show.view", OnViewShow);
 	FileBrowser_Create(&view.browser);
 	view.is_activated = TRUE;
 	InitFolderFilesSort();
@@ -616,9 +582,6 @@ void UI_FreeFoldersView(void)
 	if (!view.is_activated) {
 		return;
 	}
-	view.viewsync.is_running = FALSE;
 	FileScanner_Reset(&view.scanner);
-	LCUIThread_Join(view.viewsync.tid, NULL);
 	FileScanner_Destroy(&view.scanner);
-	LCUIMutex_Unlock(&view.viewsync.mutex);
 }

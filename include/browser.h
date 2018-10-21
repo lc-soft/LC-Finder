@@ -75,7 +75,7 @@ void FileBrowser_SetButtonsDisabled( FileBrowser browser, LCUI_BOOL disabled );
 
 void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget );
 
-LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file );
+LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, const DB_File file );
 
 LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 				      LCUI_BOOL show_path );
