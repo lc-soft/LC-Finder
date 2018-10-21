@@ -40,12 +40,13 @@
 #include <string.h>
 #include "ui.h"
 #include "finder.h"
-#include "file_storage.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/button.h>
+#include "file_storage.h"
+#include "file_stage.h"
 #include "thumbview.h"
 #include "progressbar.h"
 #include "timeseparator.h"
@@ -59,27 +60,11 @@
 #define HideProgressBar() \
 	LCUITimer_Set(1000, (FuncPtr)Widget_Hide, view.progressbar, FALSE)
 
-/** 文件扫描功能的相关数据 */
-typedef struct FileScannerRec_ {
-	LCUI_Thread tid;
-	LCUI_Cond cond;
-	LCUI_Mutex mutex;
-	LCUI_BOOL is_running;
-	LinkedList files;
-	size_t count, total;
-} FileScannerRec, *FileScanner;
-
-/** 视图同步功能的相关数据 */
-typedef struct ViewSyncRec_ {
-	LCUI_Thread tid;
-	LCUI_BOOL is_running;
-	LCUI_Mutex mutex;
-	LCUI_Cond ready;
-} ViewSyncRec, *ViewSync;
-
 /** 主页集锦视图的相关数据 */
 static struct HomeCollectionView {
 	LCUI_BOOL is_activated;
+	LCUI_BOOL show_private_files;
+
 	LCUI_Widget view;
 	LCUI_Widget items;
 	LCUI_Widget time_ranges;
@@ -87,9 +72,13 @@ static struct HomeCollectionView {
 	LCUI_Widget info_path;
 	LCUI_Widget tip_empty;
 	LCUI_Widget progressbar;
-	LCUI_BOOL show_private_files;
-	ViewSyncRec viewsync;
-	FileScannerRec scanner;
+
+	LinkedList files;
+	FileStage stage;
+	LCUI_Thread scanner_thread;
+	LCUI_BOOL scanner_running;
+	int scanner_timer;
+
 	LinkedList separators;
 	FileBrowserRec browser;
 } view;
@@ -171,114 +160,6 @@ static void OnAfterDeleted(LCUI_Widget first)
 	}
 }
 
-/** 扫描全部文件 */
-static int FileScanner_ScanAll(FileScanner scanner)
-{
-	DB_File file;
-	DB_Query query;
-	int i, total, count;
-	DB_QueryTermsRec terms = { 0 };
-
-	terms.limit = 100;
-	terms.modify_time = DESC;
-	if (terms.dirs) {
-		free(terms.dirs);
-		terms.dirs = NULL;
-		terms.n_dirs = 0;
-	}
-	terms.n_dirs = LCFinder_GetSourceDirList(&terms.dirs);
-	if (terms.n_dirs == finder.n_dirs) {
-		free(terms.dirs);
-		terms.dirs = NULL;
-		terms.n_dirs = 0;
-	}
-	query = DB_NewQuery(&terms);
-	count = total = DBQuery_GetTotalFiles(query);
-	scanner->total = total;
-	scanner->count = 0;
-	DB_DeleteQuery(query);
-
-	ProgressBar_SetValue(view.progressbar, 0);
-	ProgressBar_SetMaxValue(view.progressbar, count);
-	Widget_Show(view.progressbar);
-	_DEBUG_MSG("total: %d\n", count);
-	while (scanner->is_running && count > 0) {
-		query = DB_NewQuery(&terms);
-		i = count < terms.limit ? count : terms.limit;
-		for (; scanner->is_running && i > 0; --i) {
-			file = DBQuery_FetchFile(query);
-			if (!file) {
-				break;
-			}
-			LCUIMutex_Lock(&scanner->mutex);
-			LinkedList_Append(&scanner->files, file);
-			LCUICond_Signal(&scanner->cond);
-			LCUIMutex_Unlock(&scanner->mutex);
-			scanner->count += 1;
-		}
-		count -= terms.limit;
-		terms.offset += terms.limit;
-		DB_DeleteQuery(query);
-	}
-	if (terms.dirs) {
-		free(terms.dirs);
-		terms.dirs = NULL;
-	}
-	return total;
-}
-
-/** 初始化文件扫描 */
-static void FileScanner_Init(FileScanner scanner)
-{
-	LCUICond_Init(&scanner->cond);
-	LCUIMutex_Init(&scanner->mutex);
-	LinkedList_Init(&scanner->files);
-}
-
-/** 重置文件扫描 */
-static void FileScanner_Reset(FileScanner scanner)
-{
-	if (scanner->is_running) {
-		scanner->is_running = FALSE;
-		LCUIThread_Join(scanner->tid, NULL);
-	}
-	LCUIMutex_Lock(&scanner->mutex);
-	LinkedList_Clear(&scanner->files, OnDeleteDBFile);
-	LCUICond_Signal(&scanner->cond);
-	LCUIMutex_Unlock(&scanner->mutex);
-}
-
-/** 文件扫描线程 */
-static void FileScanner_Thread(void *arg)
-{
-	int count;
-	view.scanner.is_running = TRUE;
-	count = FileScanner_ScanAll(&view.scanner);
-	if (count > 0) {
-		Widget_AddClass(view.tip_empty, "hide");
-		Widget_Hide(view.tip_empty);
-	} else {
-		Widget_RemoveClass(view.tip_empty, "hide");
-		Widget_Show(view.tip_empty);
-	}
-	view.scanner.is_running = FALSE;
-	_DEBUG_MSG("total files: %d\n", count);
-	LCUIThread_Exit(NULL);
-}
-
-/** 开始扫描 */
-static void FileScanner_Start(FileScanner scanner)
-{
-	LCUIThread_Create(&scanner->tid, FileScanner_Thread, NULL);
-}
-
-static void FileScanner_Destroy(FileScanner scanner)
-{
-	FileScanner_Reset(scanner);
-	LCUICond_Destroy(&scanner->cond);
-	LCUIMutex_Destroy(&scanner->mutex);
-}
-
 static void OnTimeRangeClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LCUI_Widget title = e->data;
@@ -350,96 +231,179 @@ static void HomeView_AppendFile(DB_File file)
 	FileBrowser_AppendPicture(&view.browser, file);
 }
 
-/** 视图同步线程 */
-static void HomeView_SyncThread(void *arg)
+static void HomeView_AppendFiles(void *unused)
 {
-	ViewSync vs;
-	FileScanner scanner;
+	LinkedList files;
 	LinkedListNode *node;
-	vs = &view.viewsync;
-	scanner = &view.scanner;
-	LCUIMutex_Lock(&vs->mutex);
-	/* 等待缩略图列表部件准备完毕 */
-	while (view.items->state < LCUI_WSTATE_READY) {
-		LCUICond_TimedWait(&vs->ready, &vs->mutex, 100);
+	FileStage stage = view.stage;
+
+	if (view.browser.files.length >= view.files.length) {
+		HideProgressBar();
 	}
-	LCUIMutex_Unlock(&vs->mutex);
-	vs->is_running = TRUE;
-	while (vs->is_running) {
-		LCUIMutex_Lock(&scanner->mutex);
-		if (view.browser.files.length >= view.scanner.total) {
-			HideProgressBar();
-		}
-		if (scanner->files.length == 0) {
-			LCUICond_Wait(&scanner->cond, &scanner->mutex);
-			if (!vs->is_running) {
-				LCUIMutex_Unlock(&scanner->mutex);
+	LinkedList_Init(&files);
+	FileStage_GetFiles(view.stage, &files);
+	for (LinkedList_Each(node, &files)) {
+		HomeView_AppendFile(node->data);
+	}
+	LinkedList_Concat(&view.files, &files);
+	ProgressBar_SetValue(view.progressbar, view.browser.files.length);
+	if (!view.scanner_running) {
+		view.scanner_timer = 0;
+		return;
+	}
+	view.scanner_timer = LCUI_SetTimeout(200, HomeView_AppendFiles, NULL);
+}
+
+static size_t HomeView_ScanFiles(void)
+{
+	DB_File file;
+	DB_Query query;
+	size_t i, total, count;
+	DB_QueryTermsRec terms = { 0 };
+	FileStage stage = view.stage;
+
+	terms.limit = 512;
+	terms.modify_time = DESC;
+	if (terms.dirs) {
+		free(terms.dirs);
+		terms.dirs = NULL;
+		terms.n_dirs = 0;
+	}
+	terms.n_dirs = LCFinder_GetSourceDirList(&terms.dirs);
+	if (terms.n_dirs == finder.n_dirs) {
+		free(terms.dirs);
+		terms.dirs = NULL;
+		terms.n_dirs = 0;
+	}
+	query = DB_NewQuery(&terms);
+	total = DBQuery_GetTotalFiles(query);
+	DB_DeleteQuery(query);
+
+	ProgressBar_SetValue(view.progressbar, 0);
+	ProgressBar_SetMaxValue(view.progressbar, (int)total);
+	Widget_Show(view.progressbar);
+	_DEBUG_MSG("total: %lu\n", total);
+	for (count = 0; view.scanner_running && count < total;) {
+		query = DB_NewQuery(&terms);
+		for (i = 0; view.scanner_running; ++count, ++i) {
+			file = DBQuery_FetchFile(query);
+			if (!file) {
 				break;
 			}
+			FileStage_AddFile(view.stage, file);
 		}
-		LCUIMutex_Lock(&vs->mutex);
-		node = LinkedList_GetNode(&scanner->files, 0);
-		if (!node) {
-			LCUIMutex_Unlock(&vs->mutex);
-			LCUIMutex_Unlock(&scanner->mutex);
-			continue;
+		terms.offset += terms.limit;
+		FileStage_Commit(view.stage);
+		DB_DeleteQuery(query);
+		if (i < terms.limit) {
+			break;
 		}
-		LinkedList_Unlink(&scanner->files, node);
-		LCUIMutex_Unlock(&scanner->mutex);
-		HomeView_AppendFile(node->data);
-		LCUIMutex_Unlock(&vs->mutex);
-		LinkedListNode_Delete(node);
-		ProgressBar_SetValue(view.progressbar,
-				     view.browser.files.length);
 	}
-	LCUIMutex_Unlock(&scanner->mutex);
+	if (terms.dirs) {
+		free(terms.dirs);
+		terms.dirs = NULL;
+	}
+	FileStage_Commit(view.stage);
+	return total;
+}
+
+static void HomeView_ScannerThread(void *unused)
+{
+	if (HomeView_ScanFiles() > 0) {
+		Widget_AddClass(view.tip_empty, "hide");
+		Widget_Hide(view.tip_empty);
+	} else {
+		Widget_RemoveClass(view.tip_empty, "hide");
+		Widget_Show(view.tip_empty);
+	}
+	view.scanner_running = FALSE;
+	LCUIThread_Exit(NULL);
+}
+
+static void HomeView_InitScanner(void)
+{
+	view.stage = FileStage_Create();
+	view.scanner_running = FALSE;
+	view.scanner_timer = 0;
+}
+
+static void HomeView_StopScanner(void)
+{
+	if (view.scanner_running) {
+		view.scanner_running = FALSE;
+		LCUIThread_Join(view.scanner_thread, NULL);
+	}
+	if (view.scanner_timer) {
+		LCUITimer_Free(view.scanner_timer);
+		view.scanner_timer = 0;
+	}
+	FileStage_Commit(view.stage);
+	FileStage_GetFiles(view.stage, &view.files);
+	LinkedList_Clear(&view.files, OnDeleteDBFile);
+}
+
+static void HomeView_StartScanner(void)
+{
+	HomeView_StopScanner();
+	view.scanner_running = TRUE;
+	view.scanner_timer = LCUI_SetTimeout(200, HomeView_AppendFiles, NULL);
+	LCUIThread_Create(&view.scanner_thread, HomeView_ScannerThread, NULL);
+}
+
+static void HomeView_FreeScanner(void)
+{
+	HomeView_StopScanner();
+	FileStage_Destroy(view.stage);
 }
 
 /** 载入集锦中的文件列表 */
-static void LoadCollectionFiles(void)
+static void HomeView_LoadFiles(void)
 {
-	FileScanner_Reset(&view.scanner);
-	LCUIMutex_Lock(&view.viewsync.mutex);
 	LinkedList_Clear(&view.separators, NULL);
 	Widget_Empty(view.time_ranges);
 	FileBrowser_Empty(&view.browser);
-	FileScanner_Start(&view.scanner);
-	LCUIMutex_Unlock(&view.viewsync.mutex);
+	HomeView_StartScanner();
 }
 
-static void OnViewShow(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+static void HomeView_OnShow(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	if (view.show_private_files == finder.open_private_space) {
 		return;
 	}
 	view.show_private_files = finder.open_private_space;
-	LoadCollectionFiles();
+	HomeView_LoadFiles();
 }
 
 static void OnSyncDone(void *privdata, void *arg)
 {
-	LoadCollectionFiles();
+	HomeView_LoadFiles();
 }
 
-void UI_InitHomeView(void)
+static void HomeView_InitBase(void)
 {
-	LCUI_Thread tid;
-	LCUI_Widget btn[5], title;
-
-	FileScanner_Init(&view.scanner);
-	LCUICond_Init(&view.viewsync.ready);
-	LCUIMutex_Init(&view.viewsync.mutex);
-	SelectWidget(title, ID_TXT_HOME_SELECTION_STATS);
 	SelectWidget(view.view, ID_VIEW_HOME);
 	SelectWidget(view.items, ID_VIEW_HOME_COLLECTIONS);
 	SelectWidget(view.time_ranges, ID_VIEW_TIME_RANGE_LIST);
 	SelectWidget(view.progressbar, ID_VIEW_HOME_PROGRESS);
 	SelectWidget(view.tip_empty, ID_TIP_HOME_EMPTY);
+	BindEvent(view.view, "show.view", HomeView_OnShow);
+	Widget_Hide(view.time_ranges->parent->parent);
+	Widget_AddClass(view.time_ranges, "time-range-list");
+	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
+}
+
+static void HomeView_InitBrowser(void)
+{
+	LCUI_Widget btn[5], title;
+
+	SelectWidget(title, ID_TXT_HOME_SELECTION_STATS);
 	SelectWidget(btn[0], ID_BTN_SYNC_HOME_FILES);
 	SelectWidget(btn[1], ID_BTN_SELECT_HOME_FILES);
 	SelectWidget(btn[2], ID_BTN_CANCEL_HOME_SELECT);
 	SelectWidget(btn[3], ID_BTN_TAG_HOME_FILES);
 	SelectWidget(btn[4], ID_BTN_DELETE_HOME_FILES);
+	BindEvent(btn[0], "click", OnBtnSyncClick);
+
 	view.browser.btn_select = btn[1];
 	view.browser.btn_cancel = btn[2];
 	view.browser.btn_delete = btn[4];
@@ -448,18 +412,18 @@ void UI_InitHomeView(void)
 	view.browser.view = view.view;
 	view.browser.items = view.items;
 	view.browser.after_deleted = OnAfterDeleted;
-	FileBrowser_Create(&view.browser);
 	ThumbView_SetCache(view.items, finder.thumb_cache);
 	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
-	Widget_Hide(view.time_ranges->parent->parent);
-	Widget_AddClass(view.time_ranges, "time-range-list");
-	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
-	LCUIThread_Create(&tid, HomeView_SyncThread, NULL);
-	BindEvent(view.view, "show.view", OnViewShow);
-	BindEvent(btn[0], "click", OnBtnSyncClick);
-	view.viewsync.tid = tid;
+	FileBrowser_Create(&view.browser);
+}
+
+void UI_InitHomeView(void)
+{
+	HomeView_InitBase();
+	HomeView_InitBrowser();
+	HomeView_InitScanner();
+	HomeView_LoadFiles();
 	view.is_activated = TRUE;
-	LoadCollectionFiles();
 }
 
 void UI_FreeHomeView(void)
@@ -467,10 +431,5 @@ void UI_FreeHomeView(void)
 	if (!view.is_activated) {
 		return;
 	}
-	view.viewsync.is_running = FALSE;
-	FileScanner_Reset(&view.scanner);
-	LCUIThread_Join(view.viewsync.tid, NULL);
-	FileScanner_Destroy(&view.scanner);
-	LCUICond_Destroy(&view.viewsync.ready);
-	LCUIMutex_Destroy(&view.viewsync.mutex);
+	HomeView_FreeScanner();
 }

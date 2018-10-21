@@ -26,6 +26,7 @@
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\common.c" />
     <ClCompile Include="src\lib\file_cache.c" />
+    <ClCompile Include="src\lib\file_stage.c" />
     <ClCompile Include="src\lib\file_search.c" />
     <ClCompile Include="src\lib\file_service.c" />
     <ClCompile Include="src\lib\file_storage.c" />
@@ -75,6 +76,7 @@
     <ClInclude Include="include\dialog.h" />
     <ClInclude Include="include\dropdown.h" />
     <ClInclude Include="include\file_cache.h" />
+    <ClInclude Include="include\file_stage.h" />
     <ClInclude Include="include\file_search.h" />
     <ClInclude Include="include\file_service.h" />
     <ClInclude Include="include\file_storage.h" />
@@ -107,7 +109,6 @@
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LC_Finder</RootNamespace>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -197,13 +198,14 @@
       <CompileAs>CompileAsC</CompileAs>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <PrecompiledHeaderFile>brridge.hpp</PrecompiledHeaderFile>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\;$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -220,7 +222,7 @@ copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionD
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>
@@ -264,7 +266,7 @@ copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionD
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).exe" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>

@@ -141,6 +141,9 @@
     <ClCompile Include="src\lib\kvdb_unqlite.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\lib\file_stage.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -232,6 +235,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\kvdb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\file_stage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
