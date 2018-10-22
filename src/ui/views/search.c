@@ -38,7 +38,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "finder.h"
-#include "file_storage.h"
 #include "ui.h"
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
@@ -46,6 +45,8 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
 #include <LCUI/font/charset.h>
+#include "file_storage.h"
+#include "file_stage.h"
 #include "thumbview.h"
 #include "textview_i18n.h"
 #include "tagthumb.h"
@@ -69,22 +70,16 @@ typedef enum ViewState {
 /** 文件扫描功能的相关数据 */
 typedef struct FileScannerRec_ {
 	LCUI_Thread tid;
-	LCUI_Cond cond;
-	LCUI_Mutex mutex;
 	LCUI_BOOL is_running;
-	LinkedList files;
-	DB_Tag *tags;
-	int n_tags;
-	int count, total;
-} FileScannerRec, *FileScanner;
 
-/** 视图同步功能的相关数据 */
-typedef struct ViewSyncRec_ {
-	LCUI_Thread tid;
-	LCUI_BOOL is_running;
-	LCUI_Mutex mutex;
-	LCUI_Cond ready;
-} ViewSyncRec, *ViewSync;
+	int timer;
+
+	FileStage stage;
+	LinkedList files;
+
+	DB_Tag *tags;
+	size_t n_tags;
+} FileScannerRec, *FileScanner;
 
 static struct SearchView {
 	LCUI_Widget input;
@@ -109,7 +104,6 @@ static struct SearchView {
 	int sort_mode;
 	ViewState state;
 	LinkedList tags;
-	ViewSyncRec viewsync;
 	FileScannerRec scanner;
 	FileBrowserRec browser;
 	DB_QueryTermsRec terms;
@@ -136,16 +130,35 @@ static void OnDeleteDBFile(void *arg)
 	DBFile_Release(arg);
 }
 
-/** 扫描全部文件 */
+static void SearchView_AppendFiles(void *arg)
+{
+	LinkedList files;
+	LinkedListNode *node;
+	FileScanner scanner = &view.scanner;
+
+	LinkedList_Init(&files);
+	FileStage_GetFiles(scanner->stage, &files);
+	for (LinkedList_Each(node, &files)) {
+		FileBrowser_AppendPicture(&view.browser, node->data);
+	}
+	LinkedList_Concat(&scanner->files, &files);
+	if (!scanner->is_running) {
+		scanner->timer = 0;
+		return;
+	}
+	scanner->timer = LCUI_SetTimeout(200, SearchView_AppendFiles, NULL);
+}
+
 static int FileScanner_ScanAll(FileScanner scanner)
 {
 	DB_File file;
 	DB_Query query;
 	DB_QueryTerms terms;
-	int i, total, count;
+	size_t i, total, count;
+
 	terms = &view.terms;
 	terms->offset = 0;
-	terms->limit = 100;
+	terms->limit = 512;
 	terms->tags = scanner->tags;
 	terms->n_tags = scanner->n_tags;
 	if (terms->dirs) {
@@ -158,62 +171,58 @@ static int FileScanner_ScanAll(FileScanner scanner)
 			terms->dirs = NULL;
 		}
 	}
+
 	query = DB_NewQuery(&view.terms);
-	count = total = DBQuery_GetTotalFiles(query);
-	scanner->total = total, scanner->count = 0;
-	while (scanner->is_running && count > 0) {
-		DB_DeleteQuery(query);
+	total = DBQuery_GetTotalFiles(query);
+	DB_DeleteQuery(query);
+
+	for (count = 0; scanner->is_running && count < total;) {
 		query = DB_NewQuery(&view.terms);
-		if (count < terms->limit) {
-			i = count;
-		} else {
-			i = terms->limit;
-		}
-		for (; scanner->is_running && i > 0; --i) {
+		for (i = 0; scanner->is_running; ++count, ++i) {
 			file = DBQuery_FetchFile(query);
 			if (!file) {
 				break;
 			}
-			LCUIMutex_Lock(&scanner->mutex);
-			LinkedList_Append(&scanner->files, file);
-			LCUICond_Signal(&scanner->cond);
-			LCUIMutex_Unlock(&scanner->mutex);
-			scanner->count += 1;
+			FileStage_AddFile(scanner->stage, file);
+			++count;
 		}
-		count -= terms->limit;
 		terms->offset += terms->limit;
+		FileStage_Commit(scanner->stage);
+		DB_DeleteQuery(query);
+		if (i < terms->limit) {
+			break;
+		}
 	}
 	if (terms->dirs) {
 		free(terms->dirs);
 		terms->dirs = NULL;
 	}
+	FileStage_Commit(scanner->stage);
 	return total;
 }
 
-/** 初始化文件扫描 */
 static void FileScanner_Init(FileScanner scanner)
 {
-	LCUICond_Init(&scanner->cond);
-	LCUIMutex_Init(&scanner->mutex);
-	LinkedList_Init(&scanner->files);
 	scanner->tags = NULL;
 	scanner->n_tags = 0;
+	scanner->stage = FileStage_Create();
+	LinkedList_Init(&scanner->files);
 }
 
-/** 重置文件扫描 */
 static void FileScanner_Reset(FileScanner scanner)
 {
 	if (scanner->is_running) {
 		scanner->is_running = FALSE;
 		LCUIThread_Join(scanner->tid, NULL);
 	}
-	LCUIMutex_Lock(&scanner->mutex);
+	if (scanner->timer) {
+		LCUITimer_Free(scanner->timer);
+		scanner->timer = 0;
+	}
+	FileStage_GetFiles(scanner->stage, &scanner->files);
 	LinkedList_Clear(&scanner->files, OnDeleteDBFile);
-	LCUICond_Signal(&scanner->cond);
-	LCUIMutex_Unlock(&scanner->mutex);
 }
 
-/** 文件扫描线程 */
 static void FileScanner_Thread(void *arg)
 {
 	int count;
@@ -230,57 +239,17 @@ static void FileScanner_Thread(void *arg)
 	LCUIThread_Exit(NULL);
 }
 
-/** 开始扫描 */
 static void FileScanner_Start(FileScanner scanner)
 {
+	FileScanner_Reset(scanner);
+	scanner->timer = LCUI_SetTimeout(200, SearchView_AppendFiles, NULL);
 	LCUIThread_Create(&scanner->tid, FileScanner_Thread, NULL);
 }
 
 static void FileScanner_Destroy(FileScanner scanner)
 {
 	FileScanner_Reset(scanner);
-	LCUICond_Destroy(&scanner->cond);
-	LCUIMutex_Destroy(&scanner->mutex);
-}
-
-/** 视图同步线程 */
-static void ViewSyncThread(void *arg)
-{
-	ViewSync vs;
-	FileScanner scanner;
-	vs = &view.viewsync;
-	scanner = &view.scanner;
-	LCUIMutex_Lock(&vs->mutex);
-	/* 等待缩略图列表部件准备完毕 */
-	while (view.view_files->state < LCUI_WSTATE_READY) {
-		LCUICond_TimedWait(&vs->ready, &vs->mutex, 100);
-	}
-	LCUIMutex_Unlock(&vs->mutex);
-	vs->is_running = TRUE;
-	while (vs->is_running) {
-		LinkedListNode *node;
-		LCUIMutex_Lock(&scanner->mutex);
-		if (scanner->files.length == 0) {
-			LCUICond_Wait(&scanner->cond, &scanner->mutex);
-			if (!vs->is_running) {
-				LCUIMutex_Unlock(&scanner->mutex);
-				break;
-			}
-		}
-		LCUIMutex_Lock(&vs->mutex);
-		node = LinkedList_GetNode(&scanner->files, 0);
-		if (!node) {
-			LCUIMutex_Unlock(&vs->mutex);
-			LCUIMutex_Unlock(&scanner->mutex);
-			continue;
-		}
-		LinkedList_Unlink(&scanner->files, node);
-		LCUIMutex_Unlock(&scanner->mutex);
-		FileBrowser_AppendPicture(&view.browser, node->data);
-		LCUIMutex_Unlock(&vs->mutex);
-		LinkedListNode_Delete(node);
-	}
-	LCUIThread_Exit(NULL);
+	FileStage_Destroy(scanner->stage);
 }
 
 static void UpdateLayoutContext(void)
@@ -297,10 +266,8 @@ static void UpdateLayoutContext(void)
 static void UpdateSearchResults(void)
 {
 	FileScanner_Reset(&view.scanner);
-	LCUIMutex_Lock(&view.viewsync.mutex);
 	FileBrowser_Empty(&view.browser);
 	FileScanner_Start(&view.scanner);
-	LCUIMutex_Unlock(&view.viewsync.mutex);
 }
 
 static void UpdateSearchInputPlaceholder(void)
@@ -506,17 +473,20 @@ static void OnSidebarBtnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void StartSearchFiles(LinkedList *tags)
 {
+	size_t i;
 	size_t n_tags = 0;
+
+	DB_Tag tag;
 	DB_Tag *newtags;
 	LinkedListNode *node;
+
 	newtags = malloc(sizeof(DB_Tag) * (tags->length + 1));
 	if (!newtags) {
 		return;
 	}
 	for(LinkedList_Each(node, tags)) {
-		size_t i;
 		for (i = 0; i < finder.n_tags; ++i) {
-			DB_Tag tag = finder.tags[i];
+			tag = finder.tags[i];
 			if (strcmp(tag->name, node->data) == 0) {
 				newtags[n_tags++] = tag;
 			}
@@ -529,15 +499,13 @@ static void StartSearchFiles(LinkedList *tags)
 	}
 	view.scanner.tags = newtags;
 	view.scanner.n_tags = n_tags;
-	LCUIMutex_Lock(&view.viewsync.mutex);
 	FileBrowser_Empty(&view.browser);
 	FileScanner_Start(&view.scanner);
-	LCUIMutex_Unlock(&view.viewsync.mutex);
 }
 
 static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	int i, j, len;
+	size_t i, j, len;
 	LinkedList tags;
 	LCUI_BOOL saving;
 	wchar_t wstr[512] = { 0 };
@@ -547,7 +515,7 @@ static void OnBtnSearchClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (len == 0) {
 		return;
 	}
-	len = LCUI_EncodeString(NULL, wstr, 0, ENCODING_UTF8) + 1;
+	len = LCUI_EncodeUTF8String(NULL, wstr, 0) + 1;
 	str = malloc(sizeof(char) * len);
 	if (!str) {
 		return;
@@ -800,9 +768,11 @@ static void InitFileScanner(void)
 {
 	LinkedList_Init(&view.tags);
 	FileScanner_Init(&view.scanner);
-	LCUICond_Init(&view.viewsync.ready);
-	LCUIMutex_Init(&view.viewsync.mutex);
-	LCUIThread_Create(&view.viewsync.tid, ViewSyncThread, NULL);
+}
+
+static void OnKeyDown(LCUI_SysEvent e, void *arg)
+{
+	//UI_UpdateSearchView();
 }
 
 void UI_InitSearchView(void)
@@ -812,14 +782,11 @@ void UI_InitSearchView(void)
 	InitFileScanner();
 	InitSearchInput();
 	InitSearchResultsSort();
+	LCUI_BindEvent(LCUI_KEYDOWN, OnKeyDown, NULL, NULL);
 }
 
 void UI_ExitSearchView(void)
 {
-	view.viewsync.is_running = FALSE;
 	FileScanner_Reset(&view.scanner);
-	LCUIThread_Join(view.viewsync.tid, NULL);
 	FileScanner_Destroy(&view.scanner);
-	LCUICond_Destroy(&view.viewsync.ready);
-	LCUIMutex_Destroy(&view.viewsync.mutex);
 }

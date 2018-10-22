@@ -45,12 +45,12 @@ typedef void* FileStage;
 
 FileStage FileStage_Create(void);
 
-void FileStage_Destroy(FileStage scanner);
+void FileStage_Destroy(FileStage stage);
 
-void FileStage_AddFile(FileStage scanner, void *file);
+void FileStage_AddFile(FileStage stage, void *file);
 
-void FileStage_Commit(FileStage scanner);
+void FileStage_Commit(FileStage stage);
 
-size_t FileStage_GetFiles(FileStage scanner, LinkedList *files);
+size_t FileStage_GetFiles(FileStage stage, LinkedList *files);
 
 #endif

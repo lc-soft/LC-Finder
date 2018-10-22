@@ -948,7 +948,7 @@ int FileClient_Connect(FileClient client)
 		LCUICond_TimedWait(&conn->cond, &conn->mutex, 1000);
 	}
 	LCUIMutex_Unlock(&conn->mutex);
-	if (timeout >= 5) {
+	if (timeout >= 5 && conn->closed) {
 		Connection_Destroy(conn);
 		LOG("[file client] timeout\n");
 		return -1;

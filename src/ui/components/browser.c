@@ -155,7 +155,6 @@ static FileIterator FileIterator_Create( FileBrowser browser, FileIndex fidx )
 static void FileIndex_Delete( FileIndex fidx )
 {
 	if(  fidx->is_file ) {
-		DBFile_Release( fidx->file );
 		fidx->file = NULL;
 	} else {
 		free( fidx->path );
@@ -531,7 +530,7 @@ void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget )
 	ThumbView_Append( browser->items, widget );
 }
 
-LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file )
+LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, const DB_File file )
 {
 	DataPack data;
 	LCUI_Widget item;
@@ -561,8 +560,8 @@ LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 	size_t len;
 	DataPack data;
 	LCUI_Widget item;
-	len = strlen( path ) + 1;
 
+	len = strlen( path ) + 1;
 	data = NEW( DataPackRec, 1 );
 	data->fidx = NEW( FileIndexRec, 1 );
 	item = ThumbView_AppendFolder( browser->items, path, show_path );
@@ -578,6 +577,7 @@ LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 	Widget_BindEvent( item, "click", OnItemClick, data, NULL );
 	return item;
 }
+
 #undef BindEvent
 #define BindEvent(BTN, EVENT, CALLBACK) \
 	Widget_BindEvent( browser->btn_##BTN, EVENT, CALLBACK, browser, NULL )
