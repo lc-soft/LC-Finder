@@ -72,10 +72,11 @@
     <Filter Include="src\ui\components">
       <UniqueIdentifier>{525a538f-800b-4e3c-93a3-a52e74bd29fa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="资产\fonts">
+      <UniqueIdentifier>{2223c69d-fd6f-4131-bb30-46572b7d8957}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="App.cpp" />
-    <ClCompile Include="UWPMain.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="..\src\finder.c">
       <Filter>src</Filter>
@@ -101,8 +102,6 @@
     <ClCompile Include="..\src\lib\thumb_db.c">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="LCUIInput.cpp" />
-    <ClCompile Include="LCUIRenderer.cpp" />
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="FileService.cpp" />
     <ClCompile Include="..\src\lib\file_storage.c">
@@ -147,9 +146,6 @@
     <ClCompile Include="..\src\ui\components\dialog_prompt.c">
       <Filter>src\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ui\components\dropdown.c">
-      <Filter>src\ui\components</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ui\components\filesync.c">
       <Filter>src\ui\components</Filter>
     </ClCompile>
@@ -177,14 +173,32 @@
     <ClCompile Include="..\src\ui\components\timeseparator.c">
       <Filter>src\ui\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ui\components\tagthumb.c">
+      <Filter>src\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\views\picture_scanner.c">
+      <Filter>src\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\animation.c">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\file_stage.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\i18n_detetime.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\kvdb_leveldb.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\kvdb_unqlite.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="App.h" />
-    <ClInclude Include="UWPMain.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="LCUIInput.h" />
-    <ClInclude Include="LCUIRenderer.h" />
     <ClInclude Include="..\include\bridge.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -248,6 +262,12 @@
     <ClInclude Include="..\include\file_storage.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ui\views\picture.h">
+      <Filter>src\ui\views</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\build.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -270,25 +290,22 @@
     <None Include="Locales\zh-tw.yaml">
       <Filter>Locales</Filter>
     </None>
-    <None Include="Assets\stylesheets\themes\green.css">
+    <None Include="LCUI.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="Assets\stylesheets\lcui.css">
       <Filter>资产\stylesheets</Filter>
     </None>
     <None Include="Assets\stylesheets\main.css">
       <Filter>资产\stylesheets</Filter>
     </None>
-    <None Include="Assets\stylesheets\iconfont.css">
+    <None Include="Assets\stylesheets\themes\green.css">
       <Filter>资产\stylesheets</Filter>
     </None>
-    <None Include="sqlite3.dll">
+    <None Include="LCUIApp.dll">
       <Filter>dll</Filter>
     </None>
-    <None Include="unqlite.dll">
-      <Filter>dll</Filter>
-    </None>
-    <None Include="yaml.dll">
-      <Filter>dll</Filter>
-    </None>
-    <None Include="LCUI.dll">
+    <None Include="LevelDB.dll">
       <Filter>dll</Filter>
     </None>
   </ItemGroup>
@@ -296,18 +313,33 @@
     <ResourceCompile Include="UWP.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="Assets\iconfont.ttf">
-      <Filter>资产</Filter>
+    <Font Include="Assets\fonts\iconfont.ttf">
+      <Filter>资产\fonts</Filter>
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="Assets\views\picture_info.xml">
+    <Xml Include="Assets\views\folders.xml">
+      <Filter>资产\views</Filter>
+    </Xml>
+    <Xml Include="Assets\views\home.xml">
+      <Filter>资产\views</Filter>
+    </Xml>
+    <Xml Include="Assets\views\main.xml">
       <Filter>资产\views</Filter>
     </Xml>
     <Xml Include="Assets\views\picture.xml">
       <Filter>资产\views</Filter>
     </Xml>
-    <Xml Include="Assets\views\main.xml">
+    <Xml Include="Assets\views\picture_info.xml">
+      <Filter>资产\views</Filter>
+    </Xml>
+    <Xml Include="Assets\views\search.xml">
+      <Filter>资产\views</Filter>
+    </Xml>
+    <Xml Include="Assets\views\settings.xml">
+      <Filter>资产\views</Filter>
+    </Xml>
+    <Xml Include="Assets\views\sidebar.xml">
       <Filter>资产\views</Filter>
     </Xml>
   </ItemGroup>
