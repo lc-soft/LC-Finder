@@ -986,7 +986,7 @@ static void ThumbView_ExecUpdateLayout(void *arg)
 		return;
 	}
 	n = ThumbView_OnUpdateLayout(arg, 4096);
-	if (n < 100) {
+	if (n < 4096) {
 		UpdateThumbRow(view);
 		view->layout.timer = 0;
 		view->layout.current = NULL;
@@ -1050,10 +1050,8 @@ void ThumbView_UpdateLayout(LCUI_Widget w, LCUI_Widget start_child)
 	}
 	Animation_Play(&view->animation);
 	view->layout.start = start_child;
-	/* 如果已经有延迟布局任务，则重置该任务的定时 */
-	if (view->layout.is_delaying && view->layout.timer) {
-		LCUITimer_Reset(view->layout.timer, LAYOUT_DELAY);
-		return;
+	if (view->layout.timer) {
+		LCUITimer_Free(view->layout.timer);
 	}
 	view->layout.is_delaying = TRUE;
 	view->layout.timer = LCUI_SetTimeout(LAYOUT_DELAY, OnDelayLayout, w);
