@@ -42,6 +42,7 @@
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
 #include <LCUI/gui/builder.h>
+#include <LCUI/gui/metrics.h>
 #include "ui.h"
 #include "thumbview.h"
 #include "starrating.h"
@@ -162,6 +163,7 @@ int UI_Init( int argc, char **argv )
 	LCUIWidget_AddTagThumb();
 	LCUIWidget_AddSwitch();
 	LCUIWidget_AddStarRating();
+	LCUIMetrics_SetScale((float)(finder.config.scaling / 100.0));
 	LCUIDisplay_SetMode( LCUI_DMODE_WINDOWED );
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUIDisplay_SetSize( 1280, 740 );

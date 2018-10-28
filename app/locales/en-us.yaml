@@ -135,9 +135,12 @@ strings:
             title: Cache
             stats: 'Current thumbnail cache has used %s space.'
             description: >-
-                This application will automatically cache the thumbnail
+                We will automatically cache the thumbnail
                 when you browse the list of pictures, so that you can quickly
                 render thumbnail images in the next time you browse the pictures.
+        scaling:
+            title: Scaling
+            description: Set a suitable scaling to improve the visual experience of the user interface
         private_space:
             title: Private space
             sources_title: Private sources
@@ -175,4 +178,4 @@ strings:
                 title: Remove this source folder ?
                 content: This source folder's files related infomation will be remove.
         about: About
-        copyright: © 2017 LC's Software，All rights reserved.
+        copyright: © 2018 LC's Software，All rights reserved.

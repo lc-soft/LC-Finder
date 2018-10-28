@@ -936,13 +936,15 @@ int LCFinder_LoadConfig(void)
 	FinderConfigRec config;
 	wchar_t wpath[PATH_LEN];
 	LCUI_BOOL has_error = TRUE;
-	I18n_GetDefaultLanguage(finder.config.language, 32);
-	strcpy(finder.config.head, LCFINDER_CONFIG_HEAD);
+
+	finder.config.scaling = 100;
 	finder.config.encrypted_password[0] = 0;
 	finder.config.version.type = LCFINDER_VER_TYPE;
 	finder.config.version.major = LCFINDER_VER_MAJOR;
 	finder.config.version.minor = LCFINDER_VER_MINOR;
 	finder.config.version.revision = LCFINDER_VER_REVISION;
+	I18n_GetDefaultLanguage(finder.config.language, 32);
+	strcpy(finder.config.head, LCFINDER_CONFIG_HEAD);
 	wpathjoin(wpath, finder.data_dir, CONFIG_FILE);
 	path = EncodeANSI(wpath);
 	file = fopen(path, "rb");
@@ -953,6 +955,9 @@ int LCFinder_LoadConfig(void)
 			finder.config = config;
 		}
 		fclose(file);
+	}
+	if (finder.config.scaling < 100 || finder.config.scaling > 200) {
+		finder.config.scaling = 100;
 	}
 	if (has_error) {
 		LCFinder_SaveConfig();

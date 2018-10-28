@@ -44,6 +44,23 @@
               </w>
             </w>
             <w class="setting-group">
+              <w type="textview-i18n" class="text title" data-i18n-key="settings.scaling.title">缩放</w>
+              <w class="text text-line" type="textview-i18n" data-i18n-key="settings.scaling.description">设置一个合适的缩放比例，以改善界面的视觉体验</w>
+              <w class="text-line">
+                <w id="btn-change-scaling" class="btn" data-toggle="dropdown" data-target="dropdown-scaling">
+                  <w id="txt-current-scaling" type="textview" class="default text">100%</w>
+                  <w type="textview" class="icon icon icon-chevron-down"></w>
+                </w>
+                <w id="dropdown-scaling" type="dropdown-menu">
+                  <w type="textview" class="dropdown-item" value="100">100%</w>
+                  <w type="textview" class="dropdown-item" value="125">125%</w>
+                  <w type="textview" class="dropdown-item" value="150">150%</w>
+                  <w type="textview" class="dropdown-item" value="175">175%</w>
+                  <w type="textview" class="dropdown-item" value="200">200%</w>
+                </w>
+              </w>
+            </w>
+            <w class="setting-group">
               <w type="textview-i18n" class="text title" data-i18n-key="settings.private_space.title">私人空间</w>
               <w class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space.description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</w>
               <w class="text-line">

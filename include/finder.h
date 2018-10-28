@@ -79,6 +79,7 @@ typedef struct FinderConfigRec_ {
 	char language[32];		/**< 当前语言 */
 	int files_sort;			/**< 文件的排序方式 */
 	char encrypted_password[48];	/**< 加密后的密码 */
+	int scaling;			/**< 界面的缩放比例，100 ~ 200 */
 } FinderConfigRec, *FinderConfig;
 
 typedef struct FinderLicenseRec_ {

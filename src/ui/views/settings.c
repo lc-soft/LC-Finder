@@ -304,6 +304,43 @@ static void OnSelectLanguage(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	}
 }
 
+static void UI_RefreshScalingText(void)
+{
+	char str[32];
+	LCUI_Widget txt;
+
+	SelectWidget(txt, ID_TXT_CURRENT_SCALING);
+	sprintf(str, "%d%%", finder.config.scaling);
+	TextView_SetText(txt, str);
+}
+
+static void OnChangeScaling(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	int scaling;
+	const char *value = Widget_GetAttribute(e->target, "value");
+
+	if (!value || sscanf(value, "%d", &scaling) < 1) {
+		return;
+	}
+	if (scaling >= 100 && scaling <= 200) {
+		finder.config.scaling = scaling;
+		LCUIMetrics_SetScale((float)(scaling / 100.0));
+		LCUIWidget_RefreshStyle();
+		LCFinder_SaveConfig();
+		UI_RefreshScalingText();
+	}
+}
+
+static void UI_InitScaling(void)
+{
+	LCUI_Widget menu;
+
+	SelectWidget(menu, ID_DROPDOWN_SCALING);
+	BindEvent(menu, "change.dropdown", OnChangeScaling);
+	UI_RefreshScalingText();
+
+}
+
 static void UI_InitLanguages(void)
 {
 	int i, n;
@@ -461,6 +498,7 @@ void UI_InitSettingsView(void)
 	LCFinder_BindEvent(EVENT_DIR_DEL, OnDelDir, NULL);
 	LCFinder_BindEvent(EVENT_LICENSE_CHG, OnLicenseChange, NULL);
 	UI_InitPrivateSpaceView();
+	UI_InitScaling();
 	UI_InitLanguages();
 	UI_InitDirList();
 	CheckLicense();

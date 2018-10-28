@@ -55,6 +55,7 @@
 #define ID_TXT_FILE_SYNC_TITLE		"file-sync-tip-title"
 #define ID_TXT_THUMB_DB_SIZE		"text-thumb-db-size"
 #define ID_TXT_CURRENT_LANGUAGE		"txt-current-language"
+#define ID_TXT_CURRENT_SCALING		"txt-current-scaling"
 #define ID_TXT_TRIAL_LICENSE		"txt-trial-license"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
@@ -131,6 +132,7 @@
 #define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
 #define ID_DROPDOWN_FOLDER_FILES_SORT	"dropdown-folder-files-sort"
 #define ID_DROPDOWN_SEARCH_FILES_SORT	"dropdown-search-files-sort"
+#define ID_DROPDOWN_SCALING		"dropdown-scaling"
 #define ID_SWITCH_PRIVATE_SPACE		"switch-private-space-open"
 
 /* xml 文件位置 */
