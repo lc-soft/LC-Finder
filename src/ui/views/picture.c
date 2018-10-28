@@ -977,7 +977,7 @@ static void DeletePicture(Picture pic)
 		free(pic->file);
 		pic->file = NULL;
 	}
-	Widget_Destroy(pic->view);
+	pic->view = NULL;
 	free(pic);
 }
 

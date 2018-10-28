@@ -40,6 +40,8 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/css_parser.h>
 #include "textview_i18n.h"
+#include "thumbview.h"
+#include "tagthumb.h"
 #include "i18n.h"
 
 #define KEY_ITEM "tagthumb.item"
@@ -104,6 +106,12 @@ static void TagThumb_OnInit(LCUI_Widget w)
 	self.proto->proto->init(w);
 }
 
+static void TagThumb_OnDestroy(LCUI_Widget w)
+{
+	ThumbViewItem_SetFunction(w, NULL, NULL, NULL);
+	w->proto->proto->destroy(w);
+}
+
 void TagThumb_SetName(LCUI_Widget w, const char *name)
 {
 	TagThumb that = Widget_GetData(w, self.proto);
@@ -139,4 +147,5 @@ void LCUIWidget_AddTagThumb(void)
 {
 	self.proto = LCUIWidget_NewPrototype("tagthumb", "thumbviewitem");
 	self.proto->init = TagThumb_OnInit;
+	self.proto->destroy = TagThumb_OnDestroy;
 }
