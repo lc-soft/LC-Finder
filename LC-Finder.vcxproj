@@ -202,8 +202,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\;$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;unqlite.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -212,8 +212,8 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy "$(SolutionDir)..\LCUI\bin\$(Configuration)\LCUI.*" "$(SolutionDir)vendor\lib\"
-copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionDir)vendor\lib\"</Command>
+      <Command>copy "$(SolutionDir)..\LCUI\bin\$(Configuration)\LCUI.*" "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)"
+copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)"</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -223,7 +223,7 @@ copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionD
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
-copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
+copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -246,8 +246,8 @@ copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\;$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;yaml.lib;sqlite3.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
@@ -256,8 +256,8 @@ copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy "$(SolutionDir)..\LCUI\bin\$(Configuration)\LCUI.*" "$(SolutionDir)vendor\lib\"
-copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionDir)vendor\lib\"</Command>
+      <Command>copy "$(SolutionDir)..\LCUI\bin\$(Configuration)\LCUI.*" "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)"
+copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)"</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -267,7 +267,7 @@ copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionD
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
-copy "$(SolutionDir)vendor\lib\*.dll" "$(SolutionDir)app"</Command>
+copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>

@@ -308,6 +308,15 @@
     <None Include="LevelDB.dll">
       <Filter>dll</Filter>
     </None>
+    <None Include="LCUIEx.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="sqlite3.dll">
+      <Filter>dll</Filter>
+    </None>
+    <None Include="yaml.dll">
+      <Filter>dll</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UWP.rc" />

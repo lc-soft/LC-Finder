@@ -114,12 +114,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\objs\</IntDir>
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>LCFinder</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(MSBuildProjectName)\objs\</IntDir>
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>LCFinder</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
@@ -152,9 +152,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
       <AdditionalDependencies>LCUI.lib; LCUIApp.lib; LCUIEx.lib; leveldb.lib; sqlite3.lib; yaml.lib; vccorlib.lib; d2d1.lib; d3d11.lib; dxgi.lib; windowscodecs.lib; dwrite.lib; %(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\uwp\$(PlatformTarget);%(AdditionalLibraryDirectories);$(VCInstallDir)\lib\store;$(VCInstallDir)\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(Configuration);%(AdditionalLibraryDirectories);$(VCInstallDir)\lib\store;$(VCInstallDir)\lib</AdditionalLibraryDirectories>
       <ShowProgress>
       </ShowProgress>
+      <IgnoreSpecificDefaultLibraries>MSVCRT</IgnoreSpecificDefaultLibraries>
     </Link>
     <ClCompile>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -170,19 +171,20 @@
       <Command>mkdir "$(ProjectDir)Assets\views"
 mkdir "$(ProjectDir)Assets\stylesheets"
 mkdir "$(ProjectDir)Assets\stylesheets\themes"
+mkdir "$(ProjectDir)Assets\fonts"
 copy "$(SolutionDir)app\locales\*.yaml" "$(ProjectDir)Locales\"
 copy "$(SolutionDir)app\assets\views\*.xml" "$(ProjectDir)Assets\views\"
 copy "$(SolutionDir)app\assets\stylesheets\*.css" "$(ProjectDir)Assets\stylesheets\"
 copy "$(SolutionDir)app\assets\stylesheets\themes\*.css" "$(ProjectDir)Assets\stylesheets\themes"
-copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
-copy "$(SolutionDir)vendor\lib\uwp\$(PlatformTarget)\*.dll" "$(ProjectDir)"
+copy "$(SolutionDir)app\assets\fonts\*.ttf" "$(ProjectDir)Assets\fonts"
+copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(configuration)\*.dll" "$(ProjectDir)"
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Link>
       <AdditionalDependencies>LCUI.lib; LCUIApp.lib; LCUIEx.lib; leveldb.lib; sqlite3.lib; yaml.lib; vccorlib.lib; d2d1.lib; d3d11.lib; dxgi.lib; windowscodecs.lib; dwrite.lib; %(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\uwp\$(PlatformTarget);%(AdditionalLibraryDirectories);$(VCInstallDir)\lib\store;$(VCInstallDir)\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(Configuration);%(AdditionalLibraryDirectories);$(VCInstallDir)\lib\store;$(VCInstallDir)\lib</AdditionalLibraryDirectories>
       <ShowProgress>
       </ShowProgress>
     </Link>
@@ -199,12 +201,13 @@ copy "$(SolutionDir)vendor\lib\uwp\$(PlatformTarget)\*.dll" "$(ProjectDir)"
       <Command>mkdir "$(ProjectDir)Assets\views"
 mkdir "$(ProjectDir)Assets\stylesheets"
 mkdir "$(ProjectDir)Assets\stylesheets\themes"
+mkdir "$(ProjectDir)Assets\fonts"
 copy "$(SolutionDir)app\locales\*.yaml" "$(ProjectDir)Locales\"
 copy "$(SolutionDir)app\assets\views\*.xml" "$(ProjectDir)Assets\views\"
 copy "$(SolutionDir)app\assets\stylesheets\*.css" "$(ProjectDir)Assets\stylesheets\"
 copy "$(SolutionDir)app\assets\stylesheets\themes\*.css" "$(ProjectDir)Assets\stylesheets\themes"
-copy "$(SolutionDir)app\assets\*.ttf" "$(ProjectDir)Assets\"
-copy "$(SolutionDir)vendor\lib\uwp\$(PlatformTarget)\*.dll" "$(ProjectDir)"
+copy "$(SolutionDir)app\assets\fonts\*.ttf" "$(ProjectDir)Assets\fonts"
+copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(configuration)\*.dll" "$(ProjectDir)"
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -749,6 +752,10 @@ copy "$(SolutionDir)vendor\lib\uwp\$(PlatformTarget)\*.dll" "$(ProjectDir)"
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
+    <None Include="LCUIEx.dll">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+    </None>
     <None Include="LevelDB.dll">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
@@ -765,8 +772,16 @@ copy "$(SolutionDir)vendor\lib\uwp\$(PlatformTarget)\*.dll" "$(ProjectDir)"
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
+    <None Include="sqlite3.dll">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+    </None>
     <None Include="UWP_StoreKey.pfx" />
     <None Include="UWP_TemporaryKey.pfx" />
+    <None Include="yaml.dll">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Package.StoreAssociation.xml" />
