@@ -79,7 +79,7 @@ typedef struct EventPackRec_ {
 
 typedef struct FileSyncDataPackRec_ {
 	FileSyncStatus status;
-	wchar_t *path;
+	wchar_t path[PATH_LEN];
 	size_t path_len;
 } FileSyncDataPackRec, *FileSyncDataPack;
 
@@ -424,7 +424,6 @@ finish:
 	    pack->status->scaned_files == pack->status->files) {
 		LCFinder_OnScanFinished(pack->status);
 	}
-	free(pack->path);
 	free(pack);
 }
 
@@ -434,7 +433,7 @@ static void LCFinder_ScanFile(FileSyncStatus s, const wchar_t *path)
 	FileSyncDataPack pack;
 
 	pack = NEW(FileSyncDataPackRec, 1);
-	pack->path = wcsdup2(path);
+	wcscpy(pack->path, path);
 	len = wcslen(pack->path);
 	if (path[len - 1] == PATH_SEP) {
 		pack->path[len - 1] = 0;
@@ -489,7 +488,6 @@ finish:
 	    pack->status->scaned_files == pack->status->files) {
 		LCFinder_OnScanFinished(pack->status);
 	}
-	free(pack->path);
 	free(pack);
 }
 
@@ -500,7 +498,6 @@ static void LCFinder_ScanDir(FileSyncStatus s, const wchar_t *path)
 
 	len = wcslen(path);
 	pack = NEW(FileSyncDataPackRec, 1);
-	pack->path = malloc(sizeof(wchar_t) * (len + 1));
 	wcsncpy(pack->path, path, len);
 	if (path[len - 1] == PATH_SEP) {
 		len -= 1;

@@ -944,7 +944,7 @@ int FileClient_Connect(FileClient client)
 	LCUIMutex_Unlock(&service.mutex);
 	LCUIMutex_Lock(&conn->mutex);
 	LOG("[file client] waitting file service accept connection...\n");
-	for (timeout = 0; conn->closed && timeout < 5; ++timeout) {
+	for (timeout = 0; conn->closed && timeout < 60; ++timeout) {
 		LCUICond_TimedWait(&conn->cond, &conn->mutex, 1000);
 	}
 	LCUIMutex_Unlock(&conn->mutex);

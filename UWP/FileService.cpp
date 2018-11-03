@@ -587,10 +587,10 @@ static void FileService_GetFiles(Connection conn,
 				if (!IsImageFile(name)) {
 					return;
 				}
-				size = LCUI_EncodeString(buf + 1, name,
-							 PATH_LEN - 2, ENCODING_UTF8);
-				buf[size++] = '\n';
-				buf[size] = 0;
+				size = LCUI_EncodeUTF8String(buf + 1, name,
+							     PATH_LEN - 2);
+				buf[++size] = '\n';
+				buf[++size] = 0;
 				Connection_Write(conn, buf, sizeof(char), size);
 			});
 			return 0;

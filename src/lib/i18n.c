@@ -356,7 +356,7 @@ Language I18n_SetLanguage(const char *lang_code)
 			break;
 		}
 		if (self.texts) {
-			Dict_Release(dict);
+			Dict_Release(self.texts);
 		}
 		self.texts = dict;
 		self.language = lang;
