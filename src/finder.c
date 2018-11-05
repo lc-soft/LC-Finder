@@ -211,7 +211,6 @@ void LCFinder_DeleteDir(DB_Dir dir)
 #endif
 	/* 删除数据库中的源文件夹记录 */
 	DB_DeleteDir(dir);
-	free(dir->path);
 	free(dir);
 }
 
