@@ -912,7 +912,9 @@ FileClient FileClient_Create(void)
 int FileClient_Connect(FileClient client)
 {
 	int timeout = 0;
+	LinkedListNode *node;
 	Connection conn;
+
 	LOG("[file client] connecting file service...\n");
 	LCUIMutex_Lock(&service.mutex);
 	while (!service.active) {
@@ -939,7 +941,7 @@ int FileClient_Connect(FileClient client)
 		return -2;
 	}
 	conn = Connection_Create();
-	LinkedList_Append(&service.requests, conn);
+	node = LinkedList_Append(&service.requests, conn);
 	LCUICond_Signal(&service.cond);
 	LCUIMutex_Unlock(&service.mutex);
 	LCUIMutex_Lock(&conn->mutex);
@@ -948,7 +950,8 @@ int FileClient_Connect(FileClient client)
 		LCUICond_TimedWait(&conn->cond, &conn->mutex, 1000);
 	}
 	LCUIMutex_Unlock(&conn->mutex);
-	if (timeout >= 5 && conn->closed) {
+	if (timeout >= 60 && conn->closed) {
+		LinkedList_Unlink(&service.requests, node);
 		Connection_Destroy(conn);
 		LOG("[file client] timeout\n");
 		return -1;
