@@ -37,6 +37,10 @@
 
 `setup.sh` 脚本会下载在构建 LCFinder 时所需的工具以及相关依赖项，只需要运行一次即可。
 
+如果是在 Windows 系统下，建议使用 [vcpkg](https://github.com/Microsoft/vcpkg) 安装依赖，命令如下：
+
+    .\vcpkg install libyaml sqlite3 leveldb
+
 ## 构建
 
 ### Windows
