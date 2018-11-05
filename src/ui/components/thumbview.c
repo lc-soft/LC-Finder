@@ -57,6 +57,7 @@
 #define LAYOUT_DELAY		1000
 #define ANIMATION_DELAY		750
 #define ANIMATION_DURATION	1000
+#define MAX_LAYOUT_TARGETS	25600
 #define THUMBVIEW_MIN_WIDTH	300
 #define FOLDER_MAX_WIDTH	388
 #define FOLDER_FIXED_HEIGHT	134
@@ -167,6 +168,11 @@ static struct ThumbViewModule {
 } self = { 0 };
 
 /* clang-format on */
+
+static int LCUI_NextFrame(void(*callback)(void*), void *arg)
+{
+	return LCUI_SetTimeout(LCUI_MAX_FRAME_MSEC, callback, arg);
+}
 
 static int ScrollLoading_OnUpdate(ScrollLoading ctx)
 {
@@ -815,6 +821,8 @@ static void UpdateThumbRow(ThumbView view)
 	}
 	/* 计算溢出的宽度 */
 	overflow_width = view->layout.x - view->layout.max_width;
+	_DEBUG_MSG("overflow_width: %g, x: %g, max_width: %g\n",
+		   overflow_width, view->layout.x, view->layout.max_width);
 	/**
 	 * 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
 	 * 的比例，分别缩减相应的宽度。
@@ -852,6 +860,7 @@ static void UpdateThumbRow(ThumbView view)
 		} else {
 			width = thumb_width - rest_width;
 		}
+		_DEBUG_MSG("[%d] %g\n", item->index, width);
 		SetStyle(item->custom_style, key_width, width, px);
 		Widget_UpdateStyle(item, FALSE);
 	}
@@ -977,48 +986,61 @@ static void ThumbView_OnAfterLayout(LCUI_Widget w, LCUI_WidgetEvent e,
 	Widget_UnbindEvent(w, "afterlayout", ThumbView_OnAfterLayout);
 }
 
+static void ThumbView_OnLayoutDone(void *arg)
+{
+	LCUI_Widget w = arg;
+	ThumbView view = Widget_GetData(w, self.main);
+
+	view->layout.timer = 0;
+	view->layout.current = NULL;
+	view->layout.is_running = FALSE;
+	Widget_UpdateLayout(w);
+	Widget_BindEvent(w, "afterlayout", ThumbView_OnAfterLayout,
+			 NULL, NULL);
+}
+
 /** 执行缩略图列表的布局任务 */
 static void ThumbView_ExecUpdateLayout(void *arg)
 {
 	int n;
-	ThumbView view = Widget_GetData(arg, self.main);
-	if (!view->layout.is_running) {
+	LCUI_Widget w = arg;
+	ThumbView view = Widget_GetData(w, self.main);
+	LayoutContext ctx = &view->layout;
+
+	if (!ctx->is_running) {
 		return;
 	}
-	n = ThumbView_OnUpdateLayout(arg, 4096);
-	if (n < 4096) {
+	n = ThumbView_OnUpdateLayout(w, MAX_LAYOUT_TARGETS);
+	if (n < MAX_LAYOUT_TARGETS) {
 		UpdateThumbRow(view);
-		view->layout.timer = 0;
-		view->layout.current = NULL;
-		view->layout.is_running = FALSE;
-		Widget_BindEvent(arg, "afterlayout", ThumbView_OnAfterLayout,
-				 NULL, NULL);
+		ctx->timer = LCUI_NextFrame(ThumbView_OnLayoutDone, arg);
 		return;
 	}
-	view->layout.timer = LCUI_SetTimeout(LCUI_MAX_FRAME_MSEC,
-					     ThumbView_ExecUpdateLayout, arg);
+	ctx->timer = LCUI_NextFrame(ThumbView_ExecUpdateLayout, arg);
 }
 
 /** 延迟执行缩略图列表的布局操作 */
-static void OnDelayLayout(void *arg)
+static void ThumbView_OnDelayLayout(void *arg)
 {
 	LCUI_Widget w = arg;
 	ThumbView view = Widget_GetData(w, self.main);
-	LCUIMutex_Lock(&view->layout.row_mutex);
-	view->layout.x = 0;
-	view->layout.count = 0;
-	view->layout.current = NULL;
-	view->layout.folder_count = 0;
-	view->layout.is_delaying = FALSE;
-	view->layout.is_running = TRUE;
+	LayoutContext ctx = &view->layout;
+
+	LCUIMutex_Lock(&ctx->row_mutex);
+	ctx->x = 0;
+	ctx->count = 0;
+	ctx->current = NULL;
+	ctx->folder_count = 0;
+	ctx->is_delaying = FALSE;
+	ctx->is_running = TRUE;
 	ThumbView_UpdateLayoutContext(w);
-	LinkedList_Clear(&view->layout.row, NULL);
-	LCUIMutex_Unlock(&view->layout.row_mutex);
+	LinkedList_Clear(&ctx->row, NULL);
+	LCUIMutex_Unlock(&ctx->row_mutex);
+
 	if (view->onlayout) {
 		view->onlayout(w);
 	}
-	view->layout.timer = LCUI_SetTimeout(LCUI_MAX_FRAME_MSEC, 
-					     ThumbView_ExecUpdateLayout, w);
+	ctx->timer = LCUI_NextFrame(ThumbView_ExecUpdateLayout, w);
 }
 
 static void ThumbView_OnAnimationFinished(Animation ani)
@@ -1045,16 +1067,18 @@ static void ThumbView_OnAnimationFrame(Animation ani)
 void ThumbView_UpdateLayout(LCUI_Widget w, LCUI_Widget start_child)
 {
 	ThumbView view = Widget_GetData(w, self.main);
+	LayoutContext ctx = &view->layout;
+
 	if (view->layout.is_running) {
 		return;
 	}
 	Animation_Play(&view->animation);
-	view->layout.start = start_child;
-	if (view->layout.timer) {
-		LCUITimer_Free(view->layout.timer);
+	ctx->start = start_child;
+	if (ctx->timer) {
+		LCUITimer_Free(ctx->timer);
 	}
-	view->layout.is_delaying = TRUE;
-	view->layout.timer = LCUI_SetTimeout(LAYOUT_DELAY, OnDelayLayout, w);
+	ctx->is_delaying = TRUE;
+	ctx->timer = LCUI_SetTimeout(LAYOUT_DELAY, ThumbView_OnDelayLayout, w);
 }
 
 /** 在缩略图列表视图的尺寸有变更时... */
