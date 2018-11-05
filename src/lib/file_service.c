@@ -638,8 +638,9 @@ static int FileService_GetFile(Connection conn, FileRequest *request,
 	Graph_Init(&chunk->thumb);
 	if ((params->width > 0 && img.width > (int)params->width) ||
 	    (params->height > 0 && img.height > (int)params->height)) {
-		Graph_Zoom(&img, &chunk->thumb, TRUE, params->width,
-			   params->height);
+		/* FIXME: 大图的缩小效果并不好，需要改进 */
+		Graph_ZoomBilinear(&img, &chunk->thumb, TRUE, params->width,
+				   params->height);
 		Graph_Free(&img);
 	} else {
 		chunk->thumb = img;
