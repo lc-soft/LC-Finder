@@ -1,25 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="通用">
-      <UniqueIdentifier>a32417aa-ea1c-46b4-ae1c-23f54f41567a</UniqueIdentifier>
-    </Filter>
     <Filter Include="资产">
       <UniqueIdentifier>41e048c2-1ce2-453d-a1f3-0d29863d44b1</UniqueIdentifier>
       <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png;ttf;xml;css;</Extensions>
     </Filter>
-    <ClInclude Include="Common\DirectXHelper.h">
-      <Filter>通用</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\StepTimer.h">
-      <Filter>通用</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\DeviceResources.h">
-      <Filter>通用</Filter>
-    </ClInclude>
-    <ClCompile Include="Common\DeviceResources.cpp">
-      <Filter>通用</Filter>
-    </ClCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>资产</Filter>
     </Image>
@@ -195,6 +180,9 @@
       <Filter>src\lib</Filter>
     </ClCompile>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="..\src\ui\components\link_i18n.c">
+      <Filter>src\ui\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -266,6 +254,9 @@
       <Filter>src\ui\views</Filter>
     </ClInclude>
     <ClInclude Include="..\include\build.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\link_i18n.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

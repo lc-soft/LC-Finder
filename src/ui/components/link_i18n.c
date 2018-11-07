@@ -1,8 +1,7 @@
 ﻿/* ***************************************************************************
- * bridge.h -- a bridge, provides a cross-platform implementation for some
- * interfaces.
+ * link_i18n.c -- link internationalization version
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -19,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * bridge.h -- 桥梁，为某些功能提供跨平台实现。
+ * link_i18n.c -- 链接部件的国际化版本
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -35,27 +34,30 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_SELECTFOLDER_H
-#define LCFINDER_SELECTFOLDER_H
+#include <LCUI_Build.h>
+#include <LCUI/LCUI.h>
+#include <LCUI/gui/widget.h>
 
-LCFINDER_BEGIN_HEADER
+static struct LCUI_Anchor {
+	LCUI_WidgetPrototype proto;
+} self;
 
-void LCFinder_InitLicense( void );
+static void LinkI18n_OnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	const char *uri = Widget_GetAttribute(w, "target");
+	if (uri) {
+		OpenUri(uri);
+	}
+}
 
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
+static void LinkI18n_OnInit(LCUI_Widget w)
+{
+	Widget_BindEvent(w, "click", LinkI18n_OnClick, NULL, NULL);
+	self.proto->proto->init(w);
+}
 
-void RemoveFolderAccessW( const wchar_t *token );
-
-int GetAppDataFolderW( wchar_t *buf, int max_len );
-
-int GetAppInstalledLocationW( wchar_t *buf, int max_len );
-
-void OpenFileManagerW( const wchar_t *filepath );
-
-int MoveFileToTrashW( const wchar_t *filepath );
-
-int MoveFileToTrash( const char *filepath );
-
-LCFINDER_END_HEADER
-
-#endif
+void LCUIWidget_AddLinkI18n(void)
+{
+	self.proto = LCUIWidget_NewPrototype("link-i18n", "textview-i18n");
+	self.proto->init = LinkI18n_OnInit;
+}

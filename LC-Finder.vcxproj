@@ -45,6 +45,7 @@
     <ClCompile Include="src\ui\components\dialog_progress.c" />
     <ClCompile Include="src\ui\components\dialog_prompt.c" />
     <ClCompile Include="src\ui\components\filesync.c" />
+    <ClCompile Include="src\ui\components\link_i18n.c" />
     <ClCompile Include="src\ui\components\progressbar.c" />
     <ClCompile Include="src\ui\components\sidebar.c" />
     <ClCompile Include="src\ui\components\splashscreen.c" />
@@ -84,6 +85,7 @@
     <ClInclude Include="include\i18n.h" />
     <ClInclude Include="include\i18n_datetime.h" />
     <ClInclude Include="include\kvdb.h" />
+    <ClInclude Include="include\link_i18n.h" />
     <ClInclude Include="include\progressbar.h" />
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\starrating.h" />
@@ -109,6 +111,7 @@
     <ProjectGuid>{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LC_Finder</RootNamespace>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

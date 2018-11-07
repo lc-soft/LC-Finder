@@ -264,6 +264,7 @@ copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(configuration)\*.dll" "$(
     <ClInclude Include="..\include\file_storage.h" />
     <ClInclude Include="..\include\finder.h" />
     <ClInclude Include="..\include\i18n.h" />
+    <ClInclude Include="..\include\link_i18n.h" />
     <ClInclude Include="..\include\progressbar.h" />
     <ClInclude Include="..\include\sha1.h" />
     <ClInclude Include="..\include\starrating.h" />
@@ -275,10 +276,7 @@ copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(configuration)\*.dll" "$(
     <ClInclude Include="..\include\timeseparator.h" />
     <ClInclude Include="..\include\ui.h" />
     <ClInclude Include="..\src\ui\views\picture.h" />
-    <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Common\DirectXHelper.h" />
-    <ClInclude Include="Common\StepTimer.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -512,6 +510,14 @@ copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(configuration)\*.dll" "$(
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="..\src\ui\components\link_i18n.c">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsWinRT>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsWinRT>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="..\src\ui\components\progressbar.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsWinRT>
@@ -709,10 +715,6 @@ copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-uwp\$(configuration)\*.dll" "$(
     </ClCompile>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="bridge.cpp" />
-    <ClCompile Include="Common\DeviceResources.cpp">
-      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsWinRT>
-      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsWinRT>
-    </ClCompile>
     <ClCompile Include="FileService.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>

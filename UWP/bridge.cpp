@@ -89,13 +89,6 @@ void RemoveFolderAccessW(const wchar_t *token)
 	FutureAccessList->Remove(str);
 }
 
-void OpenUriW(const wchar_t *uristr)
-{
-	auto str = ref new Platform::String(uristr);
-	auto uri = ref new Uri(str);
-	Launcher::LaunchUriAsync(uri);
-}
-
 void OpenFileManagerW(const wchar_t *filepath)
 {
 

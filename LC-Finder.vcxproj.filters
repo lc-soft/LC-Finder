@@ -144,6 +144,9 @@
     <ClCompile Include="src\lib\file_stage.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\components\link_i18n.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -238,6 +241,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\file_stage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\link_i18n.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

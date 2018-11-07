@@ -143,7 +143,8 @@ static void TextViewI18n_SetAttr(LCUI_Widget w, const char *name,
 	if (strcasecmp(name, "data-i18n-key") == 0) {
 		TextViewI18n_SetKey(w, value);
 	}
-	if (w->proto->proto->setattr) {
+	if (w->proto->proto->setattr &&
+	    w->proto->setattr != w->proto->proto->setattr) {
 		w->proto->proto->setattr(w, name, value);
 	}
 }

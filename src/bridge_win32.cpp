@@ -72,11 +72,6 @@ int GetAppInstalledLocationW(wchar_t *buf, int max_len)
 	return -1;
 }
 
-void OpenUriW(const wchar_t *uri)
-{
-	ShellExecuteW(NULL, L"open", uri, NULL, NULL, SW_SHOW);
-}
-
 void OpenFileManagerW(const wchar_t *filepath)
 {
 	wchar_t args[PATH_LEN + 16];

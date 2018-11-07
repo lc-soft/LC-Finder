@@ -267,30 +267,6 @@ static void OnBtnClearThumbDBClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	TextView_SetTextW(text, I18n_GetText(KEY_CLEAR));
 }
 
-/** 在“许可协议”按钮被点击时 */
-static void OnBtnLicenseClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	OpenUriW(L"http://www.gnu.org/licenses/gpl-2.0.html");
-}
-
-/** 在“官方网站”按钮被点击时 */
-static void OnBtnWebSiteClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	OpenUriW(L"https://lc-soft.io/");
-}
-
-/** 在“问题反馈”按钮被点击时 */
-static void OnBtnFeedbackClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	OpenUriW(L"https://github.com/lc-soft/LC-Finder/issues");
-}
-
-/** 在“源代码”按钮被点击时 */
-static void OnBtnSourceCodeClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	OpenUriW(L"https://github.com/lc-soft/LC-Finder");
-}
-
 static void OnSelectLanguage(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	const char *code = Widget_GetAttribute(e->target, "value");
@@ -482,14 +458,6 @@ void UI_InitSettingsView(void)
 	BindEvent(btn, "click", OnBtnSettingsClick);
 	SelectWidget(btn, ID_BTN_CLEAR_THUMB_DB);
 	BindEvent(btn, "click", OnBtnClearThumbDBClick);
-	SelectWidget(btn, ID_BTN_OPEN_LICENSE);
-	BindEvent(btn, "click", OnBtnLicenseClick);
-	SelectWidget(btn, ID_BTN_OPEN_WEBSITE);
-	BindEvent(btn, "click", OnBtnWebSiteClick);
-	SelectWidget(btn, ID_BTN_OPEN_FEEDBACK);
-	BindEvent(btn, "click", OnBtnFeedbackClick);
-	SelectWidget(btn, ID_BTN_OPEN_SOURCECODE);
-	BindEvent(btn, "click", OnBtnSourceCodeClick);
 	LCFinder_BindEvent(EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL);
 	TextViewI18n_SetFormater(view.thumb_db_stats,
 				 RenderThumbDBSizeText, NULL);

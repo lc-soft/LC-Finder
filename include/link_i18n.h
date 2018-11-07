@@ -1,8 +1,7 @@
 ﻿/* ***************************************************************************
- * bridge.h -- a bridge, provides a cross-platform implementation for some
- * interfaces.
+ * link_i18n.h -- link internationalization version
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -19,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * bridge.h -- 桥梁，为某些功能提供跨平台实现。
+ * link_i18n.h -- 链接部件的国际化版本
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -35,27 +34,9 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_SELECTFOLDER_H
-#define LCFINDER_SELECTFOLDER_H
+#ifndef LCFINDER_LINK_H
+#define LCFINDER_LINK_H
 
-LCFINDER_BEGIN_HEADER
-
-void LCFinder_InitLicense( void );
-
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
-
-void RemoveFolderAccessW( const wchar_t *token );
-
-int GetAppDataFolderW( wchar_t *buf, int max_len );
-
-int GetAppInstalledLocationW( wchar_t *buf, int max_len );
-
-void OpenFileManagerW( const wchar_t *filepath );
-
-int MoveFileToTrashW( const wchar_t *filepath );
-
-int MoveFileToTrash( const char *filepath );
-
-LCFINDER_END_HEADER
+void LCUIWidget_AddLinkI18n(void);
 
 #endif

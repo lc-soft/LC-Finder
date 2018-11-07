@@ -49,6 +49,7 @@
 #include "timeseparator.h"
 #include "progressbar.h"
 #include "textview_i18n.h"
+#include "link_i18n.h"
 #include "tagthumb.h"
 #include "dialog.h"
 #include "switch.h"
@@ -159,6 +160,7 @@ int UI_Init( int argc, char **argv )
 	LCUIWidget_AddProgressBar();
 	LCUIWidget_AddTimeSeparator();
 	LCUIWidget_AddTextViewI18n();
+	LCUIWidget_AddLinkI18n();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddTagThumb();
 	LCUIWidget_AddSwitch();
