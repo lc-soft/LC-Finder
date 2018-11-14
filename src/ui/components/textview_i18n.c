@@ -89,7 +89,7 @@ static void TextViewI18n_Destroy(LCUI_Widget w)
 	}
 	txt->key = NULL;
 	txt->text = NULL;
-	w->proto->proto->destroy(w);
+	self.prototype->proto->destroy(w);
 }
 
 void TextViewI18n_Refresh(LCUI_Widget w)
@@ -143,9 +143,8 @@ static void TextViewI18n_SetAttr(LCUI_Widget w, const char *name,
 	if (strcasecmp(name, "data-i18n-key") == 0) {
 		TextViewI18n_SetKey(w, value);
 	}
-	if (w->proto->proto->setattr &&
-	    w->proto->setattr != w->proto->proto->setattr) {
-		w->proto->proto->setattr(w, name, value);
+	if (self.prototype->proto->setattr) {
+		self.prototype->proto->setattr(w, name, value);
 	}
 }
 
