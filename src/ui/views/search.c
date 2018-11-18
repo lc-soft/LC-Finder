@@ -770,19 +770,13 @@ static void InitFileScanner(void)
 	FileScanner_Init(&view.scanner);
 }
 
-static void OnKeyDown(LCUI_SysEvent e, void *arg)
-{
-	//UI_UpdateSearchView();
-}
-
 void UI_InitSearchView(void)
 {
 	InitView();
+	InitSearchInput();
 	InitBrowser();
 	InitFileScanner();
-	InitSearchInput();
 	InitSearchResultsSort();
-	LCUI_BindEvent(LCUI_KEYDOWN, OnKeyDown, NULL, NULL);
 }
 
 void UI_ExitSearchView(void)
