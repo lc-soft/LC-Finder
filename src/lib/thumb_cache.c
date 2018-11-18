@@ -195,7 +195,6 @@ LCUI_Graph *ThumbCache_Add(ThumbCache cache, const char *path,
 	size_t size;
 	ThumbDataNode tdn;
 	LinkedListNode *node, *prev_node;
-	LCUIMutex_Lock(&cache->mutex);
 	size = cache->size + thumb->mem_size;
 	if (size > cache->max_size) {
 		for (LinkedList_Each(node, &cache->thumbs)) {
@@ -211,11 +210,9 @@ LCUI_Graph *ThumbCache_Add(ThumbCache cache, const char *path,
 		}
 		size = cache->size + thumb->mem_size;
 		if (size > cache->max_size) {
-			LCUIMutex_Unlock(&cache->mutex);
 			return NULL;
 		}
 	}
-	cache->size = size;
 	tdn = NEW(ThumbDataNodeRec, 1);
 	tdn->graph = *thumb;
 	tdn->cache = cache;
@@ -224,9 +221,13 @@ LCUI_Graph *ThumbCache_Add(ThumbCache cache, const char *path,
 	tdn->path = NEW(char, len);
 	strncpy(tdn->path, path, len);
 	LinkedList_Init(&tdn->links);
+
+	LCUIMutex_Lock(&cache->mutex);
+	cache->size = size;
 	LinkedList_AppendNode(&cache->thumbs, &tdn->node);
 	Dict_Add(cache->paths, tdn->path, tdn);
 	LCUIMutex_Unlock(&cache->mutex);
+
 	return &tdn->graph;
 }
 

@@ -653,7 +653,6 @@ static void ThumbWorker_OnThumbLoadDone(ThumbLoader loader)
 	ThumbLoader_Destroy(loader);
 	worker->active = FALSE;
 	worker->loader = NULL;
-
 	ThumbWorker_Run(worker);
 }
 
@@ -668,9 +667,7 @@ static LCUI_BOOL ThumbWorker_ProcessTask(ThumbWorker worker)
 
 	worker->active = FALSE;
 	node = LinkedList_GetNode(&worker->tasks, 0);
-	if (!node) {
-		return FALSE;
-	}
+	assert(node && node->data);
 	target = node->data;
 	item = Widget_GetData(target, self.item);
 	LinkedList_Delete(&worker->tasks, 0);
@@ -681,7 +678,7 @@ static LCUI_BOOL ThumbWorker_ProcessTask(ThumbWorker worker)
 		if (item->setthumb) {
 			item->setthumb(target, thumb);
 		}
-		return TRUE;
+		return FALSE;
 	}
 	loader = ThumbLoader_Create(item->view, target);
 	if (!loader) {
