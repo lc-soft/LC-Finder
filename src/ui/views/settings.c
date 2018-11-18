@@ -159,9 +159,10 @@ static void UI_InitPrivateDirList(void)
 	size_t i;
 	LCUI_Widget item;
 	struct PrivateSpaceViewData *self = &private_space_view;
+
 	self->dirpaths = StrDict_Create(NULL, NULL);
 	for (i = 0; i < finder.n_dirs; ++i) {
-		if (finder.dirs[i]->visible) {
+		if (finder.dirs[i] && finder.dirs[i]->visible) {
 			continue;
 		}
 		item = NewDirListItem(finder.dirs[i]);
