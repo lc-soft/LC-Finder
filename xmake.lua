@@ -1,5 +1,5 @@
 set_project("lc-finder")
-set_version("0.11.0")
+set_version("0.2.0")
 set_warnings("all")
 set_config_header("include/config.h", {prefix = "LCFINDER"})
 add_cfuncs("3rdparty", "sqlite3", "sqlite3.h", "sqlite3_open")
