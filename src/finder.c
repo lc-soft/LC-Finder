@@ -89,6 +89,14 @@ static void OnEvent(LCUI_Event e, void *arg)
 	pack->handler(pack->data, arg);
 }
 
+static LCUI_BOOL AvailableSourceDir(DB_Dir dir)
+{
+	if (!dir || (!dir->visible && !finder.open_private_space)) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
 int LCFinder_BindEvent(int event_id, LCFinder_EventHandler handler, void *data)
 {
 	EventPack pack = NEW(EventPackRec, 1);
@@ -186,6 +194,7 @@ void LCFinder_DeleteDir(DB_Dir dir)
 	size_t i;
 	SyncTask t;
 	wchar_t *wpath, *wtoken;
+
 	for (i = 0; i < finder.n_dirs; ++i) {
 		if (dir == finder.dirs[i]) {
 			break;
@@ -313,17 +322,15 @@ DB_Dir LCFinder_GetSourceDir(const char *filepath)
 
 size_t LCFinder_GetSourceDirList(DB_Dir **outdirs)
 {
-	size_t i, count;
 	DB_Dir *dirs;
+	size_t i, count;
+
 	dirs = malloc((finder.n_dirs + 1) * sizeof(DB_Dir));
 	if (!dirs) {
 		return -ENOMEM;
 	}
 	for (count = 0, i = 0; i < finder.n_dirs; ++i) {
-		if (!finder.dirs[i]) {
-			continue;
-		}
-		if (!finder.open_private_space && !finder.dirs[i]->visible) {
+		if (!AvailableSourceDir(finder.dirs[i])) {
 			continue;
 		}
 		dirs[count++] = finder.dirs[i];
@@ -362,6 +369,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 {
 	size_t i;
 	wchar_t *dirpath;
+	DirStatusDataPackRec pack;
 
 	LOG("[scanner] task %lu finished\n", s->task_i);
 	if (finder.n_dirs > 0) {
@@ -381,9 +389,8 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 	s->state = STATE_SAVING;
 	LOG("[scanner] start sync, folders count: %lu\n", finder.n_dirs);
 	for (i = 0; i < finder.n_dirs; ++i) {
-		DirStatusDataPackRec pack;
 		pack.dir = finder.dirs[i];
-		if (!pack.dir) {
+		if (!AvailableSourceDir(pack.dir)) {
 			continue;
 		}
 		pack.status = s;
@@ -532,8 +539,10 @@ static void LCFinder_SwitchTask(FileSyncStatus s)
 
 void LCFinder_SyncFilesAsync(FileSyncStatus s)
 {
-	size_t i;
+	DB_Dir dir;
+	size_t i, count;
 	wchar_t path[PATH_LEN];
+
 	path[PATH_LEN - 1] = 0;
 	s->task_i = 0;
 	s->task = NULL;
@@ -552,15 +561,16 @@ void LCFinder_SyncFilesAsync(FileSyncStatus s)
 		return;
 	}
 	s->tasks = NEW(SyncTask, finder.n_dirs);
-	for (i = 0; i < finder.n_dirs; ++i) {
-		DB_Dir dir = finder.dirs[i];
-		if (!dir) {
+	for (count = 0, i = 0; i < finder.n_dirs; ++i) {
+		dir = finder.dirs[i];
+		if (!AvailableSourceDir(dir)) {
 			continue;
 		}
 		LCUI_DecodeUTF8String(path, dir->path, PATH_LEN - 1);
 		s->tasks[i] = SyncTask_NewW(finder.fileset_dir, path);
+		count += 1;
 	}
-	LOG("[scanner] created %lu tasks\n", finder.n_dirs);
+	LOG("[scanner] created %lu tasks\n", count);
 	LCFinder_SwitchTask(s);
 }
 
