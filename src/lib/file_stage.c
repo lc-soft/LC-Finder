@@ -35,6 +35,7 @@
  * ****************************************************************************/
 
 #define HAVE_FILE_STAGE
+#include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/types.h>
 #include <LCUI/thread.h>

@@ -142,6 +142,11 @@ static void FileClientTask_Destroy(FileClientTask *task)
 	free(task);
 }
 
+static void OnDestroyFileClientTask(void *data)
+{
+	FileClientTask_Destroy(data);
+}
+
 FileStream FileStream_Create(void)
 {
 	FileStream stream;
@@ -156,12 +161,10 @@ FileStream FileStream_Create(void)
 
 void FileStream_Close(FileStream stream)
 {
-	if (stream->active) {
-		LCUIMutex_Lock(&stream->mutex);
-		stream->closed = TRUE;
-		LCUICond_Signal(&stream->cond);
-		LCUIMutex_Lock(&stream->mutex);
-	}
+	LCUIMutex_Lock(&stream->mutex);
+	stream->closed = TRUE;
+	LCUICond_Signal(&stream->cond);
+	LCUIMutex_Unlock(&stream->mutex);
 }
 
 static LCUI_BOOL FileStream_Useable(FileStream stream)
@@ -183,6 +186,7 @@ void FileStream_Destroy(FileStream stream)
 		return;
 	}
 	stream->active = FALSE;
+	FileStream_Close(stream);
 	LinkedList_Clear(&stream->data, FileStreamChunk_Release);
 	LCUIMutex_Destroy(&stream->mutex);
 	LCUICond_Destroy(&stream->cond);
@@ -191,6 +195,7 @@ void FileStream_Destroy(FileStream stream)
 int FileStream_ReadChunk(FileStream stream, FileStreamChunk *chunk)
 {
 	LinkedListNode *node;
+
 	if (!FileStream_Useable(stream)) {
 		FileStream_Destroy(stream);
 		return 0;
@@ -214,6 +219,7 @@ int FileStream_ReadChunk(FileStream stream, FileStreamChunk *chunk)
 int FileStream_WriteChunk(FileStream stream, FileStreamChunk *chunk)
 {
 	FileStreamChunk *buf;
+
 	if (!FileStream_Useable(stream)) {
 		FileStream_Destroy(stream);
 		return -1;
@@ -238,6 +244,7 @@ size_t FileStream_Read(FileStream stream, char *buf, size_t size, size_t count)
 	LinkedListNode *node;
 	FileStreamChunk *chunk;
 	size_t read_count = 0, cur = 0;
+
 	if (!FileStream_Useable(stream)) {
 		FileStream_Destroy(stream);
 		return 0;
@@ -444,6 +451,11 @@ void Connection_Destroy(Connection conn)
 	conn->input = NULL;
 	conn->output = NULL;
 	free(conn);
+}
+
+static void OnDestroyConnection(void *data)
+{
+	Connection_Destroy(data);
 }
 
 static int FileService_GetFileImageStatus(FileRequest *request,
@@ -679,6 +691,7 @@ static void FileService_HandleRequest(Connection conn, FileRequest *request)
 {
 	FileStreamChunk chunk = { 0 };
 	const wchar_t *path = request->path;
+
 	chunk.type = DATA_CHUNK_RESPONSE;
 	switch (request->method) {
 	case REQUEST_METHOD_HEAD:
@@ -710,6 +723,7 @@ void FileService_Handler(void *arg)
 	int n;
 	FileStreamChunk chunk;
 	Connection conn = arg;
+
 	LOG("[file service][thread %d] started, connection: %d\n",
 	    LCUIThread_SelfID(), conn->id);
 	while (1) {
@@ -756,6 +770,11 @@ void ConnectionHub_Destroy(ConnectionHub conn)
 	FileStream_Destroy(conn->streams[0]);
 	FileStream_Destroy(conn->streams[1]);
 	free(conn);
+}
+
+static void OnDestroyConnectionHub(void *data)
+{
+	ConnectionHub_Destroy(data);
 }
 
 Connection FileService_Accept(void)
@@ -831,8 +850,8 @@ void FileService_Close(void)
 	if (service.thread) {
 		LCUIThread_Join(service.thread, NULL);
 	}
-	LinkedList_Clear(&service.requests, Connection_Destroy);
-	LinkedList_ClearData(&service.connections, ConnectionHub_Destroy);
+	LinkedList_Clear(&service.requests, OnDestroyConnection);
+	LinkedList_ClearData(&service.connections, OnDestroyConnectionHub);
 }
 
 void FileService_Init(void)
@@ -969,7 +988,7 @@ void FileClient_Destroy(FileClient client)
 	if (client->connection) {
 		Connection_Destroy(client->connection);
 	}
-	LinkedList_Clear(&client->tasks, FileClientTask_Destroy);
+	LinkedList_Clear(&client->tasks, OnDestroyFileClientTask);
 	LCUICond_Destroy(&client->cond);
 	LCUIMutex_Destroy(&client->mutex);
 	client->connection = NULL;

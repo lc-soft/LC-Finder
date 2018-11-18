@@ -65,6 +65,7 @@ typedef struct FileScannerRec_ {
 	LCUI_BOOL is_async_scaning;
 	LinkedList files;
 	wchar_t *dirpath;
+	size_t folders_count;
 } FileScannerRec, *FileScanner;
 
 typedef struct FileEntryRec_ {
@@ -160,6 +161,7 @@ static void FileScanner_OnGetDirs(FileStatus *status, FileStream stream,
 	FileEntry entry;
 
 	LCUIMutex_Lock(&scanner->mutex_scan);
+	scanner->folders_count = 0;
 	if (!status || !stream) {
 		scanner->is_async_scaning = FALSE;
 		LCUICond_Signal(&scanner->cond_scan);
@@ -189,6 +191,7 @@ static void FileScanner_OnGetDirs(FileStatus *status, FileStream stream,
 		entry->path = malloc(sizeof(char) * len);
 		pathjoin(entry->path, dirpath, buf + 1);
 		FileStage_AddFile(scanner->stage, entry);
+		scanner->folders_count += 1;
 	}
 	FileStage_Commit(scanner->stage);
 	scanner->is_async_scaning = FALSE;
@@ -196,16 +199,18 @@ static void FileScanner_OnGetDirs(FileStatus *status, FileStream stream,
 	LCUIMutex_Unlock(&scanner->mutex_scan);
 }
 
-static void FileScanner_ScanDirs(FileScanner scanner)
+static size_t FileScanner_ScanDirs(FileScanner scanner)
 {
 	LCUIMutex_Lock(&scanner->mutex_scan);
 	scanner->is_async_scaning = TRUE;
+	scanner->folders_count = 0;
 	FileStorage_GetFolders(finder.storage_for_scan, scanner->dirpath,
 			       FileScanner_OnGetDirs, scanner);
 	while (scanner->is_async_scaning) {
 		LCUICond_Wait(&scanner->cond_scan, &scanner->mutex_scan);
 	}
 	LCUIMutex_Unlock(&scanner->mutex_scan);
+	return scanner->folders_count;
 }
 
 static size_t FileScanner_ScanFiles(FileScanner scanner)
@@ -213,14 +218,13 @@ static size_t FileScanner_ScanFiles(FileScanner scanner)
 	DB_File file;
 	DB_Query query;
 	FileEntry entry;
-	size_t i, count, total;
+	size_t i, count;
 
 	view.terms.limit = 512;
 	view.terms.offset = 0;
 	view.terms.dirpath = EncodeUTF8(scanner->dirpath);
 
 	query = DB_NewQuery(&view.terms);
-	total = DBQuery_GetTotalFiles(query);
 	DB_DeleteQuery(query);
 
 	for (count = 0; scanner->is_running;) {
@@ -288,6 +292,7 @@ static void FoldersView_AppendFile(FileEntry entry)
 		FileBrowser_Append(&view.browser, separator);
 	}
 	view.prev_item_type = entry->is_dir;
+	_DEBUG_MSG("%p\n", view.dir);
 	if (entry->is_dir) {
 		item = FileBrowser_AppendFolder(&view.browser,
 						entry->path,
@@ -359,20 +364,20 @@ static void FileScanner_Thread(void *arg)
 {
 	size_t count;
 	FileScanner scanner = arg;
+
+	_DEBUG_MSG("%ls\n", scanner->dirpath);
 	if (scanner->dirpath) {
-		FileScanner_ScanDirs(scanner);
-		count = FileScanner_ScanFiles(scanner);
+		count = FileScanner_ScanDirs(scanner);
+		count += FileScanner_ScanFiles(scanner);
 	} else {
 		count = FileScanner_LoadSourceDirs(scanner);
 	}
-	_DEBUG_MSG("scan files: %lu\n", scanner->files.length);
 	if (count > 0) {
-		Widget_AddClass(view.tip_empty, "hide");
 		Widget_Hide(view.tip_empty);
 	} else {
-		Widget_RemoveClass(view.tip_empty, "hide");
 		Widget_Show(view.tip_empty);
 	}
+	_DEBUG_MSG("scan files: %lu\n", count);
 	scanner->is_running = FALSE;
 	LCUIThread_Exit(NULL);
 }
@@ -396,28 +401,29 @@ static void FileScanner_Start(FileScanner scanner, char *path)
 
 static void OpenFolder(const char *dirpath)
 {
-	DB_Dir dir = NULL, *dirs = NULL;
-	char *path = NULL, *scan_path = NULL;
+	size_t len;
+	size_t i, n_dirs;
+	DB_Dir dir = NULL;
+	DB_Dir *dirs = NULL;
+	char *path = NULL;
 
 	if (dirpath) {
-		size_t len = strlen(dirpath);
-		int i, n = LCFinder_GetSourceDirList(&dirs);
-		path = malloc(sizeof(char) * (len + 1));
-		scan_path = malloc(sizeof(char) * (len + 2));
-		strcpy(scan_path, dirpath);
+		len = strlen(dirpath);
+		n_dirs = LCFinder_GetSourceDirList(&dirs);
+		path = malloc(sizeof(char) * (len + 2));
 		strcpy(path, dirpath);
-		for (i = 0; i < n; ++i) {
-			if (dirs[i] && strstr(dirs[i]->path, path)) {
+		if (path[len - 1] != PATH_SEP) {
+			path[len++] = PATH_SEP;
+			path[len] = 0;
+		}
+		for (i = 0; i < n_dirs; ++i) {
+			_DEBUG_MSG("%s, %s\n", dirs[i]->path, path);
+			if (dirs[i] && strstr(path, dirs[i]->path)) {
 				dir = dirs[i];
 				break;
 			}
 		}
-		if (scan_path[len - 1] != PATH_SEP) {
-			scan_path[len++] = PATH_SEP;
-			scan_path[len] = 0;
-		} else {
-			path[len] = 0;
-		}
+		path[len - 1] = 0;
 		TextView_SetText(view.info_name, getfilename(path));
 		TextView_SetText(view.info_path, path);
 		Widget_AddClass(view.view, "show-folder-info-box");
@@ -429,13 +435,12 @@ static void OpenFolder(const char *dirpath)
 		free(view.dirpath);
 		view.dirpath = NULL;
 	}
-	FileScanner_Reset(&view.scanner);
 	view.dir = dir;
 	view.dirpath = path;
 	view.prev_item_type = -1;
 	FileBrowser_Empty(&view.browser);
 	FileScanner_Start(&view.scanner, path);
-	DEBUG_MSG("done\n");
+	DEBUG_MSG("done, dir: %p\n", view.dir);
 }
 
 static void OnSyncDone(void *privdata, void *arg)

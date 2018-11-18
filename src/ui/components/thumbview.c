@@ -648,7 +648,6 @@ static LCUI_BOOL ThumbWorker_RemoveTask(ThumbWorker worker, LCUI_Widget target)
 
 static void ThumbWorker_OnThumbLoadDone(ThumbLoader loader)
 {
-	ThumbView view = loader->view;
 	ThumbWorker worker = loader->data;
 
 	ThumbLoader_Destroy(loader);
@@ -821,7 +820,7 @@ static void UpdateThumbRow(ThumbView view)
 	}
 	/* 计算溢出的宽度 */
 	overflow_width = view->layout.x - view->layout.max_width;
-	_DEBUG_MSG("overflow_width: %g, x: %g, max_width: %g\n",
+	DEBUG_MSG("overflow_width: %g, x: %g, max_width: %g\n",
 		   overflow_width, view->layout.x, view->layout.max_width);
 	/**
 	 * 如果这一行缩略图的总宽度有溢出（超出最大宽度），则根据缩略图宽度占总宽度
@@ -860,7 +859,7 @@ static void UpdateThumbRow(ThumbView view)
 		} else {
 			width = thumb_width - rest_width;
 		}
-		_DEBUG_MSG("[%d] %g\n", item->index, width);
+		DEBUG_MSG("[%d] %g\n", item->index, width);
 		SetStyle(item->custom_style, key_width, width, px);
 		Widget_UpdateStyle(item, FALSE);
 	}
@@ -1129,6 +1128,7 @@ LCUI_Widget ThumbView_AppendFolder(LCUI_Widget w, const char *filepath,
 	LCUI_Widget path = LCUIWidget_New("textview");
 	LCUI_Widget icon = LCUIWidget_New("textview");
 	LCUI_Widget infobar = LCUIWidget_New(NULL);
+
 	data = Widget_GetData(item, self.item);
 	data->path = malloc(sizeof(char) * len);
 	strncpy(data->path, filepath, len);
@@ -1137,14 +1137,15 @@ LCUI_Widget ThumbView_AppendFolder(LCUI_Widget w, const char *filepath,
 	data->setthumb = ThumbViewItem_SetThumb;
 	data->unsetthumb = ThumbViewItem_UnsetThumb;
 	data->updatesize = UpdateFolderSize;
+
 	Widget_AddClass(item, FOLDER_CLASS);
-	if (!show_path) {
-		Widget_AddClass(item, "hide-path");
-	}
 	Widget_AddClass(infobar, "info");
 	Widget_AddClass(name, "name");
 	Widget_AddClass(path, "path");
 	Widget_AddClass(icon, "icon icon icon-folder-outline");
+	if (!show_path) {
+		Widget_AddClass(item, "hide-path");
+	}
 	TextView_SetText(name, getfilename(filepath));
 	TextView_SetText(path, filepath);
 	Widget_Append(item, infobar);
@@ -1152,6 +1153,7 @@ LCUI_Widget ThumbView_AppendFolder(LCUI_Widget w, const char *filepath,
 	Widget_Append(infobar, path);
 	Widget_Append(infobar, icon);
 	Widget_Append(w, item);
+
 	ScrollLoading_Update(data->view->scrollload);
 	if (!data->view->layout.is_running) {
 		data->view->layout.current = w;

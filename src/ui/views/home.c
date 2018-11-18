@@ -242,7 +242,6 @@ static void HomeView_AppendFiles(void *unused)
 {
 	LinkedList files;
 	LinkedListNode *node;
-	FileStage stage = view.stage;
 
 	if (view.browser.files.length >= view.files.length) {
 		HideProgressBar();
@@ -267,7 +266,6 @@ static size_t HomeView_ScanFiles(void)
 	DB_Query query;
 	size_t i, total, count;
 	DB_QueryTermsRec terms = { 0 };
-	FileStage stage = view.stage;
 
 	terms.limit = 512;
 	terms.modify_time = DESC;

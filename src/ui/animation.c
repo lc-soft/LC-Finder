@@ -6,9 +6,10 @@
 
 #include "animation.h"
 
-static void Animation_OnFrame(Animation ani)
+static void Animation_OnFrame(void *arg)
 {
 	unsigned duration;
+	Animation ani = arg;
 	
 	if (ani->_state != ANIMATION_STATE_STARTED) {
 		return;
@@ -25,8 +26,9 @@ static void Animation_OnFrame(Animation ani)
 	}
 }
 
-static void Animation_OnPlay(Animation ani)
+static void Animation_OnPlay(void *arg)
 {
+	Animation ani = arg;
 	unsigned ms = max(1000 / LCUI_MAX_FRAMES_PER_SEC, 5);
 
 	assert(ani->duration > ms);

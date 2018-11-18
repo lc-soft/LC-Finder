@@ -139,12 +139,13 @@ DB_Dir LCFinder_AddDir(const char *dirpath, const char *token, int visible)
 	size_t i, len;
 	wchar_t **paths;
 	DB_Dir dir, *dirs;
+
 	len = strlen(dirpath);
 	path = malloc((len + 2) * sizeof(char));
 	strcpy(path, dirpath);
 	if (path[len - 1] != PATH_SEP) {
-		path[len] = PATH_SEP;
-		path[len + 1] = 0;
+		path[len++] = PATH_SEP;
+		path[len] = 0;
 	}
 	for (i = 0; i < finder.n_dirs; ++i) {
 		dir = finder.dirs[i];
@@ -153,7 +154,10 @@ DB_Dir LCFinder_AddDir(const char *dirpath, const char *token, int visible)
 			return NULL;
 		}
 	}
-	dir = DB_AddDir(dirpath, token, visible);
+	if (path[len - 1] == PATH_SEP) {
+		path[len - 1] = 0;
+	}
+	dir = DB_AddDir(path, token, visible);
 	if (!dir) {
 		free(path);
 		return NULL;

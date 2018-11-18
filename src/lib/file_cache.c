@@ -128,7 +128,7 @@ static DictType FilesDict = {
 };
 
 static void FileCache_OnFetch(const char *key, size_t keylen,
-			      const char *val, size_t vallen, void *data)
+			      const void *val, size_t vallen, void *data)
 {
 	FileCacheInfo info;
 	FileCacheTime value = (FileCacheTime)val;
@@ -385,9 +385,9 @@ void SyncTask_Finish(SyncTask t)
 int SyncTask_Commit(SyncTask t)
 {
 	int ret;
-	DirStats ds = GetDirStats(t);
 	char *file = EncodeANSI(t->file);
 	char *tmpfile = EncodeANSI(t->tmpfile);
+
 	kvdb_destroy_db(file);
 	ret = rename(tmpfile, file);
 	if (ret != 0) {

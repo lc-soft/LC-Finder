@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "finder.h"
 #include <LCUI/display.h>
 #include <LCUI/font/charset.h>
@@ -152,22 +153,44 @@ int GetAppInstalledLocationW(wchar_t *buf, int max_len)
 #endif
 }
 
-void OpenUriW(const wchar_t *uri)
-{
-}
-
 void OpenFileManagerW(const wchar_t *filepath)
 {
-}
+	char *cmd;
+	wchar_t wcmd[1024];
 
-int MoveFileToTrashW(const wchar_t *filepath)
-{
-	return -1;
+	swprintf(wcmd, 1024, L"nautilus --browser \"%ls\"", filepath);
+	cmd = EncodeANSI(wcmd);
+	system(cmd);
+	free(cmd);
 }
 
 int MoveFileToTrash(const char *filepath)
 {
-	return -1;
+	int ret;
+	char *path;
+	size_t len;
+
+	len = strlen(filepath);
+	path  = malloc((len + 16) * sizeof(wchar_t));
+	if (!path) {
+		return -ENOMEM;
+	}
+	strcpy(path, filepath);
+	strcpy(path + len, ".deleted");
+	ret = rename(filepath, path);
+	free(path);
+	return ret;
+}
+
+int MoveFileToTrashW(const wchar_t *filepath)
+{
+	int ret;
+	char *path;
+
+	path = EncodeANSI(filepath);
+	ret = MoveFileToTrash(path);
+	free(path);
+	return ret;
 }
 
 static void OnSelectFolderW(void (*callback)(const wchar_t *, const wchar_t *))
