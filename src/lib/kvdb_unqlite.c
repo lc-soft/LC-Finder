@@ -25,6 +25,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef LCUI_BUILD_IN_LINUX
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 #include "unqlite.h"
 
 #define MAX_KEY_LEN 1024

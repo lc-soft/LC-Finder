@@ -21,6 +21,7 @@
 #define KVDB_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct kvdb_t kvdb_t;
 
