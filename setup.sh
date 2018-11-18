@@ -27,27 +27,44 @@ echo installing dependencies ...
 sudo apt-get -y install build-essential automake libtool pkg-config libsqlite3-dev libpng-dev libjpeg-dev libxml2-dev libfreetype6-dev libx11-dev
 
 echo downloading LCUI ...
-if [ -d "${rootdir}/../LCUI" ]; then
-  ln -s "${rootdir}/../LCUI" ./LCUI
-elif [ ! -d "LCUI" ]; then
-  git clone https://github.com/lc-soft/LCUI.git --branch master --depth 1
-fi
-cd LCUI
-if [ ! -f "configure" ]; then
-  ./autogen.sh >> $logfile
+if [ -d "LCUI" ]; then
+  cd LCUI
+  git pull
+else
+  if [ -d "${rootdir}/../LCUI" ]; then
+    ln -s "${rootdir}/../LCUI" ./LCUI
+    cd LCUI
+  elif [ ! -d "LCUI" ]; then
+    git clone https://github.com/lc-soft/LCUI.git --branch master --depth 1
+    cd LCUI
+    if [ ! -f "configure" ]; then
+      ./autogen.sh >> $logfile
+    fi
+    ./configure >> $logfile
+  else
+    cd LCUI
+  fi
 fi
 echo building LCUI ...
-./configure >> $logfile
 make >> $logfile
 cd ../
 
-echo downloading LCUI.css ...
-if [ -d "${rootdir}/../lcui.css" ]; then
-  ln -s "${rootdir}/../lcui.css" ./lcui.css
-elif [ ! -d "lcui.css" ]; then
-  git clone https://github.com/lc-ui/lcui.css.git --branch master
+echo downloading lcui.css ...
+if [ -d "lcui.css" ]; then
+  cd lcui.css
+  git pull
+else
+  if [ -d "${rootdir}/../lcui.css" ]; then
+    ln -s "${rootdir}/../lcui.css" ./lcui.css
+    cd lcui.css
+  elif [ ! -d "lcui.css" ]; then
+    git clone https://github.com/lc-ui/lcui.css.git --branch master
+    cd lcui.css
+    npm install
+  else
+    cd lcui.css
+  fi
 fi
-cd lcui.css
 echo building lcui.css ...
 npm run build-bin build-font build-css >> $logfile
 cd ../
@@ -56,15 +73,15 @@ echo downloading libyaml ...
 if [ ! -d "libyaml" ]; then
   git clone https://github.com/yaml/libyaml.git
   cd libyaml
+  if [ ! -f "configure" ]; then
+    ./bootstrap >> $logfile
+  fi
+  ./configure >> $logfile
 else
   cd libyaml
   git pull origin master
 fi
 echo building libyaml ...
-if [ ! -f "configure" ]; then
-  ./boostrap >> $logfile
-fi
-./configure >> $logfile
 make >> $logfile
 cd ../
 
