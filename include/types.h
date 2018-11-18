@@ -1,16 +1,17 @@
-#ifndef LCFINDER_TYPES_H
+ï»¿#ifndef LCFINDER_TYPES_H
 #define LCFINDER_TYPES_H
 
-/** ÎÄ¼þµü´úÆ÷ */
+/** æ–‡ä»¶è¿­ä»£å™¨ */
 typedef struct FileIteratorRec_* FileIterator;
 typedef struct FileIteratorRec_ {
-	unsigned int index;		/**< µ±Ç°Ë÷ÒýÎ»ÖÃ */
-	unsigned int length;		/**< ÎÄ¼þÁÐ±í×Ü³¤¶È */
-	void *privdata;			/**< Ë½ÓÐÊý¾Ý */
-	char *filepath;			/**< ÎÄ¼þÂ·¾¶ */
-	void(*next)(FileIterator);	/**< ÇÐ»»ÖÁÏÂÒ»¸öÎÄ¼þ */
-	void(*prev)(FileIterator);	/**< ÇÐ»»ÖÁÉÏÒ»¸öÎÄ¼þ */
-	void(*destroy)(FileIterator);	/**< Ïú»ÙÎÄ¼þµü´úÆ÷ */
+	unsigned int index;		/**< å½“å‰ç´¢å¼•ä½ç½® */
+	unsigned int length;		/**< æ–‡ä»¶åˆ—è¡¨æ€»é•¿åº¦ */
+	void *privdata;			/**< ç§æœ‰æ•°æ® */
+	char *filepath;			/**< æ–‡ä»¶è·¯å¾„ */
+	void(*unlink)(FileIterator);	/**< å°†å½“å‰æ–‡ä»¶ä»Žåˆ—è¡¨ä¸­ç§»é™¤ */
+	void(*next)(FileIterator);	/**< åˆ‡æ¢è‡³ä¸‹ä¸€ä¸ªæ–‡ä»¶ */
+	void(*prev)(FileIterator);	/**< åˆ‡æ¢è‡³ä¸Šä¸€ä¸ªæ–‡ä»¶ */
+	void(*destroy)(FileIterator);	/**< é”€æ¯æ–‡ä»¶è¿­ä»£å™¨ */
 } FileIteratorRec;
 
 typedef void(*FileIteratorFunc)(FileIterator);

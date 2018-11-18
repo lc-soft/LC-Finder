@@ -94,6 +94,29 @@ typedef struct DialogDataPackRec_ {
 	LCUI_ProgressDialog dialog;
 } DialogDataPackRec, *DialogDataPack;
 
+static void FileIndex_Delete(FileIndex fidx)
+{
+	if (fidx->is_file) {
+		fidx->file = NULL;
+	} else {
+		free(fidx->path);
+		fidx->path = NULL;
+	}
+	fidx->checkbox = NULL;
+	fidx->item = NULL;
+}
+
+static void FileBrowser_UnlinkFile(FileBrowser browser, FileIndex fidx)
+{
+	LCUI_Widget cursor = Widget_GetPrev(fidx->item);
+	Dict_Delete(browser->file_indexes, fidx->file->path);
+	LinkedList_Unlink(&browser->files, &fidx->node);
+	Widget_Destroy(fidx->item);
+	FileIndex_Delete(fidx);
+	free(fidx);
+	ThumbView_UpdateLayout(browser->items, cursor);
+}
+
 static void FileIterator_Destroy(FileIterator iter)
 {
 	iter->privdata = NULL;
@@ -131,6 +154,25 @@ static void FileIterator_Prev(FileIterator iter)
 	}
 }
 
+static void FileIterator_Unlink(FileIterator iter)
+{
+	LinkedListNode *node;
+	DataPack data = iter->privdata;
+
+	node = data->fidx->node.next;
+	if (!node && iter->index > 0) {
+		node = data->fidx->node.prev;
+		iter->index -= 1;
+	}
+	FileBrowser_UnlinkFile(data->browser, data->fidx);
+	if (node) {
+		data->fidx = node->data;
+	} else {
+		data->fidx = NULL;
+	}
+	FileIterator_Update(iter);
+}
+
 static FileIterator FileIterator_Create(FileBrowser browser, FileIndex fidx)
 {
 	LinkedListNode *node = &fidx->node;
@@ -143,6 +185,7 @@ static FileIterator FileIterator_Create(FileBrowser browser, FileIndex fidx)
 	iter->privdata = data;
 	iter->next = FileIterator_Next;
 	iter->prev = FileIterator_Prev;
+	iter->unlink = FileIterator_Unlink;
 	iter->destroy = FileIterator_Destroy;
 	while (node != browser->files.head.next) {
 		node = node->prev;
@@ -150,18 +193,6 @@ static FileIterator FileIterator_Create(FileBrowser browser, FileIndex fidx)
 	}
 	FileIterator_Update(iter);
 	return iter;
-}
-
-static void FileIndex_Delete(FileIndex fidx)
-{
-	if (fidx->is_file) {
-		fidx->file = NULL;
-	} else {
-		free(fidx->path);
-		fidx->path = NULL;
-	}
-	fidx->checkbox = NULL;
-	fidx->item = NULL;
 }
 
 static void RenderSelectedItemsText(wchar_t *buf,
@@ -274,13 +305,7 @@ static void OnFileDeletionEvent(void *privdata, void *arg)
 	FileBrowser browser = privdata;
 	FileIndex fidx = Dict_FetchValue(browser->file_indexes, arg);
 	if (fidx) {
-		LCUI_Widget cursor = Widget_GetPrev(fidx->item);
-		Dict_Delete(browser->file_indexes, fidx->file->path);
-		LinkedList_Unlink(&browser->files, &fidx->node);
-		Widget_Destroy(fidx->item);
-		FileIndex_Delete(fidx);
-		free(fidx);
-		ThumbView_UpdateLayout(browser->items, cursor);
+		FileBrowser_UnlinkFile(browser, fidx);
 	}
 }
 
@@ -510,7 +535,6 @@ void FileBrowser_SetScroll(FileBrowser browser, int y)
 
 void FileBrowser_Empty(FileBrowser browser)
 {
-	Widget_SetStyle(browser->btn_select, key_display, SV_NONE, style);
 	Widget_Hide(browser->btn_select);
 	FileBrowser_UnselectAllItems(browser);
 	FileBrowser_DisableSelectionMode(browser);
@@ -546,7 +570,6 @@ LCUI_Widget FileBrowser_AppendPicture(FileBrowser browser, const DB_File file)
 	Dict_Add(browser->file_indexes, data->fidx->file->path, data->fidx);
 	LinkedList_AppendNode(&browser->files, &data->fidx->node);
 	Widget_BindEvent(item, "click", OnItemClick, data, NULL);
-	Widget_UnsetStyle(browser->btn_select, key_display);
 	Widget_Show(browser->btn_select);
 	return item;
 }

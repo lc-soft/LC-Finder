@@ -86,6 +86,12 @@ enum SliderAction {
 	RESTORE
 };
 
+enum PcitureSlot {
+	PICTURE_SLOT_PREV,
+	PICTURE_SLOT_CURRENT,
+	PICTURE_SLOT_NEXT
+};
+
 /** 图片实例 */
 typedef struct PcitureRec_ {
 	wchar_t *file;			/**< 当前已加载的图片的路径  */
@@ -289,15 +295,15 @@ static int OpenPrevPicture(void)
 	}
 	iter->prev(iter);
 	UpdateSwitchButtons();
-	pic = view.pictures[2];
+	pic = view.pictures[PICTURE_SLOT_NEXT];
 	Widget_Prepend(view.view_pictures, pic->view);
-	view.pictures[2] = view.pictures[1];
-	view.pictures[1] = view.pictures[0];
+	view.pictures[PICTURE_SLOT_NEXT] = view.pictures[PICTURE_SLOT_CURRENT];
+	view.pictures[PICTURE_SLOT_CURRENT] = view.pictures[PICTURE_SLOT_PREV];
 	if (pic->file) {
 		free(pic->file);
 		pic->file = NULL;
 	}
-	view.pictures[0] = pic;
+	view.pictures[PICTURE_SLOT_PREV] = pic;
 	ClearPictureView(pic);
 	UI_OpenPictureView(iter->filepath);
 	return 0;
@@ -312,15 +318,15 @@ static int OpenNextPicture(void)
 	}
 	iter->next(iter);
 	UpdateSwitchButtons();
-	pic = view.pictures[0];
+	pic = view.pictures[PICTURE_SLOT_PREV];
 	Widget_Append(view.view_pictures, pic->view);
-	view.pictures[0] = view.pictures[1];
-	view.pictures[1] = view.pictures[2];
+	view.pictures[PICTURE_SLOT_PREV] = view.pictures[PICTURE_SLOT_CURRENT];
+	view.pictures[PICTURE_SLOT_CURRENT] = view.pictures[PICTURE_SLOT_NEXT];
 	if (pic->file) {
 		free(pic->file);
 		pic->file = NULL;
 	}
-	view.pictures[2] = pic;
+	view.pictures[PICTURE_SLOT_NEXT] = pic;
 	ClearPictureView(pic);
 	UI_OpenPictureView(iter->filepath);
 	return 0;
@@ -343,9 +349,9 @@ static void SetSliderPostion(int x)
 {
 	float fx = (float)x;
 	float width = view.picture->view->width;
-	Widget_Move(view.pictures[0]->view, fx - width, 0);
-	Widget_Move(view.pictures[1]->view, fx, 0);
-	Widget_Move(view.pictures[2]->view, fx + width, 0);
+	Widget_Move(view.pictures[PICTURE_SLOT_PREV]->view, fx - width, 0);
+	Widget_Move(view.pictures[PICTURE_SLOT_CURRENT]->view, fx, 0);
+	Widget_Move(view.pictures[PICTURE_SLOT_NEXT]->view, fx + width, 0);
 }
 
 /** 更新滑动过渡效果 */
@@ -367,9 +373,9 @@ static void OnSlideTransition(void *arg)
 	if (x == st->dst_x) {
 		st->timer = 0;
 		st->is_running = FALSE;
-		ClearPositionStyle(view.pictures[0]->view);
-		ClearPositionStyle(view.pictures[1]->view);
-		ClearPositionStyle(view.pictures[2]->view);
+		ClearPositionStyle(view.pictures[PICTURE_SLOT_PREV]->view);
+		ClearPositionStyle(view.pictures[PICTURE_SLOT_CURRENT]->view);
+		ClearPositionStyle(view.pictures[PICTURE_SLOT_NEXT]->view);
 		if (st->action != SWITCH) {
 			return;
 		}
@@ -628,13 +634,13 @@ static void OnBtnBackClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 static void OnPictureResize(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	if (view.is_zoom_mode) {
-		UpdatePicturePosition(view.pictures[0]);
-		UpdatePicturePosition(view.pictures[1]);
-		UpdatePicturePosition(view.pictures[2]);
+		UpdatePicturePosition(view.pictures[PICTURE_SLOT_PREV]);
+		UpdatePicturePosition(view.pictures[PICTURE_SLOT_CURRENT]);
+		UpdatePicturePosition(view.pictures[PICTURE_SLOT_NEXT]);
 	} else {
-		ResetPictureSize(view.pictures[0]);
-		ResetPictureSize(view.pictures[1]);
-		ResetPictureSize(view.pictures[2]);
+		ResetPictureSize(view.pictures[PICTURE_SLOT_PREV]);
+		ResetPictureSize(view.pictures[PICTURE_SLOT_CURRENT]);
+		ResetPictureSize(view.pictures[PICTURE_SLOT_NEXT]);
 	}
 }
 
@@ -1013,6 +1019,7 @@ static void SetPicturePreloadList(void)
 {
 	wchar_t *wpath;
 	FileIterator iter;
+
 	if (!view.iterator) {
 		return;
 	}
@@ -1022,7 +1029,7 @@ static void SetPicturePreloadList(void)
 		iter->prev(iter);
 		if (iter->filepath) {
 			wpath = DecodeUTF8(iter->filepath);
-			SetPicture(view.pictures[0], wpath);
+			SetPicture(view.pictures[PICTURE_SLOT_PREV], wpath);
 		}
 		iter->next(iter);
 	}
@@ -1031,7 +1038,7 @@ static void SetPicturePreloadList(void)
 		iter->next(iter);
 		if (iter->filepath) {
 			wpath = DecodeUTF8(iter->filepath);
-			SetPicture(view.pictures[2], wpath);
+			SetPicture(view.pictures[PICTURE_SLOT_NEXT], wpath);
 		}
 		iter->prev(iter);
 	}
@@ -1171,19 +1178,28 @@ static void OnBtnDeleteClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	char *path;
 	wchar_t *wpath = view.picture->file;
 	const wchar_t *title = I18n_GetText(KEY_DELETE);
+
 	if (!LCUIDialog_Confirm(view.window, title, NULL)) {
 		return;
 	}
+	MoveFileToTrashW(wpath);
+	ClearPictureView(view.picture);
 	path = EncodeUTF8(wpath);
-	if (OpenNextPicture() != 0) {
-		/** 如果前后都没有图片了，则提示没有可显示的内容 */
-		if (OpenPrevPicture() != 0) {
-			LCUI_PostSimpleTask(TaskForHideTipEmpty, NULL, NULL);
-		}
-	}
+	view.iterator->unlink(view.iterator);
 	LCFinder_DeleteFiles(&path, 1, NULL, NULL);
 	LCFinder_TriggerEvent(EVENT_FILE_DEL, path);
 	free(path);
+
+	if (view.iterator->length == 0) {
+		LCUI_PostSimpleTask(TaskForHideTipEmpty, NULL, NULL);
+		if (view.mode == MODE_SINGLE_PICVIEW) {
+			LCUI_Quit();
+		} else {
+			UI_ClosePictureView();
+		}
+	} else {
+		UI_OpenPictureView(view.iterator->filepath);
+	}
 }
 
 /** 在”实际大小“按钮被点击的时候 */
@@ -1222,9 +1238,15 @@ static void PictureLoader_Thread(void *arg)
 			 * 因此需要经过转换才能取到对应的图片实例
 			 */
 			switch (loader->num) {
-			case 0: pic = loader->pictures[1]; break;
-			case 1: pic = loader->pictures[2]; break;
-			case 2: pic = loader->pictures[0]; break;
+			case 0:
+				pic = loader->pictures[PICTURE_SLOT_CURRENT];
+				break;
+			case 1:
+				pic = loader->pictures[PICTURE_SLOT_NEXT];
+				break;
+			case 2:
+				pic = loader->pictures[PICTURE_SLOT_PREV];
+				break;
 			default: continue;
 			}
 			LoadPictureAsync(pic);
@@ -1448,10 +1470,10 @@ void UI_InitPictureView(int mode)
 	BindEvent(view.view_pictures, "dblclick", OnMouseDblClick);
 	LCUI_BindEvent(LCUI_KEYDOWN, OnKeyDown, NULL, NULL);
 	InitSlideTransition();
-	view.pictures[0] = CreatePicture();
-	view.pictures[1] = CreatePicture();
-	view.pictures[2] = CreatePicture();
-	view.picture = view.pictures[0];
+	view.pictures[PICTURE_SLOT_PREV] = CreatePicture();
+	view.pictures[PICTURE_SLOT_CURRENT] = CreatePicture();
+	view.pictures[PICTURE_SLOT_NEXT] = CreatePicture();
+	view.picture = view.pictures[PICTURE_SLOT_PREV];
 	view.tip_progress = LCUIWidget_New("progress");
 	ProgressBar_SetMaxValue(view.tip_progress, 100);
 	PictureLoader_Init(&view.loader, view.pictures);
@@ -1477,7 +1499,7 @@ void UI_OpenPictureView(const char *filepath)
 	wpath = DecodeUTF8(filepath);
 	view.is_opening = TRUE;
 	view.is_zoom_mode = FALSE;
-	view.picture = view.pictures[1];
+	view.picture = view.pictures[PICTURE_SLOT_CURRENT];
 	SelectWidget(main_window, ID_WINDOW_MAIN);
 	swprintf(title, 255, L"%ls - "LCFINDER_NAME, wgetfilename(wpath));
 	Widget_SetTitleW(root, title);
@@ -1488,7 +1510,7 @@ void UI_OpenPictureView(const char *filepath)
 	Widget_Show(view.window);
 	Widget_Hide(main_window);
 	if (view.mode == MODE_SINGLE_PICVIEW) {
-		PictureView_OpenScanner(&view.scanner, wpath,
+		PictureView_OpenScanner(view.scanner, wpath,
 					DirectSetPictureView,
 					SetPicturePreloadList);
 	}
@@ -1521,13 +1543,13 @@ void UI_FreePictureView(void)
 {
 	view.is_working = FALSE;
 	if (view.mode == MODE_SINGLE_PICVIEW) {
-		PictureView_CloseScanner(&view.scanner);
+		PictureView_CloseScanner(view.scanner);
 	}
 	PictureLoader_Exit(&view.loader);
-	DeletePicture(view.pictures[0]);
-	DeletePicture(view.pictures[1]);
-	DeletePicture(view.pictures[2]);
-	view.pictures[0] = NULL;
-	view.pictures[1] = NULL;
-	view.pictures[2] = NULL;
+	DeletePicture(view.pictures[PICTURE_SLOT_PREV]);
+	DeletePicture(view.pictures[PICTURE_SLOT_CURRENT]);
+	DeletePicture(view.pictures[PICTURE_SLOT_NEXT]);
+	view.pictures[PICTURE_SLOT_PREV] = NULL;
+	view.pictures[PICTURE_SLOT_CURRENT] = NULL;
+	view.pictures[PICTURE_SLOT_NEXT] = NULL;
 }

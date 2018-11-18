@@ -49,13 +49,13 @@
 #include "file_storage.h"
 
 /** 文件索引记录 */
-typedef struct FileIndexRec_ {
+typedef struct PictureFileIndexRec_ {
 	wchar_t *name;		/**< 文件名 */
 	LinkedListNode node;	/**< 在列表中的节点 */
-} FileIndexRec, *FileIndex;
+} PictureFileIndexRec, *PictureFileIndex;
 
 /** 文件扫描器数据结构 */
-typedef struct FileScannerRec_ {
+typedef struct PictureFileScannerRec_ {
 	int storage;
 	LCUI_BOOL is_ready;		/**< 是否已经准备好 */
 	LCUI_BOOL is_running;		/**< 是否正在运行 */
@@ -69,22 +69,22 @@ typedef struct FileScannerRec_ {
 
 	/**< 回调函数，当目标文件前后的文件已扫描完时调用 */
 	void(*on_active)(void);
-} FileScannerRec, *FileScanner;
+} PictureFileScannerRec, *PictureFileScanner;
 
 typedef struct FileDataPackRTec_ {
-	FileIndex fidx;
-	FileScanner scanner;
+	PictureFileIndex fidx;
+	PictureFileScanner scanner;
 } FileDataPackRec, *FileDataPack;
 
-static void FileIndex_Destroy(FileIndex fidx)
+static void PictureFileIndex_Destroy(PictureFileIndex fidx)
 {
 	free(fidx->name);
 	free(fidx);
 }
 
-static void FileIndex_OnDestroy(void *data)
+static void PictureFileIndex_OnDestroy(void *data)
 {
-	FileIndex_Destroy(data);
+	PictureFileIndex_Destroy(data);
 }
 
 static void FileIterator_Destroy(FileIterator iter)
@@ -101,8 +101,13 @@ static void FileIterator_Update(FileIterator iter)
 {
 	wchar_t wpath[PATH_LEN];
 	FileDataPack data = iter->privdata;
-	wpathjoin(wpath, data->scanner->dirpath, data->fidx->name);
+
 	iter->length = data->scanner->files.length;
+	if (!data->fidx) {
+		iter->filepath[0] = 0;
+		return;
+	}
+	wpathjoin(wpath, data->scanner->dirpath, data->fidx->name);
 	LCUI_EncodeUTF8String(iter->filepath, wpath, PATH_LEN);
 }
 
@@ -127,7 +132,28 @@ static void FileIterator_Prev(FileIterator iter)
 	}
 }
 
-static FileIterator FileIterator_Create(FileScanner scanner, FileIndex fidx)
+static void FileIterator_Unlink(FileIterator iter)
+{
+	LinkedListNode *node;
+	FileDataPack data = iter->privdata;
+
+	node = data->fidx->node.next;
+	if (!node && iter->index > 0) {
+		node = data->fidx->node.prev;
+		iter->index -= 1;
+	}
+	LinkedList_Unlink(&data->scanner->files, &data->fidx->node);
+	PictureFileIndex_Destroy(data->fidx);
+	if (node) {
+		data->fidx = node->data;
+	} else {
+		data->fidx = NULL;
+	}
+	FileIterator_Update(iter);
+}
+
+static FileIterator FileIterator_Create(PictureFileScanner scanner,
+					PictureFileIndex fidx)
 {
 	LinkedListNode *node = &fidx->node;
 	FileDataPack data = NEW(FileDataPackRec, 1);
@@ -139,6 +165,7 @@ static FileIterator FileIterator_Create(FileScanner scanner, FileIndex fidx)
 	iter->privdata = data;
 	iter->next = FileIterator_Next;
 	iter->prev = FileIterator_Prev;
+	iter->unlink = FileIterator_Unlink;
 	iter->destroy = FileIterator_Destroy;
 	iter->filepath = NEW(char, PATH_LEN);
 	while (node != scanner->files.head.next) {
@@ -154,14 +181,14 @@ static void OnOpenDir(FileStatus *status, FileStream stream, void *data)
 	size_t len;
 	int i = 0, pos = -1;
 	char buf[PATH_LEN + 2];
-	FileScanner fs = data;
+	PictureFileScanner fs = data;
 
 	if (!status || status->type != FILE_TYPE_DIRECTORY || !stream) {
 		return;
 	}
 	while (fs->is_running) {
 		char *p;
-		FileIndex fidx;
+		PictureFileIndex fidx;
 
 		buf[0] = 0;
 		p = FileStream_ReadLine(stream, buf, PATH_LEN + 2);
@@ -177,7 +204,7 @@ static void OnOpenDir(FileStatus *status, FileStream stream, void *data)
 			continue;
 		}
 		buf[len - 1] = 0;
-		fidx = NEW(FileIndexRec, 1);
+		fidx = NEW(PictureFileIndexRec, 1);
 		fidx->name = DecodeUTF8(buf + 1);
 		fidx->node.data = fidx;
 		LinkedList_AppendNode(&fs->files, &fidx->node);
@@ -203,30 +230,32 @@ static void OnOpenDir(FileStatus *status, FileStream stream, void *data)
 	fs->is_running = FALSE;
 }
 
-static FileScanner FileScanner_Create(int storage)
+static PictureFileScanner Scanner_Create(int storage)
 {
-	FileScanner scanner = malloc(sizeof(FileScannerRec));
+	PictureFileScanner scanner = calloc(1, sizeof(PictureFileScannerRec));
 
 	scanner->iterator = NULL;
 	scanner->is_running = FALSE;
 	scanner->is_ready = TRUE;
+	scanner->storage = storage;
 	LinkedList_Init(&scanner->files);
 	return scanner;
 }
 
-static int FileScanner_Start(FileScanner scanner, const wchar_t *filepath,
+static int Scanner_Start(PictureFileScanner scanner, const wchar_t *filepath,
 			     void(*on_found)(FileIterator),
 			     void(*on_active)(void))
 {
 	size_t len;
 	const wchar_t *name;
 
-	if (scanner->is_ready) {
+	if (!scanner->is_ready) {
 		return -1;
 	}
 	scanner->is_ready = FALSE;
 	scanner->is_running = TRUE;
 	scanner->on_found = on_found;
+	scanner->on_active = on_active;
 	if (scanner->dirpath) {
 		free(scanner->dirpath);
 	}
@@ -242,29 +271,29 @@ static int FileScanner_Start(FileScanner scanner, const wchar_t *filepath,
 				   OnOpenDir, scanner);
 }
 
-static void FileScanner_Exit(FileScanner scanner)
+static void Scanner_Exit(PictureFileScanner scanner)
 {
 	scanner->is_running = FALSE;
-	LinkedList_ClearData(&scanner->files, FileIndex_OnDestroy);
+	LinkedList_ClearData(&scanner->files, PictureFileIndex_OnDestroy);
 	free(scanner->file);
 	scanner->file = NULL;
 }
 
 void *PictureView_CreateScanner(int storage)
 {
-	return FileScanner_Create(storage);
+	return Scanner_Create(storage);
 }
 
 int PictureView_OpenScanner(void *scanner, const wchar_t *filepath,
 			    void(*on_found)(FileIterator),
 			    void (*on_active)(void))
 {
-	return FileScanner_Start(scanner, filepath, on_found, on_active);
+	return Scanner_Start(scanner, filepath, on_found, on_active);
 }
 
 void PictureView_CloseScanner(void *scanner)
 {
-	FileScanner_Exit(scanner);
+	Scanner_Exit(scanner);
 }
 
 void PictureView_FreeScanner(void *scanner)
