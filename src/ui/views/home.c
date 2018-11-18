@@ -413,9 +413,9 @@ static void HomeView_InitBrowser(void)
 	view.browser.btn_cancel = btn[2];
 	view.browser.btn_delete = btn[4];
 	view.browser.btn_tag = btn[3];
-	view.browser.txt_selection_stats = title;
 	view.browser.view = view.view;
 	view.browser.items = view.items;
+	view.browser.txt_selection_stats = title;
 	view.browser.after_deleted = OnAfterDeleted;
 	ThumbView_SetCache(view.items, finder.thumb_cache);
 	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
