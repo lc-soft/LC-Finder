@@ -294,7 +294,7 @@ static int OnFileDeleted(void *privdata, size_t i, size_t n)
 {
 	DialogDataPack pack;
 	pack = privdata, pack->i = i, pack->n = n;
-	ProgressBar_SetValue(pack->dialog->progress, i);
+	ProgressBar_SetValue(pack->dialog->progress, i + 1);
 	RenderProgressText(pack);
 	return  pack->active ? 0 : -1;
 }
@@ -319,6 +319,7 @@ static void FileDeletionThread(void *arg)
 	LinkedListNode *node;
 	LinkedList deleted_files;
 	DialogDataPack pack = arg;
+
 	LinkedList_Init(&deleted_files);
 	files = &pack->browser->selected_files;
 	n = pack->browser->selected_files.length;
@@ -389,7 +390,7 @@ static void FileTagAddtionThread(void *arg)
 			const char *tagname = pack->tagnames[i];
 			LCFinder_AddTagForFile(fidx->file, tagname);
 		}
-		ProgressBar_SetValue(pack->dialog->progress, pack->i);
+		ProgressBar_SetValue(pack->dialog->progress, pack->i + 1);
 		RenderProgressText(pack);
 		node = node->next;
 	}
