@@ -290,9 +290,6 @@
     <None Include="Assets\stylesheets\main.css">
       <Filter>资产\stylesheets</Filter>
     </None>
-    <None Include="Assets\stylesheets\themes\green.css">
-      <Filter>资产\stylesheets</Filter>
-    </None>
     <None Include="LCUIApp.dll">
       <Filter>dll</Filter>
     </None>
@@ -307,6 +304,9 @@
     </None>
     <None Include="yaml.dll">
       <Filter>dll</Filter>
+    </None>
+    <None Include="Assets\stylesheets\themes\default.css">
+      <Filter>资产\stylesheets</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
