@@ -225,7 +225,7 @@ copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionD
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName)$(TargetExt)" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI*.dll" "$(SolutionDir)app"
 copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
@@ -270,7 +270,7 @@ copy "$(SolutionDir)..\lcui.css\dist\lib\$(Configuration)\LCUIEx.*" "$(SolutionD
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName).*" "$(SolutionDir)app"
+      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName)$(TargetExt)" "$(SolutionDir)app"
 copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI*.dll" "$(SolutionDir)app"
 copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       <Message>Copying binary file to $(SolutionDir)app</Message>
