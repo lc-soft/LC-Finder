@@ -537,6 +537,23 @@ static int FileService_RemoveFile(const wchar_t *path,
 	return 400;
 }
 
+static size_t Connection_WriteFileName(Connection conn, const wchar_t *name,
+				       FileType type)
+{
+	size_t size;
+	char buf[PATH_LEN];
+
+	size = LCUI_EncodeUTF8String(buf + 1, name, PATH_LEN + 2) + 1;
+	if (type == FILE_TYPE_ARCHIVE) {
+		buf[0] = '-';
+	} else {
+		buf[0] = 'd';
+	}
+	buf[size++] = '\n';
+	buf[size] = 0;
+	return Connection_Write(conn, buf, sizeof(char), size);
+}
+
 static void FileService_GetFiles(Connection conn,
 				 StorageFolder ^folder,
 				 FileRequest *request,
@@ -553,17 +570,10 @@ static void FileService_GetFiles(Connection conn,
 		t = t.then([](StorageFolder ^folder) {
 			return folder->GetFoldersAsync();
 		}).then([conn, folder](IVectorView<StorageFolder^>^ folders) {
-			char buf[PATH_LEN] = "d";
 			std::for_each(begin(folders), end(folders),
-				      [conn, &buf](StorageFolder^ f) {
-				size_t size;
-				const wchar_t *name;
-				name = f->Name->Data();
-				size = LCUI_EncodeString(buf + 1, name,
-							 PATH_LEN - 2, ENCODING_UTF8);
-				buf[size++] = '\n';
-				buf[size] = 0;
-				Connection_Write(conn, buf, sizeof(char), size);
+				      [conn](StorageFolder^ f) {
+				Connection_WriteFileName(conn, f->Name->Data(),
+							 FILE_TYPE_DIRECTORY);
 			});
 			return folder;
 		});
@@ -578,20 +588,16 @@ static void FileService_GetFiles(Connection conn,
 		return t.then([folder](int) {
 			return folder->GetFilesAsync();
 		}).then([conn, folder](IVectorView<StorageFile^> ^files) {
-			char buf[PATH_LEN] = "-";
 			std::for_each(begin(files), end(files),
-				      [conn, &buf](StorageFile ^file) {
-				size_t size;
+				      [conn](StorageFile ^file) {
 				const wchar_t *name;
+
 				name = file->Name->Data();
 				if (!IsImageFile(name)) {
 					return;
 				}
-				size = LCUI_EncodeUTF8String(buf + 1, name,
-							     PATH_LEN - 2);
-				buf[++size] = '\n';
-				buf[++size] = 0;
-				Connection_Write(conn, buf, sizeof(char), size);
+				Connection_WriteFileName(conn, name,
+							 FILE_TYPE_ARCHIVE);
 			});
 			return 0;
 		});
