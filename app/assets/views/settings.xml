@@ -90,6 +90,7 @@
                 <w type="textview-i18n" class="text" data-i18n-key="settings.copyright">© 2018 LC's Software，保留所有权利。</w>
                 <w class="btn-group">
                   <w type="link-i18n" class="link" target="http://www.gnu.org/licenses/gpl-2.0.html" data-i18n-key="settings.license">许可协议</w>
+                  <w type="link-i18n" class="link" target="https://github.com/lc-soft/LC-Finder/blob/develop/PRIVACY.md" data-i18n-key="settings.privacy">隐私策略</w>
                   <w type="link-i18n" class="link" target="https://lcfinder.lc-soft.io/" data-i18n-key="settings.website">官方网站</w>
                   <w type="link-i18n" class="link" target="https://github.com/lc-soft/LC-Finder/issues" data-i18n-key="settings.feedback">问题反馈</w>
                   <w type="link-i18n" class="link" target="https://github.com/lc-soft/LC-Finder" data-i18n-key="settings.sourcecode">源代码</w>

@@ -164,6 +164,7 @@ strings:
         language: 語言
         language_description: 更改界面的顯示語言
         license: 許可協議
+        privacy: 隱私策略
         website: 官方網站
         feedback: 問題反饋
         sourcecode: 源代碼

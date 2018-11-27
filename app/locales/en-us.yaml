@@ -168,6 +168,7 @@ strings:
         language: Language
         language_description: Change language
         license: License
+        privacy: Privacy
         website: Website
         feedback: Feedback
         sourcecode: Source code
