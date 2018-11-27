@@ -2,9 +2,9 @@
 <lcui-app>
   <resource type="text/css" src="assets/stylesheets/lcui.css"/>
   <resource type="text/css" src="assets/stylesheets/main.css"/>
-  <resource type="text/css" src="assets/stylesheets/themes/green.css"/>
+  <resource type="text/css" src="assets/stylesheets/themes/default.css"/>
   <ui>
-    <w id="main-window" class="window theme-green">
+    <w id="main-window" class="window theme-default">
       <resource type="text/xml" src="assets/views/sidebar.xml"/>
       <resource type="text/xml" src="assets/views/search.xml"/>
       <resource type="text/xml" src="assets/views/home.xml"/>

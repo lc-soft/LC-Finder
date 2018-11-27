@@ -1,7 +1,6 @@
-$primary-color: #44BB55;
-$primary-dark-color: darken($primary-color, 10%);
+@import "../common/variables";
 
-.theme-green {
+.theme-default {
 	.message.inverted .text {
 		color: #fff;
 	}
@@ -24,8 +23,9 @@ $primary-dark-color: darken($primary-color, 10%);
 		color: $primary-color;
 	}
 }
-#picture-viewer-window.theme-green {
+#picture-viewer-window.theme-default {
 	background-color: #222;
+
 	.window-navbar {
 		background-color: rgba(0,0,0,0.5);
 	}

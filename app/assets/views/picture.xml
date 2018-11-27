@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <lcui-app>
   <ui>
-    <widget id="picture-viewer-window" class="window theme-green">
+    <widget id="picture-viewer-window" class="window theme-default">
       <widget class="window-navbar">
         <widget class="icon-btn window-navbar-btn" id="btn-hide-picture-viewer">
           <widget type="textview" class="icon icon icon-arrow-left"></widget>
