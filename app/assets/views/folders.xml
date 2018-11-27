@@ -39,7 +39,7 @@
         </w>
         <w id="view-folders-content-wrapper" class="view-content-wrapper">
           <w id="view-folders-content" class="view-content full-height">
-            <w id="tip-empty-folder" class="floating center middle aligned icon message hide">
+            <w id="tip-empty-folder" class="floating center middle aligned icon message">
               <w type="icon" name="folder-multiple-image"></w>
               <w type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹</w>
             </w>
