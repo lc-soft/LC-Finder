@@ -33,12 +33,12 @@ The "Photos" app responds slowly on machines with low hardware configurations, e
 - **Tag search:** Support searching for images by tag.
 - **Localization:** Support Simplified Chinese, Traditional Chinese, English, expandable support for other languages.
 - **Private space:** Put non-public images in a private space to hide them, only display them after entering your password and confirming that you have opened your private space.
-- **UWP：** Support for Windows Universal Platform (UWP).
+- **UWP：** Support for Windows Universal Platform (UWP), you can [click this link](https://www.microsoft.com/store/apps/9NBLGGH401X5) to view it in the windows app store.
 
 ## Screenshots
 
 [![screenshot 1](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg)
-[![screenshot 1](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
+[![screenshot 2](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
 
 ## Contributing
 

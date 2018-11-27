@@ -29,7 +29,7 @@ LCFinder 的界面及功能设计参考了 Windows 系统自带的“照片”�
 - **标签搜索：** 支持按标签来搜索匹配的图片
 - **多语言支持：** 自带简体中文、繁体中文、英文翻译文件，可扩展支持其它语言
 - **私人空间：** 将非公开的图片放入私人空间里可以隐藏它们，只有输入密码并确认开启私人空间后才会显示它们
-- **UWP：** 支持 Windows 通用应用平台（UWP）
+- **UWP：** 支持 Windows 通用应用平台（UWP），你可以[点击此链接](https://www.microsoft.com/store/apps/9NBLGGH401X5)到微软应用商店中查看它
 
 ### 缺少的功能
 
@@ -41,7 +41,7 @@ LCFinder 的界面及功能设计参考了 Windows 系统自带的“照片”�
 ## 截图
 
 [![screenshot 1](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg)
-[![screenshot 1](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
+[![screenshot 2](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
 
 ## 贡献
 
