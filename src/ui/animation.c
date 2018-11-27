@@ -41,14 +41,14 @@ void Animation_Play(Animation ani)
 {
 	assert(ani->on_frame != NULL);
 
+	if (ani->_timer) {
+		LCUITimer_Reset(ani->_timer, ani->delay);
+		return;
+	}
 	ani->_progress = 0;
 	ani->_state = ANIMATION_STATE_DELAY;
 	if (ani->delay == 0) {
 		Animation_OnPlay(ani);
-		return;
-	}
-	if (ani->_timer) {
-		LCUITimer_Reset(ani->_timer, ani->delay);
 		return;
 	}
 	ani->_timer = LCUI_SetTimeout(ani->delay, Animation_OnPlay, ani);
