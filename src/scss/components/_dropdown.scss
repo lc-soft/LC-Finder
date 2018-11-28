@@ -1,16 +1,28 @@
-dropdown.checkable .icon,
-dropdown.checkable .text {
-	display: inline-block;
-	line-height: 24px;
-}
-dropdown.checkable dropdown-item {
-	padding-right: 20px;
-}
-dropdown.checkable dropdown-item .icon {
-	visible: false;
-	margin-right: 5px;
-	font-size: 20px;
-}
-dropdown.checkable dropdown-item.active .icon {
-	visible: true;
+.dropdown-menu.checkable {
+	.icon,
+	.text {
+		display: inline-block;
+		line-height: 24px;
+	}
+	.dropdown-item,
+	.dropdown-header {
+		padding-left: $spacing;
+	}
+	.dropdown-item {
+		.icon {
+			visibility: hidden;
+			margin-right: $spacing * 0.4;
+			font-size: 18px;
+		}
+		&.selected .icon {
+			visibility: visible;
+		}
+		&:active,
+		&.active {
+			.icon,
+			.text {
+				color: $dropdown-link-active-color;
+			}
+		}
+	}
 }

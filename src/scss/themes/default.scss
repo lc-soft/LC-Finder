@@ -1,0 +1,59 @@
+@import "../common/variables";
+
+.theme-default {
+	.message.inverted .text {
+		color: #fff;
+	}
+	.icon.message.inverted .icon {
+		color: #555;
+	}
+	.message progress {
+		bottom: 0;
+		height: 2px;
+		position: absolute;
+	}
+	.message.box {
+		background-color: rgba(0,0,0,0.8);
+		box-shadow: 0 0 8px rgba(0,0,0,0.8);
+	}
+	.btn-dropdown.active {
+		border-color: $primary-color;
+	}
+	dropdown.checkable dropdown-item .icon {
+		color: $primary-color;
+	}
+}
+#picture-viewer-window.theme-default {
+	background-color: #222;
+
+	.window-navbar {
+		background-color: rgba(0,0,0,0.5);
+	}
+	.zoom-btn-group {
+		background-color: rgba(0,0,0,0.8);
+		border-color: transparent;
+		padding: 2px;
+	}
+	.icon-btn {
+		.icon, .text {
+			color: #fff;
+			background-color: transparent;
+		}
+		&:hover {
+			background-color: rgba(255,255,255,0.3);
+		}
+		&:active {
+			background-color: rgba(255,255,255,0.5);
+		}
+		&:disabled .icon,
+		&:disabled:hover .icon,
+		&:disabled:active .icon {
+			color: #888;
+		}
+		&:disabled,
+		&:disabled:hover,
+		&:disabled:active {
+			background-color: transparent;
+		}
+	}
+}

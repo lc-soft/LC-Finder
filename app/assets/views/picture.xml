@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <lcui-app>
   <ui>
-    <widget id="picture-viewer-window" class="window theme-green">
+    <widget id="picture-viewer-window" class="window theme-default">
       <widget class="window-navbar">
         <widget class="icon-btn window-navbar-btn" id="btn-hide-picture-viewer">
           <widget type="textview" class="icon icon icon-arrow-left"></widget>
@@ -23,13 +23,13 @@
         <widget id="picture-viewer-target" class="picture-container"></widget>
         <widget class="zoom-btn-group">
           <widget id="btn-picture-zoom-out" class="icon-btn picture-option-btn">
-            <widget class="icon icon icon-minus" type="textview"></widget>
+            <widget type="icon" name="minus"></widget>
           </widget>
           <widget id="btn-picture-reset-size" class="icon-btn picture-option-btn">
-            <widget class="icon icon icon-fullscreen" type="textview"></widget>
+            <widget type="icon" name="fullscreen"></widget>
           </widget>
           <widget id="btn-picture-zoom-in" class="icon-btn picture-option-btn">
-            <widget class="icon icon icon-plus" type="textview"></widget>
+            <widget type="icon" name="plus"></widget>
           </widget>
         </widget>
         <widget id="btn-picture-prev" class="icon-btn picture-switch-btn prev">

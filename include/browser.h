@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * browser.c -- file browser
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * browser.c -- 文件浏览器
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -47,20 +47,17 @@ typedef struct FileSortMethodRec_ {
 		SCORE_DESC,
 		SCORE_ASC
 	} value;
-
 } FileSortMethodRec, *FileSortMethod;
 
 /** 文件浏览器相关数据 */
 typedef struct FileBrowserRec_ {
-	const char *title_key;			/**< 标题文本的索引 key */
 	LCUI_Widget view;			/**< 视图 */
 	LCUI_Widget items;			/**< 缩略图列表 */
-	LCUI_Widget txt_title;			/**< 标题 */
+	LCUI_Widget txt_selection_stats;	/**< 已选文件的统计文本 */
 	LCUI_Widget btn_select;			/**< “选择”按钮 */
 	LCUI_Widget btn_cancel;			/**< “取消”按钮 */
 	LCUI_Widget btn_delete;			/**< “删除”按钮 */
 	LCUI_Widget btn_tag;			/**< “标签”按钮 */
-	LCUI_Widget btn_sort;			/**< ”排序“按钮 */
 	LCUI_Widget tip_empty;			/**< 当内容为空时显示的提示 */
 	Dict *file_indexes;			/**< 文件索引，以路径进行索引 */
 	LinkedList dirs;			/**< 目录列表 */
@@ -78,7 +75,7 @@ void FileBrowser_SetButtonsDisabled( FileBrowser browser, LCUI_BOOL disabled );
 
 void FileBrowser_Append( FileBrowser browser, LCUI_Widget widget );
 
-LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, DB_File file );
+LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, const DB_File file );
 
 LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 				      LCUI_BOOL show_path );

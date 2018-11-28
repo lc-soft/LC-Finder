@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+  <ui>
+    <w id="view-home" class="view">
+      <w class="view-navbar">
+        <w type="textview-i18n" class="text view-navbar-title on-normal-mode" data-i18n-key="home.title">集锦</w>
+        <w id="view-home-selection-stats" type="textview-i18n" class="view-navbar-text on-selection-mode"></w>
+        <w class="view-navbar-actions on-selection-mode">
+          <w id="btn-tag-home-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="tag-multiple"></w>
+          </w>
+          <w id="btn-delete-home-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="delete"></w>
+          </w>
+          <w class="divider"></w>
+          <w id="btn-cancel-home-select" class="view-navbar-btn">
+            <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+          </w>
+        </w>
+        <w class="view-navbar-actions on-normal-mode">
+          <w id="btn-select-home-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+          </w>
+          <w id="btn-sync-home-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="sync"></w>
+          </w>
+        </w>
+      </w>
+      <w class="view-body">
+        <w id="view-home-content-wrapper" class="view-content-wrapper">
+          <w id="view-home-progress" class="top-fixed" type="progress"></w>
+          <w id="view-home-content" class="view-content full-height">
+            <w id="tip-empty-collection" class="floating center middle aligned icon message hide">
+              <w type="textview" class="icon icon icon-image-multiple"></w>
+              <w type="textview-i18n" class="text" data-i18n-key="home.message.empty">未找到可读取的图片。</w>
+            </w>
+            <w type="thumbview" id="home-collection-list" class="scrolllayer file-list"></w>
+          </w>
+          <w type="scrollbar" target="home-collection-list"/>
+          <w id="view-time-range" class="view-time-range">
+            <w id="view-time-range-content" class="view-content full-height">
+              <w id="time-range-list" class="scrolllayer time-range-list"></w>
+            </w>
+            <w type="scrollbar" target="time-range-list"/>
+          </w>
+        </w>
+      </w>
+    </w>
+  </ui>
+</lcui-app>

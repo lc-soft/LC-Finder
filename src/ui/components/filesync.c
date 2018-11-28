@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * filesync.c -- file sync and sync status view function.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * filesync.c -- 文件同步和状态提示功能。
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -59,95 +59,92 @@ static struct SyncContextRec_ {
 	int cached_state;		/**< 当前缓存的同步状态 */
 } self = { 0 };
 
-static void RenderStatusText( wchar_t *buf, const wchar_t *text, void *data )
+static void RenderStatusText(wchar_t *buf, const wchar_t *text, void *data)
 {
 	size_t count, total;
-	switch( self.cached_state ) {
+	switch (self.cached_state) {
 	case STATE_SAVING:
 		count = self.status.synced_files;
 		total = self.status.added_files;
 		total += self.status.changed_files;
 		total += self.status.deleted_files;
-		if( self.status.task ) {
+		if (self.status.task) {
 			total += self.status.task->added_files;
 			total += self.status.task->changed_files;
 			total += self.status.task->deleted_files;
 		}
-		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count, total );
+		swprintf(buf, TXTFMT_BUF_MAX_LEN, text, count, total);
 		break;
 	case STATE_FINISHED:
 		count = self.status.synced_files;
-		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
+		swprintf(buf, TXTFMT_BUF_MAX_LEN, text, count);
 		break;
 	case STATE_STARTED:
 	default:
 		count = self.status.scaned_files;
-		if( self.status.task ) {
-			count += self.status.task->total_files;
-		}
-		swprintf( buf, TXTFMT_BUF_MAX_LEN, text, count );
+		swprintf(buf, TXTFMT_BUF_MAX_LEN, text, count);
 		break;
 	}
 }
 
-static void OnUpdateStats( void *arg )
+static void OnUpdateStats(void *arg)
 {
 	self.cached_state = self.status.state;
-	switch( self.cached_state ) {
+	switch (self.cached_state) {
 	case STATE_SAVING:
-		TextViewI18n_SetKey( self.text, KEY_TEXT_SAVING );
+		TextViewI18n_SetKey(self.text, KEY_TEXT_SAVING);
 		break;
 	case STATE_FINISHED:
-		TextViewI18n_SetKey( self.text, KEY_TEXT_FINISHED );
+		TextViewI18n_SetKey(self.text, KEY_TEXT_FINISHED);
 		break;
 	case STATE_STARTED:
 	default:
-		TextViewI18n_SetKey( self.text, KEY_TEXT_SCANING );
+		TextViewI18n_SetKey(self.text, KEY_TEXT_SCANING);
 		break;
 	}
 }
 
-static void OnHideTip( void *arg )
+static void OnHideTip(void *arg)
 {
 	LCUI_Widget alert = self.text->parent;
-	if( self.is_syncing ) {
+	if (self.is_syncing) {
 		return;
 	}
-	Widget_AddClass( alert, "hide" );
+	Widget_AddClass(alert, "hide");
 }
 
-static void OnFinishSyncFiles( void *data )
+static void OnFinishSyncFiles(void *data)
 {
-	OnUpdateStats( NULL );
-	LCUITimer_Free( self.timer );
-	TextViewI18n_Refresh( self.text );
-	TextViewI18n_SetKey( self.title, KEY_TITLE_FINISHED );
-	LCUITimer_Set( 3000, OnHideTip, NULL, FALSE );
+	OnUpdateStats(NULL);
+	LCUITimer_Free(self.timer);
+	TextViewI18n_Refresh(self.text);
+	TextViewI18n_SetKey(self.title, KEY_TITLE_FINISHED);
+	LCUITimer_Set(3000, OnHideTip, NULL, FALSE);
 	self.is_syncing = FALSE;
 	self.timer = 0;
-	LCFinder_TriggerEvent( EVENT_SYNC_DONE, NULL );
+	LCFinder_TriggerEvent(EVENT_SYNC_DONE, NULL);
 }
 
-static void OnStartSyncFiles( void *privdata, void *data )
+static void OnStartSyncFiles(void *privdata, void *data)
 {
 	LCUI_Widget alert = self.text->parent;
-	if( self.is_syncing ) {
+	if (self.is_syncing) {
 		return;
 	}
-	OnUpdateStats( NULL );
+	OnUpdateStats(NULL);
 	self.is_syncing = TRUE;
-	self.timer = LCUITimer_Set( 200, OnUpdateStats, NULL, TRUE );
-	TextViewI18n_SetKey( self.title, KEY_TITLE_SCANING );
-	LCFinder_SyncFilesAsync( &self.status );
-	Widget_RemoveClass( alert, "hide" );
+	self.timer = LCUITimer_Set(200, OnUpdateStats, NULL, TRUE);
+	TextViewI18n_SetKey(self.title, KEY_TITLE_SCANING);
+	LCFinder_SyncFilesAsync(&self.status);
+	Widget_RemoveClass(alert, "hide");
 }
 
-void UI_InitFileSyncTip( void )
+void UI_InitFileSyncTip(void)
 {
 	self.status.data = NULL;
 	self.status.callback = OnFinishSyncFiles;
-	self.text = LCUIWidget_GetById( ID_TXT_FILE_SYNC_STATS );
-	self.title = LCUIWidget_GetById( ID_TXT_FILE_SYNC_TITLE );
-	LCFinder_BindEvent( EVENT_SYNC, OnStartSyncFiles, NULL );
-	TextViewI18n_SetFormater( self.text, RenderStatusText, NULL );
+	self.text = LCUIWidget_GetById(ID_TXT_FILE_SYNC_STATS);
+	self.title = LCUIWidget_GetById(ID_TXT_FILE_SYNC_TITLE);
+	LCFinder_BindEvent(EVENT_SYNC, OnStartSyncFiles, NULL);
+	TextViewI18n_SetFormater(self.text, RenderStatusText, NULL);
 }

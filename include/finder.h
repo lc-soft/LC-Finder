@@ -2,7 +2,7 @@
  * finder.h -- main code of LC-Finder, responsible for the initialization of 
  * the LC-Finder and the scheduling of other functions.
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * finder.h -- LC-Finder 主程序代码，负责整个程序的初始化和其它功能的调度。
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -41,6 +41,7 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include "build.h"
+#include "types.h"
 #include "bridge.h"
 #include "common.h"
 #include "file_cache.h"
@@ -78,6 +79,7 @@ typedef struct FinderConfigRec_ {
 	char language[32];		/**< 当前语言 */
 	int files_sort;			/**< 文件的排序方式 */
 	char encrypted_password[48];	/**< 加密后的密码 */
+	int scaling;			/**< 界面的缩放比例，100 ~ 200 */
 } FinderConfigRec, *FinderConfig;
 
 typedef struct FinderLicenseRec_ {
@@ -174,7 +176,7 @@ void LCFinder_ReloadTags( void );
 
 void LCFinder_DeleteDir( DB_Dir dir );
 
-size_t LCFinder_DeleteFiles( const char **files, size_t nfiles,
+size_t LCFinder_DeleteFiles( char * const *files, size_t nfiles,
 			     int( *onstep )(void*, size_t, size_t),
 			     void *privdata );
 

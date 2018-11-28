@@ -1,9 +1,11 @@
-.text, textview-i18n, textview {
+#{$text-elements}, textview-i18n, .text, .icon, .link {
 	font-size: 14px;
-	font-family: Microsoft YaHei;
+}
+textview-i18n, .link {
+	font-family: $font-family-base;
 }
 .text-muted {
-	color: #888;
+	color: $gray-600;
 }
 .text-line {
 	width: 100%;

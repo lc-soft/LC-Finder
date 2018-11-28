@@ -2,7 +2,7 @@
  * bridge.cpp -- a bridge, provides a cross-platform implementation for some
  * interfaces.
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * bridge.cpp -- 桥梁，为某些功能提供跨平台实现.
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -51,79 +51,80 @@ using namespace Windows::ApplicationModel::Store;
 
 #define FutureAccessList AccessCache::StorageApplicationPermissions::FutureAccessList
 
-int GetAppDataFolderW( wchar_t *buf, int max_len )
+int GetAppDataFolderW(wchar_t *buf, int max_len)
 {
 	StorageFolder^ folder = ApplicationData::Current->LocalFolder;
-	wcsncpy( buf, folder->Path->Data(), max_len );
+	wcsncpy(buf, folder->Path->Data(), max_len);
 	return 0;
 }
 
-int GetAppInstalledLocationW( wchar_t *buf, int max_len )
+int GetAppInstalledLocationW(wchar_t *buf, int max_len)
 {
 	StorageFolder^ folder = Package::Current->InstalledLocation;
-	wcsncpy( buf, folder->Path->Data(), max_len );
+	wcsncpy(buf, folder->Path->Data(), max_len);
 	return 0;
 }
 
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
+void SelectFolderAsyncW(void(*callback)(const wchar_t*, const wchar_t*))
 {
 	FolderPicker^ folderPicker = ref new FolderPicker();
 	folderPicker->SuggestedStartLocation = PickerLocationId::Desktop;
-	folderPicker->FileTypeFilter->Append( ".png" );
-	folderPicker->FileTypeFilter->Append( ".bmp" );
-	folderPicker->FileTypeFilter->Append( ".jpg" );
-	folderPicker->FileTypeFilter->Append( ".jpeg" );
-	create_task( folderPicker->PickSingleFolderAsync() )
-		.then([callback]( StorageFolder^ folder ) {
-		if( !folder ) {
+	folderPicker->FileTypeFilter->Append(".png");
+	folderPicker->FileTypeFilter->Append(".bmp");
+	folderPicker->FileTypeFilter->Append(".jpg");
+	folderPicker->FileTypeFilter->Append(".jpeg");
+	create_task(folderPicker->PickSingleFolderAsync())
+		.then([callback](StorageFolder^ folder) {
+		if (!folder) {
 			return;
 		}
-		auto token = FutureAccessList->Add( folder );
-		callback( folder->Path->Data(), token->Data() );
-	} );
+		auto token = FutureAccessList->Add(folder);
+		callback(folder->Path->Data(), token->Data());
+	});
 }
 
-void RemoveFolderAccessW( const wchar_t *token )
+void RemoveFolderAccessW(const wchar_t *token)
 {
-	auto str = ref new Platform::String( token );
-	FutureAccessList->Remove( str );
+	auto str = ref new Platform::String(token);
+	FutureAccessList->Remove(str);
 }
 
-void OpenUriW( const wchar_t *uristr )
-{
-	auto str = ref new Platform::String( uristr );
-	auto uri = ref new Uri( str );
-	Launcher::LaunchUriAsync( uri );
-}
-
-void OpenFileManagerW( const wchar_t *filepath )
+void OpenFileManagerW(const wchar_t *filepath)
 {
 
 }
 
-int MoveFileToTrashW( const wchar_t *filepath )
+int MoveFileToTrashW(const wchar_t *filepath)
 {
 	// 当前版本暂不提供文件删除功能
 	return -1;
 }
 
-static void OnLicenseChanged( void )
+static void OnLicenseChanged(void)
 {
+#ifdef _DEBUG
+	LicenseInformation ^license = CurrentAppSimulator::LicenseInformation;
+#else
 	LicenseInformation ^license = CurrentApp::LicenseInformation;
+#endif
 	finder.license.is_active = license->IsActive;
 	finder.license.is_trial = license->IsTrial;
-	LCFinder_TriggerEvent( EVENT_LICENSE_CHG, NULL );
+	LCFinder_TriggerEvent(EVENT_LICENSE_CHG, NULL);
 }
 
-void LCFinder_InitLicense( void )
+void LCFinder_InitLicense(void)
 {
+#ifdef _DEBUG
+	LicenseInformation ^license = CurrentAppSimulator::LicenseInformation;
+#else
 	LicenseInformation ^license = CurrentApp::LicenseInformation;
-	license->LicenseChanged += ref new LicenseChangedEventHandler( OnLicenseChanged );
+#endif
+	license->LicenseChanged += ref new LicenseChangedEventHandler(OnLicenseChanged);
 	finder.license.is_active = license->IsActive;
 	finder.license.is_trial = license->IsTrial;
 }
 
-int MoveFileToTrash( const char *filepath )
+int MoveFileToTrash(const char *filepath)
 {
 	return -1;
 }

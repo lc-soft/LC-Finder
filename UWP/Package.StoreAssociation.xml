@@ -2,6 +2,7 @@
 <StoreAssociation xmlns="http://schemas.microsoft.com/appx/2010/storeassociation">
   <Publisher>CN=CD763D14-D031-4CC5-ACDD-C84A9B145D5B</Publisher>
   <PublisherDisplayName>LC's Software</PublisherDisplayName>
+  <DeveloperAccountType>MSA</DeveloperAccountType>
   <GeneratePackageHash>http://www.w3.org/2001/04/xmlenc#sha256</GeneratePackageHash>
   <SupportedLocales>
     <Language Code="af" InMinimumRequirementSet="true" />
@@ -361,6 +362,9 @@
     <MainPackageIdentityName>23902LCsSoftware.LCsFinder</MainPackageIdentityName>
     <ReservedNames>
       <ReservedName>LC's Finder</ReservedName>
+      <ReservedName>LC-Finder</ReservedName>
+      <ReservedName>LCFinder</ReservedName>
+      <ReservedName>LC Finder</ReservedName>
     </ReservedNames>
   </ProductReservedInfo>
   <AccountPackageIdentityNames />

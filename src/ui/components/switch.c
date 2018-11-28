@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * switch.c --switch widget
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * switch.c -- 开关部件
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -35,6 +35,7 @@
  * ****************************************************************************/
 
 #include "finder.h"
+#include <string.h>
 #include <LCUI/timer.h>
 #include <LCUI/gui/widget.h>
 #include "textview_i18n.h"
@@ -55,55 +56,6 @@ static struct SwitchModule {
 	LCUI_WidgetPrototype prototype;
 	int event_change;
 } self;
-
-static const char *switch_css = CodeToString(
-
-.switch {
-	height: 20px;
-	width: 44px;
-	display: inline-block;
-	border: 2px solid #c8d3d9;
-	background-color: #c8d3d9;
-}
-.switch .switch-bar {
-	left: 24px;
-	height: 100%;
-	width: 68px;
-	position: relative;
-}
-.switch .switch-slider {
-	width: 20px;
-	height: 100%;
-	background-color: #8c9da5;
-}
-.switch.checked {
-	border: 2px solid #80dea0;
-	background-color: #80dea0;
-}
-.switch.checked .switch-slider {
-	background-color: #44BB55;
-}
-.switch.checked .switch-bar {
-	left: 0;
-}
-.switch .switch-on-block,
-.switch .switch-off-block {
-	width: 24px;
-	color: #fff;
-	font-size: 16px;
-	text-align: center;
-}
-.switch .switch-on-block,
-.switch .switch-off-block,
-.switch .switch-slider {
-	display: inline-block;
-}
-.switch-text {
-	margin-left: 10px;
-	line-height: 24px;
-}
-
-);
 
 static void Switch_OnClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
 {
@@ -177,5 +129,4 @@ void LCUIWidget_AddSwitch( void )
 	self.prototype->init = Switch_OnInit;
 	self.event_change = LCUIWidget_AllocEventId();
 	LCUIWidget_SetEventName( self.event_change, "change.switch" );
-	LCUI_LoadCSSString( switch_css, NULL );
 }

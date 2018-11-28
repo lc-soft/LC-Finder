@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<lcui-app>
+  <ui>
+    <w id="view-folders" class="view hide">
+      <w class="view-navbar">
+        <w type="textview-i18n" class="text on-normal-mode view-navbar-title" data-i18n-key="folders.title">文件夹</w>
+        <w id="view-folders-selection-stats" type="textview-i18n" class="view-navbar-text on-selection-mode"></w>
+        <w class="view-navbar-actions on-selection-mode">
+          <w id="btn-tag-folder-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="tag-multiple"></w>
+          </w>
+          <w id="btn-delete-folder-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="delete"></w>
+          </w>
+          <w class="divider"></w>
+          <w id="btn-cancel-folder-select" class="view-navbar-btn">
+            <w type="textview-i18n" class="text" data-i18n-key="button.cancel">取消</w>
+          </w>
+        </w>
+        <w class="view-navbar-actions on-normal-mode">
+          <w class="view-navbar-btn" data-toggle="dropdown" data-target="dropdown-folder-files-sort">
+            <w type="icon" class="text" name="sort"></w>
+          </w>
+          <w id="btn-select-folder-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="checkbox-multiple-marked-outline"></w>
+          </w>
+          <w id="btn-sync-folder-files" class="view-navbar-btn">
+            <w type="icon" class="text" name="sync"></w>
+          </w>
+        </w>
+      </w>
+      <w class="view-body">
+        <w id="view-folders-info-box" class="folder-info-box">
+          <w id="view-folders-info-box-name" type="textview" class="text folder-info-box-name"></w>
+          <w id="view-folders-info-box-path" type="textview" class="text folder-info-box-path"></w>
+          <w id="btn-return-root-folder" class="link">
+            <w type="textview-i18n" class="text" data-i18n-key="folders.return">返回到源文件夹</w>
+          </w>
+        </w>
+        <w id="view-folders-content-wrapper" class="view-content-wrapper">
+          <w id="view-folders-content" class="view-content full-height">
+            <w id="tip-empty-folder" class="floating center middle aligned icon message">
+              <w type="icon" name="folder-multiple-image"></w>
+              <w type="textview-i18n" class="text" data-i18n-key="folders.message.empty">未找到可读取的图片或文件夹</w>
+            </w>
+            <w type="thumbview" id="current-file-list" class="scrolllayer file-list"></w>
+          </w>
+          <w type="scrollbar" target="current-file-list"/>
+        </w>
+      </w>
+      <w id="dropdown-folder-files-sort" type="dropdown-menu" class="checkable" data-position="bottom right"></w>
+    </w>
+  </ui>
+</lcui-app>

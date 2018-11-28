@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_search.h -- file indexing and searching.
  *
- * Copyright (C) 2015-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2015-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_search.h -- 文件信息的索引与搜索。
  *
- * 版权所有 (C) 2015-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2015-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -73,8 +73,8 @@ typedef struct DB_QueryTermsRec_ {
 	DB_Tag *tags;			/**< 标签列表 */
 	size_t n_dirs;			/**< 文件夹数量 */
 	size_t n_tags;			/**< 标签数量 */
-	int offset;			/**< 从何处开始取数据记录 */
-	int limit;			/**< 数据记录的最大数量 */
+	size_t offset;			/**< 从何处开始取数据记录 */
+	size_t limit;			/**< 数据记录的最大数量 */
 	int for_tree;			/**< 是否搜索子级目录树，值为 0 时只搜索当前目录下的文件 */
 	char *dirpath;			/**< 文件所在的目录路径 */
 	enum order score;		/**< 按评分排序时使用的排序规则 */

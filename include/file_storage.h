@@ -2,7 +2,7 @@
  * file_storage.h -- File related operating interface, based on file storage
  * service.
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * file_storage.h -- 基于文件存储服务而实现的文件相关操作接口
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -52,9 +52,7 @@ int FileStorage_Connect( void );
 
 void FileStorage_Close( int id );
 
-void FileStorage_Exit( void );
-
-static void OnResponse( FileResponse *response, void *data );
+void FileStorage_Free( void );
 
 int FileStorage_GetFile( int conn_id, const wchar_t *filename,
 			 HandlerOnGetFile callback, void *data );

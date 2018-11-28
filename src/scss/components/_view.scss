@@ -1,5 +1,3 @@
-@import "variables";
-
 .view {
 	top: 0;
 	left: 0;
@@ -8,99 +6,119 @@
 	position: absolute;
 	padding: 0 0 0 $sidebar-min-width;
 	box-sizing: border-box;
+	background-color: $view-bg;
+}
+.view-navbar {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: $view-navbar-height;
+	position: absolute;
+	padding: $view-navbar-padding-y $gutter-width $view-navbar-padding-y #{$sidebar-min-width + $gutter-width};
+	background-color: $view-navbar-bg;
+	border-bottom: 1px solid $view-navbar-border-color;
+	box-sizing: border-box;
 
-	.view-navbar {
+	.divider {
+		width: 1px;
+		display: inline-block;
+		background-color: $divider-color;
+		height: 100%;
+		margin: 0 $divider-margin-y;
+	}
+}
+.view-navbar-actions {
+	position: absolute;
+	top: $view-navbar-padding-y;
+	right: $gutter-width;
+}
+.view-navbar-title {
+	font-size: $view-navbar-title-font-size;
+	line-height: $view-navbar-line-height;
+	display: inline-block;
+}
+.view-navbar-text {
+	font-size: $view-navbar-font-size;
+	line-height: $view-navbar-line-height;
+	display: inline-block;
+}
+.view-navbar-btn {
+	display: inline-block;
+	padding: $view-navbar-btn-padding-y $view-navbar-btn-padding-x;
+
+	.text,
+	.icon {
+		color: $view-navbar-btn-color;
+	}
+	.text {
+		display: inline-block;
+	}
+	.text {
+		font-size: $view-navbar-btn-font-size;
+		height: $view-navbar-btn-icon-line-height;
+	}
+	.icon {
+		width: 24px;
+		font-size: $view-navbar-btn-icon-font-size;
+		line-height: $view-navbar-btn-icon-line-height;
+		text-align: center;
+	}
+	&:hover {
+		background-color: #fbfbfb;
+
+		.text,
+		.icon {
+			color: $view-navbar-btn-hover-color;
+		}
+	}
+	&:active {
+		background-color: #f8f8f8;
+	}
+}
+.view-body {
+	height: 100%;
+	width: 100%;
+	padding: $view-navbar-height 0 0 0;
+	box-sizing: border-box;
+
+	.title {
+		font-size: 20px;
+		line-height: 32px;
+		height: 32px;
+		margin: 0 0 10px 0;
+	}
+	.title2 {
+		font-size: 16px;
+		line-height: 24px;
+		margin: 0 0 5px 0;
+	}
+}
+.view-content-wrapper {
+	width: 100%;
+	height: 100%;
+
+	progress.top-fixed {
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: 48px;
+		height: 4px;
 		position: absolute;
-		padding-left: $sidebar-min-width;
-		background-color: #fafafa;
-		box-sizing: border-box;
-		box-shadow: 0px 0px 4px rgba(0,0,0,0.6);
 
-		.divider {
-			width: 1px;
-			display: inline-block;
-			background-color: #aaa;
+		progressbar {
+			width: 0;
 			height: 100%;
-			margin: 0 12px;
-		}
-		.view-navbar-title, .view-navbar-text {
-			font-size: 16px;
-			line-height: 48px;
-			display: inline-block;
-		}
-		.view-navbar-title {
-			padding: 0 0 0 25px;
-		}
-		.view-navbar-btn {
-			display: inline-block;
-			padding: 14px 12px 12px 10px;
-		}
-		.view-navbar-btn .text {
-			display: inline-block;
-		}
-		.view-navbar-btn .text {
-			font-size: 16px;
-			height: 24px;
-		}
-		.view-navbar-btn .icon {
-			width: 24px;
-			font-size: 24px;
-			line-height: 24px;
-			text-align: center;
-		}
-		.view-navbar-title {
-			display: inline-block;
 		}
 	}
-	.view-body {
-		height: 100%;
-		width: 100%;
-		padding: $navbar-height 0 0 0;
-		box-sizing: border-box;
-
-		.title {
-			font-size: 20px;
-			line-height: 32px;
-			height: 32px;
-			margin: 0 0 10px 0;
-		}
-		.title2 {
-			font-size: 16px;
-			line-height: 24px;
-			margin: 0 0 5px 0;
-		}
-	}
-	.view-content-wrapper {
-		width: 100%;
-		height: 100%;
-
-		progress.top-fixed {
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 4px;
-			position: absolute;
-
-			progressbar {
-				width: 0;
-				height: 100%;
-			}
-		}
-	}
-	.view-content {
-		width: 100%;
-		padding: 15px 25px 0 25px;
-		box-sizing: border-box;
-	}
-	.item-group {
-		margin: 0 0 15px 0;
-		box-sizing: border-box;
-		width: 100%;
-	}
+}
+.view-content {
+	width: 100%;
+	padding: $spacing $gutter-width 0 $gutter-width;
+	box-sizing: border-box;
+}
+.item-group {
+	margin: 0 0 $spacing 0;
+	box-sizing: border-box;
+	width: 100%;
 }
 .subview {
 	top: 0;
@@ -109,6 +127,13 @@
 	height: 100%;
 	position: absolute;
 	padding-left: $sidebar-min-width;
-	background-color: #fff;
+	background-color: $view-bg;
 	box-sizing: border-box;
+
+	.view-navbar {
+		padding-left: $sidebar-min-width;
+	}
+	.view-navbar-title {
+		padding-left: $spacing / 2;
+	}
 }

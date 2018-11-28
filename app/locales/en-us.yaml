@@ -12,11 +12,17 @@ strings:
         on: On
         off: Off
     dialog:
-        placeholder:
+        select_folder:
+            title: Select folder
+            placeholder: Folder path
+        password:
             password: Password
             confirm_password: Confirm password
+    tagthumb:
+        item: '%ls item'
+        items: '%ls items'
     sort:
-        header: Sort options
+        header: Sort by
         ctime_desc: Recently created
         ctime_asc: Least recently created
         mtime_desc: Recently updated
@@ -66,7 +72,7 @@ strings:
     search:
         title: Search
         placeholder:
-            search_input: 'search by tags, use spaces to separate tags.'
+            search_input: 'Search pictures'
         results: 
             title: Search results
         message:
@@ -129,9 +135,12 @@ strings:
             title: Cache
             stats: 'Current thumbnail cache has used %s space.'
             description: >-
-                This application will automatically cache the thumbnail
+                We will automatically cache the thumbnail
                 when you browse the list of pictures, so that you can quickly
                 render thumbnail images in the next time you browse the pictures.
+        scaling:
+            title: Scaling
+            description: Set a suitable scaling to improve the visual experience of the user interface
         private_space:
             title: Private space
             sources_title: Private sources
@@ -159,6 +168,7 @@ strings:
         language: Language
         language_description: Change language
         license: License
+        privacy: Privacy
         website: Website
         feedback: Feedback
         sourcecode: Source code
@@ -169,4 +179,4 @@ strings:
                 title: Remove this source folder ?
                 content: This source folder's files related infomation will be remove.
         about: About
-        copyright: © 2017 LC's Software，All rights reserved.
+        copyright: © 2018 LC's Software，All rights reserved.

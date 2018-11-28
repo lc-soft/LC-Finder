@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * thumb_db.c -- thumbnail database
  *
- * Copyright (C) 2016 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * thumb_db.c -- 缩略图缓存数据库
  *
- * 版权所有 (C) 2016 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,23 +34,27 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#define LCFINDER_THUMB_DB_C
+#define HAVE_THUMB_DB
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/graph.h>
 #include <LCUI/thread.h>
-#include "unqlite.h"
+#include "kvdb.h"
 #include "thumb_db.h"
 
+#define THUMB_MAX_SIZE 8553600
+#define ThumbDB_Unlock(TDB) LCUIMutex_Unlock( &(TDB)->mutex )
+#define ASSERT(X) if(!(X)) { return -1; }
+
 typedef struct ThumbDBRec_ {
-	unqlite *db;
+	kvdb_t *db;
 	LCUI_BOOL closed;
 	LCUI_Mutex mutex;
 } ThumbDBRec;
-
-#define THUMB_MAX_SIZE 8553600
 
 typedef struct ThumbDataBlockRec_ {
 	uint32_t width;
@@ -62,91 +66,93 @@ typedef struct ThumbDataBlockRec_ {
 	uint32_t modify_time;
 } ThumbDataBlockRec, *ThumbDataBlock;
 
-ThumbDB ThumbDB_Open( const char *filepath )
+ThumbDB ThumbDB_Open(const char *filepath)
 {
-	int rc;
-	ThumbDB tdb = malloc( sizeof(ThumbDBRec) );
-	rc = unqlite_open( &tdb->db, filepath, UNQLITE_OPEN_CREATE );
-	if( rc != UNQLITE_OK ) {
-		free( tdb );
+	ThumbDB tdb;
+	
+	tdb = malloc(sizeof(ThumbDBRec));
+	tdb->db = kvdb_open(filepath);
+	if (!tdb->db) {
+		printf("[thumbdb] cannot open db: %s\n", filepath);
+		free(tdb);
 		return NULL;
 	}
-	rc = unqlite_kv_store( tdb->db, "__program__", -1, "LCFinder", 9 );
-	if( rc != UNQLITE_OK ) {
-		printf( "[thumbdb] cannot open db: %s\n", filepath );
-	}
 	tdb->closed = FALSE;
-	LCUIMutex_Init( &tdb->mutex );
+	LCUIMutex_Init(&tdb->mutex);
 	return tdb;
 }
 
-void ThumbDB_Close( ThumbDB tdb )
+void ThumbDB_Close(ThumbDB tdb)
 {
 	tdb->closed = TRUE;
-	LCUIMutex_Lock( &tdb->mutex );
-	unqlite_close( tdb->db );
-	LCUIMutex_Unlock( &tdb->mutex );
-	LCUIMutex_Destroy( &tdb->mutex );
-	free( tdb );
+	LCUIMutex_Lock(&tdb->mutex);
+	kvdb_close(tdb->db);
+	LCUIMutex_Unlock(&tdb->mutex);
+	LCUIMutex_Destroy(&tdb->mutex);
+	free(tdb);
 }
 
-static int ThumbDB_Lock( ThumbDB tdb )
+int ThumbDB_GetSize(const char *filepath, int64_t *size)
 {
-	if( tdb->closed ) {
+	return kvdb_get_db_size(filepath, size);
+}
+
+int ThumbDB_DestroyDB(const char *filepath)
+{
+	return kvdb_destroy_db(filepath);
+}
+
+static int ThumbDB_Lock(ThumbDB tdb)
+{
+	if (tdb->closed) {
 		return -1;
 	}
-	LCUIMutex_Lock( &tdb->mutex );
-	if( tdb->closed ) {
+	LCUIMutex_Lock(&tdb->mutex);
+	if (tdb->closed) {
 		return -1;
 	}
 	return 0;
 }
 
-#define ThumbDB_Unlock(TDB) LCUIMutex_Unlock( &(TDB)->mutex )
-#define ASSERT(X) if(!(X)) { return -1; }
-
-int ThumbDB_Load( ThumbDB tdb, const char *filepath, ThumbData data )
+int ThumbDB_Load(ThumbDB tdb, const char *filepath, ThumbData data)
 {
-	int rc;
+	size_t size;
+	size_t keylen;
 	uchar_t *bytes;
-	unqlite_int64 size;
 	ThumbDataBlock block;
-	ASSERT( ThumbDB_Lock( tdb ) == 0 );
-	rc = unqlite_kv_fetch( tdb->db, filepath, -1, NULL, &size );
-	if( rc != UNQLITE_OK ) {
-		ThumbDB_Unlock( tdb );
+
+	ASSERT(ThumbDB_Lock(tdb) == 0);
+	keylen = strlen(filepath);
+	block = kvdb_get(tdb->db, filepath, keylen, &size);
+	if (!block) {
+		ThumbDB_Unlock(tdb);
 		return -1;
 	}
-	block = malloc( (size_t)size );
-	bytes = (uchar_t*)block + sizeof( ThumbDataBlockRec );
-	rc = unqlite_kv_fetch( tdb->db, filepath, -1, block, &size );
-	ThumbDB_Unlock( tdb );
-	if( rc != UNQLITE_OK ) {
-		return -1;
-	}
-	Graph_Init( &data->graph );
+	bytes = (uchar_t*)block + sizeof(ThumbDataBlockRec);
+	ThumbDB_Unlock(tdb);
+	Graph_Init(&data->graph);
 	data->graph.color_type = block->color_type;
-	Graph_Create( &data->graph, block->width, block->height );
-	memcpy( data->graph.bytes, bytes, block->mem_size );
+	Graph_Create(&data->graph, block->width, block->height);
+	memcpy(data->graph.bytes, bytes, block->mem_size);
 	data->modify_time = block->modify_time;
 	data->origin_width = block->origin_width;
 	data->origin_height = block->origin_height;
-	free( block );
+	free(block);
 	return 0;
 }
 
-int ThumbDB_Save( ThumbDB tdb, const char *filepath, ThumbData data )
+int ThumbDB_Save(ThumbDB tdb, const char *filepath, ThumbData data)
 {
 	int rc;
 	uchar_t *buff;
 	ThumbDataBlock block;
-	size_t head_size = sizeof( ThumbDataBlockRec );
+	size_t head_size = sizeof(ThumbDataBlockRec);
 	size_t size = head_size + data->graph.mem_size;
-	if( size > THUMB_MAX_SIZE ) {
+	if (size > THUMB_MAX_SIZE) {
 		return -1;
 	}
-	ASSERT( ThumbDB_Lock( tdb ) == 0 );
-	block = malloc( size );
+	ASSERT(ThumbDB_Lock(tdb) == 0);
+	block = malloc(size);
 	buff = (uchar_t*)block + head_size;
 	block->width = data->graph.width;
 	block->height = data->graph.height;
@@ -155,12 +161,9 @@ int ThumbDB_Save( ThumbDB tdb, const char *filepath, ThumbData data )
 	block->origin_width = data->origin_width;
 	block->origin_height = data->origin_height;
 	block->color_type = data->graph.color_type;
-	memcpy( buff, data->graph.bytes, data->graph.mem_size );
-	rc = unqlite_kv_store( tdb->db, filepath, -1, block, size );
-	if( rc == UNQLITE_OK ) {
-		unqlite_commit( tdb->db );
-	}
-	ThumbDB_Unlock( tdb );
-	free( block );
-	return rc == UNQLITE_OK ? 0 : -2;
+	memcpy(buff, data->graph.bytes, data->graph.mem_size);
+	rc = kvdb_put(tdb->db, filepath, strlen(filepath), (char*)block, size);
+	ThumbDB_Unlock(tdb);
+	free(block);
+	return rc == 0 ? 0 : -2;
 }

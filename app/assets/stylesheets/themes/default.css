@@ -1,0 +1,63 @@
+.theme-default .message.inverted .text {
+  color: #fff;
+}
+
+.theme-default .icon.message.inverted .icon {
+  color: #555;
+}
+
+.theme-default .message progress {
+  bottom: 0;
+  height: 2px;
+  position: absolute;
+}
+
+.theme-default .message.box {
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.theme-default .btn-dropdown.active {
+  border-color: #1890ff;
+}
+
+.theme-default dropdown.checkable dropdown-item .icon {
+  color: #1890ff;
+}
+
+#picture-viewer-window.theme-default {
+  background-color: #222;
+}
+
+#picture-viewer-window.theme-default .window-navbar {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#picture-viewer-window.theme-default .zoom-btn-group {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: transparent;
+  padding: 2px;
+}
+
+#picture-viewer-window.theme-default .icon-btn .icon, #picture-viewer-window.theme-default .icon-btn .text {
+  color: #fff;
+  background-color: transparent;
+}
+
+#picture-viewer-window.theme-default .icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+#picture-viewer-window.theme-default .icon-btn:active {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+#picture-viewer-window.theme-default .icon-btn:disabled .icon,
+#picture-viewer-window.theme-default .icon-btn:disabled:hover .icon,
+#picture-viewer-window.theme-default .icon-btn:disabled:active .icon {
+  color: #888;
+}
+
+#picture-viewer-window.theme-default .icon-btn:disabled, #picture-viewer-window.theme-default .icon-btn:disabled:hover, #picture-viewer-window.theme-default .icon-btn:disabled:active {
+  background-color: transparent;
+}

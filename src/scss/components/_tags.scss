@@ -1,0 +1,35 @@
+
+.tag-list {
+	margin-top: $tag-margin-y;
+}
+.tag-list-item {
+    display: inline-block;
+    background-color: $gray-100;
+	margin: 0 $tag-margin-x $tag-margin-y 0;
+
+	.text, textview {
+        color: $tag-color;
+		display: inline-block;	
+		padding: $tag-padding-y $tag-padding-x;
+        font-size: $tag-font-size;
+
+        &:first-child {
+		    padding-right: 0;
+        }
+	}
+	.btn-delete {
+        color: #bbb;
+        text-align: center;
+		pointer-events: auto;
+		display: inline-block;
+	}
+	.btn-delete:hover {
+		color: #999;
+	}
+	.btn-delete:active {
+		color: #777;
+    }
+    &:hover {
+        background-color: $gray-200;
+    }
+}

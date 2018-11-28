@@ -12,9 +12,15 @@ strings:
         on: 开
         off: 关
     dialog:
-        placeholder:
+        select_folder:
+            title: 添加文件夹
+            placeholder: 文件夹的位置
+        password:
             password: 密码
             confirm_password: 确认密码
+    tagthumb:
+        item: '%ls 项'
+        items: '%ls 项'
     sort:
         header: 排序方式
         ctime_desc: 最近创建
@@ -66,7 +72,7 @@ strings:
     search:
         title: 搜索
         placeholder:
-            search_input: 根据标签搜索图片，多个标签用空格隔开
+            search_input: 搜索图片
         results: 
             title: 搜索结果
         message:
@@ -129,8 +135,11 @@ strings:
             title: 缓存
             stats: '当前缩略图缓存共占用 %s 的空间'
             description: >-
-                本应用会在你浏览图片列表的时候自动缓存缩略图，
+                我们会在你浏览图片列表的时候自动缓存缩略图，
                 以便在下次浏览图片时能够快速呈现缩略图。
+        scaling:
+            title: 缩放
+            description: 设置一个合适的缩放比例，以改善界面的视觉体验
         private_space:
             title: 私人空间
             sources_title: 私密源
@@ -150,10 +159,11 @@ strings:
                 text: 重置私人空间的开启密码
         trial_message: >-
             当前是试用版，仅供评估使用，如果你认为此应用对你有用，
-            可以选择购买正式版，你的感谢和财务支持将激励我们继续开发此应用。
+            可以考虑购买正式版，你的感谢和资金支持将激励我们继续开发此应用。
         language: 语言
         language_description: 更改界面的显示语言
         license: 许可协议
+        privacy: 隐私策略
         website: 官方网站
         feedback: 问题反馈
         sourcecode: 源代码
@@ -164,4 +174,4 @@ strings:
                 title: 确定要移除该源文件夹？
                 content: 一旦移除后，该源文件夹内的文件相关信息将一同被移除。
         about: 关于此应用
-        copyright: © 2017 LC's Software，保留所有权利。
+        copyright: © 2018 LC's Software，保留所有权利。

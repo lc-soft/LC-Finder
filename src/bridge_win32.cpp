@@ -2,7 +2,7 @@
  * bridge.cpp -- a bridge, provides a cross-platform implementation for some
  * interfaces.
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -21,7 +21,7 @@
 /* ****************************************************************************
  * bridge.cpp -- 桥梁，为某些功能提供跨平台实现。
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -45,64 +45,59 @@
 #include <Windows.h>
 #include <ShlObj.h>
 
-int GetAppDataFolderW( wchar_t *buf, int max_len )
+int GetAppDataFolderW(wchar_t *buf, int max_len)
 {
 	HWND hwnd;
 	LCUI_Surface s;
-	s = LCUIDisplay_GetSurfaceOwner( NULL );
-	hwnd = (HWND)Surface_GetHandle( s );
-	if( !SHGetSpecialFolderPathW( hwnd, buf, CSIDL_LOCAL_APPDATA, 1 ) ) {
+	s = LCUIDisplay_GetSurfaceOwner(NULL);
+	hwnd = (HWND)Surface_GetHandle(s);
+	if (!SHGetSpecialFolderPathW(hwnd, buf, CSIDL_LOCAL_APPDATA, 1)) {
 		return -1;
 	}
-	if( wcslen( buf ) > PATH_LEN - 32 ) {
+	if (wcslen(buf) > PATH_LEN - 32) {
 		return -2;
 	}
-	wpathjoin( buf, buf, LCFINDER_NAME );
-	wmkdir( buf );
+	wpathjoin(buf, buf, LCFINDER_NAME);
+	wmkdir(buf);
 	return 0;
 }
 
-int GetAppInstalledLocationW( wchar_t *buf, int max_len )
+int GetAppInstalledLocationW(wchar_t *buf, int max_len)
 {
 	wchar_t path[PATH_LEN];
-	if( GetModuleFileNameW( NULL, path, max_len ) > 0 ) {
-		wgetdirpath( buf, max_len, path );
+	if (GetModuleFileNameW(NULL, path, max_len) > 0) {
+		wgetdirpath(buf, max_len, path);
 		return 0;
 	}
 	return -1;
 }
 
-void OpenUriW( const wchar_t *uri )
-{
-	ShellExecuteW( NULL, L"open", uri, NULL, NULL, SW_SHOW );
-}
-
-void OpenFileManagerW( const wchar_t *filepath )
+void OpenFileManagerW(const wchar_t *filepath)
 {
 	wchar_t args[PATH_LEN + 16];
-	swprintf( args, 4095, L"/select,\"%s\"", filepath );
-	ShellExecuteW( NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW );
+	swprintf(args, 4095, L"/select,\"%s\"", filepath);
+	ShellExecuteW(NULL, L"open", L"explorer.exe", args, NULL, SW_SHOW);
 }
 
 /* see: https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164%28v=vs.85%29.aspx */
 #define DE_ACCESSDENIEDSRC	0x78
 #define DE_INVALIDFILES		0x7C
 
-int MoveFileToTrashW( const wchar_t *filepath )
+int MoveFileToTrashW(const wchar_t *filepath)
 {
 	int ret;
 	SHFILEOPSTRUCT sctFileOp = { 0 };
-	size_t len = wcslen( filepath ) + 2;
-	wchar_t *path = (wchar_t*)malloc( sizeof( wchar_t ) * len );
-	wcsncpy( path, filepath, len );
+	size_t len = wcslen(filepath) + 2;
+	wchar_t *path = (wchar_t*)malloc(sizeof(wchar_t) * len);
+	wcsncpy(path, filepath, len);
 	path[len - 1] = 0;
 	sctFileOp.pTo = NULL;
 	sctFileOp.pFrom = path;
 	sctFileOp.wFunc = FO_DELETE;
 	sctFileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION |
 		FOF_NOERRORUI | FOF_SILENT;
-	ret = SHFileOperationW( &sctFileOp );
-	switch( ret ) {
+	ret = SHFileOperationW(&sctFileOp);
+	switch (ret) {
 	case DE_ACCESSDENIEDSRC:
 		ret = EACCES;
 		break;
@@ -113,17 +108,17 @@ int MoveFileToTrashW( const wchar_t *filepath )
 		ret = EINVAL;
 		break;
 	}
-	free( path );
+	free(path);
 	return ret;
 }
 
-int MoveFileToTrash( const char *filepath )
+int MoveFileToTrash(const char *filepath)
 {
-	int ret, len = strlen( filepath ) + 1;
-	wchar_t *wfilepath = (wchar_t*)malloc( sizeof( wchar_t ) * len );
-	LCUI_DecodeString( wfilepath, filepath, len, ENCODING_UTF8 );
-	ret = MoveFileToTrashW( wfilepath );
-	free( wfilepath );
+	int ret, len = strlen(filepath) + 1;
+	wchar_t *wfilepath = (wchar_t*)malloc(sizeof(wchar_t) * len);
+	LCUI_DecodeString(wfilepath, filepath, len, ENCODING_UTF8);
+	ret = MoveFileToTrashW(wfilepath);
+	free(wfilepath);
 	return ret;
 }
 
@@ -132,27 +127,27 @@ int MoveFileToTrash( const char *filepath )
 
 #define TEXT_SELECT_DIR	L"选择文件夹"
 
-int SelectFolderW( wchar_t *dirpath )
+int SelectFolderW(wchar_t *dirpath)
 {
 	int len;
 	HWND hwnd;
 	BROWSEINFOW bi;
 	LCUI_Surface s;
 	LPITEMIDLIST iids;
-	s = LCUIDisplay_GetSurfaceOwner( NULL );
-	hwnd = (HWND)Surface_GetHandle( s );
-	memset( &bi, 0, sizeof( bi ) );
+	s = LCUIDisplay_GetSurfaceOwner(NULL);
+	hwnd = (HWND)Surface_GetHandle(s);
+	memset(&bi, 0, sizeof(bi));
 	bi.hwndOwner = hwnd;
 	bi.pidlRoot = NULL;
 	bi.lpszTitle = TEXT_SELECT_DIR;
 	bi.ulFlags = BIF_NEWDIALOGSTYLE;
-	iids = SHBrowseForFolder( &bi );
-	if( !iids ) {
+	iids = SHBrowseForFolder(&bi);
+	if (!iids) {
 		return -1;
 	}
-	SHGetPathFromIDList( iids, dirpath );
-	len = wcslen( wdirpath );
-	if( len > 0 ) {
+	SHGetPathFromIDList(iids, dirpath);
+	len = wcslen(wdirpath);
+	if (len > 0) {
 		return 0;
 	}
 	return -1;
@@ -162,44 +157,44 @@ int SelectFolderW( wchar_t *dirpath )
 
 /* 适用于 Win 7 及以上的系统 */
 
-int SelectFolderW( wchar_t *dirpath )
+int SelectFolderW(wchar_t *dirpath)
 {
 	PWSTR pszPath;
 	DWORD dwOptions;
 	IShellItem *pItem;
 	IFileDialog *pFile;
-	HRESULT hr = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED |
-				     COINIT_DISABLE_OLE1DDE );
-	if( FAILED( hr ) ) {
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+				    COINIT_DISABLE_OLE1DDE);
+	if (FAILED(hr)) {
 		return -1;
 	}
-	hr = CoCreateInstance( CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-			       IID_PPV_ARGS( &pFile ) );
-	if( FAILED( hr ) ) {
+	hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+			      IID_PPV_ARGS(&pFile));
+	if (FAILED(hr)) {
 		CoUninitialize();
 		return -2;
 	}
 	do {
-		hr = pFile->GetOptions( &dwOptions );
-		if( FAILED( hr ) ) {
+		hr = pFile->GetOptions(&dwOptions);
+		if (FAILED(hr)) {
 			break;
 		}
-		pFile->SetOptions( dwOptions | FOS_PICKFOLDERS );
-		hr = pFile->Show( NULL );
-		if( FAILED( hr ) ) {
+		pFile->SetOptions(dwOptions | FOS_PICKFOLDERS);
+		hr = pFile->Show(NULL);
+		if (FAILED(hr)) {
 			break;
 		}
-		hr = pFile->GetResult( &pItem );
-		if( FAILED( hr ) ) {
+		hr = pFile->GetResult(&pItem);
+		if (FAILED(hr)) {
 			break;
 		}
-		hr = pItem->GetDisplayName( SIGDN_FILESYSPATH, &pszPath );
-		if( FAILED( hr ) ) {
+		hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
+		if (FAILED(hr)) {
 			break;
 		}
-		wcscpy( dirpath, pszPath );
-		CoTaskMemFree( pszPath );
-	} while( 0 );
+		wcscpy(dirpath, pszPath);
+		CoTaskMemFree(pszPath);
+	} while (0);
 	pFile->Release();
 	CoUninitialize();
 	return hr;
@@ -207,28 +202,28 @@ int SelectFolderW( wchar_t *dirpath )
 
 #endif
 
-typedef void( *SelectFolderCallback)(const wchar_t*, const wchar_t*);
+typedef void(*SelectFolderCallback)(const wchar_t*, const wchar_t*);
 
-static void OnSelectFolderAsyncW( void *arg1, void *arg2 )
+static void OnSelectFolderAsyncW(void *arg1, void *arg2)
 {
 	wchar_t path[PATH_LEN + 1];
 	SelectFolderCallback callback = (SelectFolderCallback)arg1;
-	if ( SelectFolderW( path ) == 0 ) {
-		callback( path, NULL );
+	if (SelectFolderW(path) == 0) {
+		callback(path, NULL);
 	}
 }
 
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) )
+void SelectFolderAsyncW(void(*callback)(const wchar_t*, const wchar_t*))
 {
-	LCUI_PostSimpleTask( OnSelectFolderAsyncW, callback, NULL );
+	LCUI_PostSimpleTask(OnSelectFolderAsyncW, callback, NULL);
 }
 
-void RemoveFolderAccessW( const wchar_t *token )
+void RemoveFolderAccessW(const wchar_t *token)
 {
 	return;
 }
 
-void LCFinder_InitLicense( void )
+void LCFinder_InitLicense(void)
 {
 	finder.license.is_active = TRUE;
 	finder.license.is_trial = FALSE;

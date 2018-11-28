@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_service.c -- file service
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_service.c -- 文件服务
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -36,6 +36,8 @@
 
 #ifndef LCFINDER_FILE_SERVICE_H
 #define LCFINDER_FILE_SERVICE_H
+
+#include <time.h>
 
 LCFINDER_BEGIN_HEADER
 
@@ -124,6 +126,7 @@ typedef struct FileRequestHandler_ {
 } FileRequestHandler;
 
 enum FileStreamChunkType {
+	DATA_CHUNK_UNKNOWN,
 	DATA_CHUNK_REQUEST,
 	DATA_CHUNK_RESPONSE,
 	DATA_CHUNK_BUFFER,

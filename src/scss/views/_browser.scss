@@ -1,113 +1,133 @@
 .file-list {
 	width: 100%;
-	margin: 0 0 20px 0;
+	margin: 0 #{-$file-list-item-spacing} 20px #{-$file-list-item-spacing};
 
-	.file-list-item-folder {
-		width: 300px;
-		height: 134px;
-		display: inline-block;
-		background-size: cover;
-		background-color: #f0f0f0;
-		background-position: top center;
-		margin: 0 10px 10px 0;
-		border: 1px solid #eee;
-		box-sizing: border-box;
-
-		.info {
-			left: 0;
-			bottom: 0;
-			width: 100%;
-			height: 54px;
-			position: absolute;
-			background-color: rgba(255,255,255,0.8);
-			border-top: 1px solid rgba(255,255,255,0.95);
-			padding: 10px 50px 10px 10px;
-			box-sizing: border-box;
-
-			.icon {
-				top: 10px;
-				right: 10px;
-				width: 34px;
-				height: 34px;
-				font-size: 30px;
-				text-align: center;
-				line-height: 34px;
-				position: absolute;
-				color: #888;
-			}
-			.path {
-				color: #888;
-				font-size: 13px;
-			}
-			.path, .name {
-				width: 190px;
-			}
-		}
-	}
-	.file-list-item-picture {
-		height: 226px;
-		width: 226px;
-		display: inline-block;
-		border: 1px solid rgba(0,0,0,0);
-		background-position: top center;
-		box-sizing: border-box;
-		background-size: cover;
-		background-color: #eee;
-
-		.picture-cover {
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			display: block;
-			position: absolute;
-			box-sizing: border-box;
-			border: 2px solid rgba(0,0,0,0);
-
-			.icon.tip {
-				color: #aaa;
-				font-size: 32px;
-			}
-		}
-		.checkbox {
-			top: 10px;
-			right: 10px;
-			color: #aaa;
-			width: 24px;
-			height: 24px;
-			display: none;
-			line-height: 24px;
-			font-size: 20px;
-			position: absolute;
-			border: 2px solid #aaa;
-			box-sizing: border-box;
-			background-color: rgba(255,255,255,0.8);
-
-			&:hover {
-				border-color: #888;
-				background-color: rgba(255,255,255,0.9);
-			}
-			&:active {
-				border-color: #888;
-				background-color: #fff;
-			}
-		}
-		&.selected .picture-cover {
-			border-color: #ddd;
-			background-color: rgba(255,255,255,0.5);
-		}
-		&:hover .picture-cover {
-			border-color: #ddd;
-		}
-		&.selected .checkbox,
-		&:hover .checkbox {
-			display: block;
-		}
-	}
 	.divider {
 		width: 100%;
+		height: $file-list-item-spacing * 2;
+		border: 0;
+		background-color: transparent;
+	}
+}
+
+.file-folder {
+	width: $file-folder-width;
+	height: $file-folder-height;
+	display: inline-block;
+	background-size: cover;
+	background-color: $file-folder-bg;
+	background-position: top center;
+	margin: $file-list-item-spacing;
+	box-sizing: border-box;
+	position: relative;
+	box-shadow: 0 0 2px rgba(0, 0 , 0, 0.1);
+
+	.info {
+		left: 0;
+		bottom: 0;
+		width: 100%;
+		height: $file-folder-info-height;
+		position: absolute;
+		background-color: $file-folder-info-bg;
+		padding: $file-folder-padding;
+		padding-right: $file-folder-icon-size + $file-folder-padding;
+		box-sizing: border-box;
+
+		.icon {
+			top: $file-folder-padding;
+			right: $file-folder-padding;
+			width: $file-folder-icon-size;
+			height: $file-folder-icon-size;
+			font-size: $file-folder-icon-font-size;
+			text-align: center;
+			line-height: $file-folder-icon-size;
+			position: absolute;
+			color: $gray-600;
+		}
+		.path {
+			color: $gray-600;
+			font-size: 13px;
+		}
+		.path, .name {
+			line-height: $file-folder-info-line-height;
+			width: $file-folder-info-content-width;
+		}
+	}
+	&:hover {
+		top: -2px;
+		box-shadow: 0 1px 5px rgba(0, 0 , 0, 0.1);
+	}
+	&:active {
+		top: 0;
+		opacity: 0.6;
+	}
+}
+.file-picture {
+	height: $file-picture-size;
+	width: $file-picture-size;
+	display: inline-block;
+	border: 1px solid rgba(0,0,0,0);
+	background-position: top center;
+	box-sizing: border-box;
+	background-size: cover;
+	background-color: #eee;
+	margin: $file-list-item-spacing;
+
+	.picture-cover {
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
 		display: block;
-		height: 10px;
+		position: absolute;
+		box-sizing: border-box;
+		border: 2px solid rgba(0,0,0,0);
+
+		.icon.tip {
+			color: #aaa;
+			font-size: 32px;
+		}
+	}
+	.checkbox {
+		top: 10px;
+		right: 10px;
+		color: #aaa;
+		width: 24px;
+		height: 24px;
+		display: none;
+		line-height: 22px;
+		font-size: 20px;
+		position: absolute;
+		border: 2px solid #aaa;
+		box-sizing: border-box;
+		background-color: rgba(255,255,255,0.8);
+
+		&:hover {
+			border-color: #888;
+			background-color: rgba(255,255,255,0.9);
+		}
+		&:active {
+			border-color: #888;
+			background-color: #fff;
+		}
+	}
+	&.selected {
+		.picture-cover {
+			border-color: $primary-color;
+			background-color: rgba($primary-color, 0.1);
+		}
+		.checkbox {
+			color: #fff;
+			border-color: $primary-color;
+			background-color: $primary-color;
+		}
+	}
+	&:hover .picture-cover {
+		border-color: $primary-color;
+	}
+	&.selected .checkbox,
+	&:hover .checkbox {
+		display: block;
 	}
 }
 .on-selection-mode {

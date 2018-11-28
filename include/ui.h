@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * ui.h -- ui managment module
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * ui.h -- 图形界面管理模块
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -37,14 +37,15 @@
 #ifndef LCFINDER_UI_H
 #define LCFINDER_UI_H
 
+#include "types.h"
+
 /* 一些元素的 ID，命名格式为：ID_类型_名称 */
 #define ID_WINDOW_MAIN			"main-window"
 #define ID_WINDOW_PCITURE_VIEWER	"picture-viewer-window"
 #define ID_PANEL_PICTURE_INFO		"picture-info-panel"
-#define ID_TXT_VIEW_HOME_TITLE		"view-home-title"
-#define ID_TXT_VIEW_SEARCH_RESULT_TITLE	"view-search-result-title"
-#define ID_TXT_VIEW_SEARCH_RESULT_COUNT	"view-search-result-count"
-#define ID_TXT_VIEW_FOLDERS_TITLE	"view-folders-title"
+#define ID_TXT_HOME_SELECTION_STATS	"view-home-selection-stats"
+#define ID_TXT_SEARCH_SELECTION_STATS	"view-search-selection-stats"
+#define ID_TXT_FOLDERS_SELECTION_STATS	"view-folders-selection-stats"
 #define ID_TXT_PICTURE_NAME		"picture-info-name"
 #define ID_TXT_PICTURE_TIME		"picture-info-time"
 #define ID_TXT_PICTURE_FILE_SIZE	"picture-info-file-size"
@@ -54,6 +55,7 @@
 #define ID_TXT_FILE_SYNC_TITLE		"file-sync-tip-title"
 #define ID_TXT_THUMB_DB_SIZE		"text-thumb-db-size"
 #define ID_TXT_CURRENT_LANGUAGE		"txt-current-language"
+#define ID_TXT_CURRENT_SCALING		"txt-current-scaling"
 #define ID_TXT_TRIAL_LICENSE		"txt-trial-license"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
@@ -72,10 +74,13 @@
 #define ID_VIEW_PRIVATE_SOURCE_LIST	"current-private-source-list"
 #define ID_VIEW_PRIVATE_SPACE		"view-private-space"
 #define ID_VIEW_SEARCH_TAGS		"view-search-tags"
-#define ID_VIEW_SEARCH_RESULT		"view-search-result"
+#define ID_VIEW_SEARCH_TAGS_WRAPPER	"view-search-tags-wrapper"
+#define ID_VIEW_SEARCH_RESULTS_WRAPPER	"view-search-results-wrapper"
+#define ID_VIEW_SEARCH			"view-search"
 #define ID_VIEW_SEARCH_FILES		"view-search-files"
 #define ID_VIEW_HOME_PROGRESS		"view-home-progress"
 #define ID_BTN_SEARCH_FILES		"btn-search-files"
+#define ID_BTN_CLEAR_SEARCH		"btn-clear-search"
 #define ID_BTN_SYNC_HOME_FILES		"btn-sync-home-files"
 #define ID_BTN_TAG_HOME_FILES		"btn-tag-home-files"
 #define ID_BTN_DELETE_HOME_FILES	"btn-delete-home-files"
@@ -106,15 +111,10 @@
 #define ID_BTN_ADD_SOURCE		"btn-add-source"
 #define ID_BTN_ADD_PRIVATE_SOURCE	"btn-add-private-source"
 #define ID_BTN_SIDEBAR_SETTINGS		"sidebar-btn-settings"
-#define ID_BTN_SIDEBAR_SEEARCH		"sidebar-btn-search"
+#define ID_BTN_SIDEBAR_SEARCH		"sidebar-btn-search"
 #define ID_BTN_CLEAR_THUMB_DB		"btn-clear-thumb-db"
-#define ID_BTN_OPEN_LICENSE		"btn-open-license"
-#define ID_BTN_OPEN_WEBSITE		"btn-open-website"
-#define ID_BTN_OPEN_FEEDBACK		"btn-open-feedback"
-#define ID_BTN_OPEN_SOURCECODE		"btn-open-sourcecode"
 #define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
 #define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
-#define ID_BTN_FOLDER_FILES_SORT	"btn-sort-folder-files"
 #define ID_BTN_RESET_PASSWORD		"btn-reset-password"
 #define ID_TIP_HOME_EMPTY		"tip-empty-collection"
 #define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
@@ -124,9 +124,11 @@
 #define ID_TIP_PICTURE_NOT_FOUND	"tip-picture-not-found"
 #define ID_TIP_PICTURE_UNSUPPORT	"tip-picture-unsupport"
 #define ID_INPUT_SEARCH			"input-search"
+#define ID_SEARCH_ACTIONS		"view-search-actions"
 #define ID_DROPDOWN_LANGUAGES		"dropdown-languages"
 #define ID_DROPDOWN_FOLDER_FILES_SORT	"dropdown-folder-files-sort"
 #define ID_DROPDOWN_SEARCH_FILES_SORT	"dropdown-search-files-sort"
+#define ID_DROPDOWN_SCALING		"dropdown-scaling"
 #define ID_SWITCH_PRIVATE_SPACE		"switch-private-space-open"
 
 /* xml 文件位置 */
@@ -142,25 +144,13 @@ enum UIMode {
 	MODE_SINGLE_PICVIEW
 };
 
-/** 文件迭代器 */
-typedef struct FileIteratorRec_* FileIterator;
-typedef struct FileIteratorRec_ {
-	unsigned int index;		/**< 当前索引位置 */
-	unsigned int length;		/**< 文件列表总长度 */
-	void *privdata;			/**< 私有数据 */
-	char *filepath;			/**< 文件路径 */
-	void (*next)(FileIterator);	/**< 切换至下一个文件 */
-	void (*prev)(FileIterator);	/**< 切换至上一个文件 */
-	void (*destroy)(FileIterator);	/**< 销毁文件迭代器 */
-} FileIteratorRec;
-
 /** 初始化主界面 */
 void UI_InitMainView( void );
 
 /** 初始化用户界面 */
 int UI_Init( int argc, char **argv );
 
-void UI_Exit( void );
+void UI_Free( void );
 
 /** 让用户界面开始工作 */
 int UI_Run( void );
@@ -174,7 +164,7 @@ void UI_InitSettingsView( void );
 /** 初始化“文件夹”视图 */
 void UI_InitFoldersView( void );
 
-void UI_ExitFolderView( void );
+void UI_FreeFoldersView( void );
 
 /** 初始化文件同步时的提示框 */
 void UI_InitFileSyncTip( void );
@@ -182,13 +172,13 @@ void UI_InitFileSyncTip( void );
 /** 初始化首页集锦视图 */
 void UI_InitHomeView( void );
 
-void UI_ExitHomeView( void );
+void UI_FreeHomeView( void );
 
 /** 初始化图片视图 */
 void UI_InitPictureView( int mode );
 
 /** 退出图片视图并销毁相关资源 */
-void UI_ExitPictureView( void );
+void UI_FreePictureView( void );
 
 /** 在图片视图中打开一张图片 */
 void UI_OpenPictureView( const char *filepath );

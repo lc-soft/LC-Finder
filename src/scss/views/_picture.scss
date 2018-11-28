@@ -30,8 +30,6 @@
 		margin-left: 5px;
 	}
 	.zoom-btn-group {
-		width: 120px;
-		height: 40px;
 		margin: 0 auto;
 		bottom: 10px;
 		position: absolute;
@@ -69,7 +67,6 @@
 		height: 24px;
 		font-size: 24px;
 		line-height: 24px;
-		padding-top: 2px;
 		text-align: center;
 		position: relative;
 		box-sizing: border-box;
@@ -109,43 +106,19 @@
 	box-shadow: 0 0 8px rgba(0,0,0,0.5);
 
 	.info-item {
-		margin-bottom: 20px;
+		margin-bottom: $spacing;
 	}
 	.info-item:last-child {
 		margin-bottom: 0;
 	}
-	.info-item .info-item-name {
-		color: #888;
+	.info-item-name {
+		color: $gray-600;
+		display: block;
 	}
-}
-.tag-list {
-	margin-top: 5px;
-}
-.tag-list-item {
-	border: 1px solid #eee;
-	display: inline-block;
-	margin: 0 5px 5px 0;
-
-	.text, textview {
-		display: inline-block;	
-		padding: 4px 8px;
-		color: #666;
-		line-height: 24px;
-		font-size: 13px;
+	.info-item-value {
+		display: block;
 	}
-	.text:first-child {
-		padding-right: 0;
-	}
-	.btn-delete {
-		color: #ddd;
-		pointer-events: auto;
-		display: inline-block;
-		font-size: 14px;
-	}
-	.btn-delete:hover {
-		color: #aaa;
-	}
-	.btn-delete:active {
-		color: #888;
+	starrating .icon-star {
+		color: $orange;
 	}
 }

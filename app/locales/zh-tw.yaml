@@ -12,9 +12,15 @@ strings:
         on: 開
         off: 關
     dialog:
-        placeholder:
+        select_folder:
+            title: 添加文件夾
+            placeholder: 文件夾的位置
+        password:
             password: 密碼
             confirm_password: 確認密碼
+    tagthumb:
+        item: '%ls 項'
+        items: '%ls 項'
     sort:
         header: 排序方式
         ctime_desc: 最近創建
@@ -66,7 +72,7 @@ strings:
     search:
         title: 搜索
         placeholder:
-            search_input: 根據標籤搜索圖片，多個標籤用空格隔開
+            search_input: 搜索圖片
         results: 
             title: 搜索結果
         message:
@@ -130,8 +136,11 @@ strings:
             title: 緩存
             stats: '當前縮略圖緩存共佔用 %s 的空間'
             description: >-
-                本應用會在你瀏覽圖片列表的時候自動緩存縮略圖，
+                我們會在你瀏覽圖片列表的時候自動緩存縮略圖，
                 以便在下次瀏覽圖片時能夠快速呈現縮略圖。
+        scaling:
+            title: 縮放
+            description: 設置一個合適的縮放比例，以改善界面的視覺體驗
         private_space:
             title: 私人空間
             sources_title: 私密源
@@ -155,6 +164,7 @@ strings:
         language: 語言
         language_description: 更改界面的顯示語言
         license: 許可協議
+        privacy: 隱私策略
         website: 官方網站
         feedback: 問題反饋
         sourcecode: 源代碼
@@ -165,4 +175,4 @@ strings:
                 title: 確定要移除該源文件夾？
                 content: 一旦移除後，該源文件夾內的文件相關信息將一同被移除。
         about: 關於此應用
-        copyright: © 2017 LC's Software，保留所有權利。
+        copyright: © 2018 LC's Software，保留所有權利。

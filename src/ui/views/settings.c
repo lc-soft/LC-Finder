@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * view_settings.c -- settings view
  *
- * Copyright (C) 2016-2017 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * view_settings.c -- “设置”视图
  *
- * 版权所有 (C) 2016-2017 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,7 +34,10 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+/* clang-format off */
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "finder.h"
 #include "ui.h"
@@ -43,7 +46,6 @@
 #include <LCUI/gui/widget/textview.h>
 #include "switch.h"
 #include "dialog.h"
-#include "dropdown.h"
 #include "textview_i18n.h"
 #include "bridge.h"
 #include "i18n.h"
@@ -64,7 +66,7 @@ static struct SettingsViewData {
 	LCUI_Widget thumb_db_stats;
 	LCUI_Widget language;
 	Dict *dirpaths;
-} this_view;
+} view;
 
 static struct PrivateSpaceViewData {
 	LCUI_Widget view;
@@ -73,383 +75,399 @@ static struct PrivateSpaceViewData {
 	Dict *dirpaths;
 } private_space_view;
 
-static void OnBtnRemoveClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+/* clang-format on */
+
+static void OnBtnRemoveClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	DB_Dir dir = e->data;
-	const wchar_t *text = I18n_GetText( KEY_DIALOG_TEXT_DEL_DIR );
-	const wchar_t *title = I18n_GetText( KEY_DIALOG_TITLE_DEL_DIR );
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( !LCUIDialog_Confirm( window, title, text ) ) {
+	const wchar_t *text = I18n_GetText(KEY_DIALOG_TEXT_DEL_DIR);
+	const wchar_t *title = I18n_GetText(KEY_DIALOG_TITLE_DEL_DIR);
+	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+	if (!LCUIDialog_Confirm(window, title, text)) {
 		return;
 	}
-	LCFinder_DeleteDir( dir );
+	LCFinder_DeleteDir(dir);
 }
 
-static LCUI_Widget NewDirListItem( DB_Dir dir )
+static LCUI_Widget NewDirListItem(DB_Dir dir)
 {
 	LCUI_Widget item, icon, text, btn;
-	item = LCUIWidget_New( NULL );
-	icon = LCUIWidget_New( "textview" );
-	text = LCUIWidget_New( "textview" );
-	btn = LCUIWidget_New( "textview" );
-	Widget_AddClass( item, "source-list-item" );
-	Widget_AddClass( icon, "icon icon-folder-outline" );
-	Widget_AddClass( text, "text" );
-	Widget_AddClass( btn, "button icon icon-close" );
-	TextView_SetText( text, dir->path );
-	Widget_BindEvent( btn, "click", OnBtnRemoveClick, dir, NULL );
-	Widget_Append( item, icon );
-	Widget_Append( item, text );
-	Widget_Append( item, btn );
+	item = LCUIWidget_New(NULL);
+	icon = LCUIWidget_New("textview");
+	text = LCUIWidget_New("textview");
+	btn = LCUIWidget_New("textview");
+	Widget_AddClass(item, "source-list-item");
+	Widget_AddClass(icon, "icon icon-folder-outline");
+	Widget_AddClass(text, "text");
+	Widget_AddClass(btn, "button icon icon-close");
+	TextView_SetText(text, dir->path);
+	Widget_BindEvent(btn, "click", OnBtnRemoveClick, dir, NULL);
+	Widget_Append(item, icon);
+	Widget_Append(item, text);
+	Widget_Append(item, btn);
 	return item;
 }
 
-static void OnDelDir( void *privdata, void *arg )
+static void OnDelDir(void *privdata, void *arg)
 {
 	Dict *dirpaths;
 	DB_Dir dir = arg;
 	LCUI_Widget item;
-	if( dir->visible ) {
-		dirpaths = this_view.dirpaths;
+	if (dir->visible) {
+		dirpaths = view.dirpaths;
 	} else {
 		dirpaths = private_space_view.dirpaths;
 	}
-	item = Dict_FetchValue( dirpaths, dir->path );
-	if( item ) {
-		Dict_Delete( dirpaths, dir->path );
-		Widget_Destroy( item );
+	item = Dict_FetchValue(dirpaths, dir->path);
+	if (item) {
+		Dict_Delete(dirpaths, dir->path);
+		Widget_Destroy(item);
 	}
 }
 
-static void OnAddDir( void *privdata, void *arg )
+static void OnAddDir(void *privdata, void *arg)
 {
 	DB_Dir dir = arg;
-	LCUI_Widget item = NewDirListItem( dir );
-	if( dir->visible ) {
-		Widget_Append( this_view.source_dirs, item );
-		Dict_Add( this_view.dirpaths, dir->path, item );
+	LCUI_Widget item = NewDirListItem(dir);
+	if (dir->visible) {
+		Widget_Append(view.source_dirs, item);
+		Dict_Add(view.dirpaths, dir->path, item);
 	} else {
-		Widget_Append( private_space_view.source_dirs, item );
-		Dict_Add( private_space_view.dirpaths, dir->path, item );
+		Widget_Append(private_space_view.source_dirs, item);
+		Dict_Add(private_space_view.dirpaths, dir->path, item);
 	}
 }
 
 /** 初始化文件夹目录控件 */
-static void UI_InitDirList( void )
+static void UI_InitDirList(void)
 {
 	size_t i;
 	LCUI_Widget item;
-	this_view.dirpaths = StrDict_Create( NULL, NULL );
-	for( i = 0; i < finder.n_dirs; ++i ) {
-		if( !finder.dirs[i]->visible ) {
+	view.dirpaths = StrDict_Create(NULL, NULL);
+	for (i = 0; i < finder.n_dirs; ++i) {
+		if (!finder.dirs[i]->visible) {
 			continue;
 		}
-		item = NewDirListItem( finder.dirs[i] );
-		Widget_Append( this_view.source_dirs, item );
-		Dict_Add( this_view.dirpaths, finder.dirs[i]->path, item );
+		item = NewDirListItem(finder.dirs[i]);
+		Widget_Append(view.source_dirs, item);
+		Dict_Add(view.dirpaths, finder.dirs[i]->path, item);
 	}
 }
 
-static void UI_InitPrivateDirList( void )
+static void UI_InitPrivateDirList(void)
 {
 	size_t i;
 	LCUI_Widget item;
 	struct PrivateSpaceViewData *self = &private_space_view;
-	self->dirpaths = StrDict_Create( NULL, NULL );
-	for( i = 0; i < finder.n_dirs; ++i ) {
-		if( finder.dirs[i]->visible ) {
+
+	self->dirpaths = StrDict_Create(NULL, NULL);
+	for (i = 0; i < finder.n_dirs; ++i) {
+		if (finder.dirs[i] && finder.dirs[i]->visible) {
 			continue;
 		}
-		item = NewDirListItem( finder.dirs[i] );
-		Widget_Append( private_space_view.source_dirs, item );
-		Dict_Add( self->dirpaths, finder.dirs[i]->path, item );
+		item = NewDirListItem(finder.dirs[i]);
+		Widget_Append(private_space_view.source_dirs, item);
+		Dict_Add(self->dirpaths, finder.dirs[i]->path, item);
 	}
 }
 
-static void OnSelectDirDone( const wchar_t *wpath, const wchar_t *wtoken )
+static void OnSelectDirDone(const wchar_t *wpath, const wchar_t *wtoken)
 {
 	char *token = NULL;
-	char *path = EncodeUTF8( wpath );
-	if( wtoken ) {
-		token = EncodeUTF8( wtoken );
+	char *path = EncodeUTF8(wpath);
+	if (wtoken) {
+		token = EncodeUTF8(wtoken);
 	}
-	if( !LCFinder_GetDir( path ) ) {
-		DB_Dir dir = LCFinder_AddDir( path, token, TRUE );
-		if( dir ) {
-			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
+	if (!LCFinder_GetDir(path)) {
+		DB_Dir dir = LCFinder_AddDir(path, token, TRUE);
+		if (dir) {
+			LCFinder_TriggerEvent(EVENT_DIR_ADD, dir);
 		}
 	}
-	free( path );
-	if( token ) {
-		free( token );
+	free(path);
+	if (token) {
+		free(token);
 	}
 }
 
-static void OnSelectPrivateDirDone( const wchar_t *wpath, const wchar_t *wtoken )
+static void OnSelectPrivateDirDone(const wchar_t *wpath, const wchar_t *wtoken)
 {
 	char *token = NULL;
-	char *path = EncodeUTF8( wpath );
-	if( wtoken ) {
-		token = EncodeUTF8( wtoken );
+	char *path = EncodeUTF8(wpath);
+	if (wtoken) {
+		token = EncodeUTF8(wtoken);
 	}
-	if( !LCFinder_GetDir( path ) ) {
-		DB_Dir dir = LCFinder_AddDir( path, token, FALSE );
-		if( dir ) {
-			LCFinder_TriggerEvent( EVENT_DIR_ADD, dir );
+	if (!LCFinder_GetDir(path)) {
+		DB_Dir dir = LCFinder_AddDir(path, token, FALSE);
+		if (dir) {
+			LCFinder_TriggerEvent(EVENT_DIR_ADD, dir);
 		}
 	}
-	free( path );
-	if( token ) {
-		free( token );
+	free(path);
+	if (token) {
+		free(token);
 	}
 }
 
-static void OnSelectDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnSelectDir(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	SelectFolderAsyncW( OnSelectDirDone );
+	SelectFolderAsyncW(OnSelectDirDone);
 }
 
-static void OnSelectPrivateDir( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnSelectPrivateDir(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	SelectFolderAsyncW( OnSelectPrivateDirDone );
+	SelectFolderAsyncW(OnSelectPrivateDirDone);
 }
 
 /** 渲染缩略图缓存占用空间文本 */
-static void RenderThumbDBSizeText( wchar_t *buf, const wchar_t *text, void *data )
+static void RenderThumbDBSizeText(wchar_t *buf, const wchar_t *text, void *data)
 {
 	wchar_t size_str[128];
 	int64_t size = LCFinder_GetThumbDBTotalSize();
-	wgetsizestr( size_str, 127, size );
-	swprintf( buf, TXTFMT_BUF_MAX_LEN, text, size_str );
+
+	wgetsizestr(size_str, 127, size);
+	wcsncpy(buf, text, TXTFMT_BUF_MAX_LEN);
+	wcsreplace(buf, TXTFMT_BUF_MAX_LEN, L"%s", size_str);
 }
 
-static void OnBtnSettingsClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnBtnSettingsClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	TextViewI18n_Refresh( this_view.thumb_db_stats );
+	TextViewI18n_Refresh(view.thumb_db_stats);
 }
 
-static void OnThumbDBDelDone( LCUI_Event e, void *arg )
+static void OnThumbDBDelDone(void *data, void *arg)
 {
-	TextViewI18n_Refresh( this_view.thumb_db_stats );
+	TextViewI18n_Refresh(view.thumb_db_stats);
 }
 
 /** 在“清除”按钮被点击时 */
-static void OnBtnClearThumbDBClick( LCUI_Widget w, LCUI_WidgetEvent e, 
-				    void *arg )
+static void OnBtnClearThumbDBClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LinkedListNode *node;
 	LCUI_Widget text = NULL;
 
-	if( w->disabled ) {
+	if (w->disabled) {
 		return;
 	}
-	LinkedList_ForEach( node, &w->children ) {
+	for (LinkedList_Each(node, &w->children)) {
 		LCUI_Widget child = node->data;
-		if( Widget_HasClass( child, "text" ) ) {
+		if (Widget_HasClass(child, "text")) {
 			text = child;
 			break;
 		}
 	}
-	if( !text ) {
+	if (!text) {
 		return;
 	}
-	Widget_SetDisabled( w, TRUE );
-	Widget_AddClass( w, "disabled" );
-	TextView_SetTextW( text, I18n_GetText( KEY_CLEANING ) );
+	Widget_SetDisabled(w, TRUE);
+	Widget_AddClass(w, "disabled");
+	TextView_SetTextW(text, I18n_GetText(KEY_CLEANING));
 	LCFinder_ClearThumbDB();
-	Widget_SetDisabled( w, FALSE );
-	Widget_RemoveClass( w, "disabled" );
-	TextView_SetTextW( text, I18n_GetText( KEY_CLEAR ) );
+	Widget_SetDisabled(w, FALSE);
+	Widget_RemoveClass(w, "disabled");
+	TextView_SetTextW(text, I18n_GetText(KEY_CLEAR));
 }
 
-/** 在“许可协议”按钮被点击时 */
-static void OnBtnLicenseClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
+static void OnSelectLanguage(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	OpenUriW( L"http://www.gnu.org/licenses/gpl-2.0.html" );
-}
-
-/** 在“官方网站”按钮被点击时 */
-static void OnBtnWebSiteClick( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	OpenUriW( L"https://lc-soft.io/" );
-}
-
-/** 在“问题反馈”按钮被点击时 */
-static void OnBtnFeedbackClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
-{
-	OpenUriW( L"https://github.com/lc-soft/LC-Finder/issues" );
-}
-
-/** 在“源代码”按钮被点击时 */
-static void OnBtnSourceCodeClick( LCUI_Widget w, LCUI_WidgetEvent e,  void *arg )
-{
-	OpenUriW( L"https://github.com/lc-soft/LC-Finder" );
-}
-
-static void OnSelectLanguage( LCUI_Widget w, LCUI_WidgetEvent e, void *arg )
-{
-	Language lang = arg;
-	lang = I18n_SetLanguage( lang->code );
-	if( lang ) {
+	const char *code = Widget_GetAttribute(e->target, "value");
+	const Language lang = I18n_SetLanguage(code);
+	if (lang) {
 		LCUIWidget_RefreshTextViewI18n();
-		TextView_SetText( this_view.language, lang->name );
-		strcpy( finder.config.language, lang->code );
+		TextView_SetText(view.language, lang->name);
+		strcpy(finder.config.language, lang->code);
 		LCFinder_SaveConfig();
-		LCFinder_TriggerEvent( EVENT_LANG_CHG, lang );
+		LCFinder_TriggerEvent(EVENT_LANG_CHG, lang);
 	}
 }
 
-static void UI_InitLanguages( void )
+static void UI_RefreshScalingText(void)
+{
+	char str[32];
+	LCUI_Widget txt;
+
+	SelectWidget(txt, ID_TXT_CURRENT_SCALING);
+	sprintf(str, "%d%%", finder.config.scaling);
+	TextView_SetText(txt, str);
+}
+
+static void OnChangeScaling(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	int scaling;
+	const char *value = Widget_GetAttribute(e->target, "value");
+
+	if (!value || sscanf(value, "%d", &scaling) < 1) {
+		return;
+	}
+	if (scaling >= 100 && scaling <= 200) {
+		finder.config.scaling = scaling;
+		LCUIMetrics_SetScale((float)(scaling / 100.0));
+		LCUIWidget_RefreshStyle();
+		LCFinder_SaveConfig();
+		UI_RefreshScalingText();
+	}
+}
+
+static void UI_InitScaling(void)
+{
+	LCUI_Widget menu;
+
+	SelectWidget(menu, ID_DROPDOWN_SCALING);
+	BindEvent(menu, "change.dropdown", OnChangeScaling);
+	UI_RefreshScalingText();
+
+}
+
+static void UI_InitLanguages(void)
 {
 	int i, n;
+	Language lang;
 	Language *langs;
 	LCUI_Widget menu;
-	n = I18n_GetLanguages( &langs );
-	SelectWidget( menu, ID_DROPDOWN_LANGUAGES );
-	SelectWidget( this_view.language, ID_TXT_CURRENT_LANGUAGE );
-	for( i = 0; i < n; ++i ) {
-		Language lang = langs[i];
-		Dropdown_AddTextItem( menu, lang, lang->name );
-		if( strcmp( finder.config.language, lang->code ) == 0 ) {
-			TextView_SetText( this_view.language, lang->name );
+	LCUI_Widget item;
+
+	n = I18n_GetLanguages(&langs);
+	SelectWidget(menu, ID_DROPDOWN_LANGUAGES);
+	SelectWidget(view.language, ID_TXT_CURRENT_LANGUAGE);
+	for (i = 0; i < n; ++i) {
+		lang = langs[i];
+		item = LCUIWidget_New("textview");
+		Widget_AddClass(item, "dropdown-item");
+		Widget_SetAttributeEx(item, "value", lang->code, 0, NULL);
+		Widget_Append(menu, item);
+		TextView_SetText(item, lang->name);
+		if (strcmp(finder.config.language, lang->code) == 0) {
+			TextView_SetText(view.language, lang->name);
 		}
 	}
-	BindEvent( menu, "change.dropdown", OnSelectLanguage );
+	BindEvent(menu, "change.dropdown", OnSelectLanguage);
 }
 
-static LCUI_BOOL OnCheckPassword( const char *password, const char *data )
+static LCUI_BOOL OnCheckPassword(const char *password, const char *data)
 {
 	char buf[48];
 	const char *pwd = data;
-	EncodeSHA1( buf, password, strlen( password ) );
-	return strcmp( pwd, buf ) == 0;
+	EncodeSHA1(buf, password, strlen(password));
+	return strcmp(pwd, buf) == 0;
 }
 
-static void OnPrivateSpaceSwitchCahnge( LCUI_Widget w,
-					LCUI_WidgetEvent e, void *arg )
+static void OnPrivateSpaceSwitchCahnge(LCUI_Widget w, LCUI_WidgetEvent e,
+				       void *arg)
 {
 	int ret;
 	const wchar_t *title, *text;
 	char *pwd = finder.config.encrypted_password;
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	if( !Switch_IsChecked( w ) ) {
+	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+	if (!Switch_IsChecked(w)) {
 		finder.open_private_space = FALSE;
-		Widget_AddClass( private_space_view.view, "hide" );
-		LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
+		Widget_AddClass(private_space_view.view, "hide");
+		LCFinder_TriggerEvent(EVENT_PRIVATE_SPACE_CHG, NULL);
 		return;
 	}
-	if( strlen( pwd ) > 0 ) {
-		title = I18n_GetText( KEY_VERIFY_PASSWORD_TITLE );
-		text = I18n_GetText( KEY_VERIFY_PASSWORD_TEXT );
-		ret = LCUIDialog_CheckPassword( window, title, text,
-						OnCheckPassword, pwd );
-		if( ret != 0 ) {
-			Switch_SetChecked( w, FALSE );
-			Widget_AddClass( private_space_view.view, "hide" );
+	if (strlen(pwd) > 0) {
+		title = I18n_GetText(KEY_VERIFY_PASSWORD_TITLE);
+		text = I18n_GetText(KEY_VERIFY_PASSWORD_TEXT);
+		ret = LCUIDialog_CheckPassword(window, title, text,
+					       OnCheckPassword, pwd);
+		if (ret != 0) {
+			Switch_SetChecked(w, FALSE);
+			Widget_AddClass(private_space_view.view, "hide");
 			return;
 		}
 	} else {
 		char *buf;
 		wchar_t wbuf[64];
-		title = I18n_GetText( KEY_NEW_PASSWORD_TITLE );
-		text = I18n_GetText( KEY_NEW_PASSWORD_TEXT );
-		ret = LCUIDialog_NewPassword( window, title, text, wbuf );
-		if( ret != 0 ) {
-			Switch_SetChecked( w, FALSE );
-			Widget_AddClass( private_space_view.view, "hide" );
+		title = I18n_GetText(KEY_NEW_PASSWORD_TITLE);
+		text = I18n_GetText(KEY_NEW_PASSWORD_TEXT);
+		ret = LCUIDialog_NewPassword(window, title, text, wbuf);
+		if (ret != 0) {
+			Switch_SetChecked(w, FALSE);
+			Widget_AddClass(private_space_view.view, "hide");
 			return;
 		}
-		buf = EncodeUTF8( wbuf );
-		LOGW( L"new password: %s\n", wbuf );
-		EncodeSHA1( pwd, buf, strlen( buf ) );
+		buf = EncodeUTF8(wbuf);
+		LOGW(L"new password: %s\n", wbuf);
+		EncodeSHA1(pwd, buf, strlen(buf));
 		LCFinder_SaveConfig();
-		free( buf );
+		free(buf);
 	}
-	if( !private_space_view.is_loaded ) {
+	if (!private_space_view.is_loaded) {
 		UI_InitPrivateDirList();
 		private_space_view.is_loaded = TRUE;
-		
 	}
 	finder.open_private_space = TRUE;
-	Widget_RemoveClass( private_space_view.view, "hide" );
-	LCFinder_TriggerEvent( EVENT_PRIVATE_SPACE_CHG, NULL );
+	Widget_RemoveClass(private_space_view.view, "hide");
+	LCFinder_TriggerEvent(EVENT_PRIVATE_SPACE_CHG, NULL);
 }
 
-static void OnBtnResetPasswordClick( LCUI_Widget w, 
-				     LCUI_WidgetEvent e, void *arg )
+static void OnBtnResetPasswordClick(LCUI_Widget w, LCUI_WidgetEvent e,
+				    void *arg)
 {
 	char *buf;
 	wchar_t wbuf[64];
 	char *pwd = finder.config.encrypted_password;
-	LCUI_Widget window = LCUIWidget_GetById( ID_WINDOW_MAIN );
-	const wchar_t *title = I18n_GetText( KEY_RESET_PASSWORD_TITLE );
-	const wchar_t *text = I18n_GetText( KEY_RESET_PASSWORD_TEXT );
-	int ret = LCUIDialog_NewPassword( window, title, text, wbuf );
-	if( ret != 0 ) {
+	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+	const wchar_t *title = I18n_GetText(KEY_RESET_PASSWORD_TITLE);
+	const wchar_t *text = I18n_GetText(KEY_RESET_PASSWORD_TEXT);
+	int ret = LCUIDialog_NewPassword(window, title, text, wbuf);
+	if (ret != 0) {
 		return;
 	}
-	buf = EncodeUTF8( wbuf );
-	LOGW( L"new password: %s\n", wbuf );
-	EncodeSHA1( pwd, buf, strlen( buf ) );
+	buf = EncodeUTF8(wbuf);
+	LOGW(L"new password: %s\n", wbuf);
+	EncodeSHA1(pwd, buf, strlen(buf));
 	LCFinder_SaveConfig();
-	free( buf );
+	free(buf);
 }
 
-void UI_InitPrivateSpaceView( void )
+void UI_InitPrivateSpaceView(void)
 {
 	LCUI_Widget btn, btn_reset;
 	struct PrivateSpaceViewData *self = &private_space_view;
-	SelectWidget( self->source_dirs, ID_VIEW_PRIVATE_SOURCE_LIST );
-	SelectWidget( self->view, ID_VIEW_PRIVATE_SPACE );
-	SelectWidget( btn, ID_BTN_ADD_PRIVATE_SOURCE );
-	SelectWidget( btn_reset, ID_BTN_RESET_PASSWORD );
-	BindEvent( btn, "click", OnSelectPrivateDir );
-	BindEvent( btn_reset, "click", OnBtnResetPasswordClick );
+	SelectWidget(self->source_dirs, ID_VIEW_PRIVATE_SOURCE_LIST);
+	SelectWidget(self->view, ID_VIEW_PRIVATE_SPACE);
+	SelectWidget(btn, ID_BTN_ADD_PRIVATE_SOURCE);
+	SelectWidget(btn_reset, ID_BTN_RESET_PASSWORD);
+	BindEvent(btn, "click", OnSelectPrivateDir);
+	BindEvent(btn_reset, "click", OnBtnResetPasswordClick);
 	self->is_loaded = FALSE;
 }
 
-static void CheckLicense( void )
+static void CheckLicense(void)
 {
-	LCUI_Widget txt = LCUIWidget_GetById( ID_TXT_TRIAL_LICENSE );
-	if( finder.license.is_active && !finder.license.is_trial ) {
-		Widget_Destroy( txt );
+	LCUI_Widget txt = LCUIWidget_GetById(ID_TXT_TRIAL_LICENSE);
+	if (finder.license.is_active && !finder.license.is_trial) {
+		Widget_Destroy(txt);
 	}
 }
 
-static void OnLicenseChange( void *privdata, void *data )
+static void OnLicenseChange(void *privdata, void *data)
 {
 	CheckLicense();
 }
 
-void UI_InitSettingsView( void )
+void UI_InitSettingsView(void)
 {
 	LCUI_Widget btn, switcher;
-	SelectWidget( this_view.source_dirs, ID_VIEW_SOURCE_LIST );
-	SelectWidget( this_view.thumb_db_stats, ID_TXT_THUMB_DB_SIZE );
-	SelectWidget( switcher, ID_SWITCH_PRIVATE_SPACE );
-	BindEvent( switcher, "change.switch", OnPrivateSpaceSwitchCahnge );
-	SelectWidget( btn, ID_BTN_ADD_SOURCE );
-	BindEvent( btn, "click", OnSelectDir );
-	SelectWidget( btn, ID_BTN_SIDEBAR_SETTINGS );
-	BindEvent( btn, "click", OnBtnSettingsClick );
-	SelectWidget( btn, ID_BTN_CLEAR_THUMB_DB );
-	BindEvent( btn, "click", OnBtnClearThumbDBClick );
-	SelectWidget( btn, ID_BTN_OPEN_LICENSE );
-	BindEvent( btn, "click", OnBtnLicenseClick );
-	SelectWidget( btn, ID_BTN_OPEN_WEBSITE );
-	BindEvent( btn, "click", OnBtnWebSiteClick );
-	SelectWidget( btn, ID_BTN_OPEN_FEEDBACK );
-	BindEvent( btn, "click", OnBtnFeedbackClick );
-	SelectWidget( btn, ID_BTN_OPEN_SOURCECODE );
-	BindEvent( btn, "click", OnBtnSourceCodeClick );
-	LCFinder_BindEvent( EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL );
-	TextViewI18n_SetFormater( this_view.thumb_db_stats,
-				  RenderThumbDBSizeText, NULL );
-	TextViewI18n_Refresh( this_view.thumb_db_stats );
-	LCFinder_BindEvent( EVENT_DIR_ADD, OnAddDir, NULL );
-	LCFinder_BindEvent( EVENT_DIR_DEL, OnDelDir, NULL );
-	LCFinder_BindEvent( EVENT_LICENSE_CHG, OnLicenseChange, NULL );
+	SelectWidget(view.source_dirs, ID_VIEW_SOURCE_LIST);
+	SelectWidget(view.thumb_db_stats, ID_TXT_THUMB_DB_SIZE);
+	SelectWidget(switcher, ID_SWITCH_PRIVATE_SPACE);
+	BindEvent(switcher, "change.switch", OnPrivateSpaceSwitchCahnge);
+	SelectWidget(btn, ID_BTN_ADD_SOURCE);
+	BindEvent(btn, "click", OnSelectDir);
+	SelectWidget(btn, ID_BTN_SIDEBAR_SETTINGS);
+	BindEvent(btn, "click", OnBtnSettingsClick);
+	SelectWidget(btn, ID_BTN_CLEAR_THUMB_DB);
+	BindEvent(btn, "click", OnBtnClearThumbDBClick);
+	LCFinder_BindEvent(EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL);
+	TextViewI18n_SetFormater(view.thumb_db_stats,
+				 RenderThumbDBSizeText, NULL);
+	TextViewI18n_Refresh(view.thumb_db_stats);
+	LCFinder_BindEvent(EVENT_DIR_ADD, OnAddDir, NULL);
+	LCFinder_BindEvent(EVENT_DIR_DEL, OnDelDir, NULL);
+	LCFinder_BindEvent(EVENT_LICENSE_CHG, OnLicenseChange, NULL);
 	UI_InitPrivateSpaceView();
+	UI_InitScaling();
 	UI_InitLanguages();
 	UI_InitDirList();
 	CheckLicense();
