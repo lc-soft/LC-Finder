@@ -159,6 +159,30 @@
     <ClCompile Include="src\ui\components\taskitem.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
+    <ClCompile Include="src\lib\detector.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_detector.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_thumb_cache.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_private_space.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_language.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_source.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_scaling.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\views\settings_license.c">
+      <Filter>源文件\ui\views</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -266,6 +290,12 @@
     </ClInclude>
     <ClInclude Include="include\taskitem.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\detector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\views\settings.h">
+      <Filter>源文件\ui\views</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -44,14 +44,16 @@
 #include "finder.h"
 #include "i18n.h"
 #include "ui.h"
+#include "detector.h"
 #include "file_storage.h"
 #include <LCUI/font/charset.h>
 
+// clang-format off
 #define DEBUG
-#define LANG_DIR L"locales"
-#define LANG_FILE_EXT L".yaml"
-#define CONFIG_FILE L"config.bin"
-#define STORAGE_FILE L"storage.db"
+#define LANG_DIR	L"locales"
+#define LANG_FILE_EXT	L".yaml"
+#define CONFIG_FILE	L"config.bin"
+#define STORAGE_FILE	L"storage.db"
 
 #define THUMB_CACHE_SIZE (64 * 1024 * 1024)
 
@@ -82,6 +84,8 @@ typedef struct FileSyncDataPackRec_ {
 	wchar_t path[PATH_LEN];
 	size_t path_len;
 } FileSyncDataPackRec, *FileSyncDataPack;
+
+// clang-format on
 
 static void OnEvent(LCUI_Event e, void *arg)
 {
@@ -234,7 +238,7 @@ static void OnCloseFileCache(void *privdata, void *data)
 }
 
 size_t LCFinder_DeleteFiles(char *const *files, size_t nfiles,
-			    int (*onstep)(void *, size_t, size_t),
+			    int(*onstep)(void *, size_t, size_t),
 			    void *privdata)
 {
 	size_t i, len;
@@ -769,7 +773,7 @@ static int LCFinder_InitLanguage(void)
 			continue;
 		}
 		p += sizeof(LANG_FILE_EXT) / sizeof(wchar_t) - 1;
-		if (*p) {
+		if (wcheckfileext(name, LANG_FILE_EXT)) {
 			continue;
 		}
 		wcscpy(wfile, name);
@@ -939,6 +943,29 @@ void LCFinder_ClosePrivateSpace(void)
 	LCFinder_TriggerEvent(EVENT_DIRS_CHG, NULL);
 }
 
+static LCUI_BOOL LCFinder_VerifyConfig(FinderConfig config)
+{
+	return strcmp(config->head, LCFINDER_CONFIG_HEAD) == 0 &&
+		config->version.major == LCFINDER_VER_MAJOR &&
+		config->version.minor == LCFINDER_VER_MINOR;
+}
+
+static void LCFInder_InitConfig(void)
+{
+	FinderConfig cfg = &finder.config;
+
+	memset(cfg, 0, sizeof(FinderConfigRec));
+
+	cfg->scaling = 100;
+	cfg->encrypted_password[0] = 0;
+	cfg->version.type = LCFINDER_VER_TYPE;
+	cfg->version.major = LCFINDER_VER_MAJOR;
+	cfg->version.minor = LCFINDER_VER_MINOR;
+	cfg->version.revision = LCFINDER_VER_REVISION;
+	I18n_GetDefaultLanguage(cfg->language, 32);
+	strcpy(cfg->head, LCFINDER_CONFIG_HEAD);
+}
+
 int LCFinder_LoadConfig(void)
 {
 	FILE *file;
@@ -947,22 +974,16 @@ int LCFinder_LoadConfig(void)
 	wchar_t wpath[PATH_LEN];
 	LCUI_BOOL has_error = TRUE;
 
-	finder.config.scaling = 100;
-	finder.config.encrypted_password[0] = 0;
-	finder.config.version.type = LCFINDER_VER_TYPE;
-	finder.config.version.major = LCFINDER_VER_MAJOR;
-	finder.config.version.minor = LCFINDER_VER_MINOR;
-	finder.config.version.revision = LCFINDER_VER_REVISION;
-	I18n_GetDefaultLanguage(finder.config.language, 32);
-	strcpy(finder.config.head, LCFINDER_CONFIG_HEAD);
+	LCFInder_InitConfig();
 	wpathjoin(wpath, finder.data_dir, CONFIG_FILE);
 	path = EncodeANSI(wpath);
 	file = fopen(path, "rb");
 	if (file) {
-		if (fread(&config, sizeof(config), 1, file) == 1 &&
-		    strcmp(finder.config.head, config.head) == 0) {
-			has_error = FALSE;
-			finder.config = config;
+		if (fread(&config, sizeof(config), 1, file) == 1) {
+			if (LCFinder_VerifyConfig(&config)) {
+				finder.config = config;
+				has_error = FALSE;
+			}
 		}
 		fclose(file);
 	}
@@ -980,6 +1001,12 @@ int LCFinder_LoadConfig(void)
 static void LCFinder_InitEvent(void)
 {
 	finder.trigger = EventTrigger();
+}
+
+static int LCFinder_InitDetector(void)
+{
+	Detector_Init(finder.work_dir);
+	return 0;
 }
 
 #ifdef PLATFORM_WIN32
@@ -1006,6 +1033,7 @@ int LCFinder_Init(int argc, char **argv)
 	ASSERT(LCFinder_InitWorkDir() == 0);
 	ASSERT(LCFinder_LoadConfig() == 0);
 	ASSERT(LCFinder_InitLanguage() == 0);
+	ASSERT(LCFinder_InitDetector() == 0);
 	ASSERT(LCFinder_InitFileDB() == 0);
 	ASSERT(LCFinder_InitThumbDB() == 0);
 	ASSERT(LCFinder_InitThumbCache() == 0);

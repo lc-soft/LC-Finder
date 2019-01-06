@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
- * view_settings.c -- settings view
+ * settings_language.c -- language setting view
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * view_settings.c -- “设置”视图
+ * settings_language.c -- “设置”视图中的语言设置项
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -35,17 +35,52 @@
  * ****************************************************************************/
 
 #include "finder.h"
-#include "ui.h"
 #include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/textview.h>
+#include "ui.h"
+#include "i18n.h"
+#include "textview_i18n.h"
 #include "settings.h"
 
-void UI_InitSettingsView(void)
+static struct LanguageSettingsView {
+	LCUI_Widget language;
+} view;
+
+static void OnSelectLanguage(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	SettingsView_InitScaling();
-	SettingsView_InitSource();
-	SettingsView_InitLanguage();
-	SettingsView_InitPrivateSpace();
-	SettingsView_InitThumbCache();
-	SettingsView_InitDetector();
-	SettingsView_InitLicense();
+	const char *code = Widget_GetAttribute(e->target, "value");
+	const Language lang = I18n_SetLanguage(code);
+	if (lang) {
+		LCUIWidget_RefreshTextViewI18n();
+		TextView_SetText(view.language, lang->name);
+		strcpy(finder.config.language, lang->code);
+		LCFinder_SaveConfig();
+		LCFinder_TriggerEvent(EVENT_LANG_CHG, lang);
+	}
+}
+
+void SettingsView_InitLanguage(void)
+{
+
+	int i, n;
+	Language lang;
+	Language *langs;
+	LCUI_Widget menu;
+	LCUI_Widget item;
+
+	n = I18n_GetLanguages(&langs);
+	SelectWidget(menu, ID_DROPDOWN_LANGUAGES);
+	SelectWidget(view.language, ID_TXT_CURRENT_LANGUAGE);
+	for (i = 0; i < n; ++i) {
+		lang = langs[i];
+		item = LCUIWidget_New("textview");
+		Widget_AddClass(item, "dropdown-item");
+		Widget_SetAttributeEx(item, "value", lang->code, 0, NULL);
+		Widget_Append(menu, item);
+		TextView_SetText(item, lang->name);
+		if (strcmp(finder.config.language, lang->code) == 0) {
+			TextView_SetText(view.language, lang->name);
+		}
+	}
+	BindEvent(menu, "change.dropdown", OnSelectLanguage);
 }

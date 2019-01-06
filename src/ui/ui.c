@@ -112,6 +112,7 @@ void UI_InitMainView(void)
 
 #ifdef PLATFORM_WIN32_DESKTOP
 #include "../resource.h"
+#pragma warning (disable:4311)
 
 /** 在 surface 准备好后，设置与 surface 绑定的窗口的图标 */
 static void OnSurfaceReady(LCUI_Event e, void *arg)
@@ -128,7 +129,11 @@ static void OnSurfaceReady(LCUI_Event e, void *arg)
 	instance = (HINSTANCE)LCUI_GetAppData();
 	hwnd = (HWND)Surface_GetHandle(surface);
 	icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON_MAIN));
-	SetClassLong(hwnd, GCL_HICON, (LONG)icon);
+#ifdef _WIN64
+	SetClassLong(hwnd, GCLP_HICON, (LONG)icon);
+#else
+	SetClassLong(hwnd, GCLP_ICON, (LONG)icon);
+#endif
 }
 #endif
 
@@ -215,7 +220,7 @@ int UI_Init(int argc, char **argv)
 
 static void OnTimer(void *arg)
 {
-	Widget_PrintTree(LCUIWidget_GetById("picture-viewer-window"));
+	//Widget_PrintTree(LCUIWidget_GetById("view-detector-settings"));
 }
 
 int UI_Run(void)

@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_cache.h -- file list cache, it used for file list changes detection.
  *
- * Copyright (C) 2015-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2015-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_cache.h -- 文件列表的缓存，方便检测文件列表的增删状态。
  *
- * 版权所有 (C) 2015-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2015-2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -60,15 +60,15 @@ typedef struct FileCacheTimeRec_ {
 
 /** 文件列表同步任务 */
 typedef struct SyncTaskRec_ {
-	wchar_t *file;				/**< 数据文件 */
-	wchar_t *tmpfile;			/**< 临时数据文件 */
-	wchar_t *scan_dir;			/**< 需扫描的目录 */
-	wchar_t *data_dir;			/**< 数据存放目录 */
-	SyncTaskState state;			/**< 任务状态 */
-	unsigned long int total_files;		/**< 当前缓存的总文件数量 */
-	unsigned long int added_files;		/**< 当前缓存的新增的文件数量 */
-	unsigned long int changed_files;	/**< 当前缓存的已修改的文件数量 */
-	unsigned long int deleted_files;	/**< 当前缓存的删除的文件数量 */
+	wchar_t *file;		/**< 数据文件 */
+	wchar_t *tmpfile;	/**< 临时数据文件 */
+	wchar_t *scan_dir;	/**< 需扫描的目录 */
+	wchar_t *data_dir;	/**< 数据存放目录 */
+	SyncTaskState state;	/**< 任务状态 */
+	size_t total_files;	/**< 当前缓存的总文件数量 */
+	size_t added_files;	/**< 当前缓存的新增的文件数量 */
+	size_t changed_files;	/**< 当前缓存的已修改的文件数量 */
+	size_t deleted_files;	/**< 当前缓存的删除的文件数量 */
 } SyncTaskRec, *SyncTask;
 
 typedef void(*FileInfoHanlder)(void*, const FileCacheInfo);

@@ -292,7 +292,6 @@ static void FoldersView_AppendFile(FileEntry entry)
 		FileBrowser_Append(&view.browser, separator);
 	}
 	view.prev_item_type = entry->is_dir;
-	_DEBUG_MSG("%p\n", view.dir);
 	if (entry->is_dir) {
 		item = FileBrowser_AppendFolder(&view.browser,
 						entry->path,

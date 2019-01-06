@@ -314,6 +314,29 @@ size_t wpathjoin(wchar_t *path, const wchar_t *path1, const wchar_t *path2)
 	return len;
 }
 
+const wchar_t *wgetfileext(const wchar_t *file)
+{
+	const wchar_t *p = file;
+
+	while (*p) {
+		if (*p == '.') {
+			return p;
+		}
+		++p;
+	}
+	return NULL;
+}
+
+int wcheckfileext(const wchar_t *file, const wchar_t *ext)
+{
+	const wchar_t *p = wgetfileext(file);
+
+	if (p && wcscmp(p, ext) == 0) {
+		return 0;
+	}
+	return -1;
+}
+
 int wgetcurdir(wchar_t *wpath, int max_len)
 {
 #ifdef _WIN32
@@ -360,7 +383,7 @@ size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number)
 	size_t k, count;
 
 	buf = malloc(sizeof(wchar_t) * (max_len + 1));
-	buf_len = swprintf(buf, max_len, L"%lu", number);
+	buf_len = swprintf(buf, max_len, L"%zu", number);
 	count = (size_t)ceil(buf_len / 3.0 - 1.0);
 	len = buf_len + count;
 	max_len = min(max_len, len);
@@ -381,7 +404,7 @@ size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number)
 	return len;
 }
 
-size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, uint32_t seconds)
+size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, unsigned seconds)
 {
 	wchar_t *p;
 	wchar_t buf[64];
@@ -393,8 +416,8 @@ size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, uint32_t seconds)
 		seconds -= hours * 3600;
 	}
 	if (seconds > 60) {
-		minutes = seconds / 3600;
-		seconds -= hours * 3600;
+		minutes = seconds / 60;
+		seconds -= minutes * 60;
 	}
 	swprintf(buf, 64, L"%u:%u:%u", hours, minutes, seconds);
 	for (p = buf; *p; ++p) {

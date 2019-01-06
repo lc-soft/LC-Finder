@@ -1,6 +1,6 @@
 labelitem {
     display: block;
-    padding: $labelitem-padding-y $labelitem-padding-x;
+    padding: $labelitem-padding-y $labelitem-padding-x $labelitem-padding-y #{$labelitem-padding-x - 3px};
     margin: 0 #{$labelitem-margin-x};
     border-left: 3px solid #ccc;
 }

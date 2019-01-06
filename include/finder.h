@@ -1,8 +1,8 @@
 ﻿/* ***************************************************************************
- * finder.h -- main code of LC-Finder, responsible for the initialization of 
+ * finder.h -- main code of LC-Finder, responsible for the initialization of
  * the LC-Finder and the scheduling of other functions.
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -80,6 +80,8 @@ typedef struct FinderConfigRec_ {
 	int files_sort;			/**< 文件的排序方式 */
 	char encrypted_password[48];	/**< 加密后的密码 */
 	int scaling;			/**< 界面的缩放比例，100 ~ 200 */
+
+	wchar_t detector_model_name[64];
 } FinderConfigRec, *FinderConfig;
 
 typedef struct FinderLicenseRec_ {
@@ -117,7 +119,7 @@ typedef struct Finder_ {
 	int storage_for_scan;		/**< 文件服务连接标识符，主要用于扫描文件列表 */
 } Finder;
 
-typedef void( *LCFinder_EventHandler )(void*, void*);
+typedef void(*LCFinder_EventHandler)(void*, void*);
 
 /** 文件同步状态记录 */
 typedef struct FileSyncStatusRec_ {
@@ -134,75 +136,75 @@ typedef struct FileSyncStatusRec_ {
 	SyncTask task;		/**< 当前正执行的任务 */
 	SyncTask *tasks;	/**< 所有任务 */
 	void *data;
-	void( *callback )(void*);
+	void(*callback)(void*);
 } FileSyncStatusRec, *FileSyncStatus;
 
 extern Finder finder;
 
 /** 绑定事件 */
-int LCFinder_BindEvent( int event_id, LCFinder_EventHandler handler, void *data );
+int LCFinder_BindEvent(int event_id, LCFinder_EventHandler handler, void *data);
 
 /** 触发事件 */
-int LCFinder_TriggerEvent( int event_id, void *data );
+int LCFinder_TriggerEvent(int event_id, void *data);
 
 /** 获取指定文件路径所处的源文件夹 */
-DB_Dir LCFinder_GetSourceDir( const char *filepath );
+DB_Dir LCFinder_GetSourceDir(const char *filepath);
 
-size_t LCFinder_GetSourceDirList( DB_Dir **outdirs );
+size_t LCFinder_GetSourceDirList(DB_Dir **outdirs);
 
 /** 获取缩略图数据库总大小 */
-int64_t LCFinder_GetThumbDBTotalSize( void );
+int64_t LCFinder_GetThumbDBTotalSize(void);
 
 /** 清除缩略图数据库 */
-void LCFinder_ClearThumbDB( void );
+void LCFinder_ClearThumbDB(void);
 
-void LCFinder_SyncFilesAsync( FileSyncStatus s );
+void LCFinder_SyncFilesAsync(FileSyncStatus s);
 
-DB_Dir LCFinder_GetDir( const char *dirpath );
+DB_Dir LCFinder_GetDir(const char *dirpath);
 
-DB_Dir LCFinder_AddDir( const char *dirpath, const char *token, int visible );
+DB_Dir LCFinder_AddDir(const char *dirpath, const char *token, int visible);
 
-DB_Tag LCFinder_GetTag( const char *tagname );
+DB_Tag LCFinder_GetTag(const char *tagname);
 
-DB_Tag LCFinder_AddTag( const char *tagname );
+DB_Tag LCFinder_AddTag(const char *tagname);
 
-DB_Tag LCFinder_AddTagForFile( DB_File file, const char *tagname );
+DB_Tag LCFinder_AddTagForFile(DB_File file, const char *tagname);
 
 /** 获取文件的标签列表 */
-size_t LCFinder_GetFileTags( DB_File file, DB_Tag **outtags );
+size_t LCFinder_GetFileTags(DB_File file, DB_Tag **outtags);
 
 /** 重新载入标签列表 */
-void LCFinder_ReloadTags( void );
+void LCFinder_ReloadTags(void);
 
-void LCFinder_DeleteDir( DB_Dir dir );
+void LCFinder_DeleteDir(DB_Dir dir);
 
-size_t LCFinder_DeleteFiles( char * const *files, size_t nfiles,
-			     int( *onstep )(void*, size_t, size_t),
-			     void *privdata );
+size_t LCFinder_DeleteFiles(char * const *files, size_t nfiles,
+			    int(*onstep)(void*, size_t, size_t),
+			    void *privdata);
 
 /** 保存配置 */
-int LCFinder_SaveConfig( void );
+int LCFinder_SaveConfig(void);
 
 /** 载入配置 */
-int LCFinder_LoadConfig( void );
+int LCFinder_LoadConfig(void);
 
 /** 验证密码 */
-LCUI_BOOL LCFinder_AuthPassword( const char *password );
+LCUI_BOOL LCFinder_AuthPassword(const char *password);
 
 /** 设置密码 */
-void LCFinder_SetPassword( const char *password );
+void LCFinder_SetPassword(const char *password);
 
 /** 开启私人空间 */
-void LCFinder_OpenPrivateSpace( void );
+void LCFinder_OpenPrivateSpace(void);
 
 /** 关闭私人空间 */
-void LCFinder_ClosePrivateSpace( void );
+void LCFinder_ClosePrivateSpace(void);
 
-int LCFinder_Init( int argc, char *argv[] );
+int LCFinder_Init(int argc, char **argv);
 
-int LCFinder_Run( void );
+int LCFinder_Run(void);
 
-void LCFinder_Exit( void );
+void LCFinder_Exit(void);
 
 LCFINDER_END_HEADER
 

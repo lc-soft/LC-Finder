@@ -23,6 +23,9 @@ strings:
     tagthumb:
         item: '%ls 項'
         items: '%ls 項'
+    taskitem:
+        preparing: '準備中...'
+        completed: '已經完成！共處理 %zu 個文件'
     sort:
         header: 排序方式
         ctime_desc: 最近創建
@@ -36,6 +39,7 @@ strings:
         password_too_long: 密碼太長
         password_empty: 密碼不能爲空
         passwords_not_match: 兩次輸入的密碼不一致
+        detector_init_failed: 檢測器初始化失敗
     datetime:
         format: YYYY年MM月DD日，DATE hh:mm
         year_format: YYYY年MM月
@@ -142,7 +146,11 @@ strings:
                 以便在下次瀏覽圖片時能夠快速呈現縮略圖。
         detector:
             title: 檢測器
+            models:
+                title: 預訓練模型
+                text: 選擇一個模型以改變檢測器的識別速度、精度和對象種類集
             tasks:
+                title: 任務管理
                 training:
                     title: 訓練
                     text: 學習已標註的圖片，增強檢測能力

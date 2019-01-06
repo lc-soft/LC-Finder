@@ -20,10 +20,25 @@
                 </w>
               </w>
             </w>
-            <w class="setting-group">
+            <w id="view-detector-settings" class="setting-group">
               <w type="textview-i18n" class="text title" data-i18n-key="settings.detector.title">检测器</w>
-              <w id="detector-task-list" class="task-list">
+              <w class="item-group">
+                <w class="text-line">
+                  <w type="textview-i18n" class="text" data-i18n-key="settings.detector.models.title">预训练模型</w>
+                </w>
+                <w class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.detector.models.text">
+                  选择一个模型以改变检测器的识别速度、精度以及对象种类集
+                </w>
+                <w class="on-models-available">
+                  <w id="btn-set-detector-model" class="btn" data-toggle="dropdown" data-target="dropdown-detector-models">
+                    <w id="txt-current-detector-model" type="textview" class="default text"></w>
+                    <w type="textview" class="icon icon icon-chevron-down"></w>
+                  </w>
+                </w>
+                <w id="dropdown-detector-models" type="dropdown-menu"></w>
               </w>
+              <w type="textview-i18n" class="text text-line" data-i18n-key="settings.detector.tasks.title">任务管理</w>
+              <w id="detector-task-list" class="task-list" />
             </w>
             <w class="setting-group">
               <w type="textview-i18n" class="title" data-i18n-key="settings.language">语言</w>

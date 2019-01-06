@@ -730,7 +730,7 @@ DB_Query DB_NewQuery(const DB_QueryTerms terms)
 			}
 			strcat(q->sql_terms, ") ");
 			strcpy(q->sql_having, buf_having);
-			sprintf(buf_having, "COUNT(ftr.tid) = %lu ",
+			sprintf(buf_having, "COUNT(ftr.tid) = %zu ",
 				terms->n_tags);
 			strcat(q->sql_having, buf_having);
 		}
@@ -787,7 +787,7 @@ DB_Query DB_NewQuery(const DB_QueryTerms terms)
 		}
 		strcpy(buf_orderby, ", ");
 	}
-	sprintf(q->sql_limit, " LIMIT %lu OFFSET %lu", terms->limit,
+	sprintf(q->sql_limit, " LIMIT %zu OFFSET %zu", terms->limit,
 		terms->offset);
 	strcpy(sql, sql_search_files);
 	strcat(sql, q->sql_tables);

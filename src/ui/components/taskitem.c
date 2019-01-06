@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * taskitem.c -- task item
  *
- * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * taskitem.c -- 任务项，用于展示任务的进度信息
  *
- * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018-2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -45,12 +45,16 @@
 #include "progressbar.h"
 #include "taskitem.h"
 #include "common.h"
+#include "i18n.h"
+
+#define KEY_TXT_COMPLETED "taskitem.completed"
+#define KEY_TXT_PREPARING "taskitem.preparing"
 
 typedef struct TaskItemRec_ {
 	int timer;
 	size_t total;
 	size_t current;
-	uint32_t start_time;
+	unsigned start_time;
 	LCUI_BOOL active;
 
 	LCUI_Widget icon;
@@ -118,20 +122,46 @@ static void TaskItem_OnInit(LCUI_Widget w)
 
 static void TaskItem_OnTimer(void *arg)
 {
-	uint32_t seconds;
-	uint32_t seconds_left;
+	unsigned seconds;
+	unsigned seconds_left;
+	const wchar_t *message;
 	wchar_t time_str[64];
 	wchar_t text[128];
+	LCUI_Widget w = arg;
+	TaskItem t = Widget_GetData(w, self.proto);
 
-	TaskItem t = Widget_GetData(arg, self.proto);
+	ProgressBar_SetMaxValue(t->progress, (int)t->total);
+	ProgressBar_SetValue(t->progress, (int)t->current);
 
-	seconds = (uint32_t)LCUI_GetTimeDelta(t->start_time) / 1000;
-	seconds_left = t->current / seconds * (t->total - t->current);
+	if (t->total == 0 || t->current == 0) {
+		t->start_time = (unsigned)(LCUI_GetTime() / 1000);
+		message = I18n_GetText(KEY_TXT_PREPARING);
+		TextView_SetTextW(t->progress_text, message);
+		return;
+	}
+	if (t->total > 0 && t->current >= t->total) {
+		message = I18n_GetText(KEY_TXT_COMPLETED);
+		swprintf(text, 128, message, t->total);
+		TextView_SetTextW(t->progress_text, text);
+		TextViewI18n_SetKey(t->action_text, "button.restart");
+		Widget_AddClass(w, "completed");
+		Widget_RemoveClass(w, "active");
+		LCUITimer_Free(t->timer);
+		t->active = FALSE;
+		return;
+	}
+	if (t->start_time < 1) {
+		t->start_time = (unsigned)(LCUI_GetTime() / 1000);
+	}
+	seconds = (unsigned)(LCUI_GetTime() / 1000) - t->start_time;
+	if (seconds > 0 && t->current > 0) {
+		seconds_left = (unsigned)((t->total - t->current) * seconds / t->current);
+	} else {
+		seconds_left = 0;
+	}
 	get_human_time_left_wcs(time_str, 32, seconds_left);
-	swprintf(text, 128, L"%lu/%lu - %ls", t->current, t->total, time_str);
+	swprintf(text, 128, L"%zu/%zu - %ls", t->current, t->total, time_str);
 	TextView_SetTextW(t->progress_text, text);
-	ProgressBar_SetMaxValue(t->progress, t->total);
-	ProgressBar_SetValue(t->progress, t->current);
 }
 
 void TaskItem_SetIcon(LCUI_Widget w, const char *icon)
@@ -155,6 +185,15 @@ void TaskItem_SetTextKey(LCUI_Widget w, const char *key)
 	TextViewI18n_SetKey(that->text, key);
 }
 
+void TaskItem_SetActionDisabled(LCUI_Widget w, LCUI_BOOL disabled)
+{
+	if (disabled) {
+		Widget_AddClass(w, "disabled");
+	} else {
+		Widget_RemoveClass(w, "disabled");
+	}
+}
+
 int TaskItem_StartTask(LCUI_Widget w)
 {
 	LCUI_WidgetEventRec e;
@@ -166,11 +205,13 @@ int TaskItem_StartTask(LCUI_Widget w)
 	that->total = 0;
 	that->current = 0;
 	that->active = TRUE;
-	that->start_time = (uint32_t)(LCUI_GetTime() / 1000);
+	that->start_time = 0;
 	that->timer = LCUI_SetInterval(1000, TaskItem_OnTimer, w);
 	TextViewI18n_SetKey(that->action_text, "button.stop");
 	LCUI_InitWidgetEvent(&e, "start");
 	Widget_AddClass(w, "active");
+	Widget_RemoveClass(w, "error");
+	Widget_RemoveClass(w, "completed");
 	Widget_TriggerEvent(w, &e, NULL);
 	TaskItem_OnTimer(w);
 	return 0;
@@ -185,12 +226,30 @@ int TaskItem_StopTask(LCUI_Widget w)
 		return -1;
 	}
 	that->active = FALSE;
-	LCUITimer_Free(that->timer);
+	if (that->timer) {
+		LCUITimer_Free(that->timer);
+		that->timer = 0;
+	}
 	TextViewI18n_SetKey(that->action_text, "button.start");
 	LCUI_InitWidgetEvent(&e, "stop");
 	Widget_RemoveClass(w, "active");
 	Widget_TriggerEvent(w, &e, NULL);
 	return 0;
+}
+
+void TaskItem_SetError(LCUI_Widget w, const wchar_t *message)
+{
+	TaskItem that = Widget_GetData(w, self.proto);
+
+	that->active = FALSE;
+	if (that->timer) {
+		LCUITimer_Free(that->timer);
+		that->timer = 0;
+	}
+	Widget_AddClass(w, "error");
+	Widget_RemoveClass(w, "active");
+	TextView_SetTextW(that->progress_text, message);
+	TextViewI18n_SetKey(that->action_text, "button.start");
 }
 
 void TaskItem_SetProgress(LCUI_Widget w, size_t current, size_t total)

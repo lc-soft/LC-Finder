@@ -77,3 +77,11 @@
 		}
 	}
 }
+.on-models-available,
+.on-models-unavailable {
+	display: none;
+}
+.models-available .on-models-available,
+.models-unavailable .on-models-unavailable {
+	display: block;
+}

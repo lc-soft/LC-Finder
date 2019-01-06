@@ -8,6 +8,7 @@ strings:
         clear: 清除
         cleaning: 正在清除...
         reset_password: 重置密码
+        restart: 重新开始
         start: 开始
         stop: 停止
     switch:
@@ -24,7 +25,8 @@ strings:
         item: '%ls 项'
         items: '%ls 项'
     taskitem:
-        progress:
+        preparing: '准备中...'
+        completed: '已经完成！共处理 %zu 个文件'
     sort:
         header: 排序方式
         ctime_desc: 最近创建
@@ -38,6 +40,7 @@ strings:
         password_too_long: 密码太长
         password_empty: 密码不能为空
         passwords_not_match: 两次输入的密码不一致
+        detector_init_failed: 检测器初始化失败
     datetime:
         format: YYYY年MM月DD日，DATE hh:mm
         year_format: YYYY年MM月
@@ -143,7 +146,11 @@ strings:
                 以便在下次浏览图片时能够快速呈现缩略图。
         detector:
             title: 检测器
+            models:
+                title: 预训练模型
+                text: 选择一个模型以改变检测器的识别速度、精度和对象种类集
             tasks:
+                title: 任务管理
                 training:
                     title: 训练
                     text: 学习已标注的图片，增强检测能力

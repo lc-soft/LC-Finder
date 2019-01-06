@@ -43,9 +43,13 @@ void TaskItem_SetNameKey(LCUI_Widget w, const char *key);
 
 void TaskItem_SetTextKey(LCUI_Widget w, const char *key);
 
+void TaskItem_SetActionDisabled(LCUI_Widget w, LCUI_BOOL disabled);
+
 int TaskItem_StartTask(LCUI_Widget w);
 
 int TaskItem_StopTask(LCUI_Widget w);
+
+void TaskItem_SetError(LCUI_Widget w, const wchar_t *message);
 
 void TaskItem_SetProgress(LCUI_Widget w, size_t current, size_t total);
 

@@ -40,3 +40,28 @@
         display: none;
     }
 }
+.taskitem.disabled {
+    .taskitem-action {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+}
+.taskitem.completed {
+    .taskitem-progress-text {
+        color: $green;
+        display: block;
+    }
+}
+.taskitem.error {
+    .taskitem-progress-text {
+        color: $red;
+        display: block;
+    }
+}
+.taskitem.error,
+.taskitem.completed {
+    .taskitem-text,
+    .taskitem-progress {
+        display: none;
+    }
+}

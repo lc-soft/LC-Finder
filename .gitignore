@@ -247,6 +247,7 @@ ModelManifest.xml
 # Other
 *.db
 *.opendb
+*.weights
 .*
 data
 src/lib/unqlite.c

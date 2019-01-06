@@ -269,11 +269,6 @@ static size_t HomeView_ScanFiles(void)
 
 	terms.limit = 512;
 	terms.modify_time = DESC;
-	if (terms.dirs) {
-		free(terms.dirs);
-		terms.dirs = NULL;
-		terms.n_dirs = 0;
-	}
 	terms.n_dirs = LCFinder_GetSourceDirList(&terms.dirs);
 	if (terms.n_dirs == finder.n_dirs) {
 		free(terms.dirs);

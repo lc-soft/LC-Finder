@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
- * view_settings.c -- settings view
+ * settings_license.c -- license info in the settings view
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * view_settings.c -- “设置”视图
+ * settings_license.c -- “设置”视图中的许可证信息
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -39,13 +39,21 @@
 #include <LCUI/gui/widget.h>
 #include "settings.h"
 
-void UI_InitSettingsView(void)
+static void CheckLicense(void)
 {
-	SettingsView_InitScaling();
-	SettingsView_InitSource();
-	SettingsView_InitLanguage();
-	SettingsView_InitPrivateSpace();
-	SettingsView_InitThumbCache();
-	SettingsView_InitDetector();
-	SettingsView_InitLicense();
+	LCUI_Widget txt = LCUIWidget_GetById(ID_TXT_TRIAL_LICENSE);
+	if (finder.license.is_active && !finder.license.is_trial) {
+		Widget_Destroy(txt);
+	}
+}
+
+static void OnLicenseChange(void *privdata, void *data)
+{
+	CheckLicense();
+}
+
+void SettingsView_InitLicense(void)
+{
+	LCFinder_BindEvent(EVENT_LICENSE_CHG, OnLicenseChange, NULL);
+	CheckLicense();
 }

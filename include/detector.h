@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
- * view_settings.c -- settings view
+ * detector.h -- detector
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * view_settings.c -- “设置”视图
+ * detector.h -- 检测器，基于 darknet 实现
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,18 +34,50 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#include "finder.h"
-#include "ui.h"
-#include <LCUI/gui/widget.h>
-#include "settings.h"
+#ifndef LCFINDER_DETECTOR_H
+#define LCFINDER_DETECTOR_H
 
-void UI_InitSettingsView(void)
-{
-	SettingsView_InitScaling();
-	SettingsView_InitSource();
-	SettingsView_InitLanguage();
-	SettingsView_InitPrivateSpace();
-	SettingsView_InitThumbCache();
-	SettingsView_InitDetector();
-	SettingsView_InitLicense();
-}
+#include "file_search.h"
+
+typedef enum DetectorTaskType {
+	DETECTOR_TASK_DETECT,
+	DETECTOR_TASK_TRAIN,
+	DETECTOR_TASK_TOTAL_NUM
+} DetectorTaskType;
+
+typedef enum DetetctorTaskState {
+	DETECTOR_TASK_STATE_READY,
+	DETECTOR_TASK_STATE_PREPARING,
+	DETECTOR_TASK_STATE_RUNNING,
+	DETECTOR_TASK_STATE_FINISHED
+} DetetctorTaskState;
+
+typedef struct DetectorTaskRec_ {
+	DetectorTaskType type;
+	DetetctorTaskState state;
+
+	LCUI_BOOL cancel;
+
+	size_t current;
+	size_t total;
+} DetectorTaskRec, *DetectorTask;
+
+int Detector_Init(const wchar_t *workdir);
+
+void Detector_Free(void);
+
+wchar_t **Detector_GetModels(void);
+
+int Detector_SetModel(const wchar_t *name);
+
+DetectorTask Detector_CreateTask(DetectorTaskType type);
+
+void Detector_CancelTask(DetectorTask task);
+
+void Detector_FreeTask(DetectorTask task);
+
+int Detector_RunTask(DetectorTask task);
+
+void Detector_RunTaskAync(DetectorTask task);
+
+#endif

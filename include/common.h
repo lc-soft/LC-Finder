@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * common.h -- common function set.
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * common.h -- 一些通用的基础功能集
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -84,6 +84,10 @@ size_t pathjoin(char *path, const char *path1, const char *path2);
 
 size_t wpathjoin(wchar_t *path, const wchar_t *path1, const wchar_t *path2);
 
+const wchar_t *wgetfileext(const wchar_t *file);
+
+int wcheckfileext(const wchar_t *file, const wchar_t *ext);
+
 /** 获取程序当前所在目录 */
 int wgetcurdir(wchar_t *path, int max_len);
 
@@ -99,7 +103,7 @@ void StrDict_Release(Dict *d);
 /** 获取数字字符串，格式为：1,234,567,890 */
 size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number);
 
-size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, uint32_t seconds);
+size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, unsigned seconds);
 
 int getsizestr(char *str, int64_t size);
 

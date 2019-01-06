@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
- * view_settings.c -- settings view
+ * settings_scaling.c -- scaling setting view
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * view_settings.c -- “设置”视图
+ * settings_scaling.c -- “设置”视图中的缩放设置项
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,18 +34,49 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdio.h>
+#include <string.h>
 #include "finder.h"
-#include "ui.h"
+#include <LCUI/display.h>
 #include <LCUI/gui/widget.h>
+#include <LCUI/gui/widget/textview.h>
+#include "ui.h"
+#include "i18n.h"
+#include "textview_i18n.h"
 #include "settings.h"
 
-void UI_InitSettingsView(void)
+static void RefreshScalingText(void)
 {
-	SettingsView_InitScaling();
-	SettingsView_InitSource();
-	SettingsView_InitLanguage();
-	SettingsView_InitPrivateSpace();
-	SettingsView_InitThumbCache();
-	SettingsView_InitDetector();
-	SettingsView_InitLicense();
+	char str[32];
+	LCUI_Widget txt;
+
+	SelectWidget(txt, ID_TXT_CURRENT_SCALING);
+	sprintf(str, "%d%%", finder.config.scaling);
+	TextView_SetText(txt, str);
+}
+
+static void OnChangeScaling(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	int scaling;
+	const char *value = Widget_GetAttribute(e->target, "value");
+
+	if (!value || sscanf(value, "%d", &scaling) < 1) {
+		return;
+	}
+	if (scaling >= 100 && scaling <= 200) {
+		finder.config.scaling = scaling;
+		LCUIMetrics_SetScale((float)(scaling / 100.0));
+		LCUIWidget_RefreshStyle();
+		LCFinder_SaveConfig();
+		RefreshScalingText();
+	}
+}
+
+void SettingsView_InitScaling(void)
+{
+	LCUI_Widget menu;
+
+	SelectWidget(menu, ID_DROPDOWN_SCALING);
+	BindEvent(menu, "change.dropdown", OnChangeScaling);
+	RefreshScalingText();
 }

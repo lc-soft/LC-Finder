@@ -42,6 +42,7 @@
 #include <LCUI/font/charset.h>
 
 #ifdef PLATFORM_WIN32_DESKTOP
+#pragma warning (disable:4091)
 #include <Windows.h>
 #include <ShlObj.h>
 
@@ -114,7 +115,8 @@ int MoveFileToTrashW(const wchar_t *filepath)
 
 int MoveFileToTrash(const char *filepath)
 {
-	int ret, len = strlen(filepath) + 1;
+	int ret;
+	size_t len = strlen(filepath) + 1;
 	wchar_t *wfilepath = (wchar_t*)malloc(sizeof(wchar_t) * len);
 	LCUI_DecodeString(wfilepath, filepath, len, ENCODING_UTF8);
 	ret = MoveFileToTrashW(wfilepath);

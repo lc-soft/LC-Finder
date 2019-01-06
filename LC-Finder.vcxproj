@@ -22,9 +22,14 @@
     <ClCompile Include="src\bridge_win32.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4996</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="src\finder.c" />
     <ClCompile Include="src\lib\common.c" />
+    <ClCompile Include="src\lib\detector.c" />
     <ClCompile Include="src\lib\file_cache.c" />
     <ClCompile Include="src\lib\file_stage.c" />
     <ClCompile Include="src\lib\file_search.c" />
@@ -67,6 +72,13 @@
     <ClCompile Include="src\ui\views\picture_scanner.c" />
     <ClCompile Include="src\ui\views\search.c" />
     <ClCompile Include="src\ui\views\settings.c" />
+    <ClCompile Include="src\ui\views\settings_detector.c" />
+    <ClCompile Include="src\ui\views\settings_language.c" />
+    <ClCompile Include="src\ui\views\settings_license.c" />
+    <ClCompile Include="src\ui\views\settings_private_space.c" />
+    <ClCompile Include="src\ui\views\settings_scaling.c" />
+    <ClCompile Include="src\ui\views\settings_source.c" />
+    <ClCompile Include="src\ui\views\settings_thumb_cache.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -78,6 +90,7 @@
     <ClInclude Include="include\browser.h" />
     <ClInclude Include="include\build.h" />
     <ClInclude Include="include\common.h" />
+    <ClInclude Include="include\detector.h" />
     <ClInclude Include="include\dialog.h" />
     <ClInclude Include="include\dropdown.h" />
     <ClInclude Include="include\file_cache.h" />
@@ -107,6 +120,7 @@
     <ClInclude Include="include\ui.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\ui\views\picture.h" />
+    <ClInclude Include="src\ui\views\settings.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LC-Finder.rc" />
@@ -200,17 +214,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;YAML_DECLARE_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\darknetlib\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4091;</DisableSpecificWarnings>
       <PrecompiledHeaderFile>brridge.hpp</PrecompiledHeaderFile>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;unqlite.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LCUI.lib;LCUIEx.lib;LCUIMain.lib;darknet.lib;Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -220,7 +234,10 @@
     </PreLinkEvent>
     <PreBuildEvent>
       <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
-copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\cudnn* $(OutDIr)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -241,7 +258,7 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;YAML_DECLARE_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\darknetlib\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -249,13 +266,13 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MinimalRebuild>true</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4091;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;LCUI.lib;LCUIEx.lib;LCUIMain.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LCUI.lib;LCUIEx.lib;LCUIMain.lib;darknet.lib;Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
@@ -265,7 +282,10 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
     </PreLinkEvent>
     <PreBuildEvent>
       <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
-copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\cudnn* $(OutDIr)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -286,19 +306,23 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\darknetlib\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
+      <DisableSpecificWarnings>4996;4091;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LCUI.lib;LCUIEx.lib;LCUIMain.lib;darknet.lib;Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
-copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\cudnn* $(OutDIr)</Command>
     </PreBuildEvent>
     <PreLinkEvent>
       <Command>
@@ -320,19 +344,23 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\LCUI\include;$(SolutionDir)build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\darknetlib\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
+      <DisableSpecificWarnings>4996;4091;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>user32.lib;LCUI_D.lib;LCUIMain.lib;sqlite3.lib;unqlite.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LCUI.lib;LCUIEx.lib;LCUIMain.lib;darknet.lib;Shlwapi.lib;user32.lib;Ole32.lib;Comdlg32.lib;Shell32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
-copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\cudnn* $(OutDIr)</Command>
     </PreBuildEvent>
     <PreLinkEvent>
       <Command>
