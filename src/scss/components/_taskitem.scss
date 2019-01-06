@@ -1,0 +1,42 @@
+.taskitem-content {
+    padding: $spacing 80px $spacing #{$taskitem-icon-width + $spacing};
+}
+.taskitem-action {
+    top: $spacing * 1.25;
+    right: $spacing;
+    position: absolute;
+}
+.taskitem-icon {
+    top: $spacing;
+    left: $spacing;
+    position: absolute;
+    width: $taskitem-icon-width;
+    font-size: 32px;
+}
+.taskitem-name {
+    font-weight: 600;
+}
+.taskitem-text,
+.taskitem-progress-text {
+    color: $gray-600;
+}
+.taskitem-progress,
+.taskitem-progress-text {
+    display: none;
+}
+.taskitem-progress {
+    progressbar {
+        min-width: 2px;
+    }
+}
+.taskitem.active {
+    .taskitem-progress {
+        display: block;
+    }
+    .taskitem-progress-text {
+        display: block;
+    }
+    .taskitem-text {
+        display: none;
+    }
+}

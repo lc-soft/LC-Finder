@@ -8,6 +8,8 @@ strings:
         clear: Clear
         cleaning: Cleaning...
         reset_password: Reset password
+        start: Start
+        stop: Stop
     switch:
         on: On
         off: Off
@@ -138,6 +140,15 @@ strings:
                 We will automatically cache the thumbnail
                 when you browse the list of pictures, so that you can quickly
                 render thumbnail images in the next time you browse the pictures.
+        detector:
+            title: Detector
+            tasks:
+                training:
+                    title: Training
+                    text: Learn the annotated pictures to enhanced detection capability
+                detection:
+                    title: Detection
+                    text: Detect objects in all images and label them
         scaling:
             title: Scaling
             description: Set a suitable scaling to improve the visual experience of the user interface

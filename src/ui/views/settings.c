@@ -47,6 +47,7 @@
 #include "switch.h"
 #include "dialog.h"
 #include "textview_i18n.h"
+#include "taskitem.h"
 #include "bridge.h"
 #include "i18n.h"
 
@@ -60,6 +61,10 @@
 #define KEY_NEW_PASSWORD_TEXT		"settings.private_space.new_dialog.text"
 #define KEY_RESET_PASSWORD_TITLE	"settings.private_space.reset_dialog.title"
 #define KEY_RESET_PASSWORD_TEXT		"settings.private_space.reset_dialog.text"
+#define KEY_DETECTOR_DETECTION_TITLE	"settings.detector.tasks.detection.title"
+#define KEY_DETECTOR_DETECTION_TEXT	"settings.detector.tasks.detection.text"
+#define KEY_DETECTOR_TRAINING_TITLE	"settings.detector.tasks.training.title"
+#define KEY_DETECTOR_TRAINING_TEXT	"settings.detector.tasks.training.text"
 
 static struct SettingsViewData {
 	LCUI_Widget source_dirs;
@@ -92,6 +97,7 @@ static void OnBtnRemoveClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 static LCUI_Widget NewDirListItem(DB_Dir dir)
 {
 	LCUI_Widget item, icon, text, btn;
+
 	item = LCUIWidget_New(NULL);
 	icon = LCUIWidget_New("textview");
 	text = LCUIWidget_New("textview");
@@ -318,6 +324,23 @@ static void UI_InitScaling(void)
 
 }
 
+static void UI_InitDetector(void)
+{
+	LCUI_Widget list;
+	LCUI_Widget task_training = LCUIWidget_New("taskitem");
+	LCUI_Widget task_detection = LCUIWidget_New("taskitem");
+
+	SelectWidget(list, ID_VIEW_DETECTOR_TASKS);
+	TaskItem_SetIcon(task_detection, "image-search-outline");
+	TaskItem_SetNameKey(task_detection, KEY_DETECTOR_DETECTION_TITLE);
+	TaskItem_SetTextKey(task_detection, KEY_DETECTOR_DETECTION_TEXT);
+	TaskItem_SetIcon(task_training, "brain");
+	TaskItem_SetNameKey(task_training, KEY_DETECTOR_TRAINING_TITLE);
+	TaskItem_SetTextKey(task_training, KEY_DETECTOR_TRAINING_TEXT);
+	Widget_Append(list, task_detection);
+	Widget_Append(list, task_training);
+}
+
 static void UI_InitLanguages(void)
 {
 	int i, n;
@@ -467,6 +490,7 @@ void UI_InitSettingsView(void)
 	LCFinder_BindEvent(EVENT_DIR_DEL, OnDelDir, NULL);
 	LCFinder_BindEvent(EVENT_LICENSE_CHG, OnLicenseChange, NULL);
 	UI_InitPrivateSpaceView();
+	UI_InitDetector();
 	UI_InitScaling();
 	UI_InitLanguages();
 	UI_InitDirList();

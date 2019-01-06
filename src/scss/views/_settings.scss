@@ -1,9 +1,22 @@
+.task-list {
+	.taskitem {
+		max-width: #{$main-container-width + $gutter-width};
+		padding-left: $list-item-padidng-x;
+		padding-right: $list-item-padidng-x;
+
+		&:hover {
+			background-color: #f9f9f9;
+		}
+	}
+}
+
+.task-list,
 .source-list {
-	margin: 0 0 $spacing #{-$gutter-width / 2};
+	margin: 0 #{-$list-item-padidng-x} $spacing #{-$list-item-padidng-x};
 }
 .source-list-item {
 	width: 340px;
-	padding: 12px 0 12px #{$gutter-width / 2};
+	padding: 12px $list-item-padidng-x 12px $list-item-padidng-x;
 
 	.text {
 		width: 240px;

@@ -381,6 +381,33 @@ size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number)
 	return len;
 }
 
+size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, uint32_t seconds)
+{
+	wchar_t *p;
+	wchar_t buf[64];
+	uint32_t hours = 0;
+	uint32_t minutes = 0;
+
+	if (seconds > 3600) {
+		hours = seconds / 3600;
+		seconds -= hours * 3600;
+	}
+	if (seconds > 60) {
+		minutes = seconds / 3600;
+		seconds -= hours * 3600;
+	}
+	swprintf(buf, 64, L"%u:%u:%u", hours, minutes, seconds);
+	for (p = buf; *p; ++p) {
+		if (*p != L'0' && *p != L':') {
+			break;
+		}
+	}
+	if (wcs) {
+		wcsncpy(wcs, buf, max_len);
+	}
+	return wcslen(buf) - (p - buf);
+}
+
 int getsizestr(char *str, int64_t size)
 {
 	int i;

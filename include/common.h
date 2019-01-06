@@ -99,6 +99,8 @@ void StrDict_Release(Dict *d);
 /** 获取数字字符串，格式为：1,234,567,890 */
 size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number);
 
+size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, uint32_t seconds);
+
 int getsizestr(char *str, int64_t size);
 
 int wgetsizestr(wchar_t *str, size_t max_len, int64_t size);

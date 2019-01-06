@@ -8,6 +8,8 @@ strings:
         clear: 清除
         cleaning: 正在清除...
         reset_password: 重置密码
+        start: 开始
+        stop: 停止
     switch:
         on: 开
         off: 关
@@ -21,6 +23,8 @@ strings:
     tagthumb:
         item: '%ls 项'
         items: '%ls 项'
+    taskitem:
+        progress:
     sort:
         header: 排序方式
         ctime_desc: 最近创建
@@ -137,6 +141,15 @@ strings:
             description: >-
                 我们会在你浏览图片列表的时候自动缓存缩略图，
                 以便在下次浏览图片时能够快速呈现缩略图。
+        detector:
+            title: 检测器
+            tasks:
+                training:
+                    title: 训练
+                    text: 学习已标注的图片，增强检测能力
+                detection:
+                    title: 检测
+                    text: 检测所有图片里的对象并标注它们
         scaling:
             title: 缩放
             description: 设置一个合适的缩放比例，以改善界面的视觉体验

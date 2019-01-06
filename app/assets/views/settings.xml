@@ -21,6 +21,11 @@
               </w>
             </w>
             <w class="setting-group">
+              <w type="textview-i18n" class="text title" data-i18n-key="settings.detector.title">检测器</w>
+              <w id="detector-task-list" class="task-list">
+              </w>
+            </w>
+            <w class="setting-group">
               <w type="textview-i18n" class="title" data-i18n-key="settings.language">语言</w>
               <w class="item-group">
                 <w class="text-line">

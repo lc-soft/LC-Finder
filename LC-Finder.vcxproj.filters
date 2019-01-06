@@ -156,6 +156,9 @@
     <ClCompile Include="src\ui\components\labelitem.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\components\taskitem.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
@@ -259,6 +262,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\labelitem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\taskitem.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,7 +9,7 @@ textview-i18n, .link {
 }
 .text-line {
 	width: 100%;
-	max-width: 440px;
+	max-width: $main-container-width;
 	margin-bottom: 5px;
 }
 .text-line .text {

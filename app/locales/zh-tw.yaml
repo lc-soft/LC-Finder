@@ -8,6 +8,8 @@ strings:
         clear: 清除
         cleaning: 正在清除...
         reset_password: 重置密碼
+        start: 開始
+        stop: 停止
     switch:
         on: 開
         off: 關
@@ -138,6 +140,15 @@ strings:
             description: >-
                 我們會在你瀏覽圖片列表的時候自動緩存縮略圖，
                 以便在下次瀏覽圖片時能夠快速呈現縮略圖。
+        detector:
+            title: 檢測器
+            tasks:
+                training:
+                    title: 訓練
+                    text: 學習已標註的圖片，增強檢測能力
+                detection:
+                    title: 檢測
+                    text: 檢測所有圖片裏的對象並標註它們
         scaling:
             title: 縮放
             description: 設置一個合適的縮放比例，以改善界面的視覺體驗

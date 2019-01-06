@@ -54,6 +54,7 @@
     <ClCompile Include="src\ui\components\starrating.c" />
     <ClCompile Include="src\ui\components\switch.c" />
     <ClCompile Include="src\ui\components\tagthumb.c" />
+    <ClCompile Include="src\ui\components\taskitem.c" />
     <ClCompile Include="src\ui\components\textview_i18n.c" />
     <ClCompile Include="src\ui\components\thumbview.c" />
     <ClCompile Include="src\ui\components\timeseparator.c" />
@@ -96,6 +97,7 @@
     <ClInclude Include="include\starrating.h" />
     <ClInclude Include="include\switch.h" />
     <ClInclude Include="include\tagthumb.h" />
+    <ClInclude Include="include\taskitem.h" />
     <ClInclude Include="include\textview_i18n.h" />
     <ClInclude Include="include\thumb_db.h" />
     <ClInclude Include="include\thumb_cache.h" />

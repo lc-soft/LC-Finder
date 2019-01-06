@@ -64,6 +64,7 @@
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
 #define ID_VIEW_PCITURE_RATING		"picture-info-rating"
 #define ID_VIEW_MAIN_SIDEBAR		"main-sidebar"
+#define ID_VIEW_DETECTOR_TASKS		"detector-task-list"
 #define ID_VIEW_FILE_LIST		"current-file-list"
 #define ID_VIEW_TIME_RANGE_LIST		"time-range-list"
 #define ID_VIEW_TIME_RANGE		"view-time-range"
