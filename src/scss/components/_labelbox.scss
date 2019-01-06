@@ -1,0 +1,74 @@
+.labelbox-resizer {
+    right: 4px;
+    bottom: 4px;
+    font-size: 24px;
+    line-height: 24px;
+    position: absolute;
+    opacity: 0.2;
+}
+.labelbox-box {
+    min-width: 32px; 
+    min-height: 32px; 
+    box-sizing: border-box;
+    border: $labelbox-border-width solid #888;
+}
+.labelbox-remove {
+    margin-top: $labelbox-border-width;
+    font-size: 18px;
+    line-height: $labelbox-label-height;
+    margin-left: #{$spacer / 2};
+    opacity: 0.6;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+labelbox {
+    top: 40px;
+    left: 40px;
+    z-index: 1000;
+    position: absolute;
+    min-width: 32px;
+    min-height: #{$labelbox-label-height + 32px};
+
+    textview {
+        color: #fff;
+        line-height: $labelbox-label-height;
+        padding: $labelbox-border-width;
+        display: inline-block;
+        background-color: #888;
+    }
+    textedit {
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-width: 60px;
+        display: none;
+        position: absolute;
+        color: #fff;
+        padding: $labelbox-border-width;
+        line-height: $labelbox-label-height;
+        border: 0;
+
+        &:focus {
+            box-shadow: none;
+            border: 0;
+        }
+    }
+    textcaret {
+        background-color: #fff;
+    }
+    &:hover {
+        .labelbox-resizer {
+            opacity: 0.5;
+        }
+    }
+    .labelbox-resizer:hover {
+        opacity: 1;
+    }
+    &.editing {
+        textedit {
+            display: block;
+        }
+    }
+}

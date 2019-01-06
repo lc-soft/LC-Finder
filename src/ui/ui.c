@@ -47,6 +47,7 @@
 #include "thumbview.h"
 #include "starrating.h"
 #include "timeseparator.h"
+#include "labelbox.h"
 #include "progressbar.h"
 #include "textview_i18n.h"
 #include "link_i18n.h"
@@ -161,6 +162,7 @@ int UI_Init(int argc, char **argv)
 	LCUIWidget_AddTimeSeparator();
 	LCUIWidget_AddTextViewI18n();
 	LCUIWidget_AddLinkI18n();
+	LCUIWidget_AddLabelBox();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddTagThumb();
 	LCUIWidget_AddSwitch();
@@ -207,8 +209,14 @@ int UI_Init(int argc, char **argv)
 	return 0;
 }
 
+static void OnTimer(void *arg)
+{
+	Widget_PrintTree(LCUIWidget_GetById("picture-viewer-window"));
+}
+
 int UI_Run(void)
 {
+	LCUI_SetTimeout(5000, OnTimer, NULL);
 	return LCUI_Main();
 }
 
