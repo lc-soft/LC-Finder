@@ -1,0 +1,9 @@
+classes= 9418
+train  = combine9k.train.list
+valid  = /home/pjreddie/data/imagenet/det.val.files
+labels = 9k.labels
+names  = 9k.names
+backup = backup
+map = inet9k.map
+eval = imagenet
+results = results
