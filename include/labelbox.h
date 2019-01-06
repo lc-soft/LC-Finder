@@ -39,6 +39,16 @@
 
 void LCUIWidget_AddLabelBox(void);
 
+void LabelBox_SetNameW(LCUI_Widget w, const wchar_t *label);
+
+const wchar_t *LabelBox_GetNameW(LCUI_Widget w);
+
+void LabelBox_GetColor(LCUI_Widget w, LCUI_Color *color);
+
+void LabelBox_GetRect(LCUI_Widget w, LCUI_RectF *rect);
+
+void LabelBox_SetRect(LCUI_Widget w, const LCUI_RectF *rect);
+
 void LabelBox_Edit(LCUI_Widget w);
 
 void LabelBox_Save(LCUI_Widget w);

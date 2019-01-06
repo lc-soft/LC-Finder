@@ -48,6 +48,7 @@
 #include "starrating.h"
 #include "timeseparator.h"
 #include "labelbox.h"
+#include "labelitem.h"
 #include "progressbar.h"
 #include "textview_i18n.h"
 #include "link_i18n.h"
@@ -163,6 +164,7 @@ int UI_Init(int argc, char **argv)
 	LCUIWidget_AddTextViewI18n();
 	LCUIWidget_AddLinkI18n();
 	LCUIWidget_AddLabelBox();
+	LCUIWidget_AddLabelItem();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddTagThumb();
 	LCUIWidget_AddSwitch();

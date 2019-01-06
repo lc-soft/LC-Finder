@@ -10,10 +10,9 @@
     min-width: 32px; 
     min-height: 32px; 
     box-sizing: border-box;
-    border: $labelbox-border-width solid #888;
+    border: 10px solid #888;
 }
 .labelbox-remove {
-    margin-top: $labelbox-border-width;
     font-size: 18px;
     line-height: $labelbox-label-height;
     margin-left: #{$spacer / 2};
@@ -24,9 +23,7 @@
     }
 }
 labelbox {
-    top: 40px;
-    left: 40px;
-    z-index: 1000;
+    z-index: 10;
     position: absolute;
     min-width: 32px;
     min-height: #{$labelbox-label-height + 32px};
@@ -34,7 +31,7 @@ labelbox {
     textview {
         color: #fff;
         line-height: $labelbox-label-height;
-        padding: $labelbox-border-width;
+        padding: 0 $labelbox-border-width;
         display: inline-block;
         background-color: #888;
     }
@@ -46,7 +43,7 @@ labelbox {
         display: none;
         position: absolute;
         color: #fff;
-        padding: $labelbox-border-width;
+        padding: 0 $labelbox-border-width;
         line-height: $labelbox-label-height;
         border: 0;
 

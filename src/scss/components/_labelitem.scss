@@ -1,0 +1,16 @@
+labelitem {
+    display: block;
+    padding: $labelitem-padding-y $labelitem-padding-x;
+    margin: 0 #{$labelitem-margin-x};
+    border-left: 3px solid #ccc;
+}
+
+.labelitem-name {
+    display: inline-block;
+    margin-right: 0.5 * $spacing;
+}
+
+.labelitem-info {
+    display: inline-block;
+    color: $gray-600;
+}

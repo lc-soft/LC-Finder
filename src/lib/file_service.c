@@ -56,6 +56,9 @@
 #define S_ISREG(mode) _S_ISTYPE((mode), _S_IFREG)
 #endif
 
+#undef LOG
+#define LOG DEBUG_MSG
+
 typedef struct FileStreamRec_ {
 	LCUI_BOOL active;
 	LCUI_BOOL closed;

@@ -46,6 +46,7 @@
     <ClCompile Include="src\ui\components\dialog_prompt.c" />
     <ClCompile Include="src\ui\components\filesync.c" />
     <ClCompile Include="src\ui\components\labelbox.c" />
+    <ClCompile Include="src\ui\components\labelitem.c" />
     <ClCompile Include="src\ui\components\link_i18n.c" />
     <ClCompile Include="src\ui\components\progressbar.c" />
     <ClCompile Include="src\ui\components\sidebar.c" />
@@ -61,6 +62,7 @@
     <ClCompile Include="src\ui\views\home.c" />
     <ClCompile Include="src\ui\views\picture.c" />
     <ClCompile Include="src\ui\views\picture_info.c" />
+    <ClCompile Include="src\ui\views\picture_labels.c" />
     <ClCompile Include="src\ui\views\picture_scanner.c" />
     <ClCompile Include="src\ui\views\search.c" />
     <ClCompile Include="src\ui\views\settings.c" />
@@ -87,6 +89,7 @@
     <ClInclude Include="include\i18n_datetime.h" />
     <ClInclude Include="include\kvdb.h" />
     <ClInclude Include="include\labelbox.h" />
+    <ClInclude Include="include\labelitem.h" />
     <ClInclude Include="include\link_i18n.h" />
     <ClInclude Include="include\progressbar.h" />
     <ClInclude Include="include\sha1.h" />
@@ -135,13 +138,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v141_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v141_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -168,29 +171,26 @@
     </CustomBuildBeforeTargets>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <OutDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\objs\</IntDir>
+    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildBeforeTargets />
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <OutDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)app\bin\$(Platform)\$(Configuration)\objs\</IntDir>
+    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <PreBuildEventUseInBuild>
-    </PreBuildEventUseInBuild>
-    <OutDir>$(SolutionDir)..\LCUI\bin\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\temp\</IntDir>
+    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <PreBuildEventUseInBuild />
-    <OutDir>$(SolutionDir)..\LCUI\bin\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\temp\</IntDir>
+    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -217,8 +217,8 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -227,10 +227,10 @@
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName)$(TargetExt)" "$(SolutionDir)app"
-copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI*.dll" "$(SolutionDir)app"
-copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
-      <Message>Copying binary file to $(SolutionDir)app</Message>
+      <Command>copy $(TargetPath) $(ProjectDir)app\
+copy $(OutDir)*.dll $(ProjectDir)app\</Command>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -262,8 +262,8 @@ copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -272,10 +272,10 @@ copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       </Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)app\bin\$(Platform)\$(Configuration)\$(ProjectName)$(TargetExt)" "$(SolutionDir)app"
-copy "$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI*.dll" "$(SolutionDir)app"
-copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
-      <Message>Copying binary file to $(SolutionDir)app</Message>
+      <Command>copy $(TargetPath) $(ProjectDir)app\
+copy $(OutDir)*.dll $(ProjectDir)app\</Command>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -295,18 +295,22 @@ copy "$(OutDir)*.dll" "$(SolutionDir)app"</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
     </PreBuildEvent>
     <PreLinkEvent>
-      <Command>cp $(SolutionDir)lib\LCUI_D.lib $(OutDir);
-cp $(SolutionDir)lib\LCUIMain.lib $(OutDir);</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <CustomBuildStep>
       <Command>
       </Command>
       <Message />
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(ProjectDir)app\
+copy $(OutDir)*.dll $(ProjectDir)app\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -325,12 +329,12 @@ cp $(SolutionDir)lib\LCUIMain.lib $(OutDir);</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)\build\lib;$(SolutionDir)..\LCUI\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)</Command>
     </PreBuildEvent>
     <PreLinkEvent>
-      <Command>cp $(SolutionDir)lib\LCUI_D.lib $(OutDir);
-cp $(SolutionDir)lib\LCUIMain.lib $(OutDir);</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <CustomBuildStep>
       <Command>
@@ -338,6 +342,10 @@ cp $(SolutionDir)lib\LCUIMain.lib $(OutDir);</Command>
       <Message>
       </Message>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(ProjectDir)app\
+copy $(OutDir)*.dll $(ProjectDir)app\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -52,6 +52,7 @@
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
 #include "starrating.h"
+#include "picture.h"
 
 #define MAX_TAG_LEN			256
 #define KEY_UNKNOWN			"picture.unknown"
@@ -212,7 +213,7 @@ static void OnSetRating(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void OnBtnHideClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	UI_HidePictureInfoView();
+	PictureView_HideInfo();
 }
 
 static void OnBtnOpenDirClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -255,7 +256,7 @@ static void OnBtnAddTagClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	free(buf);
 }
 
-void UI_InitPictureInfoView(void)
+void PictureView_InitInfo(void)
 {
 	LCUI_Widget btn_hide, btn_add_tag, btn_open;
 
@@ -311,7 +312,7 @@ static void OnGetFileStatus(FileStatus *status, void *data)
 	TextView_SetTextW(view.txt_fsize, fsize_str);
 }
 
-void UI_SetPictureInfoView(const char *filepath)
+void PictureView_SetInfo(const char *filepath)
 {
 	int i, n;
 	DB_Tag *tags;
@@ -351,13 +352,13 @@ void UI_SetPictureInfoView(const char *filepath)
 	}
 }
 
-void UI_ShowPictureInfoView(void)
+void PictureView_ShowInfo(void)
 {
 	Widget_Show(view.panel);
 	Widget_AddClass(view.panel->parent, "has-panel");
 }
 
-void UI_HidePictureInfoView(void)
+void PictureView_HideInfo(void)
 {
 	Widget_Hide(view.panel);
 	Widget_RemoveClass(view.panel->parent, "has-panel");

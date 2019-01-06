@@ -3,6 +3,7 @@
   <ui>
     <w id="picture-viewer-window" class="window theme-default">
       <resource type="text/xml" src="assets/views/picture_info.xml"/>
+      <resource type="text/xml" src="assets/views/picture_labels.xml"/>
       <w class="window-main">
         <w class="window-navbar">
           <w class="icon-btn window-navbar-btn" id="btn-hide-picture-viewer">
@@ -13,11 +14,14 @@
             <w type="textview-i18n" class="text" data-i18n-key="picture.browse_all">浏览全部图片</w>
           </w>
           <w class="pull-right">
+            <w class="icon-btn window-navbar-btn" id="btn-show-picture-labels">
+              <w type="icon" name="select-drag"></w>
+            </w>
             <w class="icon-btn window-navbar-btn" id="btn-show-picture-info">
-              <w type="textview" class="icon icon icon-information"></w>
+              <w type="icon" name="information"></w>
             </w>
             <w class="icon-btn window-navbar-btn" id="btn-delete-picture">
-              <w type="textview" class="icon icon icon-delete"></w>
+              <w type="icon" name="delete"></w>
             </w>
           </w>
         </w>

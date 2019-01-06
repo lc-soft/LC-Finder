@@ -9,7 +9,7 @@
         </w>
       </w>
       <w class="panel-body">
-        <w id="picture-info-content-wrapper" class="panel-content-wrapper">
+        <w class="panel-content-wrapper">
           <w id="picture-info-content" class="panel-content scrolllayer">
             <w class="info-item">
               <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.info.file_name">文件名</w>
@@ -46,7 +46,7 @@
               </w>
             </w>
           </w>
-          <w type="scrollbar" data-parent="picture-info-content-wrapper" data-layer="picture-info-content"/>
+          <w type="scrollbar" data-layer="picture-info-content"/>
         </w>
       </w>
     </w>

@@ -43,6 +43,7 @@
 #define ID_WINDOW_MAIN			"main-window"
 #define ID_WINDOW_PCITURE_VIEWER	"picture-viewer-window"
 #define ID_PANEL_PICTURE_INFO		"picture-info-panel"
+#define ID_PANEL_PICTURE_LABELS		"picture-labels-panel"
 #define ID_TXT_HOME_SELECTION_STATS	"view-home-selection-stats"
 #define ID_TXT_SEARCH_SELECTION_STATS	"view-search-selection-stats"
 #define ID_TXT_FOLDERS_SELECTION_STATS	"view-folders-selection-stats"
@@ -58,6 +59,8 @@
 #define ID_TXT_CURRENT_SCALING		"txt-current-scaling"
 #define ID_TXT_TRIAL_LICENSE		"txt-trial-license"
 #define ID_VIEW_PICTURE_TAGS		"picture-info-tags"
+#define ID_VIEW_PICTURE_LABELS		"picture-labels-current"
+#define ID_VIEW_PICTURE_AVAIL_LABELS	"picture-labels-available"
 #define ID_VIEW_PICTURE_TARGET		"picture-viewer-target"
 #define ID_VIEW_PCITURE_RATING		"picture-info-rating"
 #define ID_VIEW_MAIN_SIDEBAR		"main-sidebar"
@@ -97,9 +100,12 @@
 #define ID_BTN_RETURN_ROOT_FOLDER	"btn-return-root-folder"
 #define ID_BTN_SYNC_FOLDER_FILES	"btn-sync-folder-files"
 #define ID_BTN_ADD_PICTURE_TAG		"btn-add-picture-tag"
+#define ID_BTN_ADD_PICTURE_LABEL	"btn-add-picture-label"
 #define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
 #define ID_BTN_HIDE_PICTURE_INFO	"btn-hide-picture-info"
 #define ID_BTN_SHOW_PICTURE_INFO	"btn-show-picture-info"
+#define ID_BTN_SHOW_PICTURE_LABEL	"btn-show-picture-labels"
+#define ID_BTN_HIDE_PICTURE_LABEL	"btn-hide-picture-labels"
 #define ID_BTN_DELETE_PICTURE		"btn-delete-picture"
 #define ID_BTN_HIDE_PICTURE_VIEWER	"btn-hide-picture-viewer"
 #define ID_BTN_BROWSE_ALL		"btn-browse-all"
@@ -114,7 +120,6 @@
 #define ID_BTN_SIDEBAR_SEARCH		"sidebar-btn-search"
 #define ID_BTN_CLEAR_THUMB_DB		"btn-clear-thumb-db"
 #define ID_BTN_HIDE_SEARCH_RESULT	"btn-hide-search-result"
-#define ID_BTN_OPEN_PICTURE_DIR		"btn-open-picture-dir"
 #define ID_BTN_RESET_PASSWORD		"btn-reset-password"
 #define ID_TIP_HOME_EMPTY		"tip-empty-collection"
 #define ID_TIP_FOLDERS_EMPTY		"tip-empty-folder"
@@ -144,70 +149,58 @@ enum UIMode {
 };
 
 /** 初始化主界面 */
-void UI_InitMainView( void );
+void UI_InitMainView(void);
 
 /** 初始化用户界面 */
-int UI_Init( int argc, char **argv );
+int UI_Init(int argc, char **argv);
 
-void UI_Free( void );
+void UI_Free(void);
 
 /** 让用户界面开始工作 */
-int UI_Run( void );
+int UI_Run(void);
 
 /** 初始化侧边栏 */
-void UI_InitSidebar( void );
+void UI_InitSidebar(void);
 
 /** 初始化“设置”视图 */
-void UI_InitSettingsView( void );
+void UI_InitSettingsView(void);
 
 /** 初始化“文件夹”视图 */
-void UI_InitFoldersView( void );
+void UI_InitFoldersView(void);
 
-void UI_FreeFoldersView( void );
+void UI_FreeFoldersView(void);
 
 /** 初始化文件同步时的提示框 */
-void UI_InitFileSyncTip( void );
+void UI_InitFileSyncTip(void);
 
 /** 初始化首页集锦视图 */
-void UI_InitHomeView( void );
+void UI_InitHomeView(void);
 
-void UI_FreeHomeView( void );
+void UI_FreeHomeView(void);
 
 /** 初始化图片视图 */
-void UI_InitPictureView( int mode );
+void UI_InitPictureView(int mode);
 
 /** 退出图片视图并销毁相关资源 */
-void UI_FreePictureView( void );
+void UI_FreePictureView(void);
 
 /** 在图片视图中打开一张图片 */
-void UI_OpenPictureView( const char *filepath );
+void UI_OpenPictureView(const char *filepath);
 
 /**
  * 为图片视图设置相关数据
  * @param[in] iter 文件迭代器，用于图片的上一张/下一张的切换功能
  */
-void UI_SetPictureView( FileIterator iter );
+void UI_SetPictureView(FileIterator iter);
 
 /** 关闭图片视图 */
-void UI_ClosePictureView( void );
+void UI_ClosePictureView(void);
 
-/** 初始化图片信息视图 */
-void UI_InitPictureInfoView( void );
+void UI_UpdateSearchView(void);
 
-/** 设置图片信息视图 */
-void UI_SetPictureInfoView( const char *filepath );
-
-/** 显示图片信息视图 */
-void UI_ShowPictureInfoView( void );
-
-/** 隐藏图片信息视图 */
-void UI_HidePictureInfoView( void );
-
-void UI_UpdateSearchView( void );
-
-void UI_InitSearchView( void );
+void UI_InitSearchView(void);
 
 /** 初始化启动画面 */
-void UI_InitSplashScreen( void );
+void UI_InitSplashScreen(void);
 
 #endif

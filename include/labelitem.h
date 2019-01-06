@@ -1,5 +1,5 @@
 ﻿/* ***************************************************************************
- * picture.h -- private header file for the picture view
+ * labelitem.h -- label item for view labeled box info and name
  *
  * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
  *
@@ -18,7 +18,7 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * picture.h -- 图片视图的私有头文件
+ * labelitem.h -- 标签项，用于展示标记的区域和名称
  *
  * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
  *
@@ -34,44 +34,13 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_PICTURE_VIEW_H
-#define LCFINDER_PICTURE_VIEW_H
+#ifndef LCFINDER_LABELITEM_H
+#define LCFINDER_LABELITEM_H
 
-typedef struct PictureLabelsViewContextRec_ {
-	wchar_t *file;
-	uint32_t width, height;
+void LabelItem_SetNameW(LCUI_Widget w, const wchar_t *name);
 
-	float scale;
-	int focus_x, focus_y;
-	int offset_x, offset_y;
+void LabelItem_SetRect(LCUI_Widget w, LCUI_Rect *rect);
 
-	LCUI_Widget view;
-} PictureLabelsViewContextRec, *PictureLabelsViewContext;
-
-void *PictureView_CreateScanner(int storage);
-
-int PictureView_OpenScanner(void *scanner, const wchar_t *filepath,
-			    void(*on_found)(FileIterator),
-			    void(*on_active)(void));
-
-void PictureView_CloseScanner(void *scanner);
-
-void PictureView_FreeScanner(void *scanner);
-
-void PictureView_InitInfo(void);
-
-void PictureView_SetInfo(const char *filepath);
-
-void PictureView_ShowInfo(void);
-
-void PictureView_HideInfo(void);
-
-void PictureView_InitLabels(void);
-
-void PictureView_SetLabelsContext(PictureLabelsViewContext ctx);
-
-void PictureView_ShowLabels(void);
-
-void PictureView_HideLabels(void);
+void LCUIWidget_AddLabelItem(void);
 
 #endif

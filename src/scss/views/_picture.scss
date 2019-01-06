@@ -113,10 +113,12 @@
 	height: 100%;
 	position: absolute;
 	background-color: #fff;
-	box-shadow: 0 0 8px rgba(0,0,0,0.5);
 	width: $window-panel-width;
 
 	.info-item {
+		padding: 0 $panel-content-padding-x;
+		margin-left: -$panel-content-padding-x;
+		margin-right: -$panel-content-padding-x;
 		margin-bottom: $spacing;
 	}
 	.info-item:last-child {
@@ -128,6 +130,10 @@
 	}
 	.info-item-value {
 		display: block;
+	}
+	.label-list {
+		padding: 0 $panel-content-padding-x;
+		margin: 0 #{-$panel-content-padding-x};
 	}
 }
 .window {

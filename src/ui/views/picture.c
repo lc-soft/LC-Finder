@@ -217,6 +217,28 @@ static void GetViewerSize(size_t *width, size_t *height)
 	}
 }
 
+static void PictureView_SetLabels(void)
+{
+	PictureLabelsViewContextRec ctx;
+
+	ctx.file = view.picture->file;
+	ctx.view = view.picture->view;
+	ctx.focus_x = view.focus_x;
+	ctx.focus_y = view.focus_y;
+	ctx.offset_x = view.offset_x;
+	ctx.offset_y = view.offset_y;
+	if (view.picture && view.picture->data) {
+		ctx.scale = (float)view.picture->scale;
+		ctx.width = view.picture->data->width;
+		ctx.height = view.picture->data->height;
+	} else {
+		ctx.width = 0;
+		ctx.height = 0;
+		ctx.scale = 1.0f;
+	}
+	PictureView_SetLabelsContext(&ctx);
+}
+
 /** 更新图片切换按钮的状态 */
 static void UpdateSwitchButtons(void)
 {
@@ -527,6 +549,7 @@ static void UpdatePicturePosition(Picture pic)
 		view.origin_focus_y = (int)y;
 	}
 	Widget_UpdateStyle(pic->view, FALSE);
+	PictureView_SetLabels();
 }
 
 /** 重置浏览区域的位置偏移量 */
@@ -534,6 +557,7 @@ static void ResetOffsetPosition(void)
 {
 	view.offset_x = iround(view.picture->view->width / 2);
 	view.offset_y = iround(view.picture->view->height / 2);
+	PictureView_SetLabels();
 }
 
 /** 设置当前图片缩放比例 */
@@ -562,6 +586,7 @@ static void DirectSetPictureScale(Picture pic, double scale)
 		UpdateZoomButtons();
 		UpdateSwitchButtons();
 		UpdateResetSizeButton();
+		PictureView_SetLabels();
 	}
 }
 
@@ -757,6 +782,7 @@ static void DragPicture(int mouse_x, int mouse_y)
 		SetStyle(sheet, key_background_position_y, 0.5, scale);
 	}
 	Widget_UpdateStyle(pic->view, FALSE);
+	PictureView_SetLabels();
 }
 
 /** 当鼠标在图片容器上移动的时候 */
@@ -1299,7 +1325,12 @@ static void PictureLoader_Exit(PictureLoader loader)
 
 static void OnBtnShowInfoClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	UI_ShowPictureInfoView();
+	PictureView_ShowInfo();
+}
+
+static void OnBtnShowLabelsClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	PictureView_ShowLabels();
 }
 
 static void SetPictureFocusPoint(Picture pic, int focus_x, int focus_y)
@@ -1431,7 +1462,8 @@ static void OnKeyDown(LCUI_SysEvent e, void *data)
 
 void UI_InitPictureView(int mode)
 {
-	LCUI_Widget box, btn_back, btn_back2, btn_info, btn_del;
+	LCUI_Widget box, btn_back, btn_back2, btn_info, btn_label, btn_del;
+
 	box = LCUIBuilder_LoadFile(FILE_PICTURE_VIEW);
 	if (box) {
 		Widget_Top(box);
@@ -1446,6 +1478,7 @@ void UI_InitPictureView(int mode)
 	SelectWidget(btn_back, ID_BTN_BROWSE_ALL);
 	SelectWidget(btn_del, ID_BTN_DELETE_PICTURE);
 	SelectWidget(btn_info, ID_BTN_SHOW_PICTURE_INFO);
+	SelectWidget(btn_label, ID_BTN_SHOW_PICTURE_LABEL);
 	SelectWidget(btn_back2, ID_BTN_HIDE_PICTURE_VIEWER);
 	SelectWidget(view.btn_prev, ID_BTN_PCITURE_PREV);
 	SelectWidget(view.btn_next, ID_BTN_PCITURE_NEXT);
@@ -1461,6 +1494,7 @@ void UI_InitPictureView(int mode)
 	BindEvent(btn_back2, "click", OnBtnBackClick);
 	BindEvent(btn_del, "click", OnBtnDeleteClick);
 	BindEvent(btn_info, "click", OnBtnShowInfoClick);
+	BindEvent(btn_label, "click", OnBtnShowLabelsClick);
 	BindEvent(view.btn_prev, "click", OnBtnPrevClick);
 	BindEvent(view.btn_next, "click", OnBtnNextClick);
 	BindEvent(view.btn_reset, "click", OnBtnResetClick);
@@ -1479,7 +1513,8 @@ void UI_InitPictureView(int mode)
 	PictureLoader_Init(&view.loader, view.pictures);
 	Widget_Append(view.tip_loading, view.tip_progress);
 	Widget_Hide(view.window);
-	UI_InitPictureInfoView();
+	PictureView_InitInfo();
+	PictureView_InitLabels();
 	UpdateSwitchButtons();
 	if (view.mode == MODE_SINGLE_PICVIEW) {
 		view.scanner = PictureView_CreateScanner(finder.storage_for_scan);
@@ -1506,7 +1541,8 @@ void UI_OpenPictureView(const char *filepath)
 	Widget_Hide(view.tip_unsupport);
 	Widget_Hide(view.tip_empty);
 	PictureLoader_SetTarget(&view.loader, wpath);
-	UI_SetPictureInfoView(filepath);
+	PictureView_SetInfo(filepath);
+	PictureView_SetLabels();
 	Widget_Show(view.window);
 	Widget_Hide(main_window);
 	if (view.mode == MODE_SINGLE_PICVIEW) {

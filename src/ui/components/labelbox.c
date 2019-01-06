@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * labelbox.c -- label a bounding box and add name
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * labelbox.c -- 标签框，标记一个边界框并添加名称
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -49,6 +49,7 @@
 #define COLOR_TOTAL	12
 #define MAX_NAME_LEN	256
 #define DEFAULT_NAME	L"unknown"
+#define LABEL_HEIGHT	24
 
 typedef struct DraggingContextRec_ {
 	LCUI_BOOL active;
@@ -72,6 +73,7 @@ typedef struct LabelBoxRec_ {
 	LCUI_Widget resizer;
 	LCUI_Widget btn_remove;
 	LCUI_RectF rect;
+	LCUI_Color color;
 
 	DraggingContextRec dragging;
 	ResizingContextRec resizing;
@@ -130,10 +132,13 @@ static void Resizer_OnMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void Resizer_OnMouseUp(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
+	LCUI_WidgetEventRec change_event;
 	LabelBox target = Widget_GetData(e->data, self.proto);
 
 	e->cancel_bubble = TRUE;
 	target->resizing.active = FALSE;
+	LCUI_InitWidgetEvent(&change_event, "change");
+	Widget_TriggerEvent(e->data, &change_event, NULL);
 	Widget_ReleaseMouseCapture(w);
 }
 
@@ -151,6 +156,7 @@ static LCUI_Widget Resizer_New(LCUI_Widget w)
 
 static void ButtonRemove_OnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
+	e->cancel_bubble = TRUE;
 	Widget_Destroy(e->data);
 }
 
@@ -168,6 +174,7 @@ static LCUI_Widget ButtonRemove_New(LCUI_Widget w)
 static void Label_OnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LabelBox_Edit(e->data);
+	e->cancel_bubble = TRUE;
 }
 
 static LCUI_Widget Label_New(LCUI_Widget w)
@@ -183,6 +190,7 @@ static void LabelBox_OnMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LabelBox that = Widget_GetData(w, self.proto);
 	DraggingContext ctx = &that->dragging;
 
+	e->cancel_bubble = TRUE;
 	if (e->target != that->box) {
 		return;
 	}
@@ -207,15 +215,18 @@ static void LabelBox_OnMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	x = ctx->x + e->motion.x - ctx->point.x;
 	y = ctx->y + e->motion.y - ctx->point.y;
 	that->rect.x = x;
-	that->rect.y = y + that->box->y;
+	that->rect.y = y + LABEL_HEIGHT;
 	Widget_Move(w, x, y);
 }
 
 static void LabelBox_OnMouseUp(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
+	LCUI_WidgetEventRec change_event;
 	LabelBox that = Widget_GetData(w, self.proto);
 
 	that->dragging.active = FALSE;
+	LCUI_InitWidgetEvent(&change_event, "change");
+	Widget_TriggerEvent(w, &change_event, NULL);
 	Widget_ReleaseMouseCapture(w);
 }
 
@@ -265,6 +276,7 @@ static void LabelBox_OnInit(LCUI_Widget w)
 	Widget_SetStyle(that->edit, key_background_color, style.color, color);
 	TextView_SetColor(that->resizer, style.color);
 	TextView_SetColor(that->btn_remove, style.color);
+	that->color = style.color;
 
 	Widget_AddClass(that->box, "labelbox-box");
 	Widget_AddClass(that->header, "labelbox-header");
@@ -283,12 +295,26 @@ static void LabelBox_OnInit(LCUI_Widget w)
 	Widget_BindEvent(w, "mouseup", LabelBox_OnMouseUp, NULL, NULL);
 }
 
-void LabelBox_SetLabelW(LCUI_Widget w, const wchar_t *label)
+void LabelBox_SetNameW(LCUI_Widget w, const wchar_t *label)
 {
 	LabelBox that = Widget_GetData(w, self.proto);
 
 	TextView_SetTextW(that->label, label);
 	TextEdit_SetTextW(that->edit, label);
+}
+
+const wchar_t *LabelBox_GetNameW(LCUI_Widget w)
+{
+	LabelBox that = Widget_GetData(w, self.proto);
+
+	return that->name;
+}
+
+void LabelBox_GetColor(LCUI_Widget w, LCUI_Color *color)
+{
+	LabelBox that = Widget_GetData(w, self.proto);
+
+	*color = that->color;
 }
 
 void LabelBox_GetRect(LCUI_Widget w, LCUI_RectF *rect)
@@ -303,7 +329,8 @@ void LabelBox_SetRect(LCUI_Widget w, const LCUI_RectF *rect)
 	LabelBox that = Widget_GetData(w, self.proto);
 
 	that->rect = *rect;
-	Widget_Move(w, that->rect.x, rect->y - that->box->y);
+	Widget_Move(w, that->rect.x, rect->y - LABEL_HEIGHT);
+	Widget_Resize(that->box, that->rect.width, that->rect.height);
 }
 
 void LabelBox_Edit(LCUI_Widget w)
@@ -318,6 +345,7 @@ void LabelBox_Edit(LCUI_Widget w)
 void LabelBox_Save(LCUI_Widget w)
 {
 	size_t len;
+	LCUI_WidgetEventRec e;
 	LabelBox that = Widget_GetData(w, self.proto);
 
 	len = TextEdit_GetTextW(that->edit, 0, MAX_NAME_LEN, that->name);
@@ -328,6 +356,8 @@ void LabelBox_Save(LCUI_Widget w)
 	}
 	TextView_SetTextW(that->label, that->name);
 	Widget_RemoveClass(w, "editing");
+	LCUI_InitWidgetEvent(&e, "change");
+	Widget_TriggerEvent(w, &e, NULL);
 }
 
 void LCUIWidget_AddLabelBox(void)
