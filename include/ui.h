@@ -134,7 +134,6 @@
 /* xml 文件位置 */
 #define FILE_MAIN_VIEW		"assets/views/main.xml"
 #define FILE_PICTURE_VIEW	"assets/views/picture.xml"
-#define FILE_PICTURE_INFO_VIEW	"assets/views/picture_info.xml"
 
 #define SelectWidget(V, ID) V = LCUIWidget_GetById( ID )
 #define BindEvent(W, E, CB) Widget_BindEvent( W, E, CB, NULL, NULL )

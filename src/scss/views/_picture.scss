@@ -4,6 +4,10 @@
 	z-index: 10;
 	position: absolute;
 
+	.window-main,
+	.window-side-panel {
+		height: 100%;
+	}
 	.window-navbar {
 		top: 0px;
 		left: 0px;
@@ -44,22 +48,23 @@
 		width: 100%;
 		height: 100%;
 	}
-	.picture-container picture {
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		position: absolute;
-	}
-	.picture-container picture:first-child {
-		left: -100%;
-	}
-	.picture-container picture:last-child {
-		left: 100%;
-	}
 	.picture-container {
 		background-position: center;
 		background-size: auto;
+
+		picture {
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			position: absolute;
+		}
+		picture:first-child {
+			left: -100%;
+		}
+		picture:last-child {
+			left: 100%;
+		}
 	}
 	.icon-btn .icon {
 		color: #444;
@@ -95,15 +100,21 @@
 		right: 10px;
 	}
 }
+
 #picture-info-panel {
+	starrating .icon-star {
+		color: $orange;
+	}
+}
+.window-side-panel {
 	top: 0;
 	left: 0;
-	width: 320px;
 	z-index: 10;
 	height: 100%;
 	position: absolute;
 	background-color: #fff;
 	box-shadow: 0 0 8px rgba(0,0,0,0.5);
+	width: $window-panel-width;
 
 	.info-item {
 		margin-bottom: $spacing;
@@ -118,7 +129,9 @@
 	.info-item-value {
 		display: block;
 	}
-	starrating .icon-star {
-		color: $orange;
+}
+.window {
+	&.has-panel .window-main {
+		padding-left: $window-panel-width;
 	}
 }

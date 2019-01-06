@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <lcui-app>
   <ui>
-    <w id="picture-info-panel" class="panel">
+    <w id="picture-info-panel" class="panel window-side-panel">
       <w class="panel-header">
         <w type="textview-i18n" class="text panel-header-title" data-i18n-key="picture.info.title">文件信息</w>
         <w id="btn-hide-picture-info" class="panel-close-btn">
