@@ -41,7 +41,7 @@
 #include <LCUI/types.h>
 #include <LCUI/util/dict.h>
 #include <LCUI/util/linkedlist.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 
 #include "build.h"
 #include "types.h"

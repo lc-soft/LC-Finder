@@ -41,7 +41,7 @@
 #include <errno.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include <LCUI/thread.h>
 #include <LCUI/graph.h>
 #include <LCUI/image.h>

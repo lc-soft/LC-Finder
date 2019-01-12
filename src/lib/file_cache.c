@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 
 #include "kvdb.h"
 #include "common.h"

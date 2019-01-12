@@ -41,7 +41,7 @@
 #include <string.h>
 #include "finder.h"
 #include <LCUI/display.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include <LCUI/gui/widget.h>
 #include "ui.h"
 #include "dialog.h"

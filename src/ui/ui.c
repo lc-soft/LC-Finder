@@ -40,7 +40,7 @@
 #include <LCUIEx.h>
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/metrics.h>
 #include "ui.h"

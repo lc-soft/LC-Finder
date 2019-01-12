@@ -46,7 +46,7 @@
 #include "ui.h"
 #include "detector.h"
 #include "file_storage.h"
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 
 // clang-format off
 #define DEBUG

@@ -38,7 +38,7 @@
 #include <string.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include "build.h"
 #include "common.h"
 #include "i18n.h"

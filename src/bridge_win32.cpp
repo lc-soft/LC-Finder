@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #include "finder.h"
 #include <LCUI/display.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 
 #ifdef PLATFORM_WIN32_DESKTOP
 #pragma warning (disable:4091)
