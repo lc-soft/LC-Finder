@@ -38,7 +38,7 @@
 #include <errno.h>
 #include <LCUI_Build.h>
 #include <LCUI/types.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include <LCUI/util.h>
 #include <LCUI/thread.h>
 #include "finder.h"
@@ -48,11 +48,15 @@
 
 // clang-format off
 
+#define ASSERT(X)           \
+	if (!(X)) {         \
+		ret = -1;   \
+		goto faild; \
+	}
+
 #define CFG_FILE_EXT		L".cfg"
 #define DATA_FILE_EXT		L".data"
 #define WEIGHTS_FILE_EXT	L".weights"
-
-#define TaskActive(T) (!T->cancel && dmod.state == DETECTOR_STATE_READY)
 
 typedef enum DetectorState {
 	DETECTOR_STATE_READY,
@@ -79,9 +83,18 @@ static struct DetetctorModule {
 
 	LCUI_Mutex mutex;
 	LCUI_Cond cond;
+
+	int error;
+	char error_msg[1024];
 } dmod;
 
 // clang-format on
+
+static LCUI_BOOL TaskActive(DetectorTask task)
+{
+	return dmod.state == DETECTOR_STATE_READY &&
+	       task->state == DETECTOR_TASK_STATE_RUNNING;
+}
 
 static void FreeIfValid(void *ptr)
 {
@@ -207,12 +220,10 @@ static void Detector_Unload(void)
 	if (!dmod.detector) {
 		return;
 	}
-	darknet_network_destroy(dmod.net);
 	darknet_detector_destroy(dmod.detector);
+	darknet_network_destroy(dmod.net);
 	dmod.detector = NULL;
 }
-
-#define ASSERT(X) if (!(X)) { ret = -1;goto faild;}
 
 static int Detector_Reload(void)
 {
@@ -221,8 +232,8 @@ static int Detector_Reload(void)
 	char *cfgfile;
 	char *datacfgfile;
 	char *weightsfile;
-	darknet_config_t *cfg;
-	darknet_dataconfig_t *datacfg;
+	darknet_config_t *cfg = NULL;
+	darknet_dataconfig_t *datacfg = NULL;
 
 	LCUIMutex_Lock(&dmod.mutex);
 	dmod.state = DETECTOR_STATE_LOADING;
@@ -233,27 +244,44 @@ static int Detector_Reload(void)
 	datacfgfile = EncodeANSI(dmod.model->datacfg);
 	weightsfile = EncodeANSI(dmod.model->weights);
 
-	ASSERT(cfg = darknet_config_create(cfgfile));
-	ASSERT(datacfg = darknet_dataconfig_create(datacfgfile));
-	darknet_config_set_workdir(cfg, workdir);
-	darknet_dataconfig_set_workdir(datacfg, workdir);
+	darknet_try
+	{
+		cfg = darknet_config_load(cfgfile);
+		datacfg = darknet_dataconfig_load(datacfgfile);
+		darknet_config_set_workdir(cfg, workdir);
+		darknet_dataconfig_set_workdir(datacfg, workdir);
 
-	ASSERT(dmod.net = darknet_network_create(cfg));
-	ASSERT(darknet_network_load_weights(dmod.net, weightsfile) == 0);
-	darknet_config_destroy(cfg);
+		dmod.net = darknet_network_create(cfg);
+		darknet_network_load_weights(dmod.net, weightsfile);
 
-	ASSERT(dmod.detector = darnet_detector_create(dmod.net, datacfg));
-	dmod.state = DETECTOR_STATE_READY;
+		dmod.detector = darknet_detector_create(dmod.net, datacfg);
+		dmod.state = DETECTOR_STATE_READY;
+	}
+	darknet_catch(err)
+	{
+		strncpy(dmod.error_msg, darknet_get_error_string(err), 1024);
+		dmod.error_msg[1023] = 0;
+		dmod.error = err;
+		ret = -1;
+	}
+	darknet_etry;
 
-faild:
 	free(workdir);
 	free(cfgfile);
 	free(datacfgfile);
 	free(weightsfile);
 
+	darknet_config_destroy(cfg);
+	darknet_dataconfig_destroy(datacfg);
+
 	LCUICond_Signal(&dmod.cond);
 	LCUIMutex_Unlock(&dmod.mutex);
 	return ret;
+}
+
+const char *Detector_GetLastErrorString(void)
+{
+	return dmod.error_msg;
 }
 
 wchar_t **Detector_GetModels(void)
@@ -287,6 +315,8 @@ int Detector_SetModel(const wchar_t *name)
 			return Detector_Reload();
 		}
 	}
+	dmod.error = -ENOENT;
+	strcpy(dmod.error_msg, "model not found");
 	return -ENOENT;
 }
 
@@ -339,16 +369,16 @@ DetectorTask Detector_CreateTask(DetectorTaskType type)
 	task->type = type;
 	task->current = 0;
 	task->total = 0;
-	task->cancel = FALSE;
 	task->state = DETECTOR_STATE_READY;
 	return task;
 }
 
 void Detector_CancelTask(DetectorTask task)
 {
-	if (!task->cancel) {
-		task->cancel = TRUE;
+	if (dmod.threads[task->type]) {
+		task->state = DETECTOR_TASK_STATE_CANCELED;
 		LCUIThread_Join(dmod.threads[task->type], NULL);
+		dmod.threads[task->type] = 0;
 	}
 }
 
@@ -377,6 +407,7 @@ int Detector_RunTask(DetectorTask task)
 		LOG("[detector] not model selected\n");
 		return -ENOENT;
 	}
+	task->state = DETECTOR_TASK_STATE_PREPARING;
 	if (!dmod.detector) {
 		while (dmod.state == DETECTOR_STATE_LOADING) {
 			LCUICond_TimedWait(&dmod.cond, &dmod.mutex, 2000);
@@ -385,7 +416,7 @@ int Detector_RunTask(DetectorTask task)
 			Detector_Reload();
 		}
 	}
-
+	task->state = DETECTOR_TASK_STATE_RUNNING;
 	terms.limit = 512;
 	terms.modify_time = DESC;
 	terms.n_dirs = LCFinder_GetSourceDirList(&terms.dirs);
@@ -402,7 +433,7 @@ int Detector_RunTask(DetectorTask task)
 	LinkedList_Init(&files);
 	for (count = 0; TaskActive(task) && count < task->total;) {
 		query = DB_NewQuery(&terms);
-		for (i = 0; !task->cancel; ++count, ++i) {
+		for (i = 0; TaskActive(task); ++count, ++i) {
 			file = DBQuery_FetchFile(query);
 			if (!file) {
 				break;
@@ -422,18 +453,28 @@ int Detector_RunTask(DetectorTask task)
 		Detector_DetectFile(node->data);
 		++task->current;
 	}
+	if (terms.dirs) {
+		free(terms.dirs);
+		terms.dirs = NULL;
+	}
 	LinkedList_ClearData(&files, OnFreeDBFile);
+	if (task->state == DETECTOR_TASK_STATE_RUNNING) {
+		task->state = DETECTOR_TASK_STATE_FINISHED;
+	}
 	return 0;
 }
 
 static void Detector_TaskThread(void *arg)
 {
 	Detector_RunTask(arg);
-	Detector_FreeTask(arg);
 	LCUIThread_Exit(NULL);
 }
 
-void Detector_RunTaskAync(DetectorTask task)
+int Detector_RunTaskAync(DetectorTask task)
 {
+	if (task->state != DETECTOR_TASK_STATE_READY) {
+		return -1;
+	}
 	LCUIThread_Create(&dmod.threads[task->type], Detector_TaskThread, task);
+	return 0;
 }

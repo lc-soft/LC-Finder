@@ -52,7 +52,7 @@
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include "progressbar.h"
 #include "dialog.h"
 #include "i18n.h"

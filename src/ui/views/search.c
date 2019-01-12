@@ -44,7 +44,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include "file_storage.h"
 #include "file_stage.h"
 #include "thumbview.h"

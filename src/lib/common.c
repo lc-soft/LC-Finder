@@ -41,7 +41,7 @@
 #include <time.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
-#include <LCUI/font/charset.h>
+#include <LCUI/util/charset.h>
 #include "sha1.h"
 #include "common.h"
 

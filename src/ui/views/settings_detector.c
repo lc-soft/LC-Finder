@@ -75,14 +75,19 @@ static void RefreshDropdownText(void)
 static void TaskForSetModel(void *arg1, void *arg2)
 {
 	wchar_t *name = arg1;
-	const wchar_t *message;
+	wchar_t text[1024] = { 0 };
+	const wchar_t *title, *message;
 
 	if (Detector_SetModel(name) == 0) {
 		wcscpy(finder.config.detector_model_name, name);
 		LCFinder_SaveConfig();
 	} else {
-		message = I18n_GetText(KEY_DETECTOR_INIT_FAILED);
-		TaskItem_SetError(view.detection.view, message);
+		message = DecodeANSI(Detector_GetLastErrorString());
+		title = I18n_GetText(KEY_DETECTOR_INIT_FAILED);
+		swprintf(text, 1023, L"%ls: %ls", title, message);
+		TaskItem_SetError(view.detection.view, text);
+		Detector_FreeTask(view.detection.task);
+		view.detection.task = NULL;
 	}
 	free(name);
 }
@@ -91,7 +96,19 @@ static void TaskForStartDetect(void *arg1, void *arg2)
 {
 	TaskController t = arg1;
 
-	Detector_RunTaskAync(t->task);
+	if (t->task) {
+		Detector_RunTaskAync(t->task);
+	}
+}
+
+static void TaskForStopDetect(void *arg1, void *arg2)
+{
+	DetectorTask task = arg1;
+	LCUI_Widget view = arg2;
+
+	Detector_CancelTask(task);
+	Detector_FreeTask(task);
+	TaskItem_SetActionDisabled(view, FALSE);
 }
 
 static int SetDetectorModelAsync(const wchar_t *name)
@@ -107,7 +124,15 @@ static void OnDetectionProgress(void *arg)
 {
 	TaskController t = &view.detection;
 
+	if (!t->task) {
+		return;
+	}
 	TaskItem_SetProgress(t->view, t->task->current, t->task->total);
+	if (t->task->state == DETECTOR_TASK_STATE_FINISHED) {
+		TaskItem_StopTask(t->view);
+		Detector_FreeTask(t->task);
+		t->task = NULL;
+	}
 }
 
 static OnStartDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -127,7 +152,15 @@ static OnStartDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static OnStopDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	//Detector_CancelTask(view.detection.task);
+	LCUI_TaskRec task = { 0 };
+	TaskController t = &view.detection;
+
+	TaskItem_SetActionDisabled(t->view, TRUE);
+	task.func = TaskForStopDetect;
+	task.arg[0] = t->task;
+	task.arg[1] = t->view;
+	t->task = NULL;
+	LCUI_PostAsyncTask(&task);
 }
 
 static void OnChangeModel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)

@@ -49,14 +49,13 @@ typedef enum DetetctorTaskState {
 	DETECTOR_TASK_STATE_READY,
 	DETECTOR_TASK_STATE_PREPARING,
 	DETECTOR_TASK_STATE_RUNNING,
+	DETECTOR_TASK_STATE_CANCELED,
 	DETECTOR_TASK_STATE_FINISHED
 } DetetctorTaskState;
 
 typedef struct DetectorTaskRec_ {
 	DetectorTaskType type;
 	DetetctorTaskState state;
-
-	LCUI_BOOL cancel;
 
 	size_t current;
 	size_t total;
@@ -65,6 +64,8 @@ typedef struct DetectorTaskRec_ {
 int Detector_Init(const wchar_t *workdir);
 
 void Detector_Free(void);
+
+const char *Detector_GetLastErrorString(void);
 
 wchar_t **Detector_GetModels(void);
 
@@ -78,6 +79,6 @@ void Detector_FreeTask(DetectorTask task);
 
 int Detector_RunTask(DetectorTask task);
 
-void Detector_RunTaskAync(DetectorTask task);
+int Detector_RunTaskAync(DetectorTask task);
 
 #endif

@@ -140,7 +140,7 @@ void TextViewI18n_SetFormater(LCUI_Widget w, TextFormatter fmt, void *data)
 static void TextViewI18n_SetAttr(LCUI_Widget w, const char *name,
 				 const char *value)
 {
-	if (strcasecmp(name, "data-i18n-key") == 0) {
+	if (strcmp(name, "data-i18n-key") == 0) {
 		TextViewI18n_SetKey(w, value);
 	}
 	if (self.prototype->proto->setattr) {

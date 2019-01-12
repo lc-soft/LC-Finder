@@ -73,13 +73,17 @@ static struct TaskItemModule {
 
 static void TaskItem_OnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
+	LCUI_WidgetEventRec ev;
 	TaskItem that = Widget_GetData(e->data, self.proto);
 
 	if (that->active) {
 		TaskItem_StopTask(e->data);
+		LCUI_InitWidgetEvent(&ev, "stop");
 	} else {
 		TaskItem_StartTask(e->data);
+		LCUI_InitWidgetEvent(&ev, "start");
 	}
+	Widget_TriggerEvent(w, &ev, NULL);
 }
 
 static void TaskItem_OnInit(LCUI_Widget w)
@@ -196,7 +200,6 @@ void TaskItem_SetActionDisabled(LCUI_Widget w, LCUI_BOOL disabled)
 
 int TaskItem_StartTask(LCUI_Widget w)
 {
-	LCUI_WidgetEventRec e;
 	TaskItem that = Widget_GetData(w, self.proto);
 
 	if (that->active) {
@@ -208,18 +211,15 @@ int TaskItem_StartTask(LCUI_Widget w)
 	that->start_time = 0;
 	that->timer = LCUI_SetInterval(1000, TaskItem_OnTimer, w);
 	TextViewI18n_SetKey(that->action_text, "button.stop");
-	LCUI_InitWidgetEvent(&e, "start");
 	Widget_AddClass(w, "active");
 	Widget_RemoveClass(w, "error");
 	Widget_RemoveClass(w, "completed");
-	Widget_TriggerEvent(w, &e, NULL);
 	TaskItem_OnTimer(w);
 	return 0;
 }
 
 int TaskItem_StopTask(LCUI_Widget w)
 {
-	LCUI_WidgetEventRec e;
 	TaskItem that = Widget_GetData(w, self.proto);
 
 	if (!that->active) {
@@ -231,9 +231,7 @@ int TaskItem_StopTask(LCUI_Widget w)
 		that->timer = 0;
 	}
 	TextViewI18n_SetKey(that->action_text, "button.start");
-	LCUI_InitWidgetEvent(&e, "stop");
 	Widget_RemoveClass(w, "active");
-	Widget_TriggerEvent(w, &e, NULL);
 	return 0;
 }
 
