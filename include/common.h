@@ -95,6 +95,10 @@ int wmkdir(wchar_t *wpath);
 
 int wchdir(wchar_t *wpath);
 
+FILE *wfopen(const wchar_t *filename, const wchar_t *mode);
+
+int cp(const char *file, const char *newfile);
+
 Dict *StrDict_Create(void *(*val_dup)(void *, const void *),
 		     void (*val_del)(void *, void *));
 

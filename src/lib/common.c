@@ -375,6 +375,29 @@ int wchdir(wchar_t *wpath)
 #endif
 }
 
+FILE *wfopen(const wchar_t *filename, const wchar_t *mode)
+{
+	FILE *fp;
+	char *f, *m;
+
+	f = EncodeANSI(filename);
+	m = EncodeANSI(mode);
+	fp = fopen(f, m);
+	free(f);
+	free(m);
+	return fp;
+}
+
+int cp(const char *file, const char *newfile)
+{
+#ifdef _WIN32
+	return CopyFileA(file, newfile, FALSE);
+#else
+	// TODO
+	abort();
+#endif
+}
+
 size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number)
 {
 	wchar_t *buf;
