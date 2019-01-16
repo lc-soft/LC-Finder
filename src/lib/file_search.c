@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * file_search.c -- file indexing and searching.
  *
- * Copyright (C) 2015-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2015-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * file_search.c -- 文件信息的索引与搜索。
  *
- * 版权所有 (C) 2015-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2015-2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -138,7 +138,11 @@ SELECT id, path, token, visible FROM dir ORDER BY PATH ASC;";
 
 STATIC_STR sql_get_tag_list = "\
 SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
-WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY NAME ASC;";
+WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY t.name ASC;";
+
+STATIC_STR sql_get_tag_list_order_by_id = "\
+SELECT t.id, t.name, COUNT(ftr.tid) FROM tag t, file_tag_relation ftr \
+WHERE ftr.tid = t.id GROUP BY ftr.tid ORDER BY t.id ASC;";
 
 STATIC_STR sql_file_set_size = "\
 UPDATE file SET width = ?, height = ? WHERE id = ?;";
@@ -477,12 +481,14 @@ DB_File DB_GetFile(const char *filepath)
 	return DB_LoadFile(stmt);
 }
 
-int DB_GetTags(DB_Tag **outlist)
+static size_t DB_GetTagsBySQL(DB_Tag **outlist, const char *sql)
 {
 	DB_Tag *list, tag;
 	sqlite3_stmt *stmt;
+	size_t i, total = 0;
 	const char *name;
-	int ret, i, total = 0;
+	int ret;
+
 	sqlite3_prepare_v2(self.db, sql_get_tag_total, -1, &stmt, NULL);
 	ret = sqlite3_step(stmt);
 	if (ret == SQLITE_ROW) {
@@ -498,7 +504,7 @@ int DB_GetTags(DB_Tag **outlist)
 		return -1;
 	}
 	list[total] = NULL;
-	sqlite3_prepare_v2(self.db, sql_get_tag_list, -1, &stmt, NULL);
+	sqlite3_prepare_v2(self.db, sql, -1, &stmt, NULL);
 	for (i = 0; i < total; ++i) {
 		ret = sqlite3_step(stmt);
 		if (ret != SQLITE_ROW) {
@@ -519,6 +525,16 @@ int DB_GetTags(DB_Tag **outlist)
 	sqlite3_finalize(stmt);
 	*outlist = list;
 	return i;
+}
+
+size_t DB_GetTags(DB_Tag **outlist)
+{
+	return DB_GetTagsBySQL(outlist, sql_get_tag_list);
+}
+
+size_t DB_GetTagsOrderById(DB_Tag **outlist)
+{
+	return DB_GetTagsBySQL(outlist, sql_get_tag_list_order_by_id);
 }
 
 int DBFile_RemoveTag(DB_File file, DB_Tag tag)

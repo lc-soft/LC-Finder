@@ -54,9 +54,15 @@
 		goto faild; \
 	}
 
+#define MODELS_DIR		L"models"
 #define CFG_FILE_EXT		L".cfg"
 #define DATA_FILE_EXT		L".data"
 #define WEIGHTS_FILE_EXT	L".weights"
+#define NAMES_FILE_EXT		L".names"
+#define TEMPLATE_DATA_FILE	"detector/template/coco.data"
+#define TEMPLATE_MODEL_FILE	"detector/template/darknet53.conv.74"
+#define TEMPLATE_CFG_FILE	"detector/template/yolov3.cfg"
+#define TASKS_DIR		"detector/tasks"
 
 typedef enum DetectorState {
 	DETECTOR_STATE_READY,
@@ -65,12 +71,20 @@ typedef enum DetectorState {
 } DetectorState;
 
 typedef struct DetectorModelRec_ {
+	size_t classes;
 	wchar_t *name;
 	wchar_t *cfg;
 	wchar_t *datacfg;
 	wchar_t *weights;
 	wchar_t *path;
 } DetectorModelRec, *DetectorModel;
+
+typedef struct ConfigReplaceItemRec_ {
+	LCUI_BOOL replaced;
+	const char *name;
+	char value[64];
+	int count;
+} ConfigReplaceItemRec, *ConfigReplaceItem;
 
 static struct DetetctorModule {
 	darknet_network_t *net;
@@ -86,6 +100,7 @@ static struct DetetctorModule {
 
 	int error;
 	char error_msg[1024];
+	wchar_t workdir[1024];
 } dmod;
 
 // clang-format on
@@ -103,6 +118,14 @@ static void FreeIfValid(void *ptr)
 	}
 }
 
+static int Detector_SetError(int err, const char *msg)
+{
+	dmod.error = err;
+	strncpy(dmod.error_msg, msg, 1024);
+	dmod.error_msg[1023] = 0;
+	return err;
+}
+
 static void DetectorModel_Destroy(DetectorModel model)
 {
 	FreeIfValid(model->name);
@@ -111,6 +134,22 @@ static void DetectorModel_Destroy(DetectorModel model)
 	FreeIfValid(model->datacfg);
 	FreeIfValid(model->cfg);
 	FreeIfValid(model);
+}
+
+static int DetectorModel_LoadClasses(DetectorModel model)
+{
+	char *path;
+	darknet_dataconfig_t *cfg;
+
+	if (!model->datacfg) {
+		return -1;
+	}
+	path = EncodeANSI(model->datacfg);
+	cfg = darknet_dataconfig_load(path);
+	model->classes = darknet_dataconfig_get_classes(cfg);
+	darknet_dataconfig_destroy(cfg);
+	free(path);
+	return 0;
 }
 
 static DetectorModel DetectorModel_Create(const wchar_t *modeldir)
@@ -135,6 +174,7 @@ static DetectorModel DetectorModel_Create(const wchar_t *modeldir)
 	model->cfg = NULL;
 	model->datacfg = NULL;
 	model->weights = NULL;
+	model->classes = 0;
 	model->path = wcsdup2(modeldir);
 	model->name = wcsdup2(wgetfilename(modeldir));
 
@@ -159,6 +199,7 @@ static DetectorModel DetectorModel_Create(const wchar_t *modeldir)
 			model->weights = wcsdup2(path);
 		}
 	}
+	DetectorModel_LoadClasses(model);
 	return model;
 }
 
@@ -172,7 +213,8 @@ int Detector_Init(const wchar_t *workdir)
 	wchar_t *name, *file, path[PATH_LEN + 1];
 
 	wpathjoin(path, workdir, L"detector");
-	dir_len = wpathjoin(path, path, L"models");
+	wcscpy(dmod.workdir, path);
+	dir_len = wpathjoin(path, path, MODELS_DIR);
 	if (LCUI_OpenDirW(path, &dir) != 0) {
 		LOG("[detector] open directory failed: %ls\n", path);
 		return -ENOENT;
@@ -259,9 +301,7 @@ static int Detector_Reload(void)
 	}
 	darknet_catch(err)
 	{
-		strncpy(dmod.error_msg, darknet_get_error_string(err), 1024);
-		dmod.error_msg[1023] = 0;
-		dmod.error = err;
+		Detector_SetError(err, darknet_get_error_string(err));
 		ret = -1;
 	}
 	darknet_etry;
@@ -362,6 +402,154 @@ static int Detector_DetectFile(DB_File file)
 	return 0;
 }
 
+static int DetectorModel_InitConfigFile(DetectorModel model)
+{
+	FILE *infile;
+	FILE *outfile;
+	size_t i;
+	char buff[1024] = { 0 };
+	ConfigReplaceItem item;
+	ConfigReplaceItemRec items[4] = { { FALSE, "${batch}", "64", 1 },
+					  { FALSE, "${subdivisions}", "8", 1 },
+					  { FALSE, "${classes}", "0", 3 },
+					  { FALSE, "${filters}", "0", 3 } };
+
+	sprintf(items[2].value, "%zu", model->classes);
+	sprintf(items[3].value, "%zu", (model->classes + 5) * 3);
+	infile = fopen(TEMPLATE_CFG_FILE, "r");
+	if (!infile) {
+		return Detector_SetError(
+		    -ENOENT, "cannot open file: " TEMPLATE_CFG_FILE);
+	}
+	outfile = wfopen(model->cfg, L"w+");
+	if (!outfile) {
+		fclose(infile);
+		snprintf(buff, 1024, "cannot create file: %ls", model->cfg);
+		return Detector_SetError(-EIO, buff);
+	}
+	while (fgets(buff, sizeof(buff), infile)) {
+		for (i = 0; i < 4; ++i) {
+			item = &items[i];
+			if (item->replaced) {
+				continue;
+			}
+			if (strreplace(buff, 1024, item->name, item->value)) {
+				items[i].count -= 1;
+				if (items[i].count < 1) {
+					items[i].replaced = TRUE;
+				}
+				break;
+			}
+		}
+		fputs(buff, outfile);
+		fputchar('\n');
+	}
+	fputchar('\n');
+	fclose(infile);
+	fclose(outfile);
+	return 0;
+}
+
+static int DetectorModel_InitDataFile(DetectorModel model)
+{
+	FILE *fp;
+	char buff[1024];
+
+	fp = wfopen(model->datacfg, L"w+");
+	if (!fp) {
+		snprintf(buff, 1024, "cannot create file: %ls", model->datacfg);
+		return Detector_SetError(-EIO, buff);
+	}
+	fprintf(fp, "classes=%zu\n", model->classes);
+	fprintf(fp, "names=%ls%ls\n", model->name, NAMES_FILE_EXT);
+	fputs("backup=backup\n\n", fp);
+	fclose(fp);
+	return 0;
+}
+
+static int DetectorModel_InitWeightsFile(DetectorModel model)
+{
+	int ret;
+	char *path;
+
+	path = EncodeANSI(model->weights);
+	ret = cp(TEMPLATE_MODEL_FILE, path);
+	free(path);
+	return ret;
+}
+
+wchar_t *DetectorModel_GetNamesFile(DetectorModel model)
+{
+	wchar_t *path;
+
+	path = malloc(sizeof(wchar_t) * (PATH_LEN + 1));
+	wpathjoin(path, model->path, model->name);
+	wcscat(path, NAMES_FILE_EXT);
+	return path;
+}
+
+static int DetectorModel_InitNamesFile(DetectorModel model, DB_Tag *tags)
+{
+	FILE *fp;
+	size_t i;
+	wchar_t *wpath;
+	char *path;
+	char buff[1024];
+
+	wpath = DetectorModel_GetNamesFile(model);
+	path = EncodeANSI(wpath);
+	free(wpath);
+
+	fp = fopen(path, "w+");
+	if (!fp) {
+		snprintf(buff, 1024, "cannot create file: %s", path);
+		return Detector_SetError(-EIO, buff);
+	}
+	for (i = 0; i < model->classes; ++i) {
+		fputs(tags[i]->name, fp);
+		fputchar('\n');
+	}
+	fclose(fp);
+	free(path);
+	return 0;
+}
+
+DetectorModel Detector_CreateModel(const wchar_t *name)
+{
+	size_t i;
+	wchar_t path[PATH_LEN + 1];
+	DetectorModel model;
+	DB_Tag *tags;
+
+	model = malloc(sizeof(DetectorModelRec));
+	if (!model) {
+		return NULL;
+	}
+	wpathjoin(path, dmod.workdir, MODELS_DIR);
+	wpathjoin(path, path, name);
+	model->name = wcsdup2(name);
+	model->path = wcsdup2(path);
+	model->classes = DB_GetTagsOrderById(&tags);
+	model->cfg = malloc(sizeof(char) * (PATH_LEN + 1));
+	model->datacfg = malloc(sizeof(char) * (PATH_LEN + 1));
+	model->weights = malloc(sizeof(char) * (PATH_LEN + 1));
+	wpathjoin(model->cfg, path, name);
+	wpathjoin(model->datacfg, path, name);
+	wpathjoin(model->weights, path, name);
+	wcscat(model->cfg, CFG_FILE_EXT);
+	wcscat(model->datacfg, DATA_FILE_EXT);
+	wcscat(model->weights, WEIGHTS_FILE_EXT);
+	DetectorModel_InitDataFile(model);
+	DetectorModel_InitConfigFile(model);
+	DetectorModel_InitNamesFile(model, tags);
+	DetectorModel_InitWeightsFile(model);
+	for (i = 0; i < model->classes; ++i) {
+		DBTag_Release(tags[i]);
+	}
+	free(tags);
+	return model;
+}
+
 DetectorTask Detector_CreateTask(DetectorTaskType type)
 {
 	DetectorTask task = malloc(sizeof(DetectorTaskRec));
@@ -391,6 +579,10 @@ void Detector_FreeTask(DetectorTask task)
 static void OnFreeDBFile(void *arg)
 {
 	DBFile_Release(arg);
+}
+
+static int Detector_RunTrainingTask(DetectorTask task)
+{
 }
 
 int Detector_RunTask(DetectorTask task)
