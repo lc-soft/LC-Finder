@@ -70,15 +70,6 @@ typedef enum DetectorState {
 	DETECTOR_STATE_STOPPED
 } DetectorState;
 
-typedef struct DetectorModelRec_ {
-	size_t classes;
-	wchar_t *name;
-	wchar_t *cfg;
-	wchar_t *datacfg;
-	wchar_t *weights;
-	wchar_t *path;
-} DetectorModelRec, *DetectorModel;
-
 typedef struct ConfigReplaceItemRec_ {
 	LCUI_BOOL replaced;
 	const char *name;
@@ -324,23 +315,22 @@ const char *Detector_GetLastErrorString(void)
 	return dmod.error_msg;
 }
 
-wchar_t **Detector_GetModels(void)
+size_t Detector_GetModels(DetectorModel **out_models)
 {
 	size_t i = 0;
-	wchar_t **models;
-	DetectorModel model;
+	DetectorModel *models;
 	LinkedListNode *node;
 
-	models = malloc(sizeof(wchar_t *) * (dmod.models.length + 1));
+	models = malloc(sizeof(DetectorModel *) * (dmod.models.length + 1));
 	if (!models) {
-		return NULL;
+		return 0;
 	}
 	for (LinkedList_Each(node, &dmod.models)) {
-		model = node->data;
-		models[i++] = wcsdup2(model->name);
+		models[i++] = node->data;
 	}
 	models[dmod.models.length] = NULL;
-	return models;
+	*out_models = models;
+	return dmod.models.length;
 }
 
 int Detector_SetModel(const wchar_t *name)
@@ -450,6 +440,11 @@ static int DetectorModel_InitConfigFile(DetectorModel model)
 	return 0;
 }
 
+static int DetectorModel_InitDir(DetectorModel model)
+{
+	return wmkdir(model->path);
+}
+
 static int DetectorModel_InitDataFile(DetectorModel model)
 {
 	FILE *fp;
@@ -507,7 +502,7 @@ static int DetectorModel_InitNamesFile(DetectorModel model, DB_Tag *tags)
 	}
 	for (i = 0; i < model->classes; ++i) {
 		fputs(tags[i]->name, fp);
-		fputchar('\n');
+		fputc('\n', fp);
 	}
 	fclose(fp);
 	free(path);
@@ -539,6 +534,7 @@ DetectorModel Detector_CreateModel(const wchar_t *name)
 	wcscat(model->cfg, CFG_FILE_EXT);
 	wcscat(model->datacfg, DATA_FILE_EXT);
 	wcscat(model->weights, WEIGHTS_FILE_EXT);
+	DetectorModel_InitDir(model);
 	DetectorModel_InitDataFile(model);
 	DetectorModel_InitConfigFile(model);
 	DetectorModel_InitNamesFile(model, tags);
@@ -547,7 +543,30 @@ DetectorModel Detector_CreateModel(const wchar_t *name)
 		DBTag_Release(tags[i]);
 	}
 	free(tags);
+	LinkedList_Append(&dmod.models, model);
 	return model;
+}
+
+int Detector_DestroyModel(DetectorModel model)
+{
+	int ret = 0;
+	LinkedListNode *node;
+
+	if (dmod.model == model) {
+		dmod.model = NULL;
+	}
+	ret |= MoveFileToTrashW(model->cfg);
+	ret |= MoveFileToTrashW(model->datacfg);
+	ret |= MoveFileToTrashW(model->weights);
+	ret |= MoveFileToTrashW(model->path);
+	for (LinkedList_Each(node, &dmod.models)) {
+		if (model == node->data) {
+			DetectorModel_Destroy(model);
+			LinkedList_DeleteNode(&dmod.models, node);
+			break;
+		}
+	}
+	return ret;
 }
 
 DetectorTask Detector_CreateTask(DetectorTaskType type)

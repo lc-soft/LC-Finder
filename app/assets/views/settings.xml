@@ -22,11 +22,25 @@
             </w>
             <w id="view-detector-settings" class="setting-group">
               <w type="textview-i18n" class="text title" data-i18n-key="settings.detector.title">检测器</w>
-              <w class="item-group">
+              <w class="setting-group-item">
                 <w class="text-line">
                   <w type="textview-i18n" class="text" data-i18n-key="settings.detector.models.title">预训练模型</w>
                 </w>
-                <w class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.detector.models.text">
+                <w class="items">
+                  <w id="current-model-list"></w>
+                  <w id="btn-new-model" class="item">
+                    <w type="icon" class="item-icon" name="plus" />
+                    <w class="item-content">
+                      <w type="textview-i18n" class="item-text" data-i18n-key="settings.detector.models.new_model">新的模型</w>
+                    </w>
+                  </w>
+                </w>
+              </w>
+              <w class="setting-group-item">
+                <w class="text text-line" type="textview-i18n" data-i18n-key="settings.detector.current_model.title">
+                  当前使用的模型
+                </w>
+                <w class="text text-line text-muted" type="textview-i18n" data-i18n-key="settings.detector.current_model.text">
                   选择一个模型以改变检测器的识别速度、精度以及对象种类集
                 </w>
                 <w class="on-models-available">
@@ -35,10 +49,12 @@
                     <w type="textview" class="icon icon icon-chevron-down"></w>
                   </w>
                 </w>
-                <w id="dropdown-detector-models" type="dropdown-menu"></w>
+                <w id="dropdown-detector-models" type="dropdown-menu" />
               </w>
-              <w type="textview-i18n" class="text text-line" data-i18n-key="settings.detector.tasks.title">任务管理</w>
-              <w id="detector-task-list" class="task-list" />
+              <w class="setting-group-item">
+                <w type="textview-i18n" class="text text-line" data-i18n-key="settings.detector.tasks.title">任务管理</w>
+                <w id="detector-task-list" class="task-list" />
+              </w>
             </w>
             <w class="setting-group">
               <w type="textview-i18n" class="title" data-i18n-key="settings.language">语言</w>
@@ -55,11 +71,13 @@
             </w>
             <w class="setting-group">
               <w type="textview-i18n" class="title" data-i18n-key="settings.source_folders.title">源</w>
-              <w class="source-list">
+              <w class="items">
                 <w id="current-source-list"></w>
-                <w id="btn-add-source" class="source-list-item">
-                  <w type="icon" class="text" name="plus"></w>
-                  <w type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                <w id="btn-add-source" class="item">
+                  <w type="icon" class="item-icon" name="plus" />
+                  <w class="item-content">
+                    <w type="textview-i18n" class="item-text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                  </w>
                 </w>
               </w>
             </w>
@@ -90,11 +108,13 @@
             </w>
             <w id="view-private-space" class="setting-group hide">
               <w class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.sources_title">私密源</w>
-              <w class="source-list">
+              <w class="items">
                 <w id="current-private-source-list"></w>
-                <w id="btn-add-private-source" class="source-list-item">
-                  <w type="icon" class="text" name="plus"></w>
-                  <w type="textview-i18n" class="text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                <w id="btn-add-private-source" class="item">
+                  <w type="icon" class="item-icon" name="plus" />
+                  <w class="item-content">
+                    <w type="textview-i18n" class="item-text" data-i18n-key="settings.source_folders.add_folder">添加文件夹</w>
+                  </w>
                 </w>
               </w>
               <w class="text title2" type="textview-i18n" data-i18n-key="settings.private_space.password_title">密码</w>

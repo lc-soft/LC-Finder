@@ -39,6 +39,15 @@
 
 #include "file_search.h"
 
+typedef struct DetectorModelRec_ {
+	size_t classes;
+	wchar_t *name;
+	wchar_t *cfg;
+	wchar_t *datacfg;
+	wchar_t *weights;
+	wchar_t *path;
+} DetectorModelRec, *DetectorModel;
+
 typedef enum DetectorTaskType {
 	DETECTOR_TASK_DETECT,
 	DETECTOR_TASK_TRAIN,
@@ -67,9 +76,13 @@ void Detector_Free(void);
 
 const char *Detector_GetLastErrorString(void);
 
-wchar_t **Detector_GetModels(void);
+size_t Detector_GetModels(DetectorModel **out_models);
 
 int Detector_SetModel(const wchar_t *name);
+
+DetectorModel Detector_CreateModel(const wchar_t *name);
+
+int Detector_DestroyModel(DetectorModel model);
 
 DetectorTask Detector_CreateTask(DetectorTaskType type);
 

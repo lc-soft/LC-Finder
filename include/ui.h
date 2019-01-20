@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * ui.h -- ui managment module
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * ui.h -- 图形界面管理模块
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -38,6 +38,8 @@
 #define LCFINDER_UI_H
 
 #include "types.h"
+
+ // clang-format off
 
 /* 一些元素的 ID，命名格式为：ID_类型_名称 */
 #define ID_WINDOW_MAIN			"main-window"
@@ -76,6 +78,7 @@
 #define ID_VIEW_FOLDER_INFO_NAME	"view-folders-info-box-name"
 #define ID_VIEW_FOLDER_INFO_PATH	"view-folders-info-box-path"
 #define ID_VIEW_SOURCE_LIST		"current-source-list"
+#define ID_VIEW_MODEL_LIST		"current-model-list"
 #define ID_VIEW_PRIVATE_SOURCE_LIST	"current-private-source-list"
 #define ID_VIEW_PRIVATE_SPACE		"view-private-space"
 #define ID_VIEW_SEARCH_TAGS		"view-search-tags"
@@ -118,6 +121,7 @@
 #define ID_BTN_PCITURE_PREV		"btn-picture-prev"
 #define ID_BTN_PCITURE_NEXT		"btn-picture-next"
 #define ID_BTN_ADD_SOURCE		"btn-add-source"
+#define ID_BTN_NEW_MODEL		"btn-new-model"
 #define ID_BTN_ADD_PRIVATE_SOURCE	"btn-add-private-source"
 #define ID_BTN_SIDEBAR_SETTINGS		"sidebar-btn-settings"
 #define ID_BTN_SIDEBAR_SEARCH		"sidebar-btn-search"
@@ -151,6 +155,8 @@ enum UIMode {
 	MODE_FULL,
 	MODE_SINGLE_PICVIEW
 };
+
+// clang-format off
 
 /** 初始化主界面 */
 void UI_InitMainView(void);
@@ -206,5 +212,9 @@ void UI_InitSearchView(void);
 
 /** 初始化启动画面 */
 void UI_InitSplashScreen(void);
+
+void UI_StartLoading(const wchar_t *message);
+
+void UI_StopLoading(void);
 
 #endif

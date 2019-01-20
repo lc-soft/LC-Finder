@@ -20,6 +20,11 @@ strings:
         password:
             password: 密碼
             confirm_password: 確認密碼
+        new_model:
+            title: 新的模型
+            placeholder: 模型名稱
+        remove_model:
+            title: 刪除此模型？
     tagthumb:
         item: '%ls 項'
         items: '%ls 項'
@@ -40,6 +45,8 @@ strings:
         password_empty: 密碼不能爲空
         passwords_not_match: 兩次輸入的密碼不一致
         detector_init_failed: 檢測器初始化失敗
+        creating_model: 正在創建模型...
+        removing_model: 正在刪除模型...
     datetime:
         format: YYYY年MM月DD日，DATE hh:mm
         year_format: YYYY年MM月
@@ -146,9 +153,13 @@ strings:
                 以便在下次瀏覽圖片時能夠快速呈現縮略圖。
         detector:
             title: 檢測器
+            current_model:
+                title: 當前使用的模型
+                text: 選擇一個模型以改變檢測器的識別速度、精度和對象種類集
             models:
                 title: 預訓練模型
-                text: 選擇一個模型以改變檢測器的識別速度、精度和對象種類集
+                new_model: 新的模型
+            model_classes: (%zu 個種類)
             tasks:
                 title: 任務管理
                 training:

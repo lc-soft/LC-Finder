@@ -42,10 +42,20 @@
 #include <LCUI/gui/widget/textview.h>
 #include "ui.h"
 #include "i18n.h"
+#include "dialog.h"
 #include "taskitem.h"
+#include "textview_i18n.h"
 #include "settings.h"
 #include "detector.h"
 
+// clang-format off
+
+#define KEY_MESSAGE_CREATING		"message.creating_model"
+#define KEY_MESSAGE_REMOVING		"message.removing_model"
+#define KEY_NEW_MODEL_TITLE		"dialog.new_model.title"
+#define KEY_NEW_MODEL_PLACEHOLDER	"dialog.new_model.placeholder"
+#define KEY_REMOVE_MODEL_TITLE		"dialog.remove_model.title"
+#define KEY_CLASSES_TEXT		"settings.detector.model_classes"
 #define KEY_DETECTOR_DETECTION_TITLE	"settings.detector.tasks.detection.title"
 #define KEY_DETECTOR_DETECTION_TEXT	"settings.detector.tasks.detection.text"
 #define KEY_DETECTOR_TRAINING_TITLE	"settings.detector.tasks.training.title"
@@ -60,16 +70,22 @@ typedef struct TaskControllerRec_ {
 
 static struct DetectorSettingView {
 	LCUI_Widget view;
+	LCUI_Widget list;
+	LCUI_Widget dropdown;
 	TaskControllerRec detection;
 	TaskControllerRec training;
 } view;
 
-static void RefreshDropdownText(void)
-{
-	LCUI_Widget txt;
+// clang-format on
 
-	SelectWidget(txt, ID_TXT_CURRENT_DETECTOR_MODEL);
-	TextView_SetTextW(txt, finder.config.detector_model_name);
+static void RenderModels(void);
+
+static void RenderModelClassesText(wchar_t *buff, const wchar_t *key,
+				   void *data)
+{
+	DetectorModel model = data;
+
+	swprintf(buff, TXTFMT_BUF_MAX_LEN, key, model->classes);
 }
 
 static void TaskForSetModel(void *arg1, void *arg2)
@@ -109,6 +125,163 @@ static void TaskForStopDetect(void *arg1, void *arg2)
 	Detector_CancelTask(task);
 	Detector_FreeTask(task);
 	TaskItem_SetActionDisabled(view, FALSE);
+}
+
+static void UITaskForUpdateModels(void *arg1, void *arg2)
+{
+	UI_StopLoading();
+	RenderModels();
+}
+
+static void TaskForCreateModel(void *arg1, void *arg2)
+{
+	Detector_CreateModel(arg1);
+	LCUI_PostSimpleTask(UITaskForUpdateModels, NULL, NULL);
+}
+
+static void TaskForRemoveModel(void *arg1, void *arg2)
+{
+	Detector_DestroyModel(arg1);
+	LCUI_PostSimpleTask(UITaskForUpdateModels, NULL, NULL);
+}
+
+static void OnBtnRemoveModelClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	LCUI_Widget window;
+	LCUI_TaskRec task = { 0 };
+	const wchar_t *title;
+
+	title = I18n_GetText(KEY_REMOVE_MODEL_TITLE);
+	window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+	if (LCUIDialog_Confirm(window, title, NULL)) {
+		task.func = TaskForRemoveModel;
+		task.arg[0] = e->data;
+		UI_StartLoading(I18n_GetText(KEY_MESSAGE_REMOVING));
+		LCUI_PostAsyncTask(&task);
+	}
+}
+
+static LCUI_BOOL CheckModelName(const wchar_t *name)
+{
+	if (wgetcharcount(name, L"@ /\\$!&%")) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void OnBtnNewModelClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	LCUI_Widget window;
+	LCUI_TaskRec task = { 0 };
+	const wchar_t *placeholder;
+	const wchar_t *title;
+	wchar_t name[64];
+
+	title = I18n_GetText(KEY_NEW_MODEL_TITLE);
+	placeholder = I18n_GetText(KEY_NEW_MODEL_PLACEHOLDER);
+	window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+	if (0 == LCUIDialog_Prompt(window, title, placeholder, NULL, name, 64,
+				   CheckModelName)) {
+		task.func = TaskForCreateModel;
+		task.arg[0] = wcsdup2(name);
+		task.destroy_arg[0] = free;
+		UI_StartLoading(I18n_GetText(KEY_MESSAGE_CREATING));
+		LCUI_PostAsyncTask(&task);
+	}
+}
+
+static LCUI_Widget ModelItem_Create(DetectorModel model)
+{
+	LCUI_Widget item, classes, content, action, icon, text, btn;
+
+	item = LCUIWidget_New(NULL);
+	content = LCUIWidget_New(NULL);
+	action = LCUIWidget_New(NULL);
+	icon = LCUIWidget_New("icon");
+	text = LCUIWidget_New("textview");
+	btn = LCUIWidget_New("icon");
+	classes = LCUIWidget_New("textview-i18n");
+	Widget_AddClass(item, "item");
+	Widget_AddClass(text, "item-text");
+	Widget_AddClass(icon, "item-icon");
+	Widget_AddClass(classes, "item-text text-muted");
+	Widget_AddClass(content, "item-content");
+	Widget_AddClass(action, "item-action");
+	Widget_SetAttribute(btn, "name", "close");
+	Widget_SetAttribute(icon, "name", "buffer");
+	TextView_SetTextW(text, model->name);
+	TextViewI18n_SetKey(classes, KEY_CLASSES_TEXT);
+	TextViewI18n_SetFormater(classes, RenderModelClassesText, model);
+	TextViewI18n_Refresh(classes);
+	Widget_BindEvent(btn, "click", OnBtnRemoveModelClick, model, NULL);
+	Widget_Append(action, btn);
+	Widget_Append(content, text);
+	Widget_Append(content, classes);
+	Widget_Append(item, icon);
+	Widget_Append(item, content);
+	Widget_Append(item, action);
+	return item;
+}
+
+static void RefreshDropdownText(void)
+{
+	LCUI_Widget txt;
+
+	SelectWidget(txt, ID_TXT_CURRENT_DETECTOR_MODEL);
+	TextView_SetTextW(txt, finder.config.detector_model_name);
+}
+
+static void OnChangeModel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	const wchar_t *value;
+
+	value = (const wchar_t *)Widget_GetAttribute(e->target, "value");
+	if (!value || wcslen(value) < 1) {
+		return;
+	}
+	wcscpy(finder.config.detector_model_name, value);
+	LCFinder_SaveConfig();
+	RefreshDropdownText();
+}
+
+static void RenderModels(void)
+{
+	size_t i;
+	wchar_t *selected_model;
+	LCUI_Widget item;
+	DetectorModel *models;
+	LCUI_BOOL found_model = FALSE;
+
+	Widget_Empty(view.list);
+	Widget_Empty(view.dropdown);
+	BindEvent(view.dropdown, "change.dropdown", OnChangeModel);
+
+	Detector_GetModels(&models);
+	selected_model = finder.config.detector_model_name;
+	for (i = 0; models[i]; ++i) {
+		item = LCUIWidget_New("textview");
+		Widget_AddClass(item, "dropdown-item");
+		Widget_SetAttributeEx(item, "value", models[i]->name, 0, NULL);
+		Widget_Append(view.dropdown, item);
+		TextView_SetTextW(item, models[i]->name);
+		Widget_Append(view.list, ModelItem_Create(models[i]));
+		if (wcscmp(selected_model, models[i]->name) == 0) {
+			found_model = TRUE;
+		}
+	}
+	if (i > 0) {
+		if (!found_model) {
+			wcscpy(finder.config.detector_model_name,
+			       models[i]->name);
+			TaskItem_SetActionDisabled(view.detection.view, TRUE);
+			LCFinder_SaveConfig();
+		}
+		Widget_AddClass(view.view, "models-available");
+	} else {
+		Widget_AddClass(view.view, "models-unavailable");
+	}
+	RefreshDropdownText();
+	free(models);
 }
 
 static int SetDetectorModelAsync(const wchar_t *name)
@@ -163,64 +336,18 @@ static OnStopDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LCUI_PostAsyncTask(&task);
 }
 
-static void OnChangeModel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	const wchar_t *value;
-	
-	value = (const wchar_t*)Widget_GetAttribute(e->target, "value");
-	if (!value || wcslen(value) < 1) {
-		return;
-	}
-	wcscpy(finder.config.detector_model_name, value);
-	LCFinder_SaveConfig();
-	RefreshDropdownText();
-}
-
-static void InitModelsDropdown(void)
-{
-	size_t i;
-	wchar_t **names;
-	wchar_t *selected_model;
-	LCUI_Widget menu;
-	LCUI_Widget item;
-	LCUI_BOOL found_model = FALSE;
-
-	SelectWidget(menu, ID_DROPDOWN_DETECTOR_MODELS);
-	BindEvent(menu, "change.dropdown", OnChangeModel);
-
-	names = Detector_GetModels();
-	selected_model = finder.config.detector_model_name;
-	for (i = 0; names[i]; ++i) {
-		item = LCUIWidget_New("textview");
-		Widget_AddClass(item, "dropdown-item");
-		Widget_SetAttributeEx(item, "value", names[i], 0, NULL);
-		Widget_Append(menu, item);
-		TextView_SetTextW(item, names[i]);
-		if (wcscmp(selected_model, names[i]) == 0) {
-			found_model = TRUE;
-		}
-	}
-	if (i > 0) {
-		if (!found_model) {
-			wcscpy(finder.config.detector_model_name, names[0]);
-			TaskItem_SetActionDisabled(view.detection.view, TRUE);
-			LCFinder_SaveConfig();
-		}
-		Widget_AddClass(view.view, "models-available");
-	} else {
-		Widget_AddClass(view.view, "models-unavailable");
-	}
-	RefreshDropdownText();
-}
-
 void SettingsView_InitDetector(void)
 {
-	LCUI_Widget list;
+	LCUI_Widget btn;
+	LCUI_Widget tasks;
 	LCUI_Widget task_training = LCUIWidget_New("taskitem");
 	LCUI_Widget task_detection = LCUIWidget_New("taskitem");
 
-	SelectWidget(list, ID_VIEW_DETECTOR_TASKS);
+	SelectWidget(btn, ID_BTN_NEW_MODEL);
+	SelectWidget(tasks, ID_VIEW_DETECTOR_TASKS);
 	SelectWidget(view.view, ID_VIEW_DETECTOR_SETTING);
+	SelectWidget(view.list, ID_VIEW_MODEL_LIST);
+	SelectWidget(view.dropdown, ID_DROPDOWN_DETECTOR_MODELS);
 	TaskItem_SetIcon(task_detection, "image-search-outline");
 	TaskItem_SetNameKey(task_detection, KEY_DETECTOR_DETECTION_TITLE);
 	TaskItem_SetTextKey(task_detection, KEY_DETECTOR_DETECTION_TEXT);
@@ -229,9 +356,10 @@ void SettingsView_InitDetector(void)
 	TaskItem_SetTextKey(task_training, KEY_DETECTOR_TRAINING_TEXT);
 	Widget_BindEvent(task_detection, "start", OnStartDetect, NULL, NULL);
 	Widget_BindEvent(task_detection, "stop", OnStopDetect, NULL, NULL);
-	Widget_Append(list, task_detection);
-	Widget_Append(list, task_training);
+	Widget_BindEvent(btn, "click", OnBtnNewModelClick, NULL, NULL);
+	Widget_Append(tasks, task_detection);
+	Widget_Append(tasks, task_training);
 	view.detection.view = task_detection;
 	view.training.view = task_training;
-	InitModelsDropdown();
+	RenderModels();
 }

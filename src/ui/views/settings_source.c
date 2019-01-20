@@ -65,21 +65,28 @@ static void OnBtnRemoveClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 LCUI_Widget SourceListItem_Create(DB_Dir dir)
 {
-	LCUI_Widget item, icon, text, btn;
+	LCUI_Widget item, content, action, icon, text, btn;
 
 	item = LCUIWidget_New(NULL);
-	icon = LCUIWidget_New("textview");
+	content = LCUIWidget_New(NULL);
+	action = LCUIWidget_New(NULL);
+	icon = LCUIWidget_New("icon");
 	text = LCUIWidget_New("textview");
-	btn = LCUIWidget_New("textview");
-	Widget_AddClass(item, "source-list-item");
-	Widget_AddClass(icon, "icon icon-folder-outline");
-	Widget_AddClass(text, "text");
-	Widget_AddClass(btn, "button icon icon-close");
+	btn = LCUIWidget_New("icon");
+	Widget_AddClass(item, "item");
+	Widget_AddClass(text, "item-text");
+	Widget_AddClass(icon, "item-icon");
+	Widget_AddClass(content, "item-content");
+	Widget_AddClass(action, "item-action");
+	Widget_SetAttribute(btn, "name", "close");
+	Widget_SetAttribute(icon, "name", "folder-outline");
 	TextView_SetText(text, dir->path);
 	Widget_BindEvent(btn, "click", OnBtnRemoveClick, dir, NULL);
+	Widget_Append(action, btn);
+	Widget_Append(content, text);
 	Widget_Append(item, icon);
-	Widget_Append(item, text);
-	Widget_Append(item, btn);
+	Widget_Append(item, content);
+	Widget_Append(item, action);
 	return item;
 }
 

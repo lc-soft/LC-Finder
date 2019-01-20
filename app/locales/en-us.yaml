@@ -20,6 +20,11 @@ strings:
         password:
             password: Password
             confirm_password: Confirm password
+        new_model:
+            title: New model
+            placeholder: Model name
+        remove_model:
+            title: Remove this model?
     tagthumb:
         item: '%ls item'
         items: '%ls items'
@@ -40,6 +45,8 @@ strings:
         password_empty: Password can not be empty
         passwords_not_match: Passwords not match
         detector_init_failed: Detector initialization failed
+        creating_model: Creating model...
+        removing_model: Removing model...
     datetime:
         format: 'DATE MM DD, YYYY hh:mm'
         year_format: MM YYYY
@@ -146,9 +153,13 @@ strings:
                 render thumbnail images in the next time you browse the pictures.
         detector:
             title: Detector
-            models:
-                title: Pre-Trained Model
+            current_model:
+                title: Current used model
                 text: Select a model to change the detector's recognition speed, accuracy, and object classes set
+            models:
+                title: Pre-Trained Models
+                new_model: New model
+            model_classes: (%zu classes)
             tasks:
                 title: Tasks
                 training:

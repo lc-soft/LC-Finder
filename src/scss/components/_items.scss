@@ -1,0 +1,50 @@
+.items {
+    margin: 0 #{-$item-padidng-x};
+}
+.items .item {
+    padding: $item-padidng-y $item-padidng-x;
+
+	&:hover {
+		background-color: #f9f9f9;
+	}
+	&:active {
+		background-color: #f4f4f4;
+	}
+}
+.item-icon {
+    top: $item-padidng-y;
+    left: $item-padidng-x;
+    font-size: $item-icon-size;
+    width: $item-icon-size;
+    height: $item-icon-size;
+    line-height: $item-icon-size;
+    position: absolute;
+}
+.item-text {
+    display: inline-block;
+    line-height: $item-line-height;
+    min-height: $item-line-height;
+    margin-right: $spacing / 2;
+}
+.item-content {
+    padding: 0 #{$item-padidng-x + $item-action-width} 0 #{$item-padidng-x + $item-icon-size};
+}
+.item-action {
+    top: 0;
+    right: 0;
+    position: absolute;
+
+    .icon {
+        width: $item-action-width;
+        height: $item-height;
+        line-height: $item-height;
+        text-align: center;
+
+        &:hover {
+            background-color: #f4f4f4;
+        }
+        &:active {
+            background-color: #eee;
+        }
+    }
+}

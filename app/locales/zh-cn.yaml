@@ -21,6 +21,11 @@ strings:
         password:
             password: 密码
             confirm_password: 确认密码
+        new_model:
+            title: 新的模型
+            placeholder: 模型名称
+        remove_model:
+            title: 删除此模型？
     tagthumb:
         item: '%ls 项'
         items: '%ls 项'
@@ -41,6 +46,8 @@ strings:
         password_empty: 密码不能为空
         passwords_not_match: 两次输入的密码不一致
         detector_init_failed: 检测器初始化失败
+        creating_model: 正在创建模型...
+        removing_model: 正在删除模型...
     datetime:
         format: YYYY年MM月DD日，DATE hh:mm
         year_format: YYYY年MM月
@@ -146,9 +153,13 @@ strings:
                 以便在下次浏览图片时能够快速呈现缩略图。
         detector:
             title: 检测器
+            current_model:
+                title: 当前使用的模型
+                text: 选择一个模型以改变检测器的识别速度、精度和对象种类集
             models:
                 title: 预训练模型
-                text: 选择一个模型以改变检测器的识别速度、精度和对象种类集
+                new_model: 新的模型
+            model_classes: (%zu 个种类)
             tasks:
                 title: 任务管理
                 training:
@@ -194,4 +205,4 @@ strings:
                 title: 确定要移除该源文件夹？
                 content: 一旦移除后，该源文件夹内的文件相关信息将一同被移除。
         about: 关于此应用
-        copyright: © 2018 LC's Software，保留所有权利。
+        copyright: © 2019 LC's Software，保留所有权利。

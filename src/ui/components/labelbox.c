@@ -44,6 +44,8 @@
 #include <LCUI/gui/widget/textedit.h>
 #include "labelbox.h"
 
+// clang-format off
+
 #define BOX_MIN_WIDTH	32
 #define BOX_MIN_HEIGHT	32
 #define COLOR_TOTAL	12
@@ -98,6 +100,8 @@ static struct LabelBoxModule {
 		"#767676", // Grey
 	}
 };
+
+// clang-format on
 
 static void Resizer_OnMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {

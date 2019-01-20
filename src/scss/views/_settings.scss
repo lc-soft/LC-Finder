@@ -1,65 +1,16 @@
 .task-list {
 	.taskitem {
 		max-width: #{$main-container-width + $gutter-width};
-		padding-left: $list-item-padidng-x;
-		padding-right: $list-item-padidng-x;
+		padding-left: $item-padidng-x;
+		padding-right: $item-padidng-x;
 
 		&:hover {
 			background-color: #f9f9f9;
 		}
 	}
 }
-
-.task-list,
-.source-list {
-	margin: 0 #{-$list-item-padidng-x} $spacing #{-$list-item-padidng-x};
-}
-.source-list-item {
-	width: 340px;
-	padding: 12px $list-item-padidng-x 12px $list-item-padidng-x;
-
-	.text {
-		width: 240px;
-		display: inline-block;
-		line-height: 24px;
-		min-height: 24px;
-	}
-	&:hover {
-		background-color: #f9f9f9;
-	}
-	&:active {
-		background-color: #f4f4f4;
-	}
-	.icon {
-		font-size: 24px;
-		width: 24px;
-		height: 24px;
-		line-height: 24px;
-		display: inline-block;
-		vertical-align: middle;
-	}
-	.icon:first-child {
-		margin-right: $spacing / 2;
-	}
-	.icon.button {
-		top: 12px;
-		right: 0;
-		width: 48px;
-		height: 48px;
-		padding: 0;
-		font-size: 14px;
-		line-height: 48px;
-		text-align: center;
-		position: absolute;
-		vertical-align: middle;
-
-		&:hover {
-			background-color: #f4f4f4;
-		}
-		&:active {
-			background-color: #eee;
-		}
-	}
+.task-list {
+	margin: 0 #{-$item-padidng-x};
 }
 #view-settings-content.view-content {
 	padding-left: 0;
@@ -76,6 +27,14 @@
 			margin-left: 0;
 		}
 	}
+	.items {
+		max-width: #{$main-container-width + $gutter-width};
+	}
+}
+.setting-group-item {
+	margin-bottom: $spacing;
+	padding-left: $gutter-width;
+	margin-left: -$gutter-width;
 }
 .on-models-available,
 .on-models-unavailable {
