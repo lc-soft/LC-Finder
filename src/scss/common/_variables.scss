@@ -112,4 +112,11 @@ $main-container-width: 440px;
 
 $taskitem-icon-width: 32px;
 
-$list-item-padidng-x: #{$gutter-width / 2};
+$item-icon-size: 24px;
+$item-line-height: 24px;
+$item-action-width: 48px;
+$item-padidng-x: $gutter-width / 2;
+$item-padidng-y: 12px;
+$item-height: $item-padidng-y * 2 + $item-line-height;
+
+$loading-box-width: 128px;

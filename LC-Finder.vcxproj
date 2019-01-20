@@ -53,6 +53,7 @@
     <ClCompile Include="src\ui\components\labelbox.c" />
     <ClCompile Include="src\ui\components\labelitem.c" />
     <ClCompile Include="src\ui\components\link_i18n.c" />
+    <ClCompile Include="src\ui\components\loading.c" />
     <ClCompile Include="src\ui\components\progressbar.c" />
     <ClCompile Include="src\ui\components\sidebar.c" />
     <ClCompile Include="src\ui\components\splashscreen.c" />
