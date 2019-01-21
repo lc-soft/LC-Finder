@@ -651,6 +651,18 @@ int DBFile_SetSize(DB_File file, int width, int height)
 	return -1;
 }
 
+DB_Tag DBTag_Dup(DB_Tag tag)
+{
+	size_t len;
+	DB_Tag newtag = malloc(sizeof(DB_TagRec));
+
+	newtag->id = tag->id;
+	len = strlen(tag->name);
+	newtag->name = strdup(tag->name);
+	newtag->count = 0;
+	return newtag;
+}
+
 void DBTag_Release(DB_Tag tag)
 {
 	free(tag->name);

@@ -59,10 +59,30 @@ static struct PictureLabelsPanel {
 	LCUI_Widget labels;
 	LCUI_Widget available_labels;
 	PictureLabelsViewContextRec ctx;
+	LinkedList labels_trending;
 	LinkedList boxes;
 } view;
 
 #define GetWidget LCUIWidget_GetById
+
+static void RenderAvailableLabels(void);
+
+static void LabelsTrending_Add(DB_Tag tag)
+{
+	DB_Tag t;
+	LinkedListNode *node;
+	LinkedList *list = &view.labels_trending;
+
+	for (LinkedList_Each(node, list)) {
+		t = node->data;
+		if (t->id == tag->id) {
+			LinkedList_Unlink(list, node);
+			LinkedList_InsertNode(list, 0, node);
+			return;
+		}
+	}
+	LinkedList_Append(list, DBTag_Dup(tag));
+}
 
 void LabelsPanel_UpdateBox(BoxData data)
 {
@@ -90,6 +110,29 @@ void LabelsPanel_UpdateBoxes(void)
 	for (LinkedList_Each(node, &view.boxes)) {
 		LabelsPanel_UpdateBox(node->data);
 	}
+}
+
+static void SetBoxRandomStyle(BoxData data)
+{
+	LCUI_Rect img_rect;
+	LCUI_Color color;
+	PictureLabelsViewContext ctx = &view.ctx;
+	float width = ctx->scale * ctx->width;
+	float height = ctx->scale * ctx->height;
+
+	data->rect.x = 0.1f + (rand() % 10) * 0.04f;
+	data->rect.y = 0.1f + (rand() % 10) * 0.04f;
+	data->rect.width = 0.3f + (rand() % 10) * 0.02f;
+	data->rect.height = 0.3f + (rand() % 10) * 0.02f;
+	LCUIRectF_ValidateArea(&data->rect, 1.0f, 1.0f);
+	img_rect.x = iround(data->rect.x * width);
+	img_rect.y = iround(data->rect.y * height);
+	img_rect.width = iround(data->rect.width * width);
+	img_rect.height = iround(data->rect.height * height);
+	LabelItem_SetRect(data->item, &img_rect);
+	LabelsPanel_UpdateBox(data);
+	LabelBox_GetColor(data->box, &color);
+	Widget_SetBorderColor(data->item, color);
 }
 
 static void OnLabelBoxUpdate(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -165,14 +208,11 @@ static void LabelsPanel_ClearBoxes(void)
 
 static void LabelsPanel_LoadBoxes(void)
 {
-
 }
 
 static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	BoxData data;
-	LCUI_Rect img_rect;
-	LCUI_Color color;
 	PictureLabelsViewContext ctx = &view.ctx;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
@@ -181,21 +221,8 @@ static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (!data) {
 		return;
 	}
-
-	data->rect.x = 0.1f + (rand() % 10) * 0.04f;
-	data->rect.y = 0.1f + (rand() % 10) * 0.04f;
-	data->rect.width = 0.3f + (rand() % 10) * 0.02f;
-	data->rect.height = 0.3f + (rand() % 10) * 0.02f;
-	LCUIRectF_ValidateArea(&data->rect, 1.0f, 1.0f);
-	img_rect.x = iround(data->rect.x * width);
-	img_rect.y = iround(data->rect.y * height);
-	img_rect.width = iround(data->rect.width * width);
-	img_rect.height = iround(data->rect.height * height);
+	SetBoxRandomStyle(data);
 	LabelItem_SetNameW(data->item, LabelBox_GetNameW(data->box));
-	LabelItem_SetRect(data->item, &img_rect);
-	LabelsPanel_UpdateBox(data);
-	LabelBox_GetColor(data->box, &color);
-	Widget_SetBorderColor(data->item, color);
 }
 
 static void OnHideView(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -203,11 +230,72 @@ static void OnHideView(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	PictureView_HideLabels();
 }
 
+static void OnLabelClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	BoxData data;
+	DB_Tag tag = e->data;
+	wchar_t *name = DecodeUTF8(tag->name);
+
+	LabelsTrending_Add(tag);
+	data = LabelsPanel_AddBox();
+	SetBoxRandomStyle(data);
+	LabelBox_SetNameW(data->box, name);
+	LabelItem_SetNameW(data->item, name);
+	free(name);
+	RenderAvailableLabels();
+}
+
+static void OnLabelEventDestroy(void *data)
+{
+	DBTag_Release(data);
+}
+
+static LCUI_Widget CreateLabel(DB_Tag tag)
+{
+	LCUI_Widget label;
+
+	tag = DBTag_Dup(tag);
+	label = LCUIWidget_New("textview");
+	Widget_AddClass(label, "label");
+	Widget_BindEvent(label, "click", OnLabelClick, tag,
+			 OnLabelEventDestroy);
+	TextView_SetText(label, tag->name);
+	return label;
+}
+
+static void RenderAvailableLabels(void)
+{
+	size_t i;
+	DB_Tag tag;
+	LCUI_BOOL found;
+	LinkedListNode *node;
+
+	Widget_Empty(view.available_labels);
+	for (LinkedList_Each(node, &view.labels_trending)) {
+		Widget_Append(view.available_labels, CreateLabel(node->data));
+	}
+	for (i = 0; i < finder.n_tags; ++i) {
+		found = FALSE;
+		for (LinkedList_Each(node, &view.labels_trending)) {
+			tag = node->data;
+			if (tag->id == finder.tags[i]->id) {
+				found = TRUE;
+				break;
+			}
+		}
+		if (!found) {
+			Widget_Append(view.available_labels,
+				      CreateLabel(finder.tags[i]));
+		}
+	}
+}
+
 void PictureView_InitLabels(void)
 {
 	LCUI_Widget btn_add, btn_hide;
 
 	LinkedList_Init(&view.boxes);
+	LinkedList_Init(&view.labels_trending);
 	view.panel = GetWidget(ID_PANEL_PICTURE_LABELS);
 	view.labels = GetWidget(ID_VIEW_PICTURE_LABELS);
 	view.available_labels = GetWidget(ID_VIEW_PICTURE_AVAIL_LABELS);
@@ -216,6 +304,7 @@ void PictureView_InitLabels(void)
 	Widget_BindEvent(btn_add, "click", OnAddLabel, NULL, NULL);
 	Widget_BindEvent(btn_hide, "click", OnHideView, NULL, NULL);
 	Widget_Hide(view.panel);
+	RenderAvailableLabels();
 }
 
 void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)

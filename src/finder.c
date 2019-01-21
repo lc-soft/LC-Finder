@@ -682,8 +682,7 @@ void LCFinder_ReloadTags(void)
 {
 	size_t i;
 	for (i = 0; i < finder.n_tags; ++i) {
-		free(finder.tags[i]->name);
-		finder.tags[i]->name = NULL;
+		DBTag_Release(finder.tags[i]);
 	}
 	free(finder.tags);
 	finder.n_tags = DB_GetTags(&finder.tags);

@@ -135,7 +135,23 @@
 		padding: 0 $panel-content-padding-x;
 		margin: 0 #{-$panel-content-padding-x};
 	}
+	.label {
+		color: $tag-color;
+		display: inline-block;
+		background-color: $gray-100;
+		margin: 0 $tag-margin-x $tag-margin-y 0;
+		padding: $tag-padding-y $tag-padding-x;
+
+		&:hover {
+			background-color: $gray-200;
+		}
+		&:active {
+			background-color: $gray-300;
+		}
+	}
+	
 }
+
 .window {
 	&.has-panel .window-main {
 		padding-left: $window-panel-width;

@@ -146,6 +146,9 @@ DB_File DBFile_Dup(DB_File file);
 /** 释放文件信息占用的资源 */
 void DBFile_Release(DB_File file);
 
+/** 复制标签信息 */
+DB_Tag DBTag_Dup(DB_Tag tag);
+
 /** 释放标签信息占用的资源 */
 void DBTag_Release(DB_Tag tag);
 
