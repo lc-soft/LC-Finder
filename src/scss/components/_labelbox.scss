@@ -4,23 +4,13 @@
     font-size: 24px;
     line-height: 24px;
     position: absolute;
-    opacity: 0.2;
+    opacity: 0.6;
 }
 .labelbox-box {
     min-width: 32px; 
     min-height: 32px; 
     box-sizing: border-box;
-    border: 10px solid #888;
-}
-.labelbox-remove {
-    font-size: 18px;
-    line-height: $labelbox-label-height;
-    margin-left: #{$spacer / 2};
-    opacity: 0.6;
-
-    &:hover {
-        opacity: 1;
-    }
+    border: 2px solid #888;
 }
 labelbox {
     z-index: 10;
@@ -55,17 +45,30 @@ labelbox {
     textcaret {
         background-color: #fff;
     }
-    &:hover {
-        .labelbox-resizer {
-            opacity: 0.5;
-        }
-    }
     .labelbox-resizer:hover {
         opacity: 1;
     }
     &.editing {
         textedit {
             display: block;
+        }
+    }
+}
+@for $i from 1 to length($labelbox-colors) {
+    $color: nth($labelbox-colors, $i);
+
+    .labelbox-color-#{$i} {
+        .labelbox-box {
+            border-color: $color;
+            background-color: rgba($color, 0.1);
+        }
+        .labelbox-remove,
+        .labelbox-resizer {
+            color: $color;
+        }
+        textedit,
+        textview {
+            background-color: $color;
         }
     }
 }

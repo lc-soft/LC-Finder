@@ -101,10 +101,27 @@ $folder-info-box-height: $spacing * 2 + $line-height-base * 2 * $font-size + $fo
 
 $labelbox-label-height: 24px;
 $labelbox-border-width: 2px;
+$labelbox-colors: (
+    #db2828, // Red
+    #f2711c, // Orange
+    #fbbd08, // Yellow
+    #b5cc18, // Olive
+    #21ba45, // Green
+    #00b5ad, // Teal
+    #2185d0, // Blue
+    #6435c9, // Violet
+    #a333c8, // Purple
+    #e03997, // Pink
+    #a5673f, // Brown
+    #767676 // Grey
+);
 
-$labelitem-padding-y: $spacing * 0.2;
+$labelitem-marker-size: $font-size;
+$labelitem-padding-y: $spacing * 0.4;
 $labelitem-padding-x: $spacing;
+$labelitem-padding-left: $labelitem-padding-x + $labelitem-marker-size;
 $labelitem-margin-x: -$spacing;
+$labelitem-hover-color: #f9f9f9;
 
 $window-panel-width: 320px;
 

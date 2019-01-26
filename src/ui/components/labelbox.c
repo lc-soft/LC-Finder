@@ -34,6 +34,7 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
@@ -43,6 +44,7 @@
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/gui/widget/textedit.h>
 #include "labelbox.h"
+#include "common.h"
 
 // clang-format off
 
@@ -52,6 +54,7 @@
 #define MAX_NAME_LEN	256
 #define DEFAULT_NAME	L"unknown"
 #define LABEL_HEIGHT	24
+#define COLOR_COUNT	12
 
 typedef struct DraggingContextRec_ {
 	LCUI_BOOL active;
@@ -67,39 +70,22 @@ typedef struct ResizingContextRec_ {
 
 typedef struct LabelBoxRec_ {
 	wchar_t name[MAX_NAME_LEN];
+	char classname[32];
 
 	LCUI_Widget header;
 	LCUI_Widget edit;
 	LCUI_Widget label;
 	LCUI_Widget box;
 	LCUI_Widget resizer;
-	LCUI_Widget btn_remove;
 	LCUI_RectF rect;
-	LCUI_Color color;
 
 	DraggingContextRec dragging;
 	ResizingContextRec resizing;
 } LabelBoxRec, *LabelBox;
 
 static struct LabelBoxModule {
-	const char *colors[COLOR_TOTAL];
 	LCUI_WidgetPrototype proto;
-} self = {
-	{
-		"#db2828", // Red
-		"#f2711c", // Orange
-		"#fbbd08", // Yellow
-		"#b5cc18", // Olive
-		"#21ba45", // Green
-		"#00b5ad", // Teal
-		"#2185d0", // Blue
-		"#6435c9", // Violet
-		"#a333c8", // Purple
-		"#e03997", // Pink
-		"#a5673f", // Brown
-		"#767676", // Grey
-	}
-};
+} self;
 
 // clang-format on
 
@@ -156,23 +142,6 @@ static LCUI_Widget Resizer_New(LCUI_Widget w)
 	Widget_BindEvent(resizer, "mousemove", Resizer_OnMouseMove, w, NULL);
 	Widget_BindEvent(resizer, "mouseup", Resizer_OnMouseUp, w, NULL);
 	return resizer;
-}
-
-static void ButtonRemove_OnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
-{
-	e->cancel_bubble = TRUE;
-	Widget_Destroy(e->data);
-}
-
-static LCUI_Widget ButtonRemove_New(LCUI_Widget w)
-{
-	LCUI_Widget btn;
-
-	btn = LCUIWidget_New("icon");
-	Widget_AddClass(btn, "labelbox-remove");
-	Widget_SetAttribute(btn, "name", "close");
-	Widget_BindEvent(btn, "click", ButtonRemove_OnClick, w, NULL);
-	return btn;
 }
 
 static void Label_OnClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -255,14 +224,13 @@ static void LabelBox_OnFocusEdit(void *arg)
 
 static void LabelBox_OnInit(LCUI_Widget w)
 {
-	LCUI_StyleRec style;
 	LabelBox that = Widget_AddData(w, self.proto, sizeof(LabelBoxRec));
 
+	that->classname[0] = 0;
 	that->header = LCUIWidget_New(NULL);
 	that->edit = LCUIWidget_New("textedit");
 	that->label = Label_New(w);
 	that->resizer = Resizer_New(w);
-	that->btn_remove = ButtonRemove_New(w);
 	that->box = LCUIWidget_New(NULL);
 	that->rect.x = that->rect.y = 0;
 	that->rect.width = BOX_MIN_WIDTH;
@@ -270,24 +238,11 @@ static void LabelBox_OnInit(LCUI_Widget w)
 	that->dragging.active = FALSE;
 	that->resizing.active = FALSE;
 
-	wcscpy(that->name, DEFAULT_NAME);
-	TextView_SetTextW(that->label, that->name);
-	TextEdit_SetTextW(that->edit, that->name);
-
-	ParseColor(&style, self.colors[(rand() % COLOR_TOTAL)]);
-	Widget_SetBorder(that->box, 2.0f, SV_SOLID, style.color);
-	Widget_SetStyle(that->label, key_background_color, style.color, color);
-	Widget_SetStyle(that->edit, key_background_color, style.color, color);
-	TextView_SetColor(that->resizer, style.color);
-	TextView_SetColor(that->btn_remove, style.color);
-	that->color = style.color;
-
 	Widget_AddClass(that->box, "labelbox-box");
 	Widget_AddClass(that->header, "labelbox-header");
 	Widget_AddClass(that->resizer, "labelbox-resizer");
 	Widget_Append(that->box, that->resizer);
 	Widget_Append(that->header, that->label);
-	Widget_Append(that->header, that->btn_remove);
 	Widget_Append(w, that->header);
 	Widget_Append(w, that->edit);
 	Widget_Append(w, that->box);
@@ -297,14 +252,31 @@ static void LabelBox_OnInit(LCUI_Widget w)
 	Widget_BindEvent(w, "mousedown", LabelBox_OnMouseDown, NULL, NULL);
 	Widget_BindEvent(w, "mousemove", LabelBox_OnMouseMove, NULL, NULL);
 	Widget_BindEvent(w, "mouseup", LabelBox_OnMouseUp, NULL, NULL);
+
+	LabelBox_SetNameW(w, DEFAULT_NAME);
+}
+
+static void LabelBox_UpdateColor(LCUI_Widget w)
+{
+	LabelBox that = Widget_GetData(w, self.proto);
+
+	if (that->classname[0]) {
+		Widget_RemoveClass(w, that->classname);
+	}
+	snprintf(that->classname, 32, "labelbox-color-%d",
+		 get_wcs_sum(that->name) % COLOR_COUNT + 1);
+	Widget_AddClass(w, that->classname);
 }
 
 void LabelBox_SetNameW(LCUI_Widget w, const wchar_t *label)
 {
 	LabelBox that = Widget_GetData(w, self.proto);
 
+	that->name[255] = 0;
+	wcsncpy(that->name, label, 255);
 	TextView_SetTextW(that->label, label);
 	TextEdit_SetTextW(that->edit, label);
+	LabelBox_UpdateColor(w);
 }
 
 const wchar_t *LabelBox_GetNameW(LCUI_Widget w)
@@ -312,13 +284,6 @@ const wchar_t *LabelBox_GetNameW(LCUI_Widget w)
 	LabelBox that = Widget_GetData(w, self.proto);
 
 	return that->name;
-}
-
-void LabelBox_GetColor(LCUI_Widget w, LCUI_Color *color)
-{
-	LabelBox that = Widget_GetData(w, self.proto);
-
-	*color = that->color;
 }
 
 void LabelBox_GetRect(LCUI_Widget w, LCUI_RectF *rect)

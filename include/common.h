@@ -109,6 +109,8 @@ size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number);
 
 size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, unsigned seconds);
 
+int get_wcs_sum(const wchar_t *str);
+
 int getsizestr(char *str, int64_t size);
 
 int wgetsizestr(wchar_t *str, size_t max_len, int64_t size);

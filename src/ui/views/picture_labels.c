@@ -47,12 +47,12 @@
 #include "labelitem.h"
 #include "picture.h"
 
-typedef struct BoxDataRec_ {
+typedef struct BoundingBoxItemRec_ {
 	LCUI_Widget box;
 	LCUI_Widget item;
 	LCUI_RectF rect;
 	LinkedListNode node;
-} BoxDataRec, *BoxData;
+} BoundingBoxItemRec, *BoundingBoxItem;
 
 static struct PictureLabelsPanel {
 	LCUI_Widget panel;
@@ -84,7 +84,7 @@ static void LabelsTrending_Add(DB_Tag tag)
 	LinkedList_Append(list, DBTag_Dup(tag));
 }
 
-void LabelsPanel_UpdateBox(BoxData data)
+void LabelsPanel_UpdateBox(BoundingBoxItem data)
 {
 	LCUI_RectF rect;
 	PictureLabelsViewContext ctx = &view.ctx;
@@ -112,10 +112,9 @@ void LabelsPanel_UpdateBoxes(void)
 	}
 }
 
-static void SetBoxRandomStyle(BoxData data)
+static void SetRandomRect(BoundingBoxItem data)
 {
 	LCUI_Rect img_rect;
-	LCUI_Color color;
 	PictureLabelsViewContext ctx = &view.ctx;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
@@ -131,15 +130,13 @@ static void SetBoxRandomStyle(BoxData data)
 	img_rect.height = iround(data->rect.height * height);
 	LabelItem_SetRect(data->item, &img_rect);
 	LabelsPanel_UpdateBox(data);
-	LabelBox_GetColor(data->box, &color);
-	Widget_SetBorderColor(data->item, color);
 }
 
 static void OnLabelBoxUpdate(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LCUI_RectF rect;
 	LCUI_Rect img_rect;
-	BoxData data = e->data;
+	BoundingBoxItem data = e->data;
 	PictureLabelsViewContext ctx = &view.ctx;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
@@ -160,24 +157,24 @@ static void OnLabelBoxUpdate(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LabelItem_SetRect(data->item, &img_rect);
 }
 
-static void OnLabelBoxDestroy(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+static void OnLabelItemDestroy(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	BoxData data = e->data;
+	BoundingBoxItem data = e->data;
 
 	LinkedList_Unlink(&view.boxes, &data->node);
-	Widget_Destroy(data->item);
+	Widget_Destroy(data->box);
 	free(data);
 }
 
-BoxData LabelsPanel_AddBox(void)
+BoundingBoxItem LabelsPanel_AddBox(void)
 {
-	BoxData data;
+	BoundingBoxItem data;
 
 	if (!view.ctx.view) {
 		return NULL;
 	}
 
-	data = malloc(sizeof(BoxDataRec));
+	data = malloc(sizeof(BoundingBoxItemRec));
 	if (!data) {
 		return NULL;
 	}
@@ -187,7 +184,7 @@ BoxData LabelsPanel_AddBox(void)
 	data->node.data = data;
 
 	Widget_BindEvent(data->box, "change", OnLabelBoxUpdate, data, NULL);
-	Widget_BindEvent(data->box, "destroy", OnLabelBoxDestroy, data, NULL);
+	Widget_BindEvent(data->item, "destroy", OnLabelItemDestroy, data, NULL);
 	Widget_Append(view.ctx.view, data->box);
 	Widget_Append(view.labels, data->item);
 	LinkedList_AppendNode(&view.boxes, &data->node);
@@ -196,7 +193,7 @@ BoxData LabelsPanel_AddBox(void)
 
 static void LabelsPanel_ClearBoxes(void)
 {
-	BoxData data;
+	BoundingBoxItem data;
 	LinkedListNode *node;
 
 	for (LinkedList_Each(node, &view.boxes)) {
@@ -212,7 +209,7 @@ static void LabelsPanel_LoadBoxes(void)
 
 static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	BoxData data;
+	BoundingBoxItem data;
 	PictureLabelsViewContext ctx = &view.ctx;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
@@ -221,7 +218,7 @@ static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (!data) {
 		return;
 	}
-	SetBoxRandomStyle(data);
+	SetRandomRect(data);
 	LabelItem_SetNameW(data->item, LabelBox_GetNameW(data->box));
 }
 
@@ -232,13 +229,13 @@ static void OnHideView(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void OnLabelClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	BoxData data;
+	BoundingBoxItem data;
 	DB_Tag tag = e->data;
 	wchar_t *name = DecodeUTF8(tag->name);
 
 	LabelsTrending_Add(tag);
 	data = LabelsPanel_AddBox();
-	SetBoxRandomStyle(data);
+	SetRandomRect(data);
 	LabelBox_SetNameW(data->box, name);
 	LabelItem_SetNameW(data->item, name);
 	free(name);

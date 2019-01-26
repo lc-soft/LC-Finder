@@ -1,8 +1,35 @@
 labelitem {
     display: block;
-    padding: $labelitem-padding-y $labelitem-padding-x $labelitem-padding-y #{$labelitem-padding-x - 3px};
+    padding: $labelitem-padding-y $labelitem-padding-x $labelitem-padding-y $labelitem-padding-left;
     margin: 0 #{$labelitem-margin-x};
-    border-left: 3px solid #ccc;
+
+    &:hover {
+        background-color: $labelitem-hover-color;
+    }
+}
+
+.labelitem-marker {
+    width: $labelitem-marker-size;
+    height: $labelitem-marker-size;
+    margin-right: $spacing / 2;
+    margin-left: -$labelitem-marker-size;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.labelitem-remove {
+    color: $gray-600;
+    position: absolute;
+    right: $labelitem-padding-x;
+    top: $labelitem-padding-y;
+    font-size: $font-size * 1.2;
+
+    &:hover {
+        color: $red;
+    }
+    &:active {
+        color: darken($red, 10%);
+    }
 }
 
 .labelitem-name {
@@ -13,4 +40,14 @@ labelitem {
 .labelitem-info {
     display: inline-block;
     color: $gray-600;
+}
+
+@for $i from 1 to length($labelbox-colors) {
+    $color: nth($labelbox-colors, $i);
+
+    .labelitem-color-#{$i} {
+        .labelitem-marker {
+            background-color: $color;
+        }
+    }
 }

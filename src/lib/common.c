@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * common.c -- common function set.
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2019 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * common.c -- 一些通用的基础功能集
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2019 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -452,6 +452,20 @@ size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, unsigned seconds)
 		wcsncpy(wcs, buf, max_len);
 	}
 	return wcslen(buf) - (p - buf);
+}
+
+int get_wcs_sum(const wchar_t *str)
+{
+	int sum = 0;
+	const wchar_t *p = str;
+
+	if (str) {
+		while (*p) {
+			sum += *p;
+			++p;
+		}
+	}
+	return sum;
 }
 
 int getsizestr(char *str, int64_t size)

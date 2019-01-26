@@ -41,34 +41,60 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "labelitem.h"
+#include "common.h"
+
+#define COLOR_COUNT 12
 
 typedef struct LabelItemRec_ {
-	LCUI_Widget name;
-	LCUI_Widget info;
+	wchar_t name[256];
+	char classname[32];
+	LCUI_Widget txt_name;
+	LCUI_Widget txt_info;
 } LabelItemRec, *LabelItem;
 
 static struct LabelItemModule {
 	LCUI_WidgetPrototype proto;
 } self;
 
+static void LabelItem_OnRemove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	Widget_Destroy(e->data);
+}
+
 static void LabelItem_OnInit(LCUI_Widget w)
 {
+	LCUI_Widget marker, btn;
 	LabelItem that = Widget_AddData(w, self.proto, sizeof(LabelItemRec));
 
-	that->name = LCUIWidget_New("textview");
-	that->info = LCUIWidget_New("textview");
-
-	Widget_AddClass(that->name, "labelitem-name");
-	Widget_AddClass(that->info, "labelitem-info");
-	Widget_Append(w, that->name);
-	Widget_Append(w, that->info);
+	btn = LCUIWidget_New("icon");
+	marker = LCUIWidget_New(NULL);
+	that->txt_name = LCUIWidget_New("textview");
+	that->txt_info = LCUIWidget_New("textview");
+	Widget_SetAttribute(btn, "name", "trash-can-outline");
+	Widget_AddClass(that->txt_name, "labelitem-name");
+	Widget_AddClass(that->txt_info, "labelitem-info");
+	Widget_AddClass(marker, "labelitem-marker");
+	Widget_AddClass(btn, "labelitem-remove");
+	Widget_BindEvent(btn, "click", LabelItem_OnRemove, w, NULL);
+	Widget_Append(w, marker);
+	Widget_Append(w, btn);
+	Widget_Append(w, that->txt_name);
+	Widget_Append(w, that->txt_info);
 }
 
 void LabelItem_SetNameW(LCUI_Widget w, const wchar_t *name)
 {
 	LabelItem that = Widget_GetData(w, self.proto);
 
-	TextView_SetTextW(that->name, name);
+	that->name[255] = 0;
+	wcsncpy(that->name, name, 255);
+	TextView_SetTextW(that->txt_name, name);
+	if (that->classname[0]) {
+		Widget_RemoveClass(w, that->classname);
+	}
+	snprintf(that->classname, 32, "labelitem-color-%d",
+		 get_wcs_sum(that->name) % COLOR_COUNT + 1);
+	Widget_AddClass(w, that->classname);
 }
 
 void LabelItem_SetRect(LCUI_Widget w, LCUI_Rect *rect)
@@ -78,7 +104,7 @@ void LabelItem_SetRect(LCUI_Widget w, LCUI_Rect *rect)
 
 	swprintf(str, 255, L"(%d,%d,%d,%d)",
 		 rect->x, rect->y, rect->width, rect->height);
-	TextView_SetTextW(that->info, str);
+	TextView_SetTextW(that->txt_info, str);
 }
 
 void LCUIWidget_AddLabelItem(void)
