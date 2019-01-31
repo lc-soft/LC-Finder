@@ -58,7 +58,10 @@ static struct LabelItemModule {
 
 static void LabelItem_OnRemove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	Widget_Destroy(e->data);
+	LCUI_WidgetEventRec ev;
+
+	LCUI_InitWidgetEvent(&ev, "remove");
+	Widget_TriggerEvent(e->data, &ev, NULL);
 }
 
 static void LabelItem_OnInit(LCUI_Widget w)

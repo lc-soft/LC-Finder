@@ -1420,6 +1420,10 @@ static void OnKeyDown(LCUI_SysEvent e, void *data)
 {
 	int focus_x = view.focus_x;
 	int focus_y = view.focus_y;
+
+	if (LCUIWidget_GetFocus()) {
+		return;
+	}
 	switch (e->key.code) {
 	case LCUI_KEY_MINUS:
 		SetPictureZoomOut(view.picture);
