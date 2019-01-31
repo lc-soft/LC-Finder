@@ -324,6 +324,7 @@ void LabelBox_Save(LCUI_Widget w)
 		wcscpy(that->name, L"unknown");
 	}
 	TextView_SetTextW(that->label, that->name);
+	LabelBox_UpdateColor(w);
 	Widget_RemoveClass(w, "editing");
 	LCUI_InitWidgetEvent(&e, "change");
 	Widget_TriggerEvent(w, &e, NULL);

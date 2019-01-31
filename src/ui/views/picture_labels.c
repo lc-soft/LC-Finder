@@ -191,6 +191,26 @@ BoundingBoxItem LabelsPanel_AddBox(void)
 	return data;
 }
 
+static void LabelsPanel_FocusBox(LCUI_Widget labelitem)
+{
+	LinkedListNode *node;
+	BoundingBoxItem item;
+
+	for (LinkedList_Each(node, &view.boxes)) {
+		item = node->data;
+		if (labelitem) {
+			if (item->item == labelitem) {
+				Widget_UnsetStyle(item->box, key_opacity);
+			} else {
+				Widget_SetOpacity(item->box, 0.2f);
+			}
+		} else {
+			Widget_UnsetStyle(item->box, key_opacity);
+		}
+		Widget_UpdateStyle(item->box, FALSE);
+	}
+}
+
 static void LabelsPanel_ClearBoxes(void)
 {
 	BoundingBoxItem data;
@@ -287,6 +307,23 @@ static void RenderAvailableLabels(void)
 	}
 }
 
+static void OnMouseOver(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	LCUI_Widget target;
+	
+	target = Widget_GetClosest(e->target, "labelitem");
+	if (target) {
+		LabelsPanel_FocusBox(target);
+	}
+}
+
+static void OnMouseOut(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	if (e->target == w) {
+		LabelsPanel_FocusBox(NULL);
+	}
+}
+
 void PictureView_InitLabels(void)
 {
 	LCUI_Widget btn_add, btn_hide;
@@ -300,6 +337,8 @@ void PictureView_InitLabels(void)
 	btn_hide = GetWidget(ID_BTN_HIDE_PICTURE_LABEL);
 	Widget_BindEvent(btn_add, "click", OnAddLabel, NULL, NULL);
 	Widget_BindEvent(btn_hide, "click", OnHideView, NULL, NULL);
+	Widget_BindEvent(view.labels, "mouseover", OnMouseOver, NULL, NULL);
+	Widget_BindEvent(view.labels, "mouseout", OnMouseOut, NULL, NULL);
 	Widget_Hide(view.panel);
 	RenderAvailableLabels();
 }
