@@ -63,6 +63,8 @@ static struct PictureLabelsPanel {
 	int worker_id;
 	DB_Tag *tags;
 	size_t n_tags;
+	LCUI_BOOL visible;
+	LCUI_BOOL loadable;
 	LCUI_Widget panel;
 	LCUI_Widget labels;
 	LCUI_Widget available_labels;
@@ -341,7 +343,7 @@ static void LabelsPanel_FocusBox(LCUI_Widget labelitem)
 			if (item->item == labelitem) {
 				Widget_UnsetStyle(item->box, key_opacity);
 			} else {
-				Widget_SetOpacity(item->box, 0.2f);
+				Widget_SetOpacity(item->box, 0.4f);
 			}
 		} else {
 			Widget_UnsetStyle(item->box, key_opacity);
@@ -372,7 +374,7 @@ static void LabelsPanel_LoadBoxes(wchar_t *file)
 	BoundingBoxRec box;
 	BoundingBoxItem item;
 
-	if (file != labels_panel.ctx.file) {
+	if (file != labels_panel.ctx.file || !labels_panel.visible) {
 		return;
 	}
 	LabelsPanel_ClearBoxes();
@@ -387,7 +389,8 @@ static void LabelsPanel_LoadBoxes(wchar_t *file)
 		return;
 	}
 	LabelsPanel_ReloadTags();
-	if (file != labels_panel.ctx.file) {
+	if (file != labels_panel.ctx.file || !labels_panel.visible) {
+		fclose(fp);
 		return;
 	}
 	while (5 == fscanf(fp, "%d %f %f %f %f", &box.id, &box.x, &box.y,
@@ -560,6 +563,8 @@ void PictureView_InitLabels(void)
 
 	LinkedList_Init(&labels_panel.boxes);
 	LinkedList_Init(&labels_panel.labels_trending);
+	labels_panel.visible = FALSE;
+	labels_panel.loadable = TRUE;
 	labels_panel.worker_id = 0;
 	labels_panel.tags = NULL;
 	labels_panel.n_tags = 0;
@@ -582,7 +587,14 @@ void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)
 {
 	wchar_t *file = labels_panel.ctx.file;
 
-	if (file && wcscmp(ctx->file, file) == 0) {
+	if (!labels_panel.visible) {
+		labels_panel.loadable = TRUE;
+		return;
+	}
+	if (!ctx->file) {
+		return;
+	}
+	if (!labels_panel.loadable && file && wcscmp(ctx->file, file) == 0) {
 		labels_panel.ctx = *ctx;
 		labels_panel.ctx.file = file;
 		LabelsPanel_UpdateBoxes();
@@ -594,17 +606,39 @@ void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)
 		labels_panel.ctx = *ctx;
 		labels_panel.ctx.file = file;
 		LabelsPanel_LoadBoxesAsync();
+		labels_panel.loadable = FALSE;
 	}
+}
+
+static void PictureView_ReloadLabelsContext(void)
+{
+	wchar_t *file = labels_panel.ctx.file;
+
+	if (!labels_panel.loadable || !file) {
+		return;
+	}
+	LabelsPanel_LoadBoxesAsync();
+	labels_panel.loadable = FALSE;
 }
 
 void PictureView_ShowLabels(void)
 {
+	labels_panel.visible = TRUE;
 	Widget_Show(labels_panel.panel);
+	PictureView_ReloadLabelsContext();
 	Widget_AddClass(labels_panel.panel->parent, "has-panel");
 }
 
 void PictureView_HideLabels(void)
 {
+	labels_panel.visible = FALSE;
+	labels_panel.loadable = TRUE;
 	Widget_Hide(labels_panel.panel);
 	Widget_RemoveClass(labels_panel.panel->parent, "has-panel");
+	LabelsPanel_ClearBoxes();
+}
+
+LCUI_BOOL PictureView_VisibleLabels(void)
+{
+	return labels_panel.visible;
 }
