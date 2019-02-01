@@ -92,6 +92,12 @@ enum PcitureSlot {
 	PICTURE_SLOT_NEXT
 };
 
+typedef enum PictureSidePanel {
+	SIDE_PANEL_NONE,
+	SIDE_PANEL_INFO,
+	SIDE_PANEL_LABELS
+} PictureSidePanel;
+
 /** 图片实例 */
 typedef struct PcitureRec_ {
 	wchar_t *file;			/**< 当前已加载的图片的路径  */
@@ -176,6 +182,7 @@ static struct PictureViewer {
 	} slide;
 	void *scanner;
 	PictureLoaderRec loader;
+	PictureSidePanel active_panel;		/**< 当前活动的面板 */
 } view = { 0 };
 
 static void TaskForResetWidgetBackground(void *arg1, void *arg2)
@@ -1323,14 +1330,47 @@ static void PictureLoader_Exit(PictureLoader loader)
 	LCUIMutex_Destroy(&loader->mutex);
 }
 
+static void ToggleSidePanel(PictureSidePanel panel)
+{
+	LCUI_BOOL visible = FALSE;
+
+	switch (view.active_panel) {
+	case SIDE_PANEL_INFO:
+		visible = PictureView_VisibleInfo();
+		PictureView_HideInfo();
+		break;
+	case SIDE_PANEL_LABELS:
+		visible = PictureView_VisibleLabels();
+		PictureView_HideLabels();
+		break;
+	default:
+		break;
+	}
+	if (view.active_panel == panel && visible) {
+		view.active_panel = SIDE_PANEL_NONE;
+		return;
+	}
+	switch (panel) {
+	case SIDE_PANEL_INFO:
+		PictureView_ShowInfo();
+		break;
+	case SIDE_PANEL_LABELS:
+		PictureView_ShowLabels();
+		break;
+	default:
+		break;
+	}
+	view.active_panel = panel;
+}
+
 static void OnBtnShowInfoClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	PictureView_ShowInfo();
+	ToggleSidePanel(SIDE_PANEL_INFO);
 }
 
 static void OnBtnShowLabelsClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	PictureView_ShowLabels();
+	ToggleSidePanel(SIDE_PANEL_LABELS);
 }
 
 static void SetPictureFocusPoint(Picture pic, int focus_x, int focus_y)
@@ -1479,6 +1519,7 @@ void UI_InitPictureView(int mode)
 	view.zoom.point_ids[0] = -1;
 	view.zoom.point_ids[1] = -1;
 	view.zoom.is_running = FALSE;
+	view.active_panel = SIDE_PANEL_NONE;
 	SelectWidget(btn_back, ID_BTN_BROWSE_ALL);
 	SelectWidget(btn_del, ID_BTN_DELETE_PICTURE);
 	SelectWidget(btn_info, ID_BTN_SHOW_PICTURE_INFO);

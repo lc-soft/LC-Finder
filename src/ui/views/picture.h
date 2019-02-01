@@ -66,6 +66,8 @@ void PictureView_ShowInfo(void);
 
 void PictureView_HideInfo(void);
 
+LCUI_BOOL PictureView_VisibleInfo(void);
+
 void PictureView_InitLabels(void);
 
 void PictureView_SetLabelsContext(PictureLabelsViewContext ctx);
@@ -73,5 +75,7 @@ void PictureView_SetLabelsContext(PictureLabelsViewContext ctx);
 void PictureView_ShowLabels(void);
 
 void PictureView_HideLabels(void);
+
+LCUI_BOOL PictureView_VisibleLabels(void);
 
 #endif

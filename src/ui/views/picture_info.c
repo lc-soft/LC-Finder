@@ -62,6 +62,7 @@
 #define KEY_TEXT_DEL_TAG		"picture.dialog.text.delete_tag"
 
 static struct PictureInfoPanel {
+	LCUI_BOOL visible;
 	LCUI_Widget window;
 	LCUI_Widget panel;
 	LCUI_Widget txt_name;
@@ -354,12 +355,19 @@ void PictureView_SetInfo(const char *filepath)
 
 void PictureView_ShowInfo(void)
 {
+	view.visible = TRUE;
 	Widget_Show(view.panel);
 	Widget_AddClass(view.panel->parent, "has-panel");
 }
 
 void PictureView_HideInfo(void)
 {
+	view.visible = FALSE;
 	Widget_Hide(view.panel);
 	Widget_RemoveClass(view.panel->parent, "has-panel");
+}
+
+LCUI_BOOL PictureView_VisibleInfo(void)
+{
+	return view.visible;
 }
