@@ -686,7 +686,7 @@ void PictureView_InitLabels(void)
 	RenderAvailableLabels();
 }
 
-static LCUI_BOOL PictureView_SaveLabelsContext(PictureLabelsViewContext ctx)
+static LCUI_BOOL LabelsPanel_SaveContext(PictureLabelsViewContext ctx)
 {
 	PictureLabelsViewContext current = &labels_panel.ctx;
 	wchar_t *wfile = current->file;
@@ -720,14 +720,14 @@ void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)
 	wchar_t *file = labels_panel.ctx.file;
 
 	if (!labels_panel.visible) {
-		PictureView_SaveLabelsContext(ctx);
+		LabelsPanel_SaveContext(ctx);
 		labels_panel.loadable = TRUE;
 		return;
 	}
 	if (!ctx->file) {
 		return;
 	}
-	file_changed = PictureView_SaveLabelsContext(ctx);
+	file_changed = LabelsPanel_SaveContext(ctx);
 	if (labels_panel.loadable || file_changed) {
 		LabelsPanel_LoadBoxesAsync();
 		labels_panel.loadable = FALSE;
@@ -736,7 +736,7 @@ void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)
 	}
 }
 
-static void PictureView_ReloadLabelsContext(void)
+static void LabelsPanel_ReloadContext(void)
 {
 	wchar_t *filename = labels_panel.ctx.file;
 
@@ -751,7 +751,7 @@ void PictureView_ShowLabels(void)
 {
 	labels_panel.visible = TRUE;
 	Widget_Show(labels_panel.panel);
-	PictureView_ReloadLabelsContext();
+	LabelsPanel_ReloadContext();
 	Widget_AddClass(labels_panel.panel->parent, "has-panel");
 }
 

@@ -54,6 +54,8 @@
 #include "starrating.h"
 #include "picture.h"
 
+// clang-format off
+
 #define MAX_TAG_LEN			256
 #define KEY_UNKNOWN			"picture.unknown"
 #define KEY_TITLE_ADD_TAG		"picture.dialog.title.add_tag"
@@ -87,13 +89,16 @@ typedef struct TagInfoPackRec_ {
 	DB_Tag tag;
 } TagInfoPackRec, *TagInfoPack;
 
-static int wgettimestr(wchar_t *str, int max_len, time_t time)
+// clang-format on
+
+static size_t wgettimestr(wchar_t *str, int max_len, time_t time)
 {
-	int n;
+	size_t n;
 	struct tm *t;
 	char key[64], wday_key[10], month_key[4];
 	const wchar_t *format, *month_str, *wday_str;
 	wchar_t buf[256], year_str[6], mday_str[4], hour_str[4], min_str[4];
+
 	t = localtime(&time);
 	if (!t) {
 		return -1;
@@ -297,8 +302,8 @@ static void OnGetFileStatus(FileStatus *status, void *data)
 		wchar_t str[256];
 		view.width = status->image->width;
 		view.height = status->image->height;
-		swprintf(str, 256, L"%dx%d",
-			 status->image->width, status->image->height);
+		swprintf(str, 256, L"%dx%d", status->image->width,
+			 status->image->height);
 		TextView_SetTextW(view.txt_size, str);
 	} else {
 		TextView_SetTextW(view.txt_size, unknown);
@@ -313,28 +318,28 @@ static void OnGetFileStatus(FileStatus *status, void *data)
 	TextView_SetTextW(view.txt_fsize, fsize_str);
 }
 
-void PictureView_SetInfo(const char *filepath)
+static void InfoPanel_LoadInfo(void)
 {
-	int i, n;
+	size_t i, n;
 	DB_Tag *tags;
+	char *filepath;
 	wchar_t *path, *dirpath;
 	int storage = finder.storage;
 
-	path = DecodeUTF8(filepath);
+	path = view.filepath;
+	filepath = EncodeUTF8(path);
 	dirpath = wgetdirname(path);
 	FileStorage_GetStatus(storage, path, TRUE, OnGetFileStatus, NULL);
 	TextView_SetTextW(view.txt_dirpath, dirpath);
 	TextView_SetTextW(view.txt_name, wgetfilename(path));
-	if (view.filepath) {
-		free(view.filepath);
-	}
 	free(view.tags);
 	view.n_tags = 0;
 	view.tags = NULL;
-	view.filepath = path;
 	view.file = DB_GetFile(filepath);
 	Widget_Empty(view.view_tags);
-	/* 当没有文件记录时，说明该文件并不是源文件夹内的文件，暂时禁用部分操作 */
+	free(filepath);
+	/* 如果没有文件记录，则说明该文件并不是源文件夹内的文件，暂时禁用部分操作
+	 */
 	if (!view.file) {
 		Widget_Hide(view.view_tags->parent);
 		Widget_Hide(view.rating->parent);
@@ -353,11 +358,23 @@ void PictureView_SetInfo(const char *filepath)
 	}
 }
 
+void PictureView_SetInfo(const char *filepath)
+{
+	wchar_t *path;
+	
+	path = DecodeUTF8(filepath);
+	view.filepath = path;
+	if (view.visible) {
+		InfoPanel_LoadInfo();
+	}
+}
+
 void PictureView_ShowInfo(void)
 {
 	view.visible = TRUE;
 	Widget_Show(view.panel);
 	Widget_AddClass(view.panel->parent, "has-panel");
+	InfoPanel_LoadInfo();
 }
 
 void PictureView_HideInfo(void)
