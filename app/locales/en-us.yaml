@@ -114,6 +114,11 @@ strings:
                 input_tag: 'tag name, multiple tag names separated by space.'
             text:
                 delete_tag: 'Delete the %s tag ?'
+        labels:
+            title: Labels
+            labels: Labeled objects
+            add_label: Add label
+            available: Avilable labels
         info:
             title: File infomation
             file_name: Name

@@ -3,7 +3,7 @@
   <ui>
     <w id="picture-labels-panel" class="panel window-side-panel">
       <w class="panel-header">
-        <w type="textview-i18n" class="text panel-header-title" data-i18n-key="picture.labels.title">区域标记</w>
+        <w type="textview-i18n" class="text panel-header-title" data-i18n-key="picture.labels.title">标记</w>
         <w id="btn-hide-picture-labels" class="panel-close-btn">
           <w type="icon" name="close"></w>
         </w>
@@ -12,14 +12,14 @@
         <w class="panel-content-wrapper">
           <w id="picture-labels-content" class="panel-content scrolllayer">
             <w class="info-item">
-              <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.labels.labels">标记</w>
+              <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.labels.labels">已标记</w>
               <w id="picture-labels-current" class="label-list"></w>
               <w id="btn-add-picture-label" class="link">
                 <w type="textview-i18n" class="text" data-i18n-key="picture.labels.add_label">添加标记</w>
               </w>
             </w>
             <w class="info-item">
-              <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.label.available">可用标记</w>
+              <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.labels.available">可用标记</w>
               <w id="picture-labels-available" class="tag-list"></w>
             </w>
           </w>

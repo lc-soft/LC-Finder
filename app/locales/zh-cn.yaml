@@ -126,6 +126,11 @@ strings:
             folder_path: 文件夹路径
             open_folder: 打开文件夹
             add_tags: 添加标签
+        labels:
+            title: 标记
+            labels: 已标记
+            add_label: 添加标记
+            available: 可用标记
     browser:
         text:
             no_selected_items: 未选择任何项目
