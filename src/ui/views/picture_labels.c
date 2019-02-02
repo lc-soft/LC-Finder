@@ -61,14 +61,14 @@ typedef struct BoundingBoxItemRec_ {
 
 static struct PictureLabelsPanel {
 	int worker_id;
-	DB_Tag *tags;
-	size_t n_tags;
+	DB_File file;
 	LCUI_BOOL visible;
 	LCUI_BOOL loadable;
 	LCUI_Widget panel;
 	LCUI_Widget labels;
 	LCUI_Widget available_labels;
 	PictureLabelsViewContextRec ctx;
+	Dict *labels_stats;
 	LinkedList labels_trending;
 	LinkedList boxes;
 } labels_panel;
@@ -77,21 +77,6 @@ static struct PictureLabelsPanel {
 
 static void RenderAvailableLabels(void);
 static void LabelsPanel_SaveBoxesAsync(void);
-
-static DB_Tag GetTagById(int id)
-{
-	size_t i;
-
-	if (!labels_panel.tags) {
-		return NULL;
-	}
-	for (i = 0; i < labels_panel.n_tags; ++i) {
-		if (labels_panel.tags[i]->id == id) {
-			return labels_panel.tags[i];
-		}
-	}
-	return NULL;
-}
 
 static wchar_t *GetDataFileName(wchar_t *file)
 {
@@ -127,14 +112,17 @@ static BoundingBox GetBoundingBox(BoundingBoxItem item)
 	name = LabelBox_GetNameW(item->box);
 	tagname = EncodeANSI(name);
 	tag = LCFinder_GetTag(tagname);
-	if (!tag) {
-		tag = LCFinder_AddTag(tagname);
+	if (tag) {
+		box->id = tag->id;
+		box->x = item->rect.x;
+		box->y = item->rect.y;
+		box->w = item->rect.width;
+		box->h = item->rect.height;
+	} else {
+		free(box);
+		box = NULL;
 	}
-	box->id = tag->id;
-	box->x = item->rect.x;
-	box->y = item->rect.y;
-	box->w = item->rect.width;
-	box->h = item->rect.height;
+	free(tagname);
 	return box;
 }
 
@@ -150,9 +138,11 @@ static BoundingBox *GetBoundingBoxes(void)
 	}
 	for (LinkedList_Each(node, &labels_panel.boxes)) {
 		boxes[i] = GetBoundingBox(node->data);
-		i += 1;
+		if (boxes[i]) {
+			i += 1;
+		}
 	}
-	boxes[labels_panel.boxes.length] = NULL;
+	boxes[i] = NULL;
 	return boxes;
 }
 
@@ -165,6 +155,85 @@ static void DestroyBoundingBoxes(void *arg)
 		free(boxes[i]);
 	}
 	free(boxes);
+}
+
+static int AddFileTag(const wchar_t *tagname)
+{
+	DB_Tag tag;
+	char *name = EncodeANSI(tagname);
+
+	tag = LCFinder_GetTag(name);
+	if (!tag) {
+		tag = LCFinder_AddTag(name);
+	}
+	free(name);
+	return DBFile_AddTag(labels_panel.file, tag);
+}
+
+static int RemoveFileTag(const wchar_t *tagname)
+{
+	DB_Tag tag;
+	char *name = EncodeANSI(tagname);
+
+	tag = LCFinder_GetTag(name);
+	free(name);
+	if (!tag) {
+		return -1;
+	}
+	return DBFile_RemoveTag(labels_panel.file, tag);
+}
+
+static LabelsStats_Add(const char *tagname)
+{
+	int *count;
+	Dict *stats = labels_panel.labels_stats;
+
+	count = Dict_FetchValue(stats, tagname);
+	if (!count) {
+		count = malloc(sizeof(int));
+		*count = 0;
+	}
+	*count = *count + 1;
+	Dict_Add(stats, (void *)tagname, count);
+}
+
+static LCUI_BOOL LabelsStats_Remove(const char *tagname)
+{
+	int *count;
+	Dict *stats = labels_panel.labels_stats;
+
+	count = Dict_FetchValue(stats, tagname);
+	if (!count) {
+		return FALSE;
+	}
+	*count = *count - 1;
+	if (*count < 1) {
+		Dict_Delete(stats, tagname);
+		return FALSE;
+	}
+	Dict_Add(stats, (void *)tagname, count);
+	return TRUE;
+}
+
+static void LabelsPanel_AddTag(const wchar_t *name)
+{
+	char *tagname;
+
+	tagname = EncodeUTF8(name);
+	AddFileTag(name);
+	LabelsStats_Add(tagname);
+	free(tagname);
+}
+
+static void LabelsPanel_RemoveTag(const wchar_t *name)
+{
+	char *tagname;
+
+	tagname = EncodeUTF8(name);
+	if (!LabelsStats_Remove(tagname)) {
+		RemoveFileTag(name);
+	}
+	free(tagname);
 }
 
 static void LabelsTrending_Add(DB_Tag tag)
@@ -182,6 +251,16 @@ static void LabelsTrending_Add(DB_Tag tag)
 		}
 	}
 	LinkedList_Append(list, DBTag_Dup(tag));
+}
+
+static void OnDestroyBox(void *arg)
+{
+	BoundingBoxItem item = arg;
+
+	Widget_Destroy(item->box);
+	Widget_Destroy(item->item);
+	item->box = NULL;
+	item->item = NULL;
 }
 
 static void LabelsPanel_UpdateLabelItem(BoundingBoxItem item)
@@ -227,19 +306,6 @@ static void LabelsPanel_UpdateBoxes(void)
 	}
 }
 
-static void LabelsPanel_ReloadTags(void)
-{
-	size_t i;
-
-	if (labels_panel.tags) {
-		for (i = 0; i < labels_panel.n_tags; ++i) {
-			DBTag_Release(labels_panel.tags[i]);
-		}
-		free(labels_panel.tags);
-	}
-	labels_panel.n_tags = DB_GetTagsOrderById(&labels_panel.tags);
-}
-
 static void SetRandomRect(BoundingBoxItem data)
 {
 	data->rect.x = 0.1f + (rand() % 10) * 0.04f;
@@ -255,6 +321,8 @@ static void OnLabelBoxUpdate(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LCUI_RectF rect;
 	BoundingBoxItem item = e->data;
 	PictureLabelsViewContext ctx = &labels_panel.ctx;
+	const wchar_t *tagname = LabelBox_GetNameW(item->box);
+	const wchar_t *oldname = arg;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
 
@@ -266,20 +334,29 @@ static void OnLabelBoxUpdate(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (LCUIRectF_ValidateArea(&item->rect, 1.0f, 1.0f)) {
 		LabelsPanel_UpdateBox(item);
 	}
-	LabelItem_SetNameW(item->item, LabelBox_GetNameW(item->box));
+	LabelItem_SetNameW(item->item, tagname);
 	LabelsPanel_UpdateLabelItem(item);
+	if (oldname && wcscmp(oldname, tagname) != 0) {
+		LabelsPanel_RemoveTag(oldname);
+		LabelsPanel_AddTag(tagname);
+	}
 	LabelsPanel_SaveBoxesAsync();
+}
+
+static void LabelsPanel_RemoveBox(BoundingBoxItem item)
+{
+	LinkedList_Unlink(&labels_panel.boxes, &item->node);
+	OnDestroyBox(item);
+	free(item);
 }
 
 static void OnLabelItemRemove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	BoundingBoxItem data = e->data;
+	BoundingBoxItem item = e->data;
 
-	LinkedList_Unlink(&labels_panel.boxes, &data->node);
+	LabelsPanel_RemoveTag(LabelBox_GetNameW(item->box));
+	LabelsPanel_RemoveBox(item);
 	LabelsPanel_SaveBoxesAsync();
-	Widget_Destroy(data->box);
-	Widget_Destroy(data->item);
-	free(data);
 }
 
 static int LabelsPanel_SetBox(BoundingBoxItem item, BoundingBox box)
@@ -290,7 +367,7 @@ static int LabelsPanel_SetBox(BoundingBoxItem item, BoundingBox box)
 	float height = ctx->scale * ctx->height;
 	wchar_t *name;
 
-	tag = GetTagById(box->id);
+	tag = LCFinder_GetTagById(box->id);
 	if (!tag) {
 		return -ENOENT;
 	}
@@ -303,6 +380,7 @@ static int LabelsPanel_SetBox(BoundingBoxItem item, BoundingBox box)
 	LabelBox_SetNameW(item->box, name);
 	LabelItem_SetNameW(item->item, name);
 	LabelsPanel_UpdateBox(item);
+	LabelsStats_Add(tag->name);
 	free(name);
 	return 0;
 }
@@ -352,14 +430,9 @@ static void LabelsPanel_FocusBox(LCUI_Widget labelitem)
 	}
 }
 
-static void OnDestroyBox(void *arg)
+static void LabelsPanel_ClearLabelStats(void)
 {
-	BoundingBoxItem item = arg;
-
-	Widget_Destroy(item->box);
-	Widget_Destroy(item->item);
-	item->box = NULL;
-	item->item = NULL;
+	Dict_Empty(labels_panel.labels_stats);
 }
 
 static void LabelsPanel_ClearBoxes(void)
@@ -367,38 +440,59 @@ static void LabelsPanel_ClearBoxes(void)
 	LinkedList_ClearData(&labels_panel.boxes, OnDestroyBox);
 }
 
-static void LabelsPanel_LoadBoxes(wchar_t *file)
+static void LabelsPanel_OnLoadBoxes(LinkedList *list)
+{
+	LinkedListNode *node;
+	BoundingBoxItem item;
+
+	LabelsPanel_ClearBoxes();
+	LabelsPanel_ClearLabelStats();
+	for (LinkedList_Each(node, list)) {
+		item = LabelsPanel_AddBox();
+		if (LabelsPanel_SetBox(item, node->data) != 0) {
+			LabelsPanel_RemoveBox(item);
+		}
+	}
+	LinkedList_Clear(list, free);
+	free(list);
+}
+
+static void LabelsPanel_LoadBoxes(wchar_t *filename)
 {
 	FILE *fp;
 	wchar_t *datafile;
-	BoundingBoxRec box;
-	BoundingBoxItem item;
+	BoundingBox box;
+	LinkedList *boxes;
 
-	if (file != labels_panel.ctx.file || !labels_panel.visible) {
+	if (filename != labels_panel.ctx.file || !labels_panel.visible) {
 		return;
 	}
-	LabelsPanel_ClearBoxes();
-	datafile = GetDataFileName(file);
-	if (!datafile) {
-		return;
-	}
-	fp = wfopen(datafile, L"r");
-	LOG("[labels-panel] open data file: %ls\n", datafile);
-	free(datafile);
-	if (!fp) {
-		return;
-	}
-	LabelsPanel_ReloadTags();
-	if (file != labels_panel.ctx.file || !labels_panel.visible) {
+	boxes = NEW(LinkedList, 1);
+	LinkedList_Init(boxes);
+	do {
+		datafile = GetDataFileName(filename);
+		if (!datafile) {
+			break;
+		}
+		fp = wfopen(datafile, L"r");
+		LOG("[labels-panel] open data file: %ls\n", datafile);
+		free(datafile);
+		if (!fp) {
+			break;
+		}
+		while (1) {
+			box = NEW(BoundingBoxRec, 1);
+			if (5 != fscanf(fp, "%d %f %f %f %f", &box->id, &box->x,
+					&box->y, &box->w, &box->h)) {
+				free(box);
+				break;
+			}
+			LinkedList_Append(boxes, box);
+		}
 		fclose(fp);
-		return;
-	}
-	while (5 == fscanf(fp, "%d %f %f %f %f", &box.id, &box.x, &box.y,
-			   &box.w, &box.h)) {
-		item = LabelsPanel_AddBox();
-		LabelsPanel_SetBox(item, &box);
-	}
-	fclose(fp);
+	} while (0);
+	// Switch to the UI thread to render data
+	LCUI_PostSimpleTask(LabelsPanel_OnLoadBoxes, boxes, NULL);
 }
 
 static void LabelsPanel_SaveBoxes(wchar_t *file, BoundingBox *boxes)
@@ -464,13 +558,17 @@ static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	PictureLabelsViewContext ctx = &labels_panel.ctx;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
+	const wchar_t *name;
 
 	data = LabelsPanel_AddBox();
 	if (!data) {
 		return;
 	}
 	SetRandomRect(data);
-	LabelItem_SetNameW(data->item, LabelBox_GetNameW(data->box));
+	name = LabelBox_GetNameW(data->box);
+	LabelItem_SetNameW(data->item, name);
+	LabelsPanel_AddTag(name);
+	LabelsPanel_SaveBoxesAsync();
 }
 
 static void OnHideView(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -489,6 +587,7 @@ static void OnLabelClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	SetRandomRect(data);
 	LabelBox_SetNameW(data->box, name);
 	LabelItem_SetNameW(data->item, name);
+	LabelsPanel_AddTag(name);
 	free(name);
 	RenderAvailableLabels();
 	LabelsPanel_SaveBoxesAsync();
@@ -557,6 +656,11 @@ static void OnMouseOut(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	}
 }
 
+static void OnDestroyLabelStat(void *privdata, void *data)
+{
+	free(data);
+}
+
 void PictureView_InitLabels(void)
 {
 	LCUI_Widget btn_add, btn_hide;
@@ -566,8 +670,7 @@ void PictureView_InitLabels(void)
 	labels_panel.visible = FALSE;
 	labels_panel.loadable = TRUE;
 	labels_panel.worker_id = 0;
-	labels_panel.tags = NULL;
-	labels_panel.n_tags = 0;
+	labels_panel.labels_stats = StrDict_Create(NULL, OnDestroyLabelStat);
 	labels_panel.panel = GetWidget(ID_PANEL_PICTURE_LABELS);
 	labels_panel.labels = GetWidget(ID_VIEW_PICTURE_LABELS);
 	labels_panel.available_labels = GetWidget(ID_VIEW_PICTURE_AVAIL_LABELS);
@@ -583,38 +686,61 @@ void PictureView_InitLabels(void)
 	RenderAvailableLabels();
 }
 
+static LCUI_BOOL PictureView_SaveLabelsContext(PictureLabelsViewContext ctx)
+{
+	PictureLabelsViewContext current = &labels_panel.ctx;
+	wchar_t *wfile = current->file;
+	char *file;
+
+	if (!ctx->file) {
+		return FALSE;
+	}
+	if (wfile && wcscmp(ctx->file, wfile) == 0) {
+		*current = *ctx;
+		current->file = wfile;
+		return FALSE;
+	}
+	if (wfile) {
+		free(wfile);
+	}
+	if (labels_panel.file) {
+		DBFile_Release(labels_panel.file);
+	}
+	file = EncodeUTF8(ctx->file);
+	*current = *ctx;
+	current->file = wcsdup2(ctx->file);
+	labels_panel.file = DB_GetFile(file);
+	free(file);
+	return TRUE;
+}
+
 void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)
 {
+	LCUI_BOOL file_changed;
 	wchar_t *file = labels_panel.ctx.file;
 
 	if (!labels_panel.visible) {
+		PictureView_SaveLabelsContext(ctx);
 		labels_panel.loadable = TRUE;
 		return;
 	}
 	if (!ctx->file) {
 		return;
 	}
-	if (!labels_panel.loadable && file && wcscmp(ctx->file, file) == 0) {
-		labels_panel.ctx = *ctx;
-		labels_panel.ctx.file = file;
-		LabelsPanel_UpdateBoxes();
-	} else {
-		if (file) {
-			free(file);
-		}
-		file = wcsdup2(ctx->file);
-		labels_panel.ctx = *ctx;
-		labels_panel.ctx.file = file;
+	file_changed = PictureView_SaveLabelsContext(ctx);
+	if (labels_panel.loadable || file_changed) {
 		LabelsPanel_LoadBoxesAsync();
 		labels_panel.loadable = FALSE;
+	} else {
+		LCUI_PostSimpleTask(LabelsPanel_UpdateBoxes, NULL, NULL);
 	}
 }
 
 static void PictureView_ReloadLabelsContext(void)
 {
-	wchar_t *file = labels_panel.ctx.file;
+	wchar_t *filename = labels_panel.ctx.file;
 
-	if (!labels_panel.loadable || !file) {
+	if (!labels_panel.loadable || !filename) {
 		return;
 	}
 	LabelsPanel_LoadBoxesAsync();
@@ -636,6 +762,7 @@ void PictureView_HideLabels(void)
 	Widget_Hide(labels_panel.panel);
 	Widget_RemoveClass(labels_panel.panel->parent, "has-panel");
 	LabelsPanel_ClearBoxes();
+	LabelsPanel_ClearLabelStats();
 }
 
 LCUI_BOOL PictureView_VisibleLabels(void)

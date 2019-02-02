@@ -467,9 +467,13 @@ static DB_File DB_LoadFile(sqlite3_stmt *stmt)
 	file->height = sqlite3_column_int(stmt, 5);
 	file->create_time = sqlite3_column_int(stmt, 6);
 	file->modify_time = sqlite3_column_int(stmt, 7);
-	len = strlen(path) + 1;
-	file->path = malloc(len * sizeof(char));
-	strncpy(file->path, path, len);
+	if (path) {
+		len = strlen(path) + 1;
+		file->path = malloc(len * sizeof(char));
+		strncpy(file->path, path, len);
+	} else {
+		file->path = NULL;
+	}
 	return file;
 }
 

@@ -612,6 +612,17 @@ static int LCFinder_InitWorkDir(void)
 	return 0;
 }
 
+DB_Tag LCFinder_GetTagById(int id)
+{
+	size_t i;
+	for (i = 0; i < finder.n_tags; ++i) {
+		if (finder.tags[i]->id == id) {
+			return finder.tags[i];
+		}
+	}
+	return NULL;
+}
+
 DB_Tag LCFinder_GetTag(const char *tagname)
 {
 	size_t i;

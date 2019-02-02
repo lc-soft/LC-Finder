@@ -315,8 +315,10 @@ void LabelBox_Save(LCUI_Widget w)
 {
 	size_t len;
 	LCUI_WidgetEventRec e;
+	wchar_t name[MAX_NAME_LEN];
 	LabelBox that = Widget_GetData(w, self.proto);
 
+	wcscpy(name, that->name);
 	len = TextEdit_GetTextW(that->edit, 0, MAX_NAME_LEN, that->name);
 	if (len > 0) {
 		that->name[len] = 0;
@@ -327,7 +329,7 @@ void LabelBox_Save(LCUI_Widget w)
 	LabelBox_UpdateColor(w);
 	Widget_RemoveClass(w, "editing");
 	LCUI_InitWidgetEvent(&e, "change");
-	Widget_TriggerEvent(w, &e, NULL);
+	Widget_TriggerEvent(w, &e, name);
 }
 
 void LCUIWidget_AddLabelBox(void)

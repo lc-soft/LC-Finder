@@ -164,6 +164,8 @@ DB_Dir LCFinder_GetDir(const char *dirpath);
 
 DB_Dir LCFinder_AddDir(const char *dirpath, const char *token, int visible);
 
+DB_Tag LCFinder_GetTagById(int id);
+
 DB_Tag LCFinder_GetTag(const char *tagname);
 
 DB_Tag LCFinder_AddTag(const char *tagname);
