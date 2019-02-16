@@ -37,12 +37,12 @@
 #ifndef LCFINDER_PROGRESSBAR_H
 #define LCFINDER_PROGRESSBAR_H
 
-void LCUIWidget_AddProgressBar( void );
+void LCUIWidget_AddProgressBar(void);
 
-void ProgressBar_Update( LCUI_Widget w );
+void ProgressBar_Update(LCUI_Widget w);
 
-void ProgressBar_SetValue( LCUI_Widget w, int value );
+void ProgressBar_SetValue(LCUI_Widget w, size_t value);
 
-void ProgressBar_SetMaxValue( LCUI_Widget w, int max_value );
+void ProgressBar_SetMaxValue(LCUI_Widget w, size_t max_value);
 
 #endif

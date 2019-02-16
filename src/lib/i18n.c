@@ -375,7 +375,7 @@ int I18n_GetDefaultLanguage(char *lang, int max_len)
 #ifndef PLATFORM_WIN32_DESKTOP_XP
 	GetUserDefaultLocaleName(buf, 63);
 #endif
-	return LCUI_EncodeString(lang, buf, max_len, ENCODING_UTF8);
+	return (int)LCUI_EncodeString(lang, buf, max_len, ENCODING_UTF8);
 }
 
 #else

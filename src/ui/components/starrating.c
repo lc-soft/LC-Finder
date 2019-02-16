@@ -94,7 +94,7 @@ static void OnMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (!target) {
 		return;
 	}
-	UpdateRating(w, target->index + 1);
+	UpdateRating(w, (int)(target->index + 1));
 }
 
 static void OnMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -110,7 +110,7 @@ static void OnMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (!target) {
 		return;
 	}
-	data->rating = target->index + 1;
+	data->rating = (int)(target->index + 1);
 	if (data->rating > data->max_rating) {
 		data->rating = data->max_rating;
 	}

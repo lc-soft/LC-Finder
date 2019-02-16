@@ -156,7 +156,7 @@ int ThumbDB_Save(ThumbDB tdb, const char *filepath, ThumbData data)
 	buff = (uchar_t*)block + head_size;
 	block->width = data->graph.width;
 	block->height = data->graph.height;
-	block->mem_size = data->graph.mem_size;
+	block->mem_size = (uint32_t)data->graph.mem_size;
 	block->modify_time = data->modify_time;
 	block->origin_width = data->origin_width;
 	block->origin_height = data->origin_height;

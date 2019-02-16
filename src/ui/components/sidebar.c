@@ -51,7 +51,8 @@ static const char *btn_view_ids[MAX_VIEWS][2] = {
 	{ "sidebar-btn-search", "view-search" }
 };
 
-static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unused )
+static void OnSidebarBtnClick(LCUI_Widget self, LCUI_WidgetEvent e,
+			      void *unused)
 {
 	int i;
 	LCUI_Widget sidebar;
@@ -60,32 +61,32 @@ static void OnSidebarBtnClick( LCUI_Widget self, LCUI_WidgetEvent e, void *unuse
 	const char *view_id = view->id;
 	ev.cancel_bubble = TRUE;
 	ev.type = event_show_view;
-	Widget_TriggerEvent( view, &ev, NULL );
-	Widget_RemoveClass( view, "hide" );
-	Widget_Show( view );
-	for( i = 0; i < MAX_VIEWS; ++i ) {
-		if( strcmp( view_id, btn_view_ids[i][1] ) == 0 ) {
+	Widget_TriggerEvent(view, &ev, NULL);
+	Widget_RemoveClass(view, "hide");
+	Widget_Show(view);
+	for (i = 0; i < MAX_VIEWS; ++i) {
+		if (strcmp(view_id, btn_view_ids[i][1]) == 0) {
 			continue;
 		}
-		btn = LCUIWidget_GetById( btn_view_ids[i][0] );
-		view = LCUIWidget_GetById( btn_view_ids[i][1] );
-		Widget_RemoveClass( btn, "active" );
-		Widget_Hide( view );
+		btn = LCUIWidget_GetById(btn_view_ids[i][0]);
+		view = LCUIWidget_GetById(btn_view_ids[i][1]);
+		Widget_RemoveClass(btn, "active");
+		Widget_Hide(view);
 	}
-	sidebar = LCUIWidget_GetById( ID_VIEW_MAIN_SIDEBAR );
-	Widget_AddClass( sidebar, "sidebar-mini" );
-	Widget_AddClass( self, "active" );
+	sidebar = LCUIWidget_GetById(ID_VIEW_MAIN_SIDEBAR);
+	Widget_AddClass(sidebar, "sidebar-mini");
+	Widget_AddClass(self, "active");
 }
 
-void UI_InitSidebar( void )
+void UI_InitSidebar(void)
 {
 	int i;
 	LCUI_Widget btn, view;
-	for( i = 0; i < MAX_VIEWS; ++i ) {
-		btn = LCUIWidget_GetById( btn_view_ids[i][0] );
-		view = LCUIWidget_GetById( btn_view_ids[i][1] );
-		Widget_BindEvent( btn, "click", OnSidebarBtnClick, view, NULL );
+	for (i = 0; i < MAX_VIEWS; ++i) {
+		btn = LCUIWidget_GetById(btn_view_ids[i][0]);
+		view = LCUIWidget_GetById(btn_view_ids[i][1]);
+		Widget_BindEvent(btn, "click", OnSidebarBtnClick, view, NULL);
 	}
 	event_show_view = LCUIWidget_AllocEventId();
-	LCUIWidget_SetEventName( event_show_view, "show.view" );
+	LCUIWidget_SetEventName(event_show_view, "show.view");
 }

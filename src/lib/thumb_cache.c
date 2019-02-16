@@ -191,10 +191,11 @@ int ThumbCache_Delete(ThumbCache cache, const char *path)
 LCUI_Graph *ThumbCache_Add(ThumbCache cache, const char *path,
 			   LCUI_Graph *thumb)
 {
-	int len;
+	size_t len;
 	size_t size;
 	ThumbDataNode tdn;
 	LinkedListNode *node, *prev_node;
+
 	size = cache->size + thumb->mem_size;
 	if (size > cache->max_size) {
 		for (LinkedList_Each(node, &cache->thumbs)) {

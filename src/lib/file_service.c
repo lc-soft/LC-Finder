@@ -367,7 +367,7 @@ char *FileStream_ReadLine(FileStream stream, char *buf, size_t size)
 			stream->chunk = chunk;
 		}
 		if (chunk->type == DATA_CHUNK_FILE) {
-			p = fgets(buf, size, chunk->file);
+			p = fgets(buf, (int)size, chunk->file);
 			if (!p || feof(chunk->file)) {
 				FileStreamChunk_Release(chunk);
 				stream->chunk = NULL;
@@ -548,7 +548,7 @@ static int FileService_GetFiles(Connection conn, FileRequest *request,
 		return ret;
 	}
 	while (!conn->closed && (entry = LCUI_ReadDirW(&dir))) {
-		int size;
+		size_t size;
 		wchar_t *name = LCUI_GetFileNameW(entry);
 		/* 忽略 . 和 .. 文件夹 */
 		if (name[0] == '.') {
@@ -745,7 +745,7 @@ void FileService_Handler(void *arg)
 	LCUIThread_Exit(NULL);
 }
 
-int FileService_Listen(int backlog)
+size_t FileService_Listen(int backlog)
 {
 	LCUIMutex_Lock(&service.mutex);
 	service.backlog = backlog;

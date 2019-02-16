@@ -58,45 +58,38 @@
 #include "i18n.h"
 #include "picture.h"
 
-#define MAX_SCALE	5.0
-#define SCALE_STEP	0.333
-#define MOVE_STEP	50
-#define KEY_DELETE	"browser.dialog.title.confirm_delete"
+#define MAX_SCALE 5.0
+#define SCALE_STEP 0.333
+#define MOVE_STEP 50
+#define KEY_DELETE "browser.dialog.title.confirm_delete"
 
-#define ClearPositionStyle(W) do { \
-	W->custom_style->sheet[key_left].is_valid = FALSE; \
-	Widget_UnsetStyle( W, key_left ); \
-	Widget_UpdateStyle( W, FALSE ); \
-} while(0);
+#define ClearPositionStyle(W)                   \
+	do {                                    \
+		Widget_UnsetStyle(W, key_left); \
+		Widget_UpdateStyle(W, FALSE);   \
+	} while (0);
 
-#define HideSiwtchButtons() do { \
-	Widget_Hide( view.btn_prev ); \
-	Widget_Hide( view.btn_next ); \
-} while(0);
+#define HideSiwtchButtons()                 \
+	do {                                \
+		Widget_Hide(view.btn_prev); \
+		Widget_Hide(view.btn_next); \
+	} while (0);
 
 #define OnMouseDblClick OnBtnResetClick
 
-enum SliderDirection {
-	LEFT,
-	RIGHT
-};
+enum SliderDirection { LEFT, RIGHT };
 
-enum SliderAction {
-	SWITCH,
-	RESTORE
-};
+enum SliderAction { SWITCH, RESTORE };
 
-enum PcitureSlot {
-	PICTURE_SLOT_PREV,
-	PICTURE_SLOT_CURRENT,
-	PICTURE_SLOT_NEXT
-};
+enum PcitureSlot { PICTURE_SLOT_PREV, PICTURE_SLOT_CURRENT, PICTURE_SLOT_NEXT };
 
 typedef enum PictureSidePanel {
 	SIDE_PANEL_NONE,
 	SIDE_PANEL_INFO,
 	SIDE_PANEL_LABELS
 } PictureSidePanel;
+
+/* clang-format off */
 
 /** 图片实例 */
 typedef struct PcitureRec_ {
@@ -182,8 +175,10 @@ static struct PictureViewer {
 	} slide;
 	void *scanner;
 	PictureLoaderRec loader;
-	PictureSidePanel active_panel;		/**< 当前活动的面板 */
+	PictureSidePanel active_panel; /**< 当前活动的面板 */
 } view = { 0 };
+
+/* clang-format on */
 
 static void TaskForResetWidgetBackground(void *arg1, void *arg2)
 {
@@ -303,14 +298,12 @@ static void UpdateResetSizeButton(void)
 
 static void SetPictureView(Picture pic)
 {
-	LCUI_PostSimpleTask(TaskForSetWidgetBackground,
-			    pic->view, pic->data);
+	LCUI_PostSimpleTask(TaskForSetWidgetBackground, pic->view, pic->data);
 }
 
 static void ClearPictureView(Picture pic)
 {
-	LCUI_PostSimpleTask(TaskForResetWidgetBackground,
-			    pic->view, pic->data);
+	LCUI_PostSimpleTask(TaskForResetWidgetBackground, pic->view, pic->data);
 	pic->is_valid = FALSE;
 	pic->data = NULL;
 }
@@ -387,7 +380,7 @@ static void SetSliderPostion(int x)
 static void OnSlideTransition(void *arg)
 {
 	int delta, x;
-	unsigned int  delta_time;
+	unsigned int delta_time;
 	struct SlideTransition *st;
 
 	st = &view.slide;
@@ -490,16 +483,17 @@ static int SwitchNextPicture(void)
 /** 更新图片位置 */
 static void UpdatePicturePosition(Picture pic)
 {
-	LCUI_StyleSheet sheet;
 	float x = 0, y = 0, width, height;
-	sheet = pic->view->custom_style;
+
 	width = (float)(pic->data->width * pic->scale);
 	height = (float)(pic->data->height * pic->scale);
 	if (width <= pic->view->width) {
-		SetStyle(sheet, key_background_position_x, 0.5, scale);
+		Widget_SetStyle(pic->view, key_background_position_x, 0.5,
+				scale);
 	}
 	if (height <= pic->view->height) {
-		SetStyle(sheet, key_background_position_y, 0.5, scale);
+		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
+				scale);
 	}
 	if (pic != view.picture) {
 		Widget_UpdateStyle(pic->view, FALSE);
@@ -511,7 +505,8 @@ static void UpdatePicturePosition(Picture pic)
 		view.drag.with_x = FALSE;
 		view.focus_x = iround(width / 2.0);
 		view.origin_focus_x = iround(pic->data->width / 2.0);
-		SetStyle(sheet, key_background_position_x, 0.5, scale);
+		Widget_SetStyle(pic->view, key_background_position_x, 0.5,
+				scale);
 	} else {
 		view.drag.with_x = TRUE;
 		x = (float)view.origin_focus_x;
@@ -527,7 +522,7 @@ static void UpdatePicturePosition(Picture pic)
 			view.focus_x = (int)(x + view.offset_x);
 		}
 		_DEBUG_MSG("focus_x: %d\n", view.focus_x);
-		SetStyle(sheet, key_background_position_x, -x, px);
+		Widget_SetStyle(pic->view, key_background_position_x, -x, px);
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
 		x = (float)(view.focus_x / pic->scale + 0.5);
 		view.origin_focus_x = (int)x;
@@ -537,7 +532,8 @@ static void UpdatePicturePosition(Picture pic)
 		view.drag.with_y = FALSE;
 		view.focus_y = iround(height / 2);
 		view.origin_focus_y = iround(pic->data->height / 2.0);
-		SetStyle(sheet, key_background_position_y, 0.5, scale);
+		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
+				scale);
 	} else {
 		view.drag.with_y = TRUE;
 		y = (float)view.origin_focus_y;
@@ -551,7 +547,7 @@ static void UpdatePicturePosition(Picture pic)
 			y = height - pic->view->height;
 			view.focus_y = (int)(y + view.offset_y);
 		}
-		SetStyle(sheet, key_background_position_y, -y, px);
+		Widget_SetStyle(pic->view, key_background_position_y, -y, px);
 		y = (float)(view.focus_y / pic->scale + 0.5);
 		view.origin_focus_y = (int)y;
 	}
@@ -571,7 +567,7 @@ static void ResetOffsetPosition(void)
 static void DirectSetPictureScale(Picture pic, double scale)
 {
 	float width, height;
-	LCUI_StyleSheet sheet;
+
 	if (scale <= pic->min_scale) {
 		scale = pic->min_scale;
 	}
@@ -582,11 +578,10 @@ static void DirectSetPictureScale(Picture pic, double scale)
 	if (!pic->data) {
 		return;
 	}
-	sheet = pic->view->custom_style;
 	width = (float)(scale * pic->data->width);
 	height = (float)(scale * pic->data->height);
-	SetStyle(sheet, key_background_size_width, width, px);
-	SetStyle(sheet, key_background_size_height, height, px);
+	Widget_SetStyle(pic->view, key_background_size_width, width, px);
+	Widget_SetStyle(pic->view, key_background_size_height, height, px);
 	Widget_UpdateStyle(pic->view, FALSE);
 	UpdatePicturePosition(pic);
 	if (pic == view.picture) {
@@ -740,14 +735,15 @@ static int HandleGesture(void)
 
 static void DragPicture(int mouse_x, int mouse_y)
 {
-	LCUI_StyleSheet sheet;
 	Picture pic = view.picture;
+
 	if (!view.drag.is_running) {
 		return;
 	}
-	sheet = pic->view->custom_style;
+
 	if (view.drag.with_x) {
 		float x, width;
+
 		width = (float)(pic->data->width * pic->scale);
 		view.focus_x = view.drag.focus_x;
 		view.focus_x -= mouse_x - view.drag.mouse_x;
@@ -760,15 +756,16 @@ static void DragPicture(int mouse_x, int mouse_y)
 			x = width - pic->view->width;
 			view.focus_x = iround(x + view.offset_x);
 		}
-		SetStyle(pic->view->custom_style,
-			 key_background_position_x, -x, px);
+		Widget_SetStyle(pic->view, key_background_position_x, -x, px);
 		x = (float)(view.focus_x / pic->scale);
 		view.origin_focus_x = iround(x);
 	} else {
-		SetStyle(sheet, key_background_position_x, 0.5, scale);
+		Widget_SetStyle(pic->view, key_background_position_x, 0.5,
+				scale);
 	}
 	if (view.drag.with_y) {
 		float y, height;
+
 		height = (float)(pic->data->height * pic->scale);
 		view.focus_y = view.drag.focus_y;
 		view.focus_y -= mouse_y - view.drag.mouse_y;
@@ -781,12 +778,12 @@ static void DragPicture(int mouse_x, int mouse_y)
 			y = height - pic->view->height;
 			view.focus_y = iround(y + view.offset_y);
 		}
-		SetStyle(pic->view->custom_style,
-			 key_background_position_y, -y, px);
+		Widget_SetStyle(pic->view, key_background_position_y, -y, px);
 		y = (float)(view.focus_y / pic->scale);
 		view.origin_focus_y = iround(y);
 	} else {
-		SetStyle(sheet, key_background_position_y, 0.5, scale);
+		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
+				scale);
 	}
 	Widget_UpdateStyle(pic->view, FALSE);
 	PictureView_SetLabels();
@@ -795,7 +792,8 @@ static void DragPicture(int mouse_x, int mouse_y)
 /** 当鼠标在图片容器上移动的时候 */
 static void OnPictureMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	/* 如果是触控模式就不再处理鼠标事件了，因为触控事件中已经处理了一次图片拖动 */
+	/* 如果是触控模式就不再处理鼠标事件了，因为触控事件中已经处理了一次图片拖动
+	 */
 	if (view.is_touch_mode) {
 		return;
 	}
@@ -892,7 +890,8 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 			OnPictureTouchUp(point);
 			point_ids[0] = -1;
 			break;
-		default: break;
+		default:
+			break;
 		}
 		return;
 	}
@@ -1023,7 +1022,7 @@ static void DeletePicture(Picture pic)
 /** 设置图片 */
 static void SetPicture(Picture pic, const wchar_t *file)
 {
-	int len;
+	size_t len;
 	if (pic->timer > 0) {
 		LCUITimer_Free(pic->timer);
 		pic->timer = 0;
@@ -1258,8 +1257,8 @@ static void PictureLoader_Thread(void *arg)
 		_DEBUG_MSG("wait load\n");
 		LCUICond_Wait(&loader->cond, &loader->mutex);
 		_DEBUG_MSG("start load\n");
-		for (loader->num = 0; loader->num < 3 &&
-		     loader->is_running; ++loader->num) {
+		for (loader->num = 0; loader->num < 3 && loader->is_running;
+		     ++loader->num) {
 			/* 图片实例组是这样记录图片的：
 			 * [0] 上一张图片
 			 * [1] 当前显示的图片
@@ -1280,7 +1279,8 @@ static void PictureLoader_Thread(void *arg)
 			case 2:
 				pic = loader->pictures[PICTURE_SLOT_PREV];
 				break;
-			default: continue;
+			default:
+				continue;
 			}
 			LoadPictureAsync(pic);
 			LCUIMutex_Unlock(&loader->mutex);
@@ -1293,8 +1293,7 @@ static void PictureLoader_Thread(void *arg)
 }
 
 /* 设置图片加载器的目标 */
-static void PictureLoader_SetTarget(PictureLoader loader,
-				    const wchar_t *path)
+static void PictureLoader_SetTarget(PictureLoader loader, const wchar_t *path)
 {
 	LCUIMutex_Lock(&loader->mutex);
 	SetPicture(view.picture, path);
@@ -1500,7 +1499,8 @@ static void OnKeyDown(LCUI_SysEvent e, void *data)
 		}
 		focus_y += MOVE_STEP;
 		SetPictureFocusPoint(view.picture, focus_x, focus_y);
-	default: break;
+	default:
+		break;
 	}
 }
 
@@ -1562,7 +1562,8 @@ void UI_InitPictureView(int mode)
 	PictureView_InitLabels();
 	UpdateSwitchButtons();
 	if (view.mode == MODE_SINGLE_PICVIEW) {
-		view.scanner = PictureView_CreateScanner(finder.storage_for_scan);
+		view.scanner =
+		    PictureView_CreateScanner(finder.storage_for_scan);
 		Widget_SetStyle(btn_back2, key_display, SV_NONE, style);
 		Widget_Hide(btn_back2);
 	} else {
@@ -1581,7 +1582,7 @@ void UI_OpenPictureView(const char *filepath)
 	view.is_zoom_mode = FALSE;
 	view.picture = view.pictures[PICTURE_SLOT_CURRENT];
 	SelectWidget(main_window, ID_WINDOW_MAIN);
-	swprintf(title, 255, L"%ls - "LCFINDER_NAME, wgetfilename(wpath));
+	swprintf(title, 255, L"%ls - " LCFINDER_NAME, wgetfilename(wpath));
 	Widget_SetTitleW(root, title);
 	Widget_Hide(view.tip_unsupport);
 	Widget_Hide(view.tip_empty);
