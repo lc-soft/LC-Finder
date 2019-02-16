@@ -104,7 +104,9 @@ Dict *StrDict_Create(void *(*val_dup)(void *, const void *),
 
 void StrDict_Release(Dict *d);
 
-/** 获取数字字符串，格式为：1,234,567,890 */
+wchar_t *GetAnnotationFileNameW(wchar_t *file);
+
+    /** 获取数字字符串，格式为：1,234,567,890 */
 size_t get_human_number_wcs(wchar_t *wcs, size_t max_len, size_t number);
 
 size_t get_human_time_left_wcs(wchar_t *wcs, size_t max_len, unsigned seconds);

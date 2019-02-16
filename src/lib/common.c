@@ -1,4 +1,4 @@
-﻿/* ***************************************************************************
+﻿ /* ***************************************************************************
  * common.c -- common function set.
  *
  * Copyright (C) 2016-2019 by Liu Chao <lc-soft@live.cn>
@@ -192,6 +192,25 @@ void StrDict_Release(Dict *d)
 	void *privdata = d->privdata;
 	Dict_Release(d);
 	free(privdata);
+}
+
+wchar_t *GetAnnotationFileNameW(wchar_t *file)
+{
+	const wchar_t *ext;
+	wchar_t *datafile;
+
+	datafile = malloc(sizeof(wchar_t) * (wcslen(file) + 7));
+	if (!datafile) {
+		return NULL;
+	}
+	wcscpy(datafile, file);
+	ext = wgetfileext(datafile);
+	if (ext) {
+		wcscpy(datafile + (ext - datafile), L".txt");
+	} else {
+		wcscat(datafile, L".txt");
+	}
+	return datafile;
 }
 
 char *getdirname(const char *path)

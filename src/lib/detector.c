@@ -292,7 +292,7 @@ static int Detector_Reload(void)
 	}
 	darknet_catch(err)
 	{
-		Detector_SetError(err, darknet_get_error_string(err));
+		Detector_SetError(err, darknet_get_last_error_string());
 		ret = -1;
 	}
 	darknet_etry;
@@ -350,29 +350,36 @@ int Detector_SetModel(const wchar_t *name)
 	return -ENOENT;
 }
 
-static DB_Tag AllocTag(const char *name)
+static int Detector_SaveFileAnnotations(const char *path, darknet_detections_t *dets)
 {
-	size_t i;
+	FILE *fp;
 	DB_Tag tag;
-	DB_Tag *tags;
 
-	for (i = 0; i < finder.n_tags; ++i) {
-		tag = finder.tags[i];
-		if (strcmp(tag->name, name) == 0) {
-			return tag;
+	size_t i;
+	wchar_t *wpath;
+	wchar_t *datafile;
+	darknet_detection_t *det;
+
+	wpath = DecodeUTF8(path);
+	datafile = GetAnnotationFileNameW(wpath);
+	fp = wfopen(datafile, L"w+");
+	if (!fp) {
+		_DEBUG_MSG("cannot open file: %ls\n", datafile);
+		free(wpath);
+		return -1;
+	}
+	for (i = 0; i < dets->length; ++i) {
+		det = &dets->list[i];
+		tag = LCFinder_GetTag(det->best_name);
+		if (tag) {
+			fprintf(fp, "%d %f %f %f %f\n", tag->id, det->box.x,
+				det->box.y, det->box.w, det->box.h);
 		}
 	}
-	tag = DB_AddTag(name);
-	if (tag) {
-		++finder.n_tags;
-		tags = realloc(finder.tags, sizeof(DB_Tag) * finder.n_tags);
-		if (!tags) {
-			--finder.n_tags;
-			return NULL;
-		}
-		finder.tags[finder.n_tags - 1] = tag;
-	}
-	return tag;
+	free(wpath);
+	free(datafile);
+	fclose(fp);
+	return 0;
 }
 
 static int Detector_DetectFile(DB_File file)
@@ -383,11 +390,13 @@ static int Detector_DetectFile(DB_File file)
 
 	darknet_detector_test(dmod.detector, file->path, &dets);
 	for (i = 0; i < dets.length; ++i) {
-		tag = AllocTag(dets.list[i].best_name);
-		if (tag) {
-			DBFile_AddTag(file, tag);
+		tag = LCFinder_GetTag(dets.list[i].best_name);
+		if (!tag) {
+			tag = LCFinder_AddTag(dets.list[i].best_name);
 		}
+		DBFile_AddTag(file, tag);
 	}
+	Detector_SaveFileAnnotations(file->path, &dets);
 	darknet_detections_destroy(&dets);
 	return 0;
 }
