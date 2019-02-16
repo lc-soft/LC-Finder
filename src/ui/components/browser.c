@@ -114,7 +114,7 @@ static void FileBrowser_UnlinkFile(FileBrowser browser, FileIndex fidx)
 	Widget_Destroy(fidx->item);
 	FileIndex_Delete(fidx);
 	free(fidx);
-	ThumbView_UpdateLayout(browser->items, cursor);
+	ThumbView_DelayUpdateLayout(browser->items, cursor);
 }
 
 static void FileIterator_Destroy(FileIterator iter)
@@ -327,7 +327,7 @@ static void FileDeletionThread(void *arg)
 	pack->text = I18n_GetText(KEY_TAGS_ADDTION_PROGRESS);
 	ProgressBar_SetMaxValue(pack->dialog->progress, n);
 	/* 先禁用缩略图滚动加载，避免滚动加载功能访问已删除的部件 */
-	ThumbView_DisableScrollLoading(pack->browser->items);
+	ThumbView_DisableAutoLoader(pack->browser->items);
 	for (cursor = NULL, i = 0; pack->active && i < n; ++i) {
 		node = LinkedList_GetNode(files, 0);
 		fidx = node->data;
@@ -361,9 +361,9 @@ static void FileDeletionThread(void *arg)
 		LinkedList_Unlink(&pack->browser->files, &fidx->node);
 		FileIndex_Delete(fidx);
 	}
-	ThumbView_EnableScrollLoading(pack->browser->items);
+	ThumbView_EnableAutoLoader(pack->browser->items);
 	/** 以 cursor 为基点，对它后面的部件重新布局 */
-	ThumbView_UpdateLayout(pack->browser->items, cursor);
+	ThumbView_DelayUpdateLayout(pack->browser->items, cursor);
 	FileBrowser_UnselectAllItems(pack->browser);
 	FileBrowser_DisableSelectionMode(pack->browser);
 	CloseProgressDialog(pack->dialog);

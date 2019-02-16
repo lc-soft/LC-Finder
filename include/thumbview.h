@@ -55,8 +55,10 @@ LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const DB_File file );
 
 void ThumbViewItem_AppendToCover( LCUI_Widget item, LCUI_Widget child );
 
+void ThumbView_StartUpdateLayout(LCUI_Widget w);
+
 /** 更新缩略图列表的布局 */
-void ThumbView_UpdateLayout( LCUI_Widget w, LCUI_Widget start_child );
+void ThumbView_DelayUpdateLayout(LCUI_Widget w, LCUI_Widget start_child);
 
 /** 绑定回调函数，在布局开始时调用 */
 void ThumbView_OnLayout( LCUI_Widget w, void( *func )(LCUI_Widget) );
@@ -68,10 +70,10 @@ void ThumbView_SetCache( LCUI_Widget w, ThumbCache cache );
 void ThumbView_SetStorage( LCUI_Widget w, int storage );
 
 /** 启用缩略图滚动加载功能 */
-void ThumbView_EnableScrollLoading( LCUI_Widget w );
+void ThumbView_EnableAutoLoader( LCUI_Widget w );
 
 /** 禁用缩略图滚动加载功能 */
-void ThumbView_DisableScrollLoading( LCUI_Widget w );
+void ThumbView_DisableAutoLoader( LCUI_Widget w );
 
 /** 为缩略图列表项绑定文件 */
 void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file );

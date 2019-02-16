@@ -186,6 +186,18 @@
     <ClCompile Include="src\ui\components\loading.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\components\thumbview_loader.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\thumbview_worker.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\thumbview_autoloader.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\components\thumbview_layout.c">
+      <Filter>源文件\ui\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />

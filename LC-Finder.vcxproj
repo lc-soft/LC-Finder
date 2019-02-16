@@ -63,6 +63,10 @@
     <ClCompile Include="src\ui\components\taskitem.c" />
     <ClCompile Include="src\ui\components\textview_i18n.c" />
     <ClCompile Include="src\ui\components\thumbview.c" />
+    <ClCompile Include="src\ui\components\thumbview_autoloader.c" />
+    <ClCompile Include="src\ui\components\thumbview_layout.c" />
+    <ClCompile Include="src\ui\components\thumbview_loader.c" />
+    <ClCompile Include="src\ui\components\thumbview_worker.c" />
     <ClCompile Include="src\ui\components\timeseparator.c" />
     <ClCompile Include="src\ui\ui.c" />
     <ClCompile Include="src\ui\views\folders.c" />
@@ -234,7 +238,8 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
@@ -282,7 +287,8 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
@@ -319,7 +325,8 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
@@ -357,7 +364,8 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
+      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\pthreads* $(OutDIr)
