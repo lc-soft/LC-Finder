@@ -1,4 +1,4 @@
-/* ***************************************************************************
+﻿/* ***************************************************************************
  * view_search.c -- search view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -137,7 +137,7 @@ static void SearchView_AppendFiles(void *arg)
 	FileScanner scanner = &view.scanner;
 
 	LinkedList_Init(&files);
-	FileStage_GetFiles(scanner->stage, &files);
+	FileStage_GetFiles(scanner->stage, &files, 512);
 	for (LinkedList_Each(node, &files)) {
 		FileBrowser_AppendPicture(&view.browser, node->data);
 	}
@@ -149,7 +149,7 @@ static void SearchView_AppendFiles(void *arg)
 	scanner->timer = LCUI_SetTimeout(200, SearchView_AppendFiles, NULL);
 }
 
-static int FileScanner_ScanAll(FileScanner scanner)
+static size_t FileScanner_ScanAll(FileScanner scanner)
 {
 	DB_File file;
 	DB_Query query;
@@ -162,7 +162,7 @@ static int FileScanner_ScanAll(FileScanner scanner)
 	terms->tags = scanner->tags;
 	terms->n_tags = scanner->n_tags;
 	if (terms->dirs) {
-		int n_dirs;
+		size_t n_dirs;
 		free(terms->dirs);
 		terms->dirs = NULL;
 		n_dirs = LCFinder_GetSourceDirList(&terms->dirs);
@@ -219,13 +219,14 @@ static void FileScanner_Reset(FileScanner scanner)
 		LCUITimer_Free(scanner->timer);
 		scanner->timer = 0;
 	}
-	FileStage_GetFiles(scanner->stage, &scanner->files);
+	FileStage_GetFiles(scanner->stage, &scanner->files, 0);
 	LinkedList_Clear(&scanner->files, OnDeleteDBFile);
 }
 
 static void FileScanner_Thread(void *arg)
 {
-	int count;
+	size_t count;
+
 	view.scanner.is_running = TRUE;
 	count = FileScanner_ScanAll(&view.scanner);
 	if (count > 0) {

@@ -1,4 +1,4 @@
-/* ***************************************************************************
+﻿/* ***************************************************************************
  * view_home.c -- folders view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -253,7 +253,7 @@ static size_t FileScanner_ScanFiles(FileScanner scanner)
 	return count;
 }
 
-static int FileScanner_LoadSourceDirs(FileScanner scanner)
+static size_t FileScanner_LoadSourceDirs(FileScanner scanner)
 {
 	size_t i, n;
 	DB_Dir *dirs;
@@ -311,7 +311,7 @@ static void FoldersView_AppendFiles(void *unused)
 
 	view.prev_item_type = -1;
 	LinkedList_Init(&files);
-	FileStage_GetFiles(scanner->stage, &files);
+	FileStage_GetFiles(scanner->stage, &files, 512);
 	for (LinkedList_Each(node, &files)) {
 		FoldersView_AppendFile(node->data);
 	}
@@ -347,7 +347,7 @@ static void FileScanner_Reset(FileScanner scanner)
 		LCUITimer_Free(scanner->timer);
 		scanner->timer = 0;
 	}
-	FileStage_GetFiles(scanner->stage, &scanner->files);
+	FileStage_GetFiles(scanner->stage, &scanner->files, 0);
 	LinkedList_Clear(&scanner->files, OnDeleteFileEntry);
 }
 

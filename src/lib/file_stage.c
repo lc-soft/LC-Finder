@@ -82,10 +82,25 @@ void FileStage_Commit(FileStage stage)
 	LCUIMutex_Unlock(&stage->mutex);
 }
 
-size_t FileStage_GetFiles(FileStage stage, LinkedList *files)
+size_t FileStage_GetFiles(FileStage stage, LinkedList *files, size_t max_files)
 {
+	size_t count = 0;
+	LinkedListNode *node;
+
 	LCUIMutex_Lock(&stage->mutex);
-	LinkedList_Concat(files, &stage->files);
+	if (max_files > 0) {
+		node = LinkedList_GetNode(&stage->files, 0);
+		while(node && count < max_files) {
+			++count;
+			LinkedList_Unlink(&stage->files, node);
+			LinkedList_AppendNode(files, node);
+			node = LinkedList_GetNode(&stage->files, 0);
+		}
+		LinkedList_Concat(files, &stage->files);
+	} else {
+		LinkedList_Concat(files, &stage->files);
+		count = files->length;
+	}
 	LCUIMutex_Unlock(&stage->mutex);
-	return files->length;
+	return count;
 }

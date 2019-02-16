@@ -338,7 +338,7 @@ static void HomeView_StopScanner(void)
 		LCUITimer_Free(view.scanner_timer);
 		view.scanner_timer = 0;
 	}
-	FileStage_GetFiles(view.stage, &view.files);
+	FileStage_GetFiles(view.stage, &view.files, 0);
 	LinkedList_Clear(&view.files, OnDeleteDBFile);
 }
 

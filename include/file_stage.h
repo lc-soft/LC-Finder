@@ -51,6 +51,6 @@ void FileStage_AddFile(FileStage stage, void *file);
 
 void FileStage_Commit(FileStage stage);
 
-size_t FileStage_GetFiles(FileStage stage, LinkedList *files);
+size_t FileStage_GetFiles(FileStage stage, LinkedList *files, size_t max_files);
 
 #endif
