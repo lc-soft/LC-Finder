@@ -1,4 +1,4 @@
-﻿/* ***************************************************************************
+/* ***************************************************************************
  * view_search.c -- search view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -755,7 +755,7 @@ static void InitBrowser(void)
 	ThumbView_SetStorage(view.view_files, finder.storage_for_thumb);
 	ThumbView_OnLayout(view.view_tags, OnTagViewStartLayout);
 	BindEvent(btns[0], "click", OnSidebarBtnClick);
-	FileBrowser_Create(&view.browser);
+	FileBrowser_Init(&view.browser);
 	if (view.view_tags->state == LCUI_WSTATE_NORMAL) {
 		UI_UpdateSearchView();
 	} else {

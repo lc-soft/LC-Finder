@@ -1,4 +1,4 @@
-﻿/* ***************************************************************************
+/* ***************************************************************************
  * view_home.c -- home view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -414,7 +414,7 @@ static void HomeView_InitBrowser(void)
 	view.browser.after_deleted = OnAfterDeleted;
 	ThumbView_SetCache(view.items, finder.thumb_cache);
 	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
-	FileBrowser_Create(&view.browser);
+	FileBrowser_Init(&view.browser);
 }
 
 void UI_InitHomeView(void)

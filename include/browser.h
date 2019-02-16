@@ -80,6 +80,6 @@ LCUI_Widget FileBrowser_AppendPicture( FileBrowser browser, const DB_File file )
 LCUI_Widget FileBrowser_AppendFolder( FileBrowser browser, const char *path,
 				      LCUI_BOOL show_path );
 
-void FileBrowser_Create( FileBrowser browser );
+void FileBrowser_Init( FileBrowser browser );
 
 #endif

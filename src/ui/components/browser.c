@@ -411,7 +411,8 @@ static void OnCancelProcessing(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void OnBtnTagClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	int len;
+	size_t len;
+	size_t i;
 	char *buf, **tagnames;
 	DialogDataPackRec pack;
 	wchar_t text[MAX_TAG_LEN];
@@ -442,7 +443,10 @@ static void OnBtnTagClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 			 OnCancelProcessing, &pack, NULL);
 	LCUIThread_Create(&pack.thread, FileTagAddtionThread, &pack);
 	OpenProgressDialog(pack.dialog, window);
-	freestrs(tagnames);
+	for (i = 0; tagnames[i]; ++i) {
+		free(tagnames[i]);
+	}
+	free(tagnames);
 	free(buf);
 }
 
@@ -603,7 +607,7 @@ LCUI_Widget FileBrowser_AppendFolder(FileBrowser browser, const char *path,
 #define BindEvent(BTN, EVENT, CALLBACK) \
 	Widget_BindEvent( browser->btn_##BTN, EVENT, CALLBACK, browser, NULL )
 
-void FileBrowser_Create(FileBrowser browser)
+void FileBrowser_Init(FileBrowser browser)
 {
 	browser->is_selection_mode = FALSE;
 	LinkedList_Init(&browser->dirs);

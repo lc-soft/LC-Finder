@@ -1,4 +1,4 @@
-﻿/* ***************************************************************************
+/* ***************************************************************************
  * view_home.c -- folders view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -575,7 +575,7 @@ void UI_InitFoldersView(void)
 	FoldersView_InitBrowser();
 	FileScanner_Init(&view.scanner);
 	BindEvent(view.view, "show.view", OnViewShow);
-	FileBrowser_Create(&view.browser);
+	FileBrowser_Init(&view.browser);
 	view.is_activated = TRUE;
 	InitFolderFilesSort();
 	OpenFolder(NULL);
