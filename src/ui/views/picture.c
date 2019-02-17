@@ -71,8 +71,8 @@
 
 #define HideSiwtchButtons()                 \
 	do {                                \
-		Widget_Hide(view.btn_prev); \
-		Widget_Hide(view.btn_next); \
+		Widget_Hide(viewer.btn_prev); \
+		Widget_Hide(viewer.btn_next); \
 	} while (0);
 
 #define OnMouseDblClick OnBtnResetClick
@@ -176,7 +176,7 @@ static struct PictureViewer {
 	void *scanner;
 	PictureLoaderRec loader;
 	PictureSidePanel active_panel; /**< 当前活动的面板 */
-} view = { 0 };
+} viewer = { 0 };
 
 /* clang-format on */
 
@@ -201,19 +201,19 @@ static void TaskForSetWidgetBackground(void *arg1, void *arg2)
 
 static void TaskForHideTipEmpty(void *arg1, void *arg2)
 {
-	Widget_RemoveClass(view.tip_empty, "hide");
-	Widget_Show(view.tip_empty);
+	Widget_RemoveClass(viewer.tip_empty, "hide");
+	Widget_Show(viewer.tip_empty);
 }
 
 static void GetViewerSize(size_t *width, size_t *height)
 {
-	if (view.picture->view->width > 200) {
-		*width = (size_t)view.picture->view->width - 120;
+	if (viewer.picture->view->width > 200) {
+		*width = (size_t)viewer.picture->view->width - 120;
 	} else {
 		*width = 200;
 	}
-	if (view.picture->view->height > 200) {
-		*height = (size_t)view.picture->view->height - 120;
+	if (viewer.picture->view->height > 200) {
+		*height = (size_t)viewer.picture->view->height - 120;
 	} else {
 		*height = 200;
 	}
@@ -223,16 +223,16 @@ static void PictureView_SetLabels(void)
 {
 	PictureLabelsViewContextRec ctx;
 
-	ctx.file = view.picture->file;
-	ctx.view = view.picture->view;
-	ctx.focus_x = view.focus_x;
-	ctx.focus_y = view.focus_y;
-	ctx.offset_x = view.offset_x;
-	ctx.offset_y = view.offset_y;
-	if (view.picture && view.picture->data) {
-		ctx.scale = (float)view.picture->scale;
-		ctx.width = view.picture->data->width;
-		ctx.height = view.picture->data->height;
+	ctx.file = viewer.picture->file;
+	ctx.view = viewer.picture->view;
+	ctx.focus_x = viewer.focus_x;
+	ctx.focus_y = viewer.focus_y;
+	ctx.offset_x = viewer.offset_x;
+	ctx.offset_y = viewer.offset_y;
+	if (viewer.picture && viewer.picture->data) {
+		ctx.scale = (float)viewer.picture->scale;
+		ctx.width = viewer.picture->data->width;
+		ctx.height = viewer.picture->data->height;
 	} else {
 		ctx.width = 0;
 		ctx.height = 0;
@@ -244,17 +244,17 @@ static void PictureView_SetLabels(void)
 /** 更新图片切换按钮的状态 */
 static void UpdateSwitchButtons(void)
 {
-	FileIterator iter = view.iterator;
+	FileIterator iter = viewer.iterator;
 	HideSiwtchButtons();
-	if (view.is_zoom_mode) {
+	if (viewer.is_zoom_mode) {
 		return;
 	}
 	if (iter) {
 		if (iter->index > 0) {
-			Widget_Show(view.btn_prev);
+			Widget_Show(viewer.btn_prev);
 		}
 		if (iter->length >= 1 && iter->index < iter->length - 1) {
-			Widget_Show(view.btn_next);
+			Widget_Show(viewer.btn_next);
 		}
 	}
 }
@@ -262,32 +262,32 @@ static void UpdateSwitchButtons(void)
 /** 更新图片缩放按钮的状态 */
 static void UpdateZoomButtons(void)
 {
-	if (!view.picture->is_valid) {
-		Widget_SetDisabled(view.btn_zoomin, TRUE);
-		Widget_SetDisabled(view.btn_zoomout, TRUE);
+	if (!viewer.picture->is_valid) {
+		Widget_SetDisabled(viewer.btn_zoomin, TRUE);
+		Widget_SetDisabled(viewer.btn_zoomout, TRUE);
 		return;
 	}
-	if (view.picture->scale > view.picture->min_scale) {
-		Widget_SetDisabled(view.btn_zoomout, FALSE);
+	if (viewer.picture->scale > viewer.picture->min_scale) {
+		Widget_SetDisabled(viewer.btn_zoomout, FALSE);
 	} else {
-		Widget_SetDisabled(view.btn_zoomout, TRUE);
+		Widget_SetDisabled(viewer.btn_zoomout, TRUE);
 	}
-	if (view.picture->scale < MAX_SCALE) {
-		Widget_SetDisabled(view.btn_zoomin, FALSE);
+	if (viewer.picture->scale < MAX_SCALE) {
+		Widget_SetDisabled(viewer.btn_zoomin, FALSE);
 	} else {
-		Widget_SetDisabled(view.btn_zoomin, TRUE);
+		Widget_SetDisabled(viewer.btn_zoomin, TRUE);
 	}
 }
 
 static void UpdateResetSizeButton(void)
 {
-	LCUI_Widget txt = LinkedList_Get(&view.btn_reset->children, 0);
-	if (view.picture->is_valid) {
-		Widget_SetDisabled(view.btn_reset, FALSE);
+	LCUI_Widget txt = LinkedList_Get(&viewer.btn_reset->children, 0);
+	if (viewer.picture->is_valid) {
+		Widget_SetDisabled(viewer.btn_reset, FALSE);
 	} else {
-		Widget_SetDisabled(view.btn_reset, TRUE);
+		Widget_SetDisabled(viewer.btn_reset, TRUE);
 	}
-	if (view.picture->scale == view.picture->min_scale) {
+	if (viewer.picture->scale == viewer.picture->min_scale) {
 		Widget_RemoveClass(txt, "icon-fullscreen-exit");
 		Widget_AddClass(txt, "icon-fullscreen");
 	} else {
@@ -311,21 +311,21 @@ static void ClearPictureView(Picture pic)
 static int OpenPrevPicture(void)
 {
 	Picture pic;
-	FileIterator iter = view.iterator;
+	FileIterator iter = viewer.iterator;
 	if (!iter || iter->index == 0) {
 		return -1;
 	}
 	iter->prev(iter);
 	UpdateSwitchButtons();
-	pic = view.pictures[PICTURE_SLOT_NEXT];
-	Widget_Prepend(view.view_pictures, pic->view);
-	view.pictures[PICTURE_SLOT_NEXT] = view.pictures[PICTURE_SLOT_CURRENT];
-	view.pictures[PICTURE_SLOT_CURRENT] = view.pictures[PICTURE_SLOT_PREV];
+	pic = viewer.pictures[PICTURE_SLOT_NEXT];
+	Widget_Prepend(viewer.view_pictures, pic->view);
+	viewer.pictures[PICTURE_SLOT_NEXT] = viewer.pictures[PICTURE_SLOT_CURRENT];
+	viewer.pictures[PICTURE_SLOT_CURRENT] = viewer.pictures[PICTURE_SLOT_PREV];
 	if (pic->file) {
 		free(pic->file);
 		pic->file = NULL;
 	}
-	view.pictures[PICTURE_SLOT_PREV] = pic;
+	viewer.pictures[PICTURE_SLOT_PREV] = pic;
 	ClearPictureView(pic);
 	UI_OpenPictureView(iter->filepath);
 	return 0;
@@ -334,21 +334,21 @@ static int OpenPrevPicture(void)
 static int OpenNextPicture(void)
 {
 	Picture pic;
-	FileIterator iter = view.iterator;
+	FileIterator iter = viewer.iterator;
 	if (!iter || iter->index >= iter->length - 1) {
 		return -1;
 	}
 	iter->next(iter);
 	UpdateSwitchButtons();
-	pic = view.pictures[PICTURE_SLOT_PREV];
-	Widget_Append(view.view_pictures, pic->view);
-	view.pictures[PICTURE_SLOT_PREV] = view.pictures[PICTURE_SLOT_CURRENT];
-	view.pictures[PICTURE_SLOT_CURRENT] = view.pictures[PICTURE_SLOT_NEXT];
+	pic = viewer.pictures[PICTURE_SLOT_PREV];
+	Widget_Append(viewer.view_pictures, pic->view);
+	viewer.pictures[PICTURE_SLOT_PREV] = viewer.pictures[PICTURE_SLOT_CURRENT];
+	viewer.pictures[PICTURE_SLOT_CURRENT] = viewer.pictures[PICTURE_SLOT_NEXT];
 	if (pic->file) {
 		free(pic->file);
 		pic->file = NULL;
 	}
-	view.pictures[PICTURE_SLOT_NEXT] = pic;
+	viewer.pictures[PICTURE_SLOT_NEXT] = pic;
 	ClearPictureView(pic);
 	UI_OpenPictureView(iter->filepath);
 	return 0;
@@ -357,7 +357,7 @@ static int OpenNextPicture(void)
 static void InitSlideTransition(void)
 {
 	struct SlideTransition *st;
-	st = &view.slide;
+	st = &viewer.slide;
 	st->direction = 0;
 	st->src_x = 0;
 	st->dst_x = 0;
@@ -370,10 +370,10 @@ static void InitSlideTransition(void)
 static void SetSliderPostion(int x)
 {
 	float fx = (float)x;
-	float width = view.picture->view->width;
-	Widget_Move(view.pictures[PICTURE_SLOT_PREV]->view, fx - width, 0);
-	Widget_Move(view.pictures[PICTURE_SLOT_CURRENT]->view, fx, 0);
-	Widget_Move(view.pictures[PICTURE_SLOT_NEXT]->view, fx + width, 0);
+	float width = viewer.picture->view->width;
+	Widget_Move(viewer.pictures[PICTURE_SLOT_PREV]->view, fx - width, 0);
+	Widget_Move(viewer.pictures[PICTURE_SLOT_CURRENT]->view, fx, 0);
+	Widget_Move(viewer.pictures[PICTURE_SLOT_NEXT]->view, fx + width, 0);
 }
 
 /** 更新滑动过渡效果 */
@@ -383,7 +383,7 @@ static void OnSlideTransition(void *arg)
 	unsigned int delta_time;
 	struct SlideTransition *st;
 
-	st = &view.slide;
+	st = &viewer.slide;
 	delta = st->dst_x - st->src_x;
 	delta_time = (unsigned int)LCUI_GetTimeDelta(st->start_time);
 	if (delta_time < st->duration) {
@@ -395,9 +395,9 @@ static void OnSlideTransition(void *arg)
 	if (x == st->dst_x) {
 		st->timer = 0;
 		st->is_running = FALSE;
-		ClearPositionStyle(view.pictures[PICTURE_SLOT_PREV]->view);
-		ClearPositionStyle(view.pictures[PICTURE_SLOT_CURRENT]->view);
-		ClearPositionStyle(view.pictures[PICTURE_SLOT_NEXT]->view);
+		ClearPositionStyle(viewer.pictures[PICTURE_SLOT_PREV]->view);
+		ClearPositionStyle(viewer.pictures[PICTURE_SLOT_CURRENT]->view);
+		ClearPositionStyle(viewer.pictures[PICTURE_SLOT_NEXT]->view);
 		if (st->action != SWITCH) {
 			return;
 		}
@@ -415,12 +415,12 @@ static void OnSlideTransition(void *arg)
 static void RestoreSliderPosition(void)
 {
 	struct SlideTransition *st;
-	st = &view.slide;
+	st = &viewer.slide;
 	if (st->is_running) {
 		return;
 	}
 	st->action = RESTORE;
-	st->src_x = (int)view.picture->view->x;
+	st->src_x = (int)viewer.picture->view->x;
 	if (st->src_x == 0) {
 		return;
 	} else if (st->src_x < 0) {
@@ -440,17 +440,17 @@ static void RestoreSliderPosition(void)
 static void StartSlideTransition(int direction)
 {
 	struct SlideTransition *st;
-	st = &view.slide;
+	st = &viewer.slide;
 	if (st->is_running) {
 		return;
 	}
 	st->action = SWITCH;
 	st->direction = direction;
-	st->src_x = (int)view.picture->view->x;
+	st->src_x = (int)viewer.picture->view->x;
 	if (st->direction == RIGHT) {
-		st->dst_x = (int)view.picture->view->width;
+		st->dst_x = (int)viewer.picture->view->width;
 	} else {
-		st->dst_x = 0 - (int)view.picture->view->width;
+		st->dst_x = 0 - (int)viewer.picture->view->width;
 	}
 	st->is_running = TRUE;
 	st->start_time = LCUI_GetTime();
@@ -462,7 +462,7 @@ static void StartSlideTransition(int direction)
 
 static int SwitchPrevPicture(void)
 {
-	FileIterator iter = view.iterator;
+	FileIterator iter = viewer.iterator;
 	if (!iter || iter->index == 0) {
 		return -1;
 	}
@@ -472,7 +472,7 @@ static int SwitchPrevPicture(void)
 
 static int SwitchNextPicture(void)
 {
-	FileIterator iter = view.iterator;
+	FileIterator iter = viewer.iterator;
 	if (!iter || iter->index >= iter->length - 1) {
 		return -1;
 	}
@@ -495,63 +495,63 @@ static void UpdatePicturePosition(Picture pic)
 		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
 				scale);
 	}
-	if (pic != view.picture) {
+	if (pic != viewer.picture) {
 		Widget_UpdateStyle(pic->view, FALSE);
 		return;
 	}
 	/* 若缩放后的图片宽度小于图片查看器的宽度 */
 	if (width <= pic->view->width) {
 		/* 设置拖动时不需要改变X坐标，且图片水平居中显示 */
-		view.drag.with_x = FALSE;
-		view.focus_x = iround(width / 2.0);
-		view.origin_focus_x = iround(pic->data->width / 2.0);
-		view.offset_x = iround(pic->view->width / 2);
+		viewer.drag.with_x = FALSE;
+		viewer.focus_x = iround(width / 2.0);
+		viewer.origin_focus_x = iround(pic->data->width / 2.0);
+		viewer.offset_x = iround(pic->view->width / 2);
 		Widget_SetStyle(pic->view, key_background_position_x, 0.5,
 				scale);
 	} else {
-		view.drag.with_x = TRUE;
-		x = (float)view.origin_focus_x;
-		view.focus_x = iround(x * pic->scale);
-		x = (float)view.focus_x - view.offset_x;
+		viewer.drag.with_x = TRUE;
+		x = (float)viewer.origin_focus_x;
+		viewer.focus_x = iround(x * pic->scale);
+		x = (float)viewer.focus_x - viewer.offset_x;
 		/* X坐标调整，确保查看器的图片浏览范围不超出图片 */
 		if (x < 0) {
 			x = 0;
-			view.focus_x = view.offset_x;
+			viewer.focus_x = viewer.offset_x;
 		}
 		if (x + pic->view->width > width) {
 			x = width - pic->view->width;
-			view.focus_x = (int)(x + view.offset_x);
+			viewer.focus_x = (int)(x + viewer.offset_x);
 		}
-		_DEBUG_MSG("focus_x: %d\n", view.focus_x);
+		_DEBUG_MSG("focus_x: %d\n", viewer.focus_x);
 		Widget_SetStyle(pic->view, key_background_position_x, -x, px);
 		/* 根据缩放后的焦点坐标，计算出相对于原始尺寸图片的焦点坐标 */
-		x = (float)(view.focus_x / pic->scale + 0.5);
-		view.origin_focus_x = (int)x;
+		x = (float)(viewer.focus_x / pic->scale + 0.5);
+		viewer.origin_focus_x = (int)x;
 	}
 	/* 原理同上 */
 	if (height <= pic->view->height) {
-		view.drag.with_y = FALSE;
-		view.focus_y = iround(height / 2);
-		view.origin_focus_y = iround(pic->data->height / 2.0);
-		view.offset_y = iround(pic->view->height / 2);
+		viewer.drag.with_y = FALSE;
+		viewer.focus_y = iround(height / 2);
+		viewer.origin_focus_y = iround(pic->data->height / 2.0);
+		viewer.offset_y = iround(pic->view->height / 2);
 		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
 				scale);
 	} else {
-		view.drag.with_y = TRUE;
-		y = (float)view.origin_focus_y;
-		view.focus_y = (int)(y * pic->scale + 0.5);
-		y = (float)(view.focus_y - view.offset_y);
+		viewer.drag.with_y = TRUE;
+		y = (float)viewer.origin_focus_y;
+		viewer.focus_y = (int)(y * pic->scale + 0.5);
+		y = (float)(viewer.focus_y - viewer.offset_y);
 		if (y < 0) {
 			y = 0;
-			view.focus_y = view.offset_y;
+			viewer.focus_y = viewer.offset_y;
 		}
 		if (y + pic->view->height > height) {
 			y = height - pic->view->height;
-			view.focus_y = (int)(y + view.offset_y);
+			viewer.focus_y = (int)(y + viewer.offset_y);
 		}
 		Widget_SetStyle(pic->view, key_background_position_y, -y, px);
-		y = (float)(view.focus_y / pic->scale + 0.5);
-		view.origin_focus_y = (int)y;
+		y = (float)(viewer.focus_y / pic->scale + 0.5);
+		viewer.origin_focus_y = (int)y;
 	}
 	Widget_UpdateStyle(pic->view, FALSE);
 	PictureView_SetLabels();
@@ -560,8 +560,8 @@ static void UpdatePicturePosition(Picture pic)
 /** 重置浏览区域的位置偏移量 */
 static void ResetOffsetPosition(void)
 {
-	view.offset_x = iround(view.picture->view->width / 2);
-	view.offset_y = iround(view.picture->view->height / 2);
+	viewer.offset_x = iround(viewer.picture->view->width / 2);
+	viewer.offset_y = iround(viewer.picture->view->height / 2);
 	PictureView_SetLabels();
 }
 
@@ -586,7 +586,7 @@ static void DirectSetPictureScale(Picture pic, double scale)
 	Widget_SetStyle(pic->view, key_background_size_height, height, px);
 	Widget_UpdateStyle(pic->view, FALSE);
 	UpdatePicturePosition(pic);
-	if (pic == view.picture) {
+	if (pic == viewer.picture) {
 		UpdateZoomButtons();
 		UpdateSwitchButtons();
 		UpdateResetSizeButton();
@@ -597,9 +597,9 @@ static void DirectSetPictureScale(Picture pic, double scale)
 static void SetPictureScale(Picture pic, double scale)
 {
 	if (scale <= pic->min_scale) {
-		view.is_zoom_mode = FALSE;
+		viewer.is_zoom_mode = FALSE;
 	} else {
-		view.is_zoom_mode = TRUE;
+		viewer.is_zoom_mode = TRUE;
 	}
 	DirectSetPictureScale(pic, scale);
 }
@@ -646,14 +646,14 @@ static void ResetPictureSize(Picture pic)
 /** 在返回按钮被点击的时候 */
 static void OnBtnBackClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (view.mode == MODE_SINGLE_PICVIEW) {
+	if (viewer.mode == MODE_SINGLE_PICVIEW) {
 		LCUI_Widget btn_back, btn_back2;
 		SelectWidget(btn_back, ID_BTN_BROWSE_ALL);
 		SelectWidget(btn_back2, ID_BTN_HIDE_PICTURE_VIEWER);
 		Widget_UnsetStyle(btn_back2, key_display);
 		Widget_Destroy(btn_back);
 		Widget_Show(btn_back2);
-		view.mode = MODE_FULL;
+		viewer.mode = MODE_FULL;
 		UI_InitMainView();
 	}
 	UI_ClosePictureView();
@@ -662,24 +662,24 @@ static void OnBtnBackClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 /** 在图片视图尺寸发生变化的时候 */
 static void OnPictureResize(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (view.is_zoom_mode) {
-		UpdatePicturePosition(view.pictures[PICTURE_SLOT_PREV]);
-		UpdatePicturePosition(view.pictures[PICTURE_SLOT_CURRENT]);
-		UpdatePicturePosition(view.pictures[PICTURE_SLOT_NEXT]);
+	if (viewer.is_zoom_mode) {
+		UpdatePicturePosition(viewer.pictures[PICTURE_SLOT_PREV]);
+		UpdatePicturePosition(viewer.pictures[PICTURE_SLOT_CURRENT]);
+		UpdatePicturePosition(viewer.pictures[PICTURE_SLOT_NEXT]);
 	} else {
-		ResetPictureSize(view.pictures[PICTURE_SLOT_PREV]);
-		ResetPictureSize(view.pictures[PICTURE_SLOT_CURRENT]);
-		ResetPictureSize(view.pictures[PICTURE_SLOT_NEXT]);
+		ResetPictureSize(viewer.pictures[PICTURE_SLOT_PREV]);
+		ResetPictureSize(viewer.pictures[PICTURE_SLOT_CURRENT]);
+		ResetPictureSize(viewer.pictures[PICTURE_SLOT_NEXT]);
 	}
 }
 
 static void OnShowTipLoading(void *arg)
 {
 	Picture pic = arg;
-	if (view.picture == pic) {
+	if (viewer.picture == pic) {
 		if (pic->is_loading) {
-			ProgressBar_SetValue(view.tip_progress, 0);
-			Widget_Show(view.tip_loading);
+			ProgressBar_SetValue(viewer.tip_progress, 0);
+			Widget_Show(viewer.tip_loading);
 		}
 	}
 	pic->timer = 0;
@@ -688,7 +688,7 @@ static void OnShowTipLoading(void *arg)
 static void StartGesture(int mouse_x, int mouse_y)
 {
 	struct Gesture *g;
-	g = &view.gesture;
+	g = &viewer.gesture;
 	g->x = mouse_x;
 	g->y = mouse_y;
 	g->start_x = mouse_x;
@@ -699,12 +699,12 @@ static void StartGesture(int mouse_x, int mouse_y)
 
 static void StopGesture(void)
 {
-	view.gesture.is_running = FALSE;
+	viewer.gesture.is_running = FALSE;
 }
 
 static void UpdateGesture(int mouse_x, int mouse_y)
 {
-	struct Gesture *g = &view.gesture;
+	struct Gesture *g = &viewer.gesture;
 	/* 只处理左右滑动 */
 	if (g->x != mouse_x) {
 		/* 如果滑动方向不同 */
@@ -720,7 +720,7 @@ static void UpdateGesture(int mouse_x, int mouse_y)
 
 static int HandleGesture(void)
 {
-	struct Gesture *g = &view.gesture;
+	struct Gesture *g = &viewer.gesture;
 	int delta_time = (int)LCUI_GetTimeDelta(g->timestamp);
 	/* 如果坐标停止变化已经超过 100ms，或滑动距离太短，则视为无效手势 */
 	if (delta_time > 100 || abs(g->x - g->start_x) < 80) {
@@ -737,52 +737,52 @@ static int HandleGesture(void)
 
 static void DragPicture(int mouse_x, int mouse_y)
 {
-	Picture pic = view.picture;
+	Picture pic = viewer.picture;
 
-	if (!view.drag.is_running) {
+	if (!viewer.drag.is_running) {
 		return;
 	}
 
-	if (view.drag.with_x) {
+	if (viewer.drag.with_x) {
 		float x, width;
 
 		width = (float)(pic->data->width * pic->scale);
-		view.focus_x = view.drag.focus_x;
-		view.focus_x -= mouse_x - view.drag.mouse_x;
-		x = (float)(view.focus_x - view.offset_x);
+		viewer.focus_x = viewer.drag.focus_x;
+		viewer.focus_x -= mouse_x - viewer.drag.mouse_x;
+		x = (float)(viewer.focus_x - viewer.offset_x);
 		if (x < 0) {
 			x = 0;
-			view.focus_x = view.offset_x;
+			viewer.focus_x = viewer.offset_x;
 		}
 		if (x + pic->view->width > width) {
 			x = width - pic->view->width;
-			view.focus_x = iround(x + view.offset_x);
+			viewer.focus_x = iround(x + viewer.offset_x);
 		}
 		Widget_SetStyle(pic->view, key_background_position_x, -x, px);
-		x = (float)(view.focus_x / pic->scale);
-		view.origin_focus_x = iround(x);
+		x = (float)(viewer.focus_x / pic->scale);
+		viewer.origin_focus_x = iround(x);
 	} else {
 		Widget_SetStyle(pic->view, key_background_position_x, 0.5,
 				scale);
 	}
-	if (view.drag.with_y) {
+	if (viewer.drag.with_y) {
 		float y, height;
 
 		height = (float)(pic->data->height * pic->scale);
-		view.focus_y = view.drag.focus_y;
-		view.focus_y -= mouse_y - view.drag.mouse_y;
-		y = (float)(view.focus_y - view.offset_y);
+		viewer.focus_y = viewer.drag.focus_y;
+		viewer.focus_y -= mouse_y - viewer.drag.mouse_y;
+		y = (float)(viewer.focus_y - viewer.offset_y);
 		if (y < 0) {
 			y = 0;
-			view.focus_y = view.offset_y;
+			viewer.focus_y = viewer.offset_y;
 		}
 		if (y + pic->view->height > height) {
 			y = height - pic->view->height;
-			view.focus_y = iround(y + view.offset_y);
+			viewer.focus_y = iround(y + viewer.offset_y);
 		}
 		Widget_SetStyle(pic->view, key_background_position_y, -y, px);
-		y = (float)(view.focus_y / pic->scale);
-		view.origin_focus_y = iround(y);
+		y = (float)(viewer.focus_y / pic->scale);
+		viewer.origin_focus_y = iround(y);
 	} else {
 		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
 				scale);
@@ -796,7 +796,7 @@ static void OnPictureMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	/* 如果是触控模式就不再处理鼠标事件了，因为触控事件中已经处理了一次图片拖动
 	 */
-	if (view.is_touch_mode) {
+	if (viewer.is_touch_mode) {
 		return;
 	}
 	DragPicture(e->motion.x, e->motion.y);
@@ -805,10 +805,10 @@ static void OnPictureMouseMove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 /** 当鼠标按钮在图片容器上释放的时候 */
 static void OnPictureMouseUp(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (view.is_touch_mode) {
+	if (viewer.is_touch_mode) {
 		return;
 	}
-	view.drag.is_running = FALSE;
+	viewer.drag.is_running = FALSE;
 	Widget_UnbindEvent(w, "mouseup", OnPictureMouseUp);
 	Widget_UnbindEvent(w, "mousemove", OnPictureMouseMove);
 	Widget_ReleaseMouseCapture(w);
@@ -817,14 +817,14 @@ static void OnPictureMouseUp(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 /** 当鼠标按钮在图片容器上点住的时候 */
 static void OnPictureMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	if (view.is_touch_mode) {
+	if (viewer.is_touch_mode) {
 		return;
 	}
-	view.drag.is_running = TRUE;
-	view.drag.mouse_x = e->motion.x;
-	view.drag.mouse_y = e->motion.y;
-	view.drag.focus_x = view.focus_x;
-	view.drag.focus_y = view.focus_y;
+	viewer.drag.is_running = TRUE;
+	viewer.drag.mouse_x = e->motion.x;
+	viewer.drag.mouse_y = e->motion.y;
+	viewer.drag.focus_x = viewer.focus_x;
+	viewer.drag.focus_y = viewer.focus_y;
 	Widget_BindEvent(w, "mousemove", OnPictureMouseMove, NULL, NULL);
 	Widget_BindEvent(w, "mouseup", OnPictureMouseUp, NULL, NULL);
 	Widget_SetMouseCapture(w);
@@ -832,39 +832,39 @@ static void OnPictureMouseDown(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void OnPictureTouchDown(LCUI_TouchPoint point)
 {
-	view.is_touch_mode = TRUE;
-	view.drag.is_running = TRUE;
-	if (!view.is_zoom_mode) {
+	viewer.is_touch_mode = TRUE;
+	viewer.drag.is_running = TRUE;
+	if (!viewer.is_zoom_mode) {
 		StartGesture(point->x, point->y);
 	}
-	view.drag.mouse_x = point->x;
-	view.drag.mouse_y = point->y;
-	view.drag.focus_x = view.focus_x;
-	view.drag.focus_y = view.focus_y;
-	Widget_SetTouchCapture(view.picture->view, point->id);
+	viewer.drag.mouse_x = point->x;
+	viewer.drag.mouse_y = point->y;
+	viewer.drag.focus_x = viewer.focus_x;
+	viewer.drag.focus_y = viewer.focus_y;
+	Widget_SetTouchCapture(viewer.picture->view, point->id);
 }
 
 static void OnPictureTouchUp(LCUI_TouchPoint point)
 {
-	view.is_touch_mode = FALSE;
-	view.drag.is_running = FALSE;
-	if (view.gesture.is_running) {
-		if (!view.zoom.is_running && !view.is_zoom_mode) {
+	viewer.is_touch_mode = FALSE;
+	viewer.drag.is_running = FALSE;
+	if (viewer.gesture.is_running) {
+		if (!viewer.zoom.is_running && !viewer.is_zoom_mode) {
 			if (HandleGesture() != 0) {
 				RestoreSliderPosition();
 			}
 		}
 		StopGesture();
 	}
-	Widget_ReleaseTouchCapture(view.picture->view, -1);
+	Widget_ReleaseTouchCapture(viewer.picture->view, -1);
 }
 
 static void OnPictureTouchMove(LCUI_TouchPoint point)
 {
 	DragPicture(point->x, point->y);
-	if (view.gesture.is_running) {
+	if (viewer.gesture.is_running) {
 		UpdateGesture(point->x, point->y);
-		SetSliderPostion(point->x - view.drag.mouse_x);
+		SetSliderPostion(point->x - viewer.drag.mouse_x);
 	}
 }
 
@@ -876,7 +876,7 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (e->touch.n_points == 0) {
 		return;
 	}
-	point_ids = view.zoom.point_ids;
+	point_ids = viewer.zoom.point_ids;
 	if (e->touch.n_points == 1) {
 		LCUI_TouchPoint point;
 		point = &e->touch.points[0];
@@ -898,7 +898,7 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 		return;
 	}
 	StopGesture();
-	view.drag.is_running = FALSE;
+	viewer.drag.is_running = FALSE;
 	/* 遍历各个触点，确定两个用于缩放功能的触点 */
 	for (i = 0; i < e->touch.n_points; ++i) {
 		if (point_ids[0] == -1) {
@@ -909,7 +909,7 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 			points[0] = &e->touch.points[i];
 			continue;
 		}
-		if (view.zoom.point_ids[1] == -1) {
+		if (viewer.zoom.point_ids[1] == -1) {
 			points[1] = &e->touch.points[i];
 			point_ids[1] = points[1]->id;
 		} else if (point_ids[1] == e->touch.points[i].id) {
@@ -920,30 +920,30 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	distance = pow(points[0]->x - points[1]->x, 2);
 	distance += pow(points[0]->y - points[1]->y, 2);
 	distance = sqrt(distance);
-	if (!view.zoom.is_running) {
+	if (!viewer.zoom.is_running) {
 		x = points[0]->x - (points[0]->x - points[1]->x) / 2;
 		y = points[0]->y - (points[0]->y - points[1]->y) / 2;
-		view.zoom.distance = (int)distance;
-		view.zoom.scale = view.picture->scale;
-		view.zoom.is_running = TRUE;
-		view.zoom.x = x;
-		view.zoom.y = y;
+		viewer.zoom.distance = (int)distance;
+		viewer.zoom.scale = viewer.picture->scale;
+		viewer.zoom.is_running = TRUE;
+		viewer.zoom.x = x;
+		viewer.zoom.y = y;
 	} else if (points[0]->state == LCUI_WEVENT_TOUCHMOVE ||
 		   points[1]->state == LCUI_WEVENT_TOUCHMOVE) {
 		/* 重新计算焦点位置 */
-		x = view.focus_x - view.offset_x;
-		y = view.focus_y - view.offset_y;
-		view.offset_x = view.zoom.x;
-		view.offset_y = view.zoom.y;
-		view.focus_x = x + view.offset_x;
-		view.focus_y = y + view.offset_y;
-		x = iround(view.focus_x / view.picture->scale);
-		y = iround(view.focus_y / view.picture->scale);
-		view.origin_focus_x = x;
-		view.origin_focus_y = y;
-		scale = view.zoom.scale;
-		scale *= distance / view.zoom.distance;
-		SetPictureScale(view.picture, scale);
+		x = viewer.focus_x - viewer.offset_x;
+		y = viewer.focus_y - viewer.offset_y;
+		viewer.offset_x = viewer.zoom.x;
+		viewer.offset_y = viewer.zoom.y;
+		viewer.focus_x = x + viewer.offset_x;
+		viewer.focus_y = y + viewer.offset_y;
+		x = iround(viewer.focus_x / viewer.picture->scale);
+		y = iround(viewer.focus_y / viewer.picture->scale);
+		viewer.origin_focus_x = x;
+		viewer.origin_focus_y = y;
+		scale = viewer.zoom.scale;
+		scale *= distance / viewer.zoom.distance;
+		SetPictureScale(viewer.picture, scale);
 	}
 	for (i = 0; i < 2; ++i) {
 		int j, id;
@@ -952,7 +952,7 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 			continue;
 		}
 		point_ids[i] = -1;
-		view.zoom.is_running = FALSE;
+		viewer.zoom.is_running = FALSE;
 		id = point_ids[i == 0 ? 1 : 0];
 		for (j = 0; j < e->touch.n_points; ++j) {
 			if (e->touch.points[j].state == LCUI_WEVENT_TOUCHUP ||
@@ -968,9 +968,9 @@ static void OnPictureTouch(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	if (point_ids[0] == -1) {
 		point_ids[0] = point_ids[1];
 		point_ids[1] = -1;
-		view.zoom.is_running = FALSE;
+		viewer.zoom.is_running = FALSE;
 	} else if (point_ids[1] == -1) {
-		view.zoom.is_running = FALSE;
+		viewer.zoom.is_running = FALSE;
 	}
 }
 
@@ -988,7 +988,7 @@ static Picture CreatePicture(void)
 	pic->min_scale = pic->scale = 1.0;
 
 	Graph_Init(pic->data);
-	Widget_Append(view.view_pictures, pic->view);
+	Widget_Append(viewer.view_pictures, pic->view);
 	BindEvent(pic->view, "resize", OnPictureResize);
 	BindEvent(pic->view, "touch", OnPictureTouch);
 	BindEvent(pic->view, "mousedown", OnPictureMouseDown);
@@ -1044,7 +1044,7 @@ static void SetPicture(Picture pic, const wchar_t *file)
 
 static void DirectSetPictureView(FileIterator iter)
 {
-	view.iterator = iter;
+	viewer.iterator = iter;
 	UpdateSwitchButtons();
 }
 
@@ -1054,16 +1054,16 @@ static void SetPicturePreloadList(void)
 	wchar_t *wpath;
 	FileIterator iter;
 
-	if (!view.iterator) {
+	if (!viewer.iterator) {
 		return;
 	}
-	iter = view.iterator;
+	iter = viewer.iterator;
 	/* 预加载上一张图片 */
 	if (iter->index > 0) {
 		iter->prev(iter);
 		if (iter->filepath) {
 			wpath = DecodeUTF8(iter->filepath);
-			SetPicture(view.pictures[PICTURE_SLOT_PREV], wpath);
+			SetPicture(viewer.pictures[PICTURE_SLOT_PREV], wpath);
 		}
 		iter->next(iter);
 	}
@@ -1072,7 +1072,7 @@ static void SetPicturePreloadList(void)
 		iter->next(iter);
 		if (iter->filepath) {
 			wpath = DecodeUTF8(iter->filepath);
-			SetPicture(view.pictures[PICTURE_SLOT_NEXT], wpath);
+			SetPicture(viewer.pictures[PICTURE_SLOT_NEXT], wpath);
 		}
 		iter->prev(iter);
 	}
@@ -1098,10 +1098,10 @@ static void OnPictureLoadDone(LCUI_Graph *img, void *data)
 static void OnPictureProgress(float progress, void *data)
 {
 	Picture pic = data;
-	if (pic != view.picture) {
+	if (pic != viewer.picture) {
 		return;
 	}
-	ProgressBar_SetValue(view.tip_progress, iround(progress));
+	ProgressBar_SetValue(viewer.tip_progress, iround(progress));
 }
 
 static int LoadPictureAsync(Picture pic)
@@ -1109,7 +1109,7 @@ static int LoadPictureAsync(Picture pic)
 	wchar_t *wpath;
 	int storage = finder.storage_for_image;
 
-	if (!pic->file_for_load || !view.is_working) {
+	if (!pic->file_for_load || !viewer.is_working) {
 		return -1;
 	}
 	/* 避免重复加载 */
@@ -1143,12 +1143,12 @@ static void WaitPictureLoadDone(Picture pic)
 {
 	_DEBUG_MSG("enter\n");
 	LCUIMutex_Lock(&pic->mutex);
-	while (pic->is_loading && view.is_working) {
+	while (pic->is_loading && viewer.is_working) {
 		LCUICond_TimedWait(&pic->cond, &pic->mutex, 1000);
 	}
 	LCUIMutex_Unlock(&pic->mutex);
 	_DEBUG_MSG("exit\n");
-	if (!view.is_working) {
+	if (!viewer.is_working) {
 		return;
 	}
 	/* 如果在加载完后没有待加载的图片，则直接呈现到部件上 */
@@ -1157,14 +1157,14 @@ static void WaitPictureLoadDone(Picture pic)
 		ResetPictureSize(pic);
 	}
 	pic->is_loading = FALSE;
-	if (view.picture->view == pic->view) {
+	if (viewer.picture->view == pic->view) {
 		if (!pic->file_for_load) {
-			Widget_Hide(view.tip_loading);
+			Widget_Hide(viewer.tip_loading);
 		}
 		if (pic->is_valid) {
-			Widget_Hide(view.tip_unsupport);
+			Widget_Hide(viewer.tip_unsupport);
 		} else {
-			Widget_Show(view.tip_unsupport);
+			Widget_Show(viewer.tip_unsupport);
 		}
 		UpdateResetSizeButton();
 		UpdateZoomButtons();
@@ -1175,26 +1175,26 @@ static void WaitPictureLoadDone(Picture pic)
 static void OnBtnZoomInClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	double scale;
-	Picture pic = view.picture;
+	Picture pic = viewer.picture;
 	ResetOffsetPosition();
 	if (!pic->data) {
 		return;
 	}
 	scale = pic->scale * (1.0 + SCALE_STEP);
-	SetPictureScale(view.picture, scale);
+	SetPictureScale(viewer.picture, scale);
 }
 
 /** 在”缩小“按钮被点击的时候 */
 static void OnBtnZoomOutClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	double scale;
-	Picture pic = view.picture;
+	Picture pic = viewer.picture;
 	if (!pic->data) {
 		return;
 	}
 	ResetOffsetPosition();
 	scale = pic->scale * (1.0 - SCALE_STEP);
-	SetPictureScale(view.picture, scale);
+	SetPictureScale(viewer.picture, scale);
 }
 
 static void OnBtnPrevClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -1210,29 +1210,29 @@ static void OnBtnNextClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 static void OnBtnDeleteClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	char *path;
-	wchar_t *wpath = view.picture->file;
+	wchar_t *wpath = viewer.picture->file;
 	const wchar_t *title = I18n_GetText(KEY_DELETE);
 
-	if (!LCUIDialog_Confirm(view.window, title, NULL)) {
+	if (!LCUIDialog_Confirm(viewer.window, title, NULL)) {
 		return;
 	}
 	MoveFileToTrashW(wpath);
-	ClearPictureView(view.picture);
+	ClearPictureView(viewer.picture);
 	path = EncodeUTF8(wpath);
-	view.iterator->unlink(view.iterator);
+	viewer.iterator->unlink(viewer.iterator);
 	LCFinder_DeleteFiles(&path, 1, NULL, NULL);
 	LCFinder_TriggerEvent(EVENT_FILE_DEL, path);
 	free(path);
 
-	if (view.iterator->length == 0) {
+	if (viewer.iterator->length == 0) {
 		LCUI_PostSimpleTask(TaskForHideTipEmpty, NULL, NULL);
-		if (view.mode == MODE_SINGLE_PICVIEW) {
+		if (viewer.mode == MODE_SINGLE_PICVIEW) {
 			LCUI_Quit();
 		} else {
 			UI_ClosePictureView();
 		}
 	} else {
-		UI_OpenPictureView(view.iterator->filepath);
+		UI_OpenPictureView(viewer.iterator->filepath);
 	}
 }
 
@@ -1240,13 +1240,13 @@ static void OnBtnDeleteClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 static void OnBtnResetClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	double scale;
-	if (view.picture->scale != view.picture->min_scale) {
-		scale = view.picture->min_scale;
+	if (viewer.picture->scale != viewer.picture->min_scale) {
+		scale = viewer.picture->min_scale;
 	} else {
 		scale = 1.0;
 	}
 	ResetOffsetPosition();
-	SetPictureScale(view.picture, scale);
+	SetPictureScale(viewer.picture, scale);
 }
 
 /** 图片加载器线程 */
@@ -1298,13 +1298,13 @@ static void PictureLoader_Thread(void *arg)
 static void PictureLoader_SetTarget(PictureLoader loader, const wchar_t *path)
 {
 	LCUIMutex_Lock(&loader->mutex);
-	SetPicture(view.picture, path);
+	SetPicture(viewer.picture, path);
 	SetPicturePreloadList();
 	loader->num = -1;
 	/* 如果当前图片实例正在加载图片资源，则直接显示提示 */
-	if (view.picture->is_loading) {
-		ProgressBar_SetValue(view.tip_progress, 0);
-		Widget_Show(view.tip_loading);
+	if (viewer.picture->is_loading) {
+		ProgressBar_SetValue(viewer.tip_progress, 0);
+		Widget_Show(viewer.tip_loading);
 	}
 	LCUICond_Signal(&loader->cond);
 	LCUIMutex_Unlock(&loader->mutex);
@@ -1335,7 +1335,7 @@ static void ToggleSidePanel(PictureSidePanel panel)
 {
 	LCUI_BOOL visible = FALSE;
 
-	switch (view.active_panel) {
+	switch (viewer.active_panel) {
 	case SIDE_PANEL_INFO:
 		visible = PictureView_VisibleInfo();
 		PictureView_HideInfo();
@@ -1347,8 +1347,8 @@ static void ToggleSidePanel(PictureSidePanel panel)
 	default:
 		break;
 	}
-	if (view.active_panel == panel && visible) {
-		view.active_panel = SIDE_PANEL_NONE;
+	if (viewer.active_panel == panel && visible) {
+		viewer.active_panel = SIDE_PANEL_NONE;
 		return;
 	}
 	switch (panel) {
@@ -1361,7 +1361,7 @@ static void ToggleSidePanel(PictureSidePanel panel)
 	default:
 		break;
 	}
-	view.active_panel = panel;
+	viewer.active_panel = panel;
 }
 
 static void OnBtnShowInfoClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
@@ -1379,16 +1379,16 @@ static void SetPictureFocusPoint(Picture pic, int focus_x, int focus_y)
 	int x, y;
 	float width, height;
 	/* 获取浏览区域的位置 */
-	x = focus_x - view.offset_x;
-	y = focus_y - view.offset_y;
+	x = focus_x - viewer.offset_x;
+	y = focus_y - viewer.offset_y;
 	width = (float)(pic->scale * pic->data->width);
 	height = (float)(pic->scale * pic->data->height);
 	/* 如果缩放后的尺寸小于浏览区域，则调整偏移量 */
 	if (width < pic->view->width) {
-		view.offset_x += (int)((pic->view->width - width) / 2);
+		viewer.offset_x += (int)((pic->view->width - width) / 2);
 	}
 	if (height < pic->view->height) {
-		view.offset_y += (int)((pic->view->height - height) / 2);
+		viewer.offset_y += (int)((pic->view->height - height) / 2);
 	}
 	/* 调整浏览区域坐标 */
 	if (x < 0) {
@@ -1404,10 +1404,10 @@ static void SetPictureFocusPoint(Picture pic, int focus_x, int focus_y)
 		y = iround(height - pic->view->height);
 	}
 	/* 更新焦点位置 */
-	view.focus_x = x + view.offset_x;
-	view.focus_y = y + view.offset_y;
-	view.origin_focus_x = iround(view.focus_x / pic->scale);
-	view.origin_focus_y = iround(view.focus_y / pic->scale);
+	viewer.focus_x = x + viewer.offset_x;
+	viewer.focus_y = y + viewer.offset_y;
+	viewer.origin_focus_x = iround(viewer.focus_x / pic->scale);
+	viewer.origin_focus_y = iround(viewer.focus_y / pic->scale);
 	UpdatePicturePosition(pic);
 }
 
@@ -1415,23 +1415,23 @@ static void OnMouseWheel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	int x, y;
 	float width, height;
-	double scale = view.picture->scale;
-	Picture pic = view.picture;
+	double scale = viewer.picture->scale;
+	Picture pic = viewer.picture;
 
 	/* 获取当前浏览区域的位置 */
-	x = view.focus_x - view.offset_x;
-	y = view.focus_y - view.offset_y;
+	x = viewer.focus_x - viewer.offset_x;
+	y = viewer.focus_y - viewer.offset_y;
 	/* 更新区域偏移量 */
-	view.offset_x = e->wheel.x;
-	view.offset_y = e->wheel.y;
+	viewer.offset_x = e->wheel.x;
+	viewer.offset_y = e->wheel.y;
 	width = (float)(scale * pic->data->width);
 	height = (float)(scale * pic->data->height);
 	/* 如果缩放后的尺寸小于浏览区域，则调整偏移量 */
 	if (width < pic->view->width) {
-		view.offset_x += (int)((pic->view->width - width) / 2);
+		viewer.offset_x += (int)((pic->view->width - width) / 2);
 	}
 	if (height < pic->view->height) {
-		view.offset_y += (int)((pic->view->height - height) / 2);
+		viewer.offset_y += (int)((pic->view->height - height) / 2);
 	}
 	/* 调整浏览区域坐标 */
 	if (x < 0) {
@@ -1447,10 +1447,10 @@ static void OnMouseWheel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 		y = iround(height - pic->view->height);
 	}
 	/* 更新焦点位置 */
-	view.focus_x = x + view.offset_x;
-	view.focus_y = y + view.offset_y;
-	view.origin_focus_x = iround(view.focus_x / pic->scale);
-	view.origin_focus_y = iround(view.focus_y / pic->scale);
+	viewer.focus_x = x + viewer.offset_x;
+	viewer.focus_y = y + viewer.offset_y;
+	viewer.origin_focus_x = iround(viewer.focus_x / pic->scale);
+	viewer.origin_focus_y = iround(viewer.focus_y / pic->scale);
 	if (e->wheel.delta < 0) {
 		SetPictureZoomOut(pic);
 	} else {
@@ -1460,48 +1460,48 @@ static void OnMouseWheel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void OnKeyDown(LCUI_SysEvent e, void *data)
 {
-	int focus_x = view.focus_x;
-	int focus_y = view.focus_y;
+	int focus_x = viewer.focus_x;
+	int focus_y = viewer.focus_y;
 
 	if (LCUIWidget_GetFocus()) {
 		return;
 	}
 	switch (e->key.code) {
 	case LCUI_KEY_MINUS:
-		SetPictureZoomOut(view.picture);
+		SetPictureZoomOut(viewer.picture);
 		break;
 	case LCUI_KEY_EQUAL:
-		SetPictureZoomIn(view.picture);
+		SetPictureZoomIn(viewer.picture);
 		break;
 	case LCUI_KEY_LEFT:
-		if (!view.is_zoom_mode) {
+		if (!viewer.is_zoom_mode) {
 			OpenPrevPicture();
 			break;
 		}
 		focus_x -= MOVE_STEP;
-		SetPictureFocusPoint(view.picture, focus_x, focus_y);
+		SetPictureFocusPoint(viewer.picture, focus_x, focus_y);
 		break;
 	case LCUI_KEY_RIGHT:
-		if (!view.is_zoom_mode) {
+		if (!viewer.is_zoom_mode) {
 			OpenNextPicture();
 			break;
 		}
 		focus_x += MOVE_STEP;
-		SetPictureFocusPoint(view.picture, focus_x, focus_y);
+		SetPictureFocusPoint(viewer.picture, focus_x, focus_y);
 		break;
 	case LCUI_KEY_UP:
-		if (!view.is_zoom_mode) {
+		if (!viewer.is_zoom_mode) {
 			break;
 		}
 		focus_y -= MOVE_STEP;
-		SetPictureFocusPoint(view.picture, focus_x, focus_y);
+		SetPictureFocusPoint(viewer.picture, focus_x, focus_y);
 		break;
 	case LCUI_KEY_DOWN:
-		if (!view.is_zoom_mode) {
+		if (!viewer.is_zoom_mode) {
 			break;
 		}
 		focus_y += MOVE_STEP;
-		SetPictureFocusPoint(view.picture, focus_x, focus_y);
+		SetPictureFocusPoint(viewer.picture, focus_x, focus_y);
 	default:
 		break;
 	}
@@ -1516,56 +1516,56 @@ void UI_InitPictureView(int mode)
 		Widget_Top(box);
 		Widget_Unwrap(box);
 	}
-	view.mode = mode;
-	view.is_working = TRUE;
-	view.is_opening = FALSE;
-	view.zoom.point_ids[0] = -1;
-	view.zoom.point_ids[1] = -1;
-	view.zoom.is_running = FALSE;
-	view.active_panel = SIDE_PANEL_NONE;
+	viewer.mode = mode;
+	viewer.is_working = TRUE;
+	viewer.is_opening = FALSE;
+	viewer.zoom.point_ids[0] = -1;
+	viewer.zoom.point_ids[1] = -1;
+	viewer.zoom.is_running = FALSE;
+	viewer.active_panel = SIDE_PANEL_NONE;
 	SelectWidget(btn_back, ID_BTN_BROWSE_ALL);
 	SelectWidget(btn_del, ID_BTN_DELETE_PICTURE);
 	SelectWidget(btn_info, ID_BTN_SHOW_PICTURE_INFO);
 	SelectWidget(btn_label, ID_BTN_SHOW_PICTURE_LABEL);
 	SelectWidget(btn_back2, ID_BTN_HIDE_PICTURE_VIEWER);
-	SelectWidget(view.btn_prev, ID_BTN_PCITURE_PREV);
-	SelectWidget(view.btn_next, ID_BTN_PCITURE_NEXT);
-	SelectWidget(view.btn_zoomin, ID_BTN_PICTURE_ZOOM_IN);
-	SelectWidget(view.btn_zoomout, ID_BTN_PICTURE_ZOOM_OUT);
-	SelectWidget(view.btn_reset, ID_BTN_PICTURE_RESET_SIZE);
-	SelectWidget(view.window, ID_WINDOW_PCITURE_VIEWER);
-	SelectWidget(view.tip_empty, ID_TIP_PICTURE_NOT_FOUND);
-	SelectWidget(view.tip_loading, ID_TIP_PICTURE_LOADING);
-	SelectWidget(view.tip_unsupport, ID_TIP_PICTURE_UNSUPPORT);
-	SelectWidget(view.view_pictures, ID_VIEW_PICTURE_TARGET);
+	SelectWidget(viewer.btn_prev, ID_BTN_PCITURE_PREV);
+	SelectWidget(viewer.btn_next, ID_BTN_PCITURE_NEXT);
+	SelectWidget(viewer.btn_zoomin, ID_BTN_PICTURE_ZOOM_IN);
+	SelectWidget(viewer.btn_zoomout, ID_BTN_PICTURE_ZOOM_OUT);
+	SelectWidget(viewer.btn_reset, ID_BTN_PICTURE_RESET_SIZE);
+	SelectWidget(viewer.window, ID_WINDOW_PCITURE_VIEWER);
+	SelectWidget(viewer.tip_empty, ID_TIP_PICTURE_NOT_FOUND);
+	SelectWidget(viewer.tip_loading, ID_TIP_PICTURE_LOADING);
+	SelectWidget(viewer.tip_unsupport, ID_TIP_PICTURE_UNSUPPORT);
+	SelectWidget(viewer.view_pictures, ID_VIEW_PICTURE_TARGET);
 	BindEvent(btn_back, "click", OnBtnBackClick);
 	BindEvent(btn_back2, "click", OnBtnBackClick);
 	BindEvent(btn_del, "click", OnBtnDeleteClick);
 	BindEvent(btn_info, "click", OnBtnShowInfoClick);
 	BindEvent(btn_label, "click", OnBtnShowLabelsClick);
-	BindEvent(view.btn_prev, "click", OnBtnPrevClick);
-	BindEvent(view.btn_next, "click", OnBtnNextClick);
-	BindEvent(view.btn_reset, "click", OnBtnResetClick);
-	BindEvent(view.btn_zoomin, "click", OnBtnZoomInClick);
-	BindEvent(view.btn_zoomout, "click", OnBtnZoomOutClick);
-	BindEvent(view.view_pictures, "mousewheel", OnMouseWheel);
-	BindEvent(view.view_pictures, "dblclick", OnMouseDblClick);
+	BindEvent(viewer.btn_prev, "click", OnBtnPrevClick);
+	BindEvent(viewer.btn_next, "click", OnBtnNextClick);
+	BindEvent(viewer.btn_reset, "click", OnBtnResetClick);
+	BindEvent(viewer.btn_zoomin, "click", OnBtnZoomInClick);
+	BindEvent(viewer.btn_zoomout, "click", OnBtnZoomOutClick);
+	BindEvent(viewer.view_pictures, "mousewheel", OnMouseWheel);
+	BindEvent(viewer.view_pictures, "dblclick", OnMouseDblClick);
 	LCUI_BindEvent(LCUI_KEYDOWN, OnKeyDown, NULL, NULL);
 	InitSlideTransition();
-	view.pictures[PICTURE_SLOT_PREV] = CreatePicture();
-	view.pictures[PICTURE_SLOT_CURRENT] = CreatePicture();
-	view.pictures[PICTURE_SLOT_NEXT] = CreatePicture();
-	view.picture = view.pictures[PICTURE_SLOT_PREV];
-	view.tip_progress = LCUIWidget_New("progress");
-	ProgressBar_SetMaxValue(view.tip_progress, 100);
-	PictureLoader_Init(&view.loader, view.pictures);
-	Widget_Append(view.tip_loading, view.tip_progress);
-	Widget_Hide(view.window);
+	viewer.pictures[PICTURE_SLOT_PREV] = CreatePicture();
+	viewer.pictures[PICTURE_SLOT_CURRENT] = CreatePicture();
+	viewer.pictures[PICTURE_SLOT_NEXT] = CreatePicture();
+	viewer.picture = viewer.pictures[PICTURE_SLOT_PREV];
+	viewer.tip_progress = LCUIWidget_New("progress");
+	ProgressBar_SetMaxValue(viewer.tip_progress, 100);
+	PictureLoader_Init(&viewer.loader, viewer.pictures);
+	Widget_Append(viewer.tip_loading, viewer.tip_progress);
+	Widget_Hide(viewer.window);
 	PictureView_InitInfo();
 	PictureView_InitLabels();
 	UpdateSwitchButtons();
-	if (view.mode == MODE_SINGLE_PICVIEW) {
-		view.scanner =
+	if (viewer.mode == MODE_SINGLE_PICVIEW) {
+		viewer.scanner =
 		    PictureView_CreateScanner(finder.storage_for_scan);
 		Widget_SetStyle(btn_back2, key_display, SV_NONE, style);
 		Widget_Hide(btn_back2);
@@ -1581,21 +1581,21 @@ void UI_OpenPictureView(const char *filepath)
 
 	root = LCUIWidget_GetRoot();
 	wpath = DecodeUTF8(filepath);
-	view.is_opening = TRUE;
-	view.is_zoom_mode = FALSE;
-	view.picture = view.pictures[PICTURE_SLOT_CURRENT];
+	viewer.is_opening = TRUE;
+	viewer.is_zoom_mode = FALSE;
+	viewer.picture = viewer.pictures[PICTURE_SLOT_CURRENT];
 	SelectWidget(main_window, ID_WINDOW_MAIN);
 	swprintf(title, 255, L"%ls - " LCFINDER_NAME, wgetfilename(wpath));
 	Widget_SetTitleW(root, title);
-	Widget_Hide(view.tip_unsupport);
-	Widget_Hide(view.tip_empty);
-	PictureLoader_SetTarget(&view.loader, wpath);
+	Widget_Hide(viewer.tip_unsupport);
+	Widget_Hide(viewer.tip_empty);
+	PictureLoader_SetTarget(&viewer.loader, wpath);
 	PictureView_SetInfo(filepath);
 	PictureView_SetLabels();
-	Widget_Show(view.window);
+	Widget_Show(viewer.window);
 	Widget_Hide(main_window);
-	if (view.mode == MODE_SINGLE_PICVIEW) {
-		PictureView_OpenScanner(view.scanner, wpath,
+	if (viewer.mode == MODE_SINGLE_PICVIEW) {
+		PictureView_OpenScanner(viewer.scanner, wpath,
 					DirectSetPictureView,
 					SetPicturePreloadList);
 	}
@@ -1604,9 +1604,9 @@ void UI_OpenPictureView(const char *filepath)
 
 void UI_SetPictureView(FileIterator iter)
 {
-	if (view.iterator) {
-		view.iterator->destroy(view.iterator);
-		view.iterator = NULL;
+	if (viewer.iterator) {
+		viewer.iterator->destroy(viewer.iterator);
+		viewer.iterator = NULL;
 	}
 	DirectSetPictureView(iter);
 }
@@ -1617,24 +1617,24 @@ void UI_ClosePictureView(void)
 	LCUI_Widget root = LCUIWidget_GetRoot();
 	SelectWidget(main_window, ID_WINDOW_MAIN);
 	Widget_SetTitleW(root, LCFINDER_NAME);
-	ResetPictureSize(view.picture);
+	ResetPictureSize(viewer.picture);
 	Widget_Show(main_window);
-	Widget_Hide(view.window);
-	view.is_opening = FALSE;
+	Widget_Hide(viewer.window);
+	viewer.is_opening = FALSE;
 	UI_SetPictureView(NULL);
 }
 
 void UI_FreePictureView(void)
 {
-	view.is_working = FALSE;
-	if (view.mode == MODE_SINGLE_PICVIEW) {
-		PictureView_CloseScanner(view.scanner);
+	viewer.is_working = FALSE;
+	if (viewer.mode == MODE_SINGLE_PICVIEW) {
+		PictureView_CloseScanner(viewer.scanner);
 	}
-	PictureLoader_Exit(&view.loader);
-	DeletePicture(view.pictures[PICTURE_SLOT_PREV]);
-	DeletePicture(view.pictures[PICTURE_SLOT_CURRENT]);
-	DeletePicture(view.pictures[PICTURE_SLOT_NEXT]);
-	view.pictures[PICTURE_SLOT_PREV] = NULL;
-	view.pictures[PICTURE_SLOT_CURRENT] = NULL;
-	view.pictures[PICTURE_SLOT_NEXT] = NULL;
+	PictureLoader_Exit(&viewer.loader);
+	DeletePicture(viewer.pictures[PICTURE_SLOT_PREV]);
+	DeletePicture(viewer.pictures[PICTURE_SLOT_CURRENT]);
+	DeletePicture(viewer.pictures[PICTURE_SLOT_NEXT]);
+	viewer.pictures[PICTURE_SLOT_PREV] = NULL;
+	viewer.pictures[PICTURE_SLOT_CURRENT] = NULL;
+	viewer.pictures[PICTURE_SLOT_NEXT] = NULL;
 }
