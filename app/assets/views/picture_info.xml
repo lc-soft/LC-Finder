@@ -46,7 +46,7 @@
               </w>
             </w>
           </w>
-          <w type="scrollbar" data-layer="picture-info-content"/>
+          <w type="scrollbar" target="picture-info-content"/>
         </w>
       </w>
     </w>
