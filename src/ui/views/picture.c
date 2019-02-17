@@ -505,6 +505,7 @@ static void UpdatePicturePosition(Picture pic)
 		view.drag.with_x = FALSE;
 		view.focus_x = iround(width / 2.0);
 		view.origin_focus_x = iround(pic->data->width / 2.0);
+		view.offset_x = iround(pic->view->width / 2);
 		Widget_SetStyle(pic->view, key_background_position_x, 0.5,
 				scale);
 	} else {
@@ -532,6 +533,7 @@ static void UpdatePicturePosition(Picture pic)
 		view.drag.with_y = FALSE;
 		view.focus_y = iround(height / 2);
 		view.origin_focus_y = iround(pic->data->height / 2.0);
+		view.offset_y = iround(pic->view->height / 2);
 		Widget_SetStyle(pic->view, key_background_position_y, 0.5,
 				scale);
 	} else {
@@ -1415,6 +1417,7 @@ static void OnMouseWheel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	float width, height;
 	double scale = view.picture->scale;
 	Picture pic = view.picture;
+
 	/* 获取当前浏览区域的位置 */
 	x = view.focus_x - view.offset_x;
 	y = view.focus_y - view.offset_y;
