@@ -6,7 +6,7 @@ strings:
         cancel: 取消
         search: 搜索
         clear: 清除
-        cleaning: 正在清除...
+        clearing: 正在清除...
         reset_password: 重置密碼
         start: 開始
         stop: 停止
@@ -47,6 +47,7 @@ strings:
         detector_init_failed: 檢測器初始化失敗
         creating_model: 正在創建模型...
         removing_model: 正在刪除模型...
+        clearing_cache: 正在清除緩存...
     datetime:
         format: YYYY年MM月DD日，DATE hh:mm
         year_format: YYYY年MM月

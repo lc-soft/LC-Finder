@@ -42,8 +42,9 @@
 #include "textview_i18n.h"
 #include "settings.h"
 
-#define KEY_CLEANING 	"button.cleaning"
-#define KEY_CLEAR	"button.clear" 
+#define KEY_CLEANING "button.cleaning"
+#define KEY_MSG_CLEARING "message.clearing_cache"
+#define KEY_CLEAR "button.clear"
 
 static struct ThumbCacheSettingView {
 	LCUI_Widget thumb_db_stats;
@@ -70,11 +71,26 @@ static void RenderThumbDBSizeText(wchar_t *buf, const wchar_t *text, void *data)
 	wcsreplace(buf, TXTFMT_BUF_MAX_LEN, L"%s", size_str);
 }
 
+static void OnClearThumbDBDone(LCUI_Widget w, LCUI_Widget text)
+{
+	Widget_SetDisabled(w, FALSE);
+	Widget_RemoveClass(w, "disabled");
+	TextView_SetTextW(text, I18n_GetText(KEY_CLEAR));
+	UI_StopLoading();
+}
+
+static void ClearThumbDBAsync(LCUI_Widget w, LCUI_Widget text)
+{
+	LCFinder_ClearThumbDB();
+	LCUI_PostSimpleTask(OnClearThumbDBDone, w, text);
+}
+
 /** 在“清除”按钮被点击时 */
 static void OnBtnClearThumbDBClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LinkedListNode *node;
 	LCUI_Widget text = NULL;
+	LCUI_TaskRec task = { 0 };
 
 	if (w->disabled) {
 		return;
@@ -92,10 +108,11 @@ static void OnBtnClearThumbDBClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	Widget_SetDisabled(w, TRUE);
 	Widget_AddClass(w, "disabled");
 	TextView_SetTextW(text, I18n_GetText(KEY_CLEANING));
-	LCFinder_ClearThumbDB();
-	Widget_SetDisabled(w, FALSE);
-	Widget_RemoveClass(w, "disabled");
-	TextView_SetTextW(text, I18n_GetText(KEY_CLEAR));
+	task.func = (LCUI_TaskFunc)ClearThumbDBAsync;
+	task.arg[0] = w;
+	task.arg[1] = text;
+	UI_StartLoading(I18n_GetText(KEY_MSG_CLEARING));
+	LCUI_PostAsyncTask(&task);
 }
 
 void SettingsView_InitThumbCache(void)
@@ -107,7 +124,7 @@ void SettingsView_InitThumbCache(void)
 	SelectWidget(btn, ID_BTN_SIDEBAR_SETTINGS);
 	BindEvent(btn, "click", OnBtnSettingsClick);
 	LCFinder_BindEvent(EVENT_THUMBDB_DEL_DONE, OnThumbDBDelDone, NULL);
-	TextViewI18n_SetFormater(view.thumb_db_stats,
-				 RenderThumbDBSizeText, NULL);
+	TextViewI18n_SetFormater(view.thumb_db_stats, RenderThumbDBSizeText,
+				 NULL);
 	TextViewI18n_Refresh(view.thumb_db_stats);
 }

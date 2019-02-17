@@ -6,7 +6,7 @@ strings:
         cancel: Cancel
         search: Search
         clear: Clear
-        cleaning: Cleaning...
+        clearing: Cleaning...
         reset_password: Reset password
         start: Start
         stop: Stop
@@ -47,6 +47,7 @@ strings:
         detector_init_failed: Detector initialization failed
         creating_model: Creating model...
         removing_model: Removing model...
+        clearing_cache: Clearing cache...
     datetime:
         format: 'DATE MM DD, YYYY hh:mm'
         year_format: MM YYYY
