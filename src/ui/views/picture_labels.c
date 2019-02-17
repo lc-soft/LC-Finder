@@ -78,25 +78,6 @@ static struct PictureLabelsPanel {
 static void RenderAvailableLabels(void);
 static void LabelsPanel_SaveBoxesAsync(void);
 
-static wchar_t *GetDataFileName(wchar_t *file)
-{
-	const wchar_t *ext;
-	wchar_t *datafile;
-
-	datafile = malloc(sizeof(wchar_t) * (wcslen(file) + 7));
-	if (!datafile) {
-		return NULL;
-	}
-	wcscpy(datafile, file);
-	ext = wgetfileext(datafile);
-	if (ext) {
-		wcscpy(datafile + (ext - datafile), L".txt");
-	} else {
-		wcscat(datafile, L".txt");
-	}
-	return datafile;
-}
-
 static BoundingBox GetBoundingBox(BoundingBoxItem item)
 {
 	char *tagname;
@@ -470,7 +451,7 @@ static void LabelsPanel_LoadBoxes(wchar_t *filename)
 	boxes = NEW(LinkedList, 1);
 	LinkedList_Init(boxes);
 	do {
-		datafile = GetDataFileName(filename);
+		datafile = GetAnnotationFileNameW(filename);
 		if (!datafile) {
 			break;
 		}
@@ -502,7 +483,7 @@ static void LabelsPanel_SaveBoxes(wchar_t *file, BoundingBox *boxes)
 	wchar_t *datafile;
 	BoundingBox box;
 
-	datafile = GetDataFileName(file);
+	datafile = GetAnnotationFileNameW(file);
 	fp = wfopen(datafile, L"w+");
 	LOG("[labels-panel] write data file: %ls\n", datafile);
 	free(datafile);
