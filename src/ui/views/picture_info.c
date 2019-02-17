@@ -236,6 +236,7 @@ static void OnBtnAddTagClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	const wchar_t *title = I18n_GetText(KEY_TITLE_ADD_TAG);
 	const wchar_t *holder = I18n_GetText(KEY_PLACEHOLDER_INPUT_TAG);
 	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_PCITURE_VIEWER);
+
 	if (0 != LCUIDialog_Prompt(window, title, holder, NULL, text,
 				   MAX_TAG_LEN, CheckTagName)) {
 		return;
@@ -258,7 +259,10 @@ static void OnBtnAddTagClick(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 			}
 		}
 	}
-	freestrs(tagnames);
+	for (i = 0; tagnames[i]; ++i) {
+		free(tagnames[i]);
+	}
+	free(tagnames);
 	free(buf);
 }
 
