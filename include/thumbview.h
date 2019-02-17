@@ -37,23 +37,23 @@
 #ifndef LCFINDER_THUMBVIEW_H
 #define LCFINDER_THUMBVIEW_H
 
-void ThumbView_Lock( LCUI_Widget w );
+void ThumbView_Lock(LCUI_Widget w);
 
-void ThumbView_Unlock( LCUI_Widget w );
+void ThumbView_Unlock(LCUI_Widget w);
 
-void ThumbView_Empty( LCUI_Widget w );
+void ThumbView_Empty(LCUI_Widget w);
 
 /** 追加子部件 */
-void ThumbView_Append( LCUI_Widget w, LCUI_Widget child );
+void ThumbView_Append(LCUI_Widget w, LCUI_Widget child);
 
 /** 追加文件夹 */
-LCUI_Widget ThumbView_AppendFolder( LCUI_Widget w, const char *filepath,
-				    LCUI_BOOL show_path );
+LCUI_Widget ThumbView_AppendFolder(LCUI_Widget w, const char *filepath,
+				   LCUI_BOOL show_path);
 
 /** 追加图片 */
-LCUI_Widget ThumbView_AppendPicture( LCUI_Widget w, const DB_File file );
+LCUI_Widget ThumbView_AppendPicture(LCUI_Widget w, const DB_File file);
 
-void ThumbViewItem_AppendToCover( LCUI_Widget item, LCUI_Widget child );
+void ThumbViewItem_AppendToCover(LCUI_Widget item, LCUI_Widget child);
 
 void ThumbView_StartUpdateLayout(LCUI_Widget w);
 
@@ -61,33 +61,32 @@ void ThumbView_StartUpdateLayout(LCUI_Widget w);
 void ThumbView_DelayUpdateLayout(LCUI_Widget w, LCUI_Widget start_child);
 
 /** 绑定回调函数，在布局开始时调用 */
-void ThumbView_OnLayout( LCUI_Widget w, void( *func )(LCUI_Widget) );
+void ThumbView_OnLayout(LCUI_Widget w, void (*func)(LCUI_Widget));
 
 /** 设置缩略图缓存 */
-void ThumbView_SetCache( LCUI_Widget w, ThumbCache cache );
+void ThumbView_SetCache(LCUI_Widget w, ThumbCache cache);
 
 /** 设置文件存储服务的连接标识符 */
-void ThumbView_SetStorage( LCUI_Widget w, int storage );
+void ThumbView_SetStorage(LCUI_Widget w, int storage);
 
 /** 启用缩略图滚动加载功能 */
-void ThumbView_EnableAutoLoader( LCUI_Widget w );
+void ThumbView_EnableAutoLoader(LCUI_Widget w);
 
 /** 禁用缩略图滚动加载功能 */
-void ThumbView_DisableAutoLoader( LCUI_Widget w );
+void ThumbView_DisableAutoLoader(LCUI_Widget w);
 
 /** 为缩略图列表项绑定文件 */
-void ThumbViewItem_BindFile( LCUI_Widget item, DB_File file );
+void ThumbViewItem_BindFile(LCUI_Widget item, DB_File file);
 
 /** 获取与缩略图列表项绑定的文件 */
-DB_File ThumbViewItem_GetFile( LCUI_Widget item );
+DB_File ThumbViewItem_GetFile(LCUI_Widget item);
 
 /** 为缩略图列表项设置相关操作函数 */
-void ThumbViewItem_SetFunction( LCUI_Widget item,
-				void( *setthumb )(LCUI_Widget, LCUI_Graph*),
-				void( *unsetthumb )(LCUI_Widget),
-				void( *updatesize )(LCUI_Widget) );
+void ThumbViewItem_SetFunction(LCUI_Widget item,
+			       void (*setthumb)(LCUI_Widget, LCUI_Graph *),
+			       void (*unsetthumb)(LCUI_Widget),
+			       void (*updatesize)(LCUI_Widget));
 
-void LCUIWidget_AddThumbView( void );
-
+void LCUIWidget_AddThumbView(void);
 
 #endif
