@@ -248,13 +248,11 @@ static void LabelsPanel_UpdateLabelItem(BoundingBoxItem item)
 {
 	LCUI_Rect img_rect;
 	PictureLabelsViewContext ctx = &labels_panel.ctx;
-	float width = ctx->scale * ctx->width;
-	float height = ctx->scale * ctx->height;
 
-	img_rect.x = iround(item->rect.x * width);
-	img_rect.y = iround(item->rect.y * height);
-	img_rect.width = iround(item->rect.width * width);
-	img_rect.height = iround(item->rect.height * height);
+	img_rect.x = iround(item->rect.x * ctx->width);
+	img_rect.y = iround(item->rect.y * ctx->height);
+	img_rect.width = iround(item->rect.width * ctx->width);
+	img_rect.height = iround(item->rect.height * ctx->height);
 	LabelItem_SetRect(item->item, &img_rect);
 }
 
