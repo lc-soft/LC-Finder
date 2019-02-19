@@ -54,7 +54,7 @@ labelbox {
         }
     }
 }
-@for $i from 1 to length($labelbox-colors) {
+@for $i from 1 to length($labelbox-colors) + 1 {
     $color: nth($labelbox-colors, $i);
 
     .labelbox-color-#{$i} {
