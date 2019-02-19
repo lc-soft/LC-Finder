@@ -312,6 +312,7 @@ static int OpenPrevPicture(void)
 {
 	Picture pic;
 	FileIterator iter = viewer.iterator;
+
 	if (!iter || iter->index == 0) {
 		return -1;
 	}
@@ -335,6 +336,7 @@ static int OpenNextPicture(void)
 {
 	Picture pic;
 	FileIterator iter = viewer.iterator;
+
 	if (!iter || iter->index >= iter->length - 1) {
 		return -1;
 	}
@@ -1615,6 +1617,8 @@ void UI_ClosePictureView(void)
 {
 	LCUI_Widget main_window;
 	LCUI_Widget root = LCUIWidget_GetRoot();
+
+	ClearPictureView(viewer.picture);
 	SelectWidget(main_window, ID_WINDOW_MAIN);
 	Widget_SetTitleW(root, LCFINDER_NAME);
 	ResetPictureSize(viewer.picture);
