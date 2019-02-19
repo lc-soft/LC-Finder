@@ -95,8 +95,8 @@ static BoundingBox GetBoundingBox(BoundingBoxItem item)
 	tag = LCFinder_GetTag(tagname);
 	if (tag) {
 		box->id = tag->id;
-		box->x = item->rect.x;
-		box->y = item->rect.y;
+		box->x = item->rect.x + item->rect.width / 2;
+		box->y = item->rect.y + item->rect.height / 2;
 		box->w = item->rect.width;
 		box->h = item->rect.height;
 	} else {
@@ -466,6 +466,8 @@ static void LabelsPanel_LoadBoxes(wchar_t *filename)
 				free(box);
 				break;
 			}
+			box->x -= box->w / 2;
+			box->y -= box->h / 2;
 			LinkedList_Append(boxes, box);
 		}
 		fclose(fp);
