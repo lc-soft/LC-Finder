@@ -50,6 +50,8 @@
 
 // clang-format off
 
+#define KEY_DIALOG_TITLE		"dialog.not_implement.title"
+#define KEY_DIALOG_CONTENT		"dialog.not_implement.text"
 #define KEY_MESSAGE_CREATING		"message.creating_model"
 #define KEY_MESSAGE_REMOVING		"message.removing_model"
 #define KEY_NEW_MODEL_TITLE		"dialog.new_model.title"
@@ -308,7 +310,17 @@ static void OnDetectionProgress(void *arg)
 	}
 }
 
-static OnStartDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+static void OnStartTrain(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	const wchar_t *title = I18n_GetText(KEY_DIALOG_TITLE);
+	const wchar_t *text = I18n_GetText(KEY_DIALOG_CONTENT);
+	LCUI_Widget window = LCUIWidget_GetById(ID_WINDOW_MAIN);
+
+	LCUIDialog_Alert(window, title, text);
+	TaskItem_StopTask(view.training.view);
+}
+
+static void OnStartDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	int worker;
 	LCUI_TaskRec task = { 0 };
@@ -323,7 +335,7 @@ static OnStartDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LCUI_PostAsyncTaskTo(&task, worker);
 }
 
-static OnStopDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+static void OnStopDetect(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	LCUI_TaskRec task = { 0 };
 	TaskController t = &view.detection;
@@ -354,6 +366,7 @@ void SettingsView_InitDetector(void)
 	TaskItem_SetIcon(task_training, "brain");
 	TaskItem_SetNameKey(task_training, KEY_DETECTOR_TRAINING_TITLE);
 	TaskItem_SetTextKey(task_training, KEY_DETECTOR_TRAINING_TEXT);
+	Widget_BindEvent(task_training, "start", OnStartTrain, NULL, NULL);
 	Widget_BindEvent(task_detection, "start", OnStartDetect, NULL, NULL);
 	Widget_BindEvent(task_detection, "stop", OnStopDetect, NULL, NULL);
 	Widget_BindEvent(btn, "click", OnBtnNewModelClick, NULL, NULL);

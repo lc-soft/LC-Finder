@@ -25,6 +25,9 @@ strings:
             placeholder: Model name
         remove_model:
             title: Remove this model?
+        not_implement:
+            title: Not implement
+            text: This feature is not implement. Please wait for further updates.
     tagthumb:
         item: '%ls item'
         items: '%ls items'

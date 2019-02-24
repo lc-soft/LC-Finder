@@ -25,6 +25,9 @@ strings:
             placeholder: 模型名稱
         remove_model:
             title: 刪除此模型？
+        not_implement:
+            title: 功能未實現
+            text: 此功能未實現，請等待後續更新。
     tagthumb:
         item: '%ls 項'
         items: '%ls 項'
