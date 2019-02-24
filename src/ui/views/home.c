@@ -1,4 +1,4 @@
-/* ***************************************************************************
+﻿/* ***************************************************************************
  * view_home.c -- home view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -55,10 +55,6 @@
 #include "browser.h"
 
 #define KEY_TITLE "home.title"
-
-/* 延时隐藏进度条 */
-#define HideProgressBar() \
-	LCUITimer_Set(1000, (FuncPtr)Widget_Hide, view.progressbar, FALSE)
 
 /** 主页集锦视图的相关数据 */
 static struct HomeCollectionView {
@@ -243,20 +239,12 @@ static void HomeView_AppendFiles(void *unused)
 	LinkedList files;
 	LinkedListNode *node;
 
-	if (view.browser.files.length >= view.files.length) {
-		HideProgressBar();
-	}
 	LinkedList_Init(&files);
-	FileStage_GetFiles(view.stage, &files);
+	FileStage_GetFiles(view.stage, &files, 512);
 	for (LinkedList_Each(node, &files)) {
 		HomeView_AppendFile(node->data);
 	}
 	LinkedList_Concat(&view.files, &files);
-	ProgressBar_SetValue(view.progressbar, view.browser.files.length);
-	if (!view.scanner_running) {
-		view.scanner_timer = 0;
-		return;
-	}
 	view.scanner_timer = LCUI_SetTimeout(200, HomeView_AppendFiles, NULL);
 }
 
@@ -279,10 +267,6 @@ static size_t HomeView_ScanFiles(void)
 	total = DBQuery_GetTotalFiles(query);
 	DB_DeleteQuery(query);
 
-	ProgressBar_SetValue(view.progressbar, 0);
-	ProgressBar_SetMaxValue(view.progressbar, (int)total);
-	Widget_Show(view.progressbar);
-	_DEBUG_MSG("total: %lu\n", total);
 	for (count = 0; view.scanner_running && count < total;) {
 		query = DB_NewQuery(&terms);
 		for (i = 0; view.scanner_running; ++count, ++i) {
@@ -348,6 +332,9 @@ static void HomeView_StartScanner(void)
 	view.scanner_running = TRUE;
 	view.scanner_timer = LCUI_SetTimeout(200, HomeView_AppendFiles, NULL);
 	LCUIThread_Create(&view.scanner_thread, HomeView_ScannerThread, NULL);
+	ProgressBar_SetValue(view.progressbar, 0);
+	ProgressBar_SetMaxValue(view.progressbar, 100);
+	Widget_Show(view.progressbar);
 }
 
 static void HomeView_FreeScanner(void)
@@ -376,7 +363,7 @@ static void HomeView_OnShow(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 
 static void OnSyncDone(void *privdata, void *arg)
 {
-	HomeView_LoadFiles();
+	LCUI_PostSimpleTask(HomeView_LoadFiles, NULL, NULL);
 }
 
 static void HomeView_InitBase(void)
@@ -390,6 +377,19 @@ static void HomeView_InitBase(void)
 	Widget_Hide(view.time_ranges->parent->parent);
 	Widget_AddClass(view.time_ranges, "time-range-list");
 	LCFinder_BindEvent(EVENT_SYNC_DONE, OnSyncDone, NULL);
+}
+
+static void HomeView_OnProgress(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	size_t *current = arg;
+
+	ProgressBar_SetValue(view.progressbar, *current);
+	ProgressBar_SetMaxValue(view.progressbar, w->children.length);
+	if (*current == w->children.length) {
+		Widget_Hide(view.progressbar);
+	} else {
+		Widget_Show(view.progressbar);
+	}
 }
 
 static void HomeView_InitBrowser(void)
@@ -414,6 +414,7 @@ static void HomeView_InitBrowser(void)
 	view.browser.after_deleted = OnAfterDeleted;
 	ThumbView_SetCache(view.items, finder.thumb_cache);
 	ThumbView_SetStorage(view.items, finder.storage_for_thumb);
+	Widget_BindEvent(view.items, "progress", HomeView_OnProgress, NULL, NULL);
 	FileBrowser_Init(&view.browser);
 }
 
