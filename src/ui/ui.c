@@ -130,7 +130,7 @@ static void OnSurfaceReady(LCUI_Event e, void *arg)
 	hwnd = (HWND)Surface_GetHandle(surface);
 	icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON_MAIN));
 #ifdef _WIN64
-	SetClassLong(hwnd, GCLP_HICON, (LONG)icon);
+	SetClassLongPtr(hwnd, GCLP_HICON, (LONG)icon);
 #else
 	SetClassLong(hwnd, GCLP_ICON, (LONG)icon);
 #endif
@@ -220,12 +220,12 @@ int UI_Init(int argc, char **argv)
 
 static void OnTimer(void *arg)
 {
-	//Widget_PrintTree(LCUIWidget_GetById("view-detector-settings"));
+	Widget_PrintTree(LCUIWidget_GetById(ID_PANEL_PICTURE_LABELS));
 }
 
 int UI_Run(void)
 {
-	LCUI_SetTimeout(5000, OnTimer, NULL);
+	//LCUI_SetTimeout(5000, OnTimer, NULL);
 	return LCUI_Main();
 }
 
