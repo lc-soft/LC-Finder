@@ -43,8 +43,8 @@
               <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</w>
             </w>
             <w id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></w>
+            <w type="scrollbar" target="view-search-tags" />
           </w>
-          <w type="scrollbar" target="view-search-tags"/>
         </w>
         <w id="view-search-results-wrapper" class="hide view-content-wrapper">
           <w class="view-content full-height">
@@ -53,8 +53,8 @@
               <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</w>
             </w>
             <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
+            <w type="scrollbar" target="view-search-files" />
           </w>
-          <w type="scrollbar" target="view-search-files"/>
         </w>
       </w>
     </w>
