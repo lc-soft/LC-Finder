@@ -181,21 +181,20 @@ static void OnOpenDir(FileStatus *status, FileStream stream, void *data)
 	size_t len;
 	int i = 0, pos = -1;
 	char buf[PATH_LEN + 2];
+
+	PictureFileIndex fidx;
 	PictureFileScanner fs = data;
+	LCUI_BOOL activated = FALSE;
 
 	if (!status || status->type != FILE_TYPE_DIRECTORY || !stream) {
 		return;
 	}
 	while (fs->is_running) {
-		char *p;
-		PictureFileIndex fidx;
-
 		buf[0] = 0;
-		p = FileStream_ReadLine(stream, buf, PATH_LEN + 2);
-		if (p == NULL) {
+		if (!FileStream_ReadLine(stream, buf, PATH_LEN + 2)) {
 			break;
 		}
-		/* 忽略文件夹 */
+		/* Ignore the directory */
 		if (buf[0] == 'd') {
 			continue;
 		}
@@ -203,29 +202,32 @@ static void OnOpenDir(FileStatus *status, FileStream stream, void *data)
 		if (len < 2) {
 			continue;
 		}
+		/* Removes '\n' */
 		buf[len - 1] = 0;
 		fidx = NEW(PictureFileIndexRec, 1);
 		fidx->name = DecodeUTF8(buf + 1);
 		fidx->node.data = fidx;
 		LinkedList_AppendNode(&fs->files, &fidx->node);
-		if (wcscmp(fidx->name, fs->file) == 0 && !fs->iterator) {
-			fs->iterator = FileIterator_Create(fs, fidx);
-			pos = i;
+		if (!activated && pos >= 0 && i > pos + 2) {
+			fs->on_active();
+			activated = TRUE;
 		}
-		if (pos < 0 && fs->iterator) {
+		if (activated) {
 			FileIterator_Update(fs->iterator);
 			fs->on_found(fs->iterator);
 		}
-		if (pos >= 0 && i - pos > 2) {
-			fs->on_active();
-			pos = -1;
+		if (!fs->iterator && wcscmp(fidx->name, fs->file) == 0) {
+			fs->iterator = FileIterator_Create(fs, fidx);
+			pos = i;
 		}
 		++i;
 	}
-	if (fs->iterator && pos >= 0) {
+	if (fs->iterator) {
 		FileIterator_Update(fs->iterator);
 		fs->on_found(fs->iterator);
-		fs->on_active();
+		if (!activated) {
+			fs->on_active();
+		}
 	}
 	fs->is_running = FALSE;
 }

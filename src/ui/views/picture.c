@@ -1618,7 +1618,6 @@ void UI_ClosePictureView(void)
 	LCUI_Widget main_window;
 	LCUI_Widget root = LCUIWidget_GetRoot();
 
-	ClearPictureView(viewer.picture);
 	SelectWidget(main_window, ID_WINDOW_MAIN);
 	Widget_SetTitleW(root, LCFINDER_NAME);
 	ResetPictureSize(viewer.picture);

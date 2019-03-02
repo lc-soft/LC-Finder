@@ -338,7 +338,7 @@ char *FileStream_ReadLine(FileStream stream, char *buf, size_t size)
 
 	if (!FileStream_Useable(stream)) {
 		FileStream_Destroy(stream);
-		return 0;
+		return NULL;
 	}
 	do {
 		if (stream->chunk) {
@@ -1007,7 +1007,7 @@ void FileClient_Run(FileClient client)
 	FileResponse response;
 	Connection conn = client->connection;
 
-	LOG("[file client] work started\n");
+	LOG("[file client][%u] work started\n", client->thread);
 	client->active = TRUE;
 	while (client->active) {
 		LCUIMutex_Lock(&client->mutex);
@@ -1015,12 +1015,14 @@ void FileClient_Run(FileClient client)
 			LCUICond_Wait(&client->cond, &client->mutex);
 		}
 		node = LinkedList_GetNode(&client->tasks, 0);
+		LCUIMutex_Unlock(&client->mutex);
+		if (!client->active) {
+			break;
+		}
 		if (!node) {
-			LCUIMutex_Unlock(&client->mutex);
 			continue;
 		}
 		LinkedList_Unlink(&client->tasks, node);
-		LCUIMutex_Unlock(&client->mutex);
 		task = node->data;
 		LOG("[file client] send request, "
 		    "method: %s, path len: %lu\n",
@@ -1043,7 +1045,7 @@ void FileClient_Run(FileClient client)
 		task->handler.callback(&response, task->handler.data);
 		FileClientTask_Destroy(task);
 	}
-	LOG("[file client] work stopped\n");
+	LOG("[file client][%u] work stopped\n", client->thread);
 	LCUIThread_Exit(NULL);
 }
 
@@ -1056,12 +1058,15 @@ static void FileClient_Thread(void *arg)
 
 void FileClient_Close(FileClient client)
 {
+	LOG("[file client][%u] close...\n", client->thread);
 	LCUIMutex_Lock(&client->mutex);
 	client->active = FALSE;
 	Connection_Close(client->connection);
 	LCUICond_Signal(&client->cond);
 	LCUIMutex_Unlock(&client->mutex);
+	LOG("[file client][%u] waiting...\n", client->thread);
 	LCUIThread_Join(client->thread, NULL);
+	LOG("[file client][%u] closed!\n", client->thread);
 }
 
 void FileClient_RunAsync(FileClient client)
