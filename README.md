@@ -4,7 +4,7 @@
   </a>
   <h3 align="center">LC's Finder</h3>
   <p align="center">
-    Lightweight, cross-platform image manager
+    Image labeling and object detection tool
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/GPL-2.0"><img src="https://img.shields.io/github/license/lc-soft/LC-Finder.svg" alt="License"></a>
@@ -19,26 +19,28 @@
 
 [中文版](README.zh-cn.md)
 
-LCFinder (LC's Finder) is an image resource management tool that you can use to browse images, easily manage images, or search for images you want. As with the author's other projects, the naming is simple, it begins with LC, and the following Finder is referenced from the Finder in Mac OS.
+LCFinder (LC's Finder) is an image management tool that supports image annotation and object detection. It is written in C and uses [LCUI](https://github.com/lc-soft/LCUI) for its graphical interface. As with the author's other projects, the naming is simple, it begins with LC, and the following Finder is referenced from the Finder in Mac OS.
 
 LCFinder's user interface and feature design is based on the "photos" application that comes with Windows, Although it is a reference, the functional aspects are mainly developed according to the author's individual needs, and the author does not intend to waste time to implement all the functions of the "photo" application.
 
-The "Photos" app responds slowly on machines with low hardware configurations, especially when opening an image file in the Explorer, the window will be in an unresponsive state for a long time, and the experience is very poor. It is easy to wonder: from the open file decoding data, to build user interface and render the image, to such a point operations also need to spend such a long time? Therefore, this is one of the reasons for the development of LCFinder.
-
 ### Features
 
-- **Collection view:** Group by time to show all images.
-- **Folders view:** Keep the folder structure, you can view the images in each folder separately.
-- **Image view:** Support for opening bmp, jpg, and png images to score and tag current image.
-- **Tag search:** Support searching for images by tag.
-- **Localization:** Support Simplified Chinese, Traditional Chinese, English, expandable support for other languages.
-- **Private space:** Put non-public images in a private space to hide them, only display them after entering your password and confirming that you have opened your private space.
-- **UWP：** Support for Windows Universal Platform (UWP), you can [click this link](https://www.microsoft.com/store/apps/9NBLGGH401X5) to view it in the windows app store.
+- **Image labeling:** Provides a simple GUI for marking bounded boxes of objects in images for training Yolo v3 and v2
+- **Object Detection:** Built-in image detector, It can automatically annotate the detected objects in the images.
+- **Search by tags:** You can browse and search tagged images in the tags view
+- **Localization:** Support English, Simplified Chinese, Traditional Chinese, expandable support for other languages.
+- **Private space:** A password-protected space where you can hide non-public image sources
+- **UWP：** Support for Windows Universal Platform (UWP), you can [click this link](https://www.microsoft.com/store/apps/9NBLGGH401X5) to view it in the windows app store. Due to the development cost of the UWP version, it will not be updated with the desktop version.
 
 ## Screenshots
 
-[![screenshot 1](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-001.jpg)
-[![screenshot 2](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg "效果图")](https://lcfinder.lc-soft.io/static/images/screenshot-004.jpg)
+[![screenshot 1](screenshots/1.jpg "LCFinder")](screenshots/1.jpg)
+
+[![screenshot 1](screenshots/2.jpg "LCFinder")](screenshots/2.jpg)
+
+[![screenshot 1](screenshots/3.jpg "LCFinder")](screenshots/3.jpg)
+
+[![screenshot 1](screenshots/4.jpg "LCFinder")](screenshots/4.jpg)
 
 ## Contributing
 
@@ -49,18 +51,14 @@ If you are interested in fixing issues and contributing directly to the code bas
 - [Submitting pull requests](CONTRIBUTING.md#pull-requests)
 - [Contributing to translations](CONTRIBUTING.md#translations)
 
-## Feedback
-
-- Request a new feature on [GitHub](https://github.com/lc-soft/LC-Finder/issues).
-- File a bug in [GitHub Issues](https://github.com/lc-soft/LC-Finder/issues).
-- Vote for [Popular Feature Requests](https://github.com/lc-soft/LC-Finder/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc).
-
 ## Related Projects
 
 The development of LCFinder is inseparable from the support of these projects:
 
 - [LCUI](https://lcui.lc-soft.io) — UI engine, provide graphical user interface support
-- [LCUI.css](https://github.com/lc-ui/lcui.css) — UI component library, provides basic styles and components for the graphical user interface.
+- [LCUI.css](https://github.com/lc-ui/lcui.css) — UI component library, provides basic styles and components for the graphical user interface
+- [darknetlib](https://github.com/lc-soft/darknetlib) — C bindings for [darknet](http://pjreddie.com/darknet/), provide image recognition support
+
 
 ## License
 
