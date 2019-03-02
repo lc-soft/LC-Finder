@@ -4,7 +4,7 @@
   </a>
   <h3 align="center">LC's Finder</h3>
   <p align="center">
-    Image labeling and object detection tool
+    Image annotation and object detection tool
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/GPL-2.0"><img src="https://img.shields.io/github/license/lc-soft/LC-Finder.svg" alt="License"></a>
@@ -25,8 +25,8 @@ LCFinder's user interface and feature design is based on the "photos" applicatio
 
 ### Features
 
-- **Image labeling:** Provides a simple GUI for marking bounded boxes of objects in images for training Yolo v3 and v2
-- **Object Detection:** Built-in image detector, It can automatically annotate the detected objects in the images.
+- **Image annotation:** Provides a simple GUI for marking bounded boxes of objects in images for training Yolo v3 and v2
+- **Object detection:** Built-in image detector, It can automatically annotate the detected objects in the images.
 - **Search by tags:** You can browse and search tagged images in the tags view
 - **Localization:** Support English, Simplified Chinese, Traditional Chinese, expandable support for other languages.
 - **Private space:** A password-protected space where you can hide non-public image sources
@@ -55,7 +55,7 @@ If you are interested in fixing issues and contributing directly to the code bas
 
 The development of LCFinder is inseparable from the support of these projects:
 
-- [LCUI](https://lcui.lc-soft.io) — UI engine, provide graphical user interface support
+- [LCUI](https://github.com/lc-soft/LCUI) — UI engine, provide graphical user interface support
 - [LCUI.css](https://github.com/lc-ui/lcui.css) — UI component library, provides basic styles and components for the graphical user interface
 - [darknetlib](https://github.com/lc-soft/darknetlib) — C bindings for [darknet](http://pjreddie.com/darknet/), provide image recognition support
 

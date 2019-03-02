@@ -28,6 +28,7 @@
   - [sqlite3](https://www.sqlite.org/)
   - [unqlite](https://www.unqlite.org/) 或 [leveldb](https://github.com/google/leveldb)
   - [libyaml](https://github.com/yaml/libyaml)
+  - [darknetlib](https://github.com/lc-soft/darknetlib)
 
 最后，运行如下命令安装全部依赖：
 

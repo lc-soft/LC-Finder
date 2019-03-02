@@ -30,7 +30,8 @@ If you want to understand how Code works or want to debug an issue, you'll want 
   - [sqlite3](https://www.sqlite.org/)
   - [unqlite](https://www.unqlite.org/) or [leveldb](https://github.com/google/leveldb)
   - [libyaml](https://github.com/yaml/libyaml)
-
+  - [darknetlib](https://github.com/lc-soft/darknetlib)
+  
 Finally, install all dependencies using:
 
     cd LC-Finder
