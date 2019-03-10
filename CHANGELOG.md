@@ -1,3 +1,9 @@
+## 0.3.0 Beta (2019-3-10)
+
+- Support image object detection
+- Support image annotation
+- Optimizing rendering performance of thumbnail list view
+
 ## 0.2.1 Beta (2018-11-28)
 
 - Migrate to the latest version of LCUI
