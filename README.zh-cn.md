@@ -33,7 +33,7 @@ LCFinder 的界面及功能设计参考了 Windows 系统自带的“照片”�
 ### 缺少的功能
 
 - **Linux 支持：** 当前版本并不一定能在 Linux 系统中编译通过并正常工作，请等待其他熟悉 Linux 的开发者来贡献代码，作者暂时不想折腾
-- **训练模型：** 网络上的一些预训练模型都比较通用，有些人会有训练专用模型的需求，要是能有图形化的界面来管理模型训练任务的话会方便很多，能省去了查资料、改源码和重新编译的麻烦，毕竟网络上有些文章还在介绍如何通过改源码、配置、重新编译等操作来训练模型。如果你熟悉 darknet，可以帮助我们完善 [darknetlib](https://github.com/lc-soft/darknetlib)
+- **训练模型：** 网络上的一些预训练模型都比较通用，有些人会有训练专用模型的需求，要是有图形化的界面来管理模型训练任务的话会方便很多，省去查资料、改源码和重新编译的麻烦，毕竟网络上有些文章还在介绍如何通过改源码、配置、重新编译等操作来训练模型。如果你熟悉 darknet，可以帮助我们完善 [darknetlib](https://github.com/lc-soft/darknetlib)
 
 ## 截图
 
@@ -44,6 +44,16 @@ LCFinder 的界面及功能设计参考了 Windows 系统自带的“照片”�
 [![screenshot 1](screenshots/3.jpg "LCFinder")](screenshots/3.jpg)
 
 [![screenshot 1](screenshots/4.jpg "LCFinder")](screenshots/4.jpg)
+
+## 安装
+
+如果你想使用检测器检测一些图像，那么需要如下步骤:
+
+1. 下载预训练模型文件:
+   - `yolov3.cfg` (236 MB COCO Yolo v3) - requires 4 GB GPU-RAM: https://pjreddie.com/media/files/yolov3.weights
+    - `yolov3-tiny.cfg` (34 MB COCO Yolo v3 tiny) - requires 1 GB GPU-RAM: https://pjreddie.com/media/files/yolov3-tiny.weights
+    - `yolo9000.cfg` (186 MB Yolo9000-model) - requires 4 GB GPU-RAM: http://pjreddie.com/media/files/yolo9000.weights
+1. 复制 `.weights` 文件到 `app/detector/models` 中与它同名的目录里，例如：复制 `yolov3.weights` 文件到 `app/detector/models/yolov3/`
 
 ## 贡献
 

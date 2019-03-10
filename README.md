@@ -30,7 +30,7 @@ LCFinder's user interface and feature design is based on the "photos" applicatio
 - **Search by tags:** You can browse and search tagged images in the tags view
 - **Localization:** Support English, Simplified Chinese, Traditional Chinese, expandable support for other languages.
 - **Private space:** A password-protected space where you can hide non-public image sources
-- **UWP：** Support for Windows Universal Platform (UWP), you can [click this link](https://www.microsoft.com/store/apps/9NBLGGH401X5) to view it in the windows app store. Due to the development cost of the UWP version, it will not be updated with the desktop version.
+- **UWP:** Support for Windows Universal Platform (UWP), you can [click this link](https://www.microsoft.com/store/apps/9NBLGGH401X5) to view it in the windows app store. Due to the development cost of the UWP version, it will not be updated with the desktop version.
 
 ## Screenshots
 
@@ -41,6 +41,16 @@ LCFinder's user interface and feature design is based on the "photos" applicatio
 [![screenshot 1](screenshots/3.jpg "LCFinder")](screenshots/3.jpg)
 
 [![screenshot 1](screenshots/4.jpg "LCFinder")](screenshots/4.jpg)
+
+## Install
+
+If you want to use the detector, you need the following steps:
+
+1. Download pre-trained models:
+    - `yolov3.cfg` (236 MB COCO Yolo v3) - requires 4 GB GPU-RAM: https://pjreddie.com/media/files/yolov3.weights
+    - `yolov3-tiny.cfg` (34 MB COCO Yolo v3 tiny) - requires 1 GB GPU-RAM: https://pjreddie.com/media/files/yolov3-tiny.weights
+    - `yolo9000.cfg` (186 MB Yolo9000-model) - requires 4 GB GPU-RAM: http://pjreddie.com/media/files/yolo9000.weights
+1. Copy the `.weights` file to its namesake directory in the `app/detector/models` directory, such as: copy `yolov3.weights` file to `app/detector/models/yolov3/`
 
 ## Contributing
 
