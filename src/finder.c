@@ -135,7 +135,7 @@ static wchar_t *LCFinder_CreateThumbDB(const char *dirpath)
 	strcpy(path, dirpath);
 	EncodeSHA1(name, path, strlen(path));
 	LCUI_EncodeString(dbpath, finder.thumbs_dir, PATH_LEN - 1,
-			  ENCODING_UTF8);
+			  ENCODING_ANSI);
 	pathjoin(dbpath, dbpath, name);
 	db = ThumbDB_Open(dbpath);
 	if (!db) {
@@ -745,8 +745,10 @@ static int LCFinder_InitThumbCache(void)
 
 static void LCFinder_FreeThumbCache(void)
 {
-	ThumbCache_Destroy(finder.thumb_cache);
-	finder.thumb_cache = NULL;
+	if (finder.thumb_cache) {
+		ThumbCache_Destroy(finder.thumb_cache);
+		finder.thumb_cache = NULL;
+	}
 }
 
 /** 初始化语言文件列表 */

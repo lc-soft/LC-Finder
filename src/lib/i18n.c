@@ -271,7 +271,9 @@ void I18n_Clear(void)
 		free(lang);
 	}
 	free(self.languages);
-	StrDict_Release(self.texts);
+	if (self.texts) {
+		StrDict_Release(self.texts);
+	}
 	self.languages = NULL;
 	self.language = NULL;
 	self.texts = NULL;

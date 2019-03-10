@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <leveldb/c.h>
 #include <LCUI_Build.h>
-#include <LCUI/util/dirent.h>
+#include <LCUI/util.h>
 
 #ifdef _WIN32
 #define PATH_SEP '\\'
@@ -71,7 +71,7 @@ kvdb_t *kvdb_open(const char *name)
 	leveldb_writeoptions_set_sync(db->woptions, 1);
 	db->db = leveldb_open(db->options, name, &err);
 	if (err) {
-		printf("[kvdb] error: %s\n", err);
+		LOG("[kvdb] error: %s\n", err);
 		return NULL;
 	}
 	return db;
@@ -93,7 +93,7 @@ int kvdb_destroy_db(const char *name)
 	leveldb_options_t *options = kvdb_options_create();
 	leveldb_destroy_db(options, name, &err);
 	if (err) {
-		printf("[kvdb] error: %s\n", err);
+		LOG("[kvdb] error: %s\n", err);
 		return -1;
 	}
 	return 0;
@@ -139,7 +139,7 @@ void *kvdb_get(kvdb_t *db, const char *key, size_t keylen, size_t *vallen)
 	char *value = leveldb_get(db->db, db->roptions, key,
 				  keylen, vallen, &err);
 	if (err) {
-		printf("[kvdb] error: %s\n", err);
+		LOG("[kvdb] error: %s\n", err);
 		return NULL;
 	}
 	return value;
@@ -151,7 +151,7 @@ int kvdb_put(kvdb_t *db, const char *key, size_t keylen,
 	char *err = NULL;
 	leveldb_put(db->db, db->woptions, key, keylen, val, vallen, &err);
 	if (err) {
-		printf("[kvdb] error: %s\n", err);
+		LOG("[kvdb] error: %s\n", err);
 		return -1;
 	}
 	return 0;
@@ -162,7 +162,7 @@ int kvdb_delete(kvdb_t *db, const char *key, size_t keylen)
 	char *err = NULL;
 	leveldb_delete(db->db, db->woptions, key, keylen, &err);
 	if (err) {
-		printf("[kvdb] error: %s\n", err);
+		LOG("[kvdb] error: %s\n", err);
 		return -1;
 	}
 	return 0;
