@@ -274,7 +274,7 @@ static void RenderModels(void)
 	if (i > 0) {
 		if (!found_model) {
 			wcscpy(finder.config.detector_model_name,
-			       models[i]->name);
+			       models[i - 1]->name);
 			TaskItem_SetActionDisabled(view.detection.view, TRUE);
 			LCFinder_SaveConfig();
 		}
