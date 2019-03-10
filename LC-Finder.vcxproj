@@ -209,7 +209,7 @@
     <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
@@ -238,7 +238,7 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+      <Command>copy $(ProjectDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
@@ -287,7 +287,7 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+      <Command>copy $(ProjectDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
@@ -325,7 +325,7 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+      <Command>copy $(ProjectDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)
@@ -350,12 +350,19 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)..\lcui.css\include;$(SolutionDir)..\LCUI\include;$(SolutionDir)..\darknetlib\include;$(SolutionDir)vendor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <CompileAs>CompileAsC</CompileAs>
       <DisableSpecificWarnings>4996;4091;</DisableSpecificWarnings>
+      <Optimization>MaxSpeed</Optimization>
+      <OmitFramePointers>false</OmitFramePointers>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -364,7 +371,7 @@ copy $(OutDir)*.dll $(ProjectDir)app\</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration);$(SolutionDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration);$(SolutionDIr)..\darknetlib\build\$(PlatformTarget)-windows\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>copy $(ProjectDir)..LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
+      <Command>copy $(ProjectDir)..\LCUI\bin\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUI.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\LCUIEx.* $(OutDIr)
 copy $(ProjectDir)vendor\lib\$(PlatformTarget)-windows\$(Configuration)\darknet.* $(OutDIr)

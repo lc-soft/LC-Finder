@@ -24,7 +24,9 @@ Global
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Debug|x86.Build.0 = Debug|Win32
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|ARM.ActiveCfg = Release|Win32
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x64.ActiveCfg = Release|x64
+		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x64.Build.0 = Release|x64
 		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x86.ActiveCfg = Release|Win32
+		{FE1B26DD-86FB-4CB8-8504-E2ACD5BC4D87}.Release|x86.Build.0 = Release|Win32
 		{A32417AA-EA1C-46B4-AE1C-23F54F41567A}.Debug|ARM.ActiveCfg = Debug|ARM
 		{A32417AA-EA1C-46B4-AE1C-23F54F41567A}.Debug|ARM.Build.0 = Debug|ARM
 		{A32417AA-EA1C-46B4-AE1C-23F54F41567A}.Debug|ARM.Deploy.0 = Debug|ARM
@@ -46,5 +48,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9F3D05A5-0CC9-42E3-8720-393BAC614868}
 	EndGlobalSection
 EndGlobal
