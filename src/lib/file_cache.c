@@ -34,7 +34,6 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#define DEBUG
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>

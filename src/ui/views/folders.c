@@ -444,7 +444,7 @@ static void OpenFolder(const char *dirpath)
 
 static void OnSyncDone(void *privdata, void *arg)
 {
-	OpenFolder(NULL);
+	LCUI_PostSimpleTask(OpenFolder, NULL, NULL);
 }
 
 static void UpdateQueryTerms(void)

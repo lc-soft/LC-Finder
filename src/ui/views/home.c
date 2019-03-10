@@ -215,8 +215,7 @@ static void HomeView_AppendFile(DB_File file)
 
 	time = file->modify_time;
 	t = localtime(&time);
-	sep = LinkedList_Get(&view.separators,
-			     view.separators.length - 1);
+	sep = LinkedList_Get(&view.separators, view.separators.length - 1);
 	/* 如果当前文件的创建时间超出当前时间段，则新建分割线 */
 	if (!sep || !TimeSeparator_CheckTime(sep, t)) {
 		sep = LCUIWidget_New("time-separator");
@@ -293,12 +292,16 @@ static size_t HomeView_ScanFiles(void)
 
 static void HomeView_ScannerThread(void *unused)
 {
-	if (HomeView_ScanFiles() > 0) {
+	size_t count = HomeView_ScanFiles();
+
+	if (view.is_activated) {
+		if (count > 0) {
 		Widget_AddClass(view.tip_empty, "hide");
 		Widget_Hide(view.tip_empty);
 	} else {
 		Widget_RemoveClass(view.tip_empty, "hide");
 		Widget_Show(view.tip_empty);
+	}
 	}
 	view.scanner_running = FALSE;
 	LCUIThread_Exit(NULL);
@@ -432,5 +435,6 @@ void UI_FreeHomeView(void)
 	if (!view.is_activated) {
 		return;
 	}
+	view.is_activated = FALSE;
 	HomeView_FreeScanner();
 }
