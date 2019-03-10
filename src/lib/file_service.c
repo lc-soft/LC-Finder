@@ -606,6 +606,7 @@ static int FileService_GetFile(Connection conn, FileRequest *request,
 	LCUI_ImageReaderRec reader = { 0 };
 	FileResponse *response = &chunk->response;
 	FileRequestParams *params = &request->params;
+
 	ret = FileService_GetFileStatus(request, chunk);
 	if (response->status != RESPONSE_STATUS_OK) {
 		return ret;
@@ -623,27 +624,32 @@ static int FileService_GetFile(Connection conn, FileRequest *request,
 		response->status = RESPONSE_STATUS_NOT_FOUND;
 		return -1;
 	}
+	do {
 	LCUI_SetImageReaderForFile(&reader, fp);
 	reader.fn_prog = request->params.progress;
 	reader.prog_arg = request->params.progress_arg;
-	if (LCUI_InitImageReader(&reader) != 0) {
-		goto load_image_falied;
+		ret = LCUI_InitImageReader(&reader);
+		if (ret != 0) {
+			LOG("[file service] cannot initialize image reader\n");
+			break;
 	}
 	if (LCUI_SetImageReaderJump(&reader)) {
-		goto load_image_falied;
+			LOG("[file service] cannot set jump point\n");
+			break;
 	}
 	if (LCUI_ReadImageHeader(&reader) != 0) {
-		goto load_image_falied;
+			LOG("[file service] cannot read image header\n");
+			break;
 	}
 	response->file.image = NEW(FileImageStatus, 1);
 	response->file.image->width = reader.header.width;
 	response->file.image->height = reader.header.height;
 	if (LCUI_ReadImage(&reader, &img) != 0) {
-		goto load_image_falied;
+			break;
 	}
 	fclose(fp);
-	LOG("[file service] load image success, size: (%d, %d)\n", img.width,
-	    img.height);
+		LOG("[file service] load image success, size: (%d, %d)\n",
+		    img.width, img.height);
 	Connection_WriteChunk(conn, chunk);
 	if (!params->get_thumbnail) {
 		chunk->type = DATA_CHUNK_IMAGE;
@@ -654,16 +660,15 @@ static int FileService_GetFile(Connection conn, FileRequest *request,
 	if ((params->width > 0 && img.width > (int)params->width) ||
 	    (params->height > 0 && img.height > (int)params->height)) {
 		/* FIXME: 大图的缩小效果并不好，需要改进 */
-		Graph_ZoomBilinear(&img, &chunk->thumb, TRUE, params->width,
-				   params->height);
+			Graph_ZoomBilinear(&img, &chunk->thumb, TRUE,
+					   params->width, params->height);
 		Graph_Free(&img);
 	} else {
 		chunk->thumb = img;
 	}
 	chunk->type = DATA_CHUNK_THUMB;
 	return 0;
-
-load_image_falied:
+	} while (0);
 	LOG("[file service] load image failed\n");
 	response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
 	Graph_Free(&img);
