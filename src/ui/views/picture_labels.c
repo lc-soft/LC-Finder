@@ -537,9 +537,10 @@ static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	BoundingBoxItem data;
 	PictureLabelsViewContext ctx = &labels_panel.ctx;
+
+	const wchar_t *name;
 	float width = ctx->scale * ctx->width;
 	float height = ctx->scale * ctx->height;
-	const wchar_t *name;
 
 	data = LabelsPanel_AddBox();
 	if (!data) {
@@ -550,6 +551,7 @@ static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 	LabelItem_SetNameW(data->item, name);
 	LabelsPanel_AddTag(name);
 	LabelsPanel_SaveBoxesAsync();
+	LabelBox_Edit(data->box);
 }
 
 static void OnHideView(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
