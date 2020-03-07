@@ -32,6 +32,9 @@
   },
   "homepage": "https://github.com/lc-soft/LC-Finder#readme",
   "devDependencies": {
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-conventional": "^8.2.0",
+    "@commitlint/travis-cli": "^8.2.0",
     "node-sass": "^4.13.1",
     "npm-run-all": "^4.1.3"
   },
