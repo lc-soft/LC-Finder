@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install xmake
+      uses: xmake-io/github-action-setup-xmake@v1.0.1
+    - name: install Node.js packages
+      run: npm install
+    - name: setup
+      run: sh ./setup.sh
+    - name: build
+      run: xmake
