@@ -248,7 +248,7 @@ ModelManifest.xml
 *.db
 *.opendb
 *.weights
-.*
+.xmake
 data
 src/lib/unqlite.c
 include/sqlite3.h
