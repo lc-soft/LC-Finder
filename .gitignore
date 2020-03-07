@@ -260,4 +260,5 @@ UWP/[Aa]ssets/*.ttf
 UWP/[Ll]ocales/
 UWP/BundleArtifacts
 vendor/
+setup/
 app/lc-finder
