@@ -47,9 +47,9 @@
 #include "common.h"
 #include "file_service.h"
 
-#undef LOG
+#undef Logger_Debug
 #undef LOGW
-#define LOG(format, ...)
+#define Logger_Debug(format, ...)
 #define LOGW(format, ...)
 #define TIME_SHIFT 116444736000000000ULL
 
@@ -713,7 +713,7 @@ static int FileService_ReadImage(Connection conn,
 	response->file.image = NEW(FileImageStatus, 1);
 	response->file.image->width = reader->header.width;
 	response->file.image->height = reader->header.height;
-	LOG("write response, status: %d\n", response->status);
+	Logger_Debug("write response, status: %d\n", response->status);
 	Connection_WriteChunk(conn, chunk);
 	ret = LCUI_ReadImage(reader, &img);
 	LCUI_ClearImageReader(reader);
@@ -837,7 +837,7 @@ void FileService_Handler(void *arg)
 	int n;
 	FileStreamChunk chunk;
 	Connection conn = (Connection)arg;
-	LOG("[file service][thread %d] started, connection: %d\n",
+	Logger_Debug("[file service][thread %d] started, connection: %d\n",
 	    LCUIThread_SelfID(), conn->id);
 	while (1) {
 		n = Connection_ReadChunk(conn, &chunk);
@@ -849,7 +849,7 @@ void FileService_Handler(void *arg)
 		chunk.request.stream = conn->input;
 		FileService_HandleRequest(conn, &chunk.request);
 	}
-	LOG("[file service][thread %d] stopped, connection: %d\n",
+	Logger_Debug("[file service][thread %d] stopped, connection: %d\n",
 	    LCUIThread_SelfID(), conn->id);
 	Connection_Destroy(conn);
 	LCUIThread_Exit(NULL);
@@ -909,20 +909,20 @@ void FileService_Run(void)
 	service.active = TRUE;
 	LCUICond_Signal(&service.cond);
 	LCUIMutex_Unlock(&service.mutex);
-	LOG("[file service] file service started\n");
+	Logger_Debug("[file service] file service started\n");
 	while (service.active) {
-		LOG("[file service] listen...\n");
+		Logger_Debug("[file service] listen...\n");
 		if (FileService_Listen(5) == 0) {
 			continue;
 		}
 		conn = FileService_Accept();
-		LOG("[file service] accept connection %d\n", conn->id);
+		Logger_Debug("[file service] accept connection %d\n", conn->id);
 		if (!conn) {
 			continue;
 		}
 		LCUIThread_Create(&conn->thread, FileService_Handler, conn);
 	}
-	LOG("[file service] file service stopped\n");
+	Logger_Debug("[file service] file service stopped\n");
 }
 
 static void FileService_Thread(void *arg)
@@ -1027,14 +1027,14 @@ int FileClient_Connect(FileClient client)
 {
 	int timeout = 0;
 	Connection conn;
-	LOG("[file client] connecting file service...\n");
+	Logger_Debug("[file client] connecting file service...\n");
 	LCUIMutex_Lock(&service.mutex);
 	while (!service.active) {
-		LOG("[file client] wait...\n");
+		Logger_Debug("[file client] wait...\n");
 		LCUICond_TimedWait(&service.cond, &service.mutex, 1000);
 		if (timeout++ >= 5) {
 			LCUIMutex_Unlock(&service.mutex);
-			LOG("[file client] timeout\n");
+			Logger_Debug("[file client] timeout\n");
 			return -1;
 		}
 	}
@@ -1043,13 +1043,13 @@ int FileClient_Connect(FileClient client)
 		LCUICond_TimedWait(&service.cond, &service.mutex, 1000);
 		if (timeout++ >= 5) {
 			LCUIMutex_Unlock(&service.mutex);
-			LOG("[file client] timeout\n");
+			Logger_Debug("[file client] timeout\n");
 			return -1;
 		}
 	}
 	if (!service.active) {
 		LCUIMutex_Unlock(&service.mutex);
-		LOG("[file client] service stopped\n");
+		Logger_Debug("[file client] service stopped\n");
 		return -2;
 	}
 	conn = Connection_Create();
@@ -1057,18 +1057,18 @@ int FileClient_Connect(FileClient client)
 	LCUICond_Signal(&service.cond);
 	LCUIMutex_Unlock(&service.mutex);
 	LCUIMutex_Lock(&conn->mutex);
-	LOG("[file client] waitting file service accept connection...\n");
+	Logger_Debug("[file client] waitting file service accept connection...\n");
 	for (timeout = 0; conn->closed && timeout < 5; ++timeout) {
 		LCUICond_TimedWait(&conn->cond, &conn->mutex, 1000);
 	}
 	LCUIMutex_Unlock(&conn->mutex);
 	if (timeout >= 5) {
 		Connection_Destroy(conn);
-		LOG("[file client] timeout\n");
+		Logger_Debug("[file client] timeout\n");
 		return -1;
 	}
 	client->connection = conn;
-	LOG("[file client][connection %d] created\n", conn->id);
+	Logger_Debug("[file client][connection %d] created\n", conn->id);
 	return 0;
 }
 
@@ -1085,11 +1085,11 @@ void FileClient_Run(FileClient client)
 	FileResponse response;
 	Connection conn = client->connection;
 
-	LOG("[file client] work started\n");
+	Logger_Debug("[file client] work started\n");
 	client->active = TRUE;
 	while (client->active) {
 		LCUIMutex_Lock(&client->mutex);
-		LOG("[file client] waitting task...\n");
+		Logger_Debug("[file client] waitting task...\n");
 		while (client->tasks.length < 1 && client->active) {
 			LCUICond_Wait(&client->cond, &client->mutex);
 		}
@@ -1110,7 +1110,7 @@ void FileClient_Run(FileClient client)
 		}
 		while (client->active) {
 			n = Connection_ReceiveResponse(conn, &response);
-			LOG("receive count: %d, response status: %d\n",
+			Logger_Debug("receive count: %d, response status: %d\n",
 			    n, response.status);
 			if (n != 0) {
 				break;
@@ -1119,7 +1119,7 @@ void FileClient_Run(FileClient client)
 		response.stream = conn->input;
 		task->handler.callback(&response, task->handler.data);
 	}
-	LOG("[file client] work stopped\n");
+	Logger_Debug("[file client] work stopped\n");
 }
 
 static void FileClient_Thread(void *arg)

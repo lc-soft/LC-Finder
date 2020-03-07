@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * i18n.c -- internationalization suport module.
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * textview_i18n.c -- 国际化支持模块。
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -187,19 +187,19 @@ Dict *I18n_LoadFile(const char *path)
 	parent_value = value = NULL;
 	parent_dict = dict = StrDict_Create(NULL, DeleteDictValue);
 	if (!yaml_parser_initialize(&parser)) {
-		LOG("[i18n] failed to initialize parser!\n");
+		Logger_Debug("[i18n] failed to initialize parser!\n");
 		return NULL;
 	}
-	LOG("[i18n] load language file: %s\n", path);
+	Logger_Debug("[i18n] load language file: %s\n", path);
 	buffer = LoadFileToBuffer(path, &size);
 	if (!buffer) {
-		LOG("[i18n] failed to open file: %s\n", path);
+		Logger_Debug("[i18n] failed to open file: %s\n", path);
 		return NULL;
 	}
 	yaml_parser_set_input_string(&parser, (unsigned char *)buffer, size);
 	do {
 		if (!yaml_parser_scan(&parser, &token)) {
-			LOG("[i18n] error: %s\n", parser.problem);
+			Logger_Debug("[i18n] error: %s\n", parser.problem);
 			StrDict_Release(dict);
 			dict = NULL;
 			break;

@@ -196,7 +196,7 @@ static void ThumbView_OnLayoutDone(void *arg)
 	view->layout.timer = 0;
 	view->layout.current = NULL;
 	view->layout.is_running = FALSE;
-	Widget_UpdateLayout(w);
+	Widget_AddTask(w, LCUI_WTASK_REFLOW);
 	Widget_BindEvent(w, "afterlayout", ThumbView_OnAfterLayout, NULL, NULL);
 }
 

@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * kvdb.c -- key-value database, based on LevelDB
  *
- * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -71,7 +71,7 @@ kvdb_t *kvdb_open(const char *name)
 	leveldb_writeoptions_set_sync(db->woptions, 1);
 	db->db = leveldb_open(db->options, name, &err);
 	if (err) {
-		LOG("[kvdb] error: %s\n", err);
+		Logger_Debug("[kvdb] error: %s\n", err);
 		return NULL;
 	}
 	return db;
@@ -93,7 +93,7 @@ int kvdb_destroy_db(const char *name)
 	leveldb_options_t *options = kvdb_options_create();
 	leveldb_destroy_db(options, name, &err);
 	if (err) {
-		LOG("[kvdb] error: %s\n", err);
+		Logger_Debug("[kvdb] error: %s\n", err);
 		return -1;
 	}
 	return 0;
@@ -139,7 +139,7 @@ void *kvdb_get(kvdb_t *db, const char *key, size_t keylen, size_t *vallen)
 	char *value = leveldb_get(db->db, db->roptions, key,
 				  keylen, vallen, &err);
 	if (err) {
-		LOG("[kvdb] error: %s\n", err);
+		Logger_Debug("[kvdb] error: %s\n", err);
 		return NULL;
 	}
 	return value;
@@ -151,7 +151,7 @@ int kvdb_put(kvdb_t *db, const char *key, size_t keylen,
 	char *err = NULL;
 	leveldb_put(db->db, db->woptions, key, keylen, val, vallen, &err);
 	if (err) {
-		LOG("[kvdb] error: %s\n", err);
+		Logger_Debug("[kvdb] error: %s\n", err);
 		return -1;
 	}
 	return 0;
@@ -162,7 +162,7 @@ int kvdb_delete(kvdb_t *db, const char *key, size_t keylen)
 	char *err = NULL;
 	leveldb_delete(db->db, db->woptions, key, keylen, &err);
 	if (err) {
-		LOG("[kvdb] error: %s\n", err);
+		Logger_Debug("[kvdb] error: %s\n", err);
 		return -1;
 	}
 	return 0;

@@ -375,7 +375,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 	wchar_t *dirpath;
 	DirStatusDataPackRec pack;
 
-	LOG("[scanner] task %lu finished\n", s->task_i);
+	Logger_Debug("[scanner] task %lu finished\n", s->task_i);
 	if (finder.n_dirs > 0) {
 		s->task_i += 1;
 		if (s->task) {
@@ -391,7 +391,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 	}
 	DB_Begin();
 	s->state = STATE_SAVING;
-	LOG("[scanner] start sync, folders count: %lu\n", finder.n_dirs);
+	Logger_Debug("[scanner] start sync, folders count: %lu\n", finder.n_dirs);
 	for (i = 0; i < finder.n_dirs; ++i) {
 		pack.dir = finder.dirs[i];
 		if (!AvailableSourceDir(pack.dir)) {
@@ -400,7 +400,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 		pack.status = s;
 		s->task = s->tasks[i];
 		dirpath = DecodeUTF8(pack.dir->path);
-		LOG("[scanner] sync files from folder: %ls\n", dirpath);
+		Logger_Debug("[scanner] sync files from folder: %ls\n", dirpath);
 		SyncTask_InAddedFiles(s->task, SyncAddedFile, &pack);
 		SyncTask_InDeletedFiles(s->task, SyncDeletedFile, &pack);
 		SyncTask_InChangedFiles(s->task, SyncChangedFile, &pack);
@@ -410,7 +410,7 @@ static void LCFinder_OnScanFinished(FileSyncStatus s)
 		free(dirpath);
 	}
 	DB_Commit();
-	LOG("[scanner] end sync\n");
+	Logger_Debug("[scanner] end sync\n");
 	s->state = STATE_FINISHED;
 	s->task = NULL;
 	s->task_i = 0;
@@ -533,7 +533,7 @@ static void LCFinder_SwitchTask(FileSyncStatus s)
 		SyncTask_Start(s->task);
 		dir = finder.dirs[s->task_i];
 		path = DecodeUTF8(dir->path);
-		LOG("[scanner] task %lu started, path: %ls\n", s->task_i, path);
+		Logger_Debug("[scanner] task %lu started, path: %ls\n", s->task_i, path);
 		LCFinder_ScanDir(s, path);
 		free(path);
 	} else {
@@ -574,7 +574,7 @@ void LCFinder_SyncFilesAsync(FileSyncStatus s)
 		s->tasks[i] = SyncTask_NewW(finder.fileset_dir, path);
 		count += 1;
 	}
-	LOG("[scanner] created %lu tasks\n", count);
+	Logger_Debug("[scanner] created %lu tasks\n", count);
 	LCFinder_SwitchTask(s);
 }
 
@@ -585,7 +585,7 @@ static int LCFinder_InitWorkDir(void)
 	wchar_t data_dir[PATH_LEN];
 	wchar_t *dirs[2] = { L"fileset", L"thumbs" };
 	if (GetAppInstalledLocationW(data_dir, PATH_LEN) != 0) {
-		LOG("[workdir] cannot get app installed location\n");
+		Logger_Debug("[workdir] cannot get app installed location\n");
 		return -1;
 	}
 	len = wcslen(data_dir) + 1;
@@ -593,7 +593,7 @@ static int LCFinder_InitWorkDir(void)
 	wcsncpy(finder.work_dir, data_dir, len);
 	wchdir(finder.work_dir);
 	if (GetAppDataFolderW(data_dir, PATH_LEN) != 0) {
-		LOG("[workdir] cannot get app data folder path\n");
+		Logger_Debug("[workdir] cannot get app data folder path\n");
 		return -1;
 	}
 	len = wcslen(data_dir) + 2;
@@ -607,8 +607,8 @@ static int LCFinder_InitWorkDir(void)
 	wpathjoin(finder.thumbs_dir, data_dir, dirs[1]);
 	wmkdir(finder.fileset_dir);
 	wmkdir(finder.thumbs_dir);
-	LOG("[workdir] work directory: %S\n", finder.work_dir);
-	LOG("[workdir] data directory: %S\n", finder.data_dir);
+	Logger_Debug("[workdir] work directory: %S\n", finder.work_dir);
+	Logger_Debug("[workdir] data directory: %S\n", finder.data_dir);
 	return 0;
 }
 
@@ -705,7 +705,7 @@ static int LCFinder_InitFileDB(void)
 	char *path;
 	wchar_t wpath[PATH_LEN];
 	wpathjoin(wpath, finder.data_dir, STORAGE_FILE);
-	LOGW(L"[filedb] path: %s\n", wpath);
+	Logger_Debug("[filedb] path: %ls\n", wpath);
 	path = EncodeUTF8(wpath);
 	ASSERT(DB_Init(path) == 0);
 	finder.n_dirs = DB_GetDirs(&finder.dirs);
@@ -764,9 +764,9 @@ static int LCFinder_InitLanguage(void)
 	LCUI_DirEntry *entry;
 
 	dir_len = wpathjoin(lang_path, finder.work_dir, LANG_DIR);
-	LOG("[i18n] open directory: %S\n", lang_path);
+	Logger_Debug("[i18n] open directory: %S\n", lang_path);
 	if (LCUI_OpenDir(lang_path, &dir) != 0) {
-		LOG("[i18n] open directory failed\n");
+		Logger_Debug("[i18n] open directory failed\n");
 		return -1;
 	}
 	lang_path[dir_len++] = PATH_SEP;
@@ -792,16 +792,16 @@ static int LCFinder_InitLanguage(void)
 		len = LCUI_EncodeString(file, lang_path, PATH_LEN - 1,
 					ENCODING_ANSI);
 		file[len] = 0;
-		LOG("[i18n] load file: %S\n", lang_path);
+		Logger_Debug("[i18n] load file: %S\n", lang_path);
 		I18n_LoadLanguage(file);
 	}
-	LOG("[i18n] set language: %s\n", finder.config.language);
+	Logger_Debug("[i18n] set language: %s\n", finder.config.language);
 	if (I18n_SetLanguage(finder.config.language)) {
 		return 0;
 	}
 	I18n_GetDefaultLanguage(finder.config.language, 32);
 	LCFinder_SaveConfig();
-	LOG("[i18n] set language: %s\n", finder.config.language);
+	Logger_Debug("[i18n] set language: %s\n", finder.config.language);
 	if (I18n_SetLanguage(finder.config.language)) {
 		return 0;
 	}
@@ -823,7 +823,7 @@ static int LCFinder_InitThumbDB(void)
 {
 	size_t i;
 	wchar_t *path;
-	LOG("[thumbdb] init ...\n");
+	Logger_Debug("[thumbdb] init ...\n");
 	finder.thumb_dbs = StrDict_Create(NULL, ThumbDBDict_ValDel);
 	finder.thumb_paths = malloc(sizeof(wchar_t *) * finder.n_dirs);
 	if (!finder.thumb_dbs || !finder.thumb_paths) {
@@ -835,9 +835,9 @@ static int LCFinder_InitThumbDB(void)
 		}
 		path = LCFinder_CreateThumbDB(finder.dirs[i]->path);
 		finder.thumb_paths[i] = path;
-		LOGW(L"[thumbdb] %d: %s\n", i, path);
+		Logger_Debug("[thumbdb] %d: %ls\n", i, path);
 	}
-	LOG("[thumbdb] init done\n");
+	Logger_Debug("[thumbdb] init done\n");
 	return 0;
 }
 
@@ -848,7 +848,7 @@ static void LCFinder_FreeThumbDB(void)
 	if (!finder.thumb_dbs) {
 		return;
 	}
-	LOG("[thumbdb] exit ..\n");
+	Logger_Debug("[thumbdb] exit ..\n");
 	StrDict_Release(finder.thumb_dbs);
 	for (i = 0; i < finder.n_dirs; ++i) {
 		free(finder.thumb_paths[i]);
@@ -857,7 +857,7 @@ static void LCFinder_FreeThumbDB(void)
 	free(finder.thumb_paths);
 	finder.thumb_paths = NULL;
 	finder.thumb_dbs = NULL;
-	LOG("[thumbdb] exit done\n");
+	Logger_Debug("[thumbdb] exit done\n");
 }
 
 /** 清除缩略图数据库 */
@@ -918,7 +918,7 @@ int LCFinder_SaveConfig(void)
 	path = EncodeANSI(wpath);
 	file = fopen(path, "wb");
 	if (!file) {
-		LOG("[config] cannot open file: %s\n", path);
+		Logger_Debug("[config] cannot open file: %s\n", path);
 		return -1;
 	}
 	fwrite(&finder.config, sizeof(finder.config), 1, file);

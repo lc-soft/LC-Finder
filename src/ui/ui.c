@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * ui.c -- ui managment module
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * ui.c -- 图形界面管理模块
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -37,7 +37,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "finder.h"
-#include <LCUIEx.h>
+#include <LCDesign.h>
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/util/charset.h>
@@ -45,7 +45,6 @@
 #include <LCUI/gui/metrics.h>
 #include "ui.h"
 #include "thumbview.h"
-#include "starrating.h"
 #include "timeseparator.h"
 #include "labelbox.h"
 #include "labelitem.h"
@@ -55,7 +54,6 @@
 #include "link_i18n.h"
 #include "tagthumb.h"
 #include "dialog.h"
-#include "switch.h"
 
 typedef struct ArgumentsRec_ {
 	const char *filepath;
@@ -164,7 +162,7 @@ int UI_Init(int argc, char **argv)
 #ifndef PLATFORM_WIN32_PC_APP
 	LCUI_Init();
 #endif
-	LCUIEx_Init();
+	LCDesign_Init();
 	LCUIWidget_AddProgressBar();
 	LCUIWidget_AddTimeSeparator();
 	LCUIWidget_AddTextViewI18n();
@@ -174,8 +172,6 @@ int UI_Init(int argc, char **argv)
 	LCUIWidget_AddTaskItem();
 	LCUIWidget_AddThumbView();
 	LCUIWidget_AddTagThumb();
-	LCUIWidget_AddSwitch();
-	LCUIWidget_AddStarRating();
 	LCUIMetrics_SetScale((float)(finder.config.scaling / 100.0));
 	LCUIDisplay_SetMode(LCUI_DMODE_WINDOWED);
 #ifndef PLATFORM_WIN32_PC_APP
@@ -218,14 +214,8 @@ int UI_Init(int argc, char **argv)
 	return 0;
 }
 
-static void OnTimer(void *arg)
-{
-	Widget_PrintTree(LCUIWidget_GetById(ID_PANEL_PICTURE_LABELS));
-}
-
 int UI_Run(void)
 {
-	//LCUI_SetTimeout(5000, OnTimer, NULL);
 	return LCUI_Main();
 }
 

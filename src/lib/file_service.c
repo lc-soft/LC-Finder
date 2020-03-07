@@ -676,25 +676,6 @@ static int FileService_GetFile(Connection conn, FileRequest *request,
 	return -1;
 }
 
-static const char *GetRequestMethodString(int method)
-{
-	switch (method) {
-	case REQUEST_METHOD_HEAD:
-		return "head";
-	case REQUEST_METHOD_POST:
-		return "post";
-	case REQUEST_METHOD_GET:
-		return "get";
-	case REQUEST_METHOD_DELETE:
-		return "delete";
-	case REQUEST_METHOD_PUT:
-		return "put";
-	default:
-		break;
-	}
-	return "unknown";
-}
-
 static void FileService_HandleRequest(Connection conn, FileRequest *request)
 {
 	FileStreamChunk chunk = { 0 };

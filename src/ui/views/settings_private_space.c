@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * settings_private_space.c -- private space setting view
  *
- * Copyright (C) 2019 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2019-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * settings_private_space.c -- “设置”视图中的私人空间设置项
  *
- * 版权所有 (C) 2019 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2019-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,13 +34,15 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
+#include <string.h>
+#include <stdlib.h>
 #include "finder.h"
+#include <LCDesign.h>
 #include <LCUI/gui/widget.h>
 #include "ui.h"
 #include "i18n.h"
 #include "dialog.h"
 #include "textview_i18n.h"
-#include "switch.h"
 #include "settings.h"
 
 #define KEY_VERIFY_PASSWORD_TITLE	"settings.private_space.verify_dialog.title"
@@ -95,13 +97,13 @@ static void OnBtnResetPasswordClick(LCUI_Widget w, LCUI_WidgetEvent e,
 		return;
 	}
 	buf = EncodeUTF8(wbuf);
-	LOGW(L"new password: %s\n", wbuf);
+	Logger_Debug("new password: %ls\n", wbuf);
 	EncodeSHA1(pwd, buf, strlen(buf));
 	LCFinder_SaveConfig();
 	free(buf);
 }
 
-static void OnPrivateSpaceSwitchCahnge(LCUI_Widget w, LCUI_WidgetEvent e,
+static void OnPrivateSpaceSwitchChange(LCUI_Widget w, LCUI_WidgetEvent e,
 				       void *arg)
 {
 	int ret;
@@ -136,7 +138,7 @@ static void OnPrivateSpaceSwitchCahnge(LCUI_Widget w, LCUI_WidgetEvent e,
 			return;
 		}
 		buf = EncodeUTF8(wbuf);
-		LOGW(L"new password: %s\n", wbuf);
+		Logger_Debug("new password: %ls\n", wbuf);
 		EncodeSHA1(pwd, buf, strlen(buf));
 		LCFinder_SaveConfig();
 		free(buf);
@@ -208,7 +210,7 @@ void SettingsView_InitPrivateSpace(void)
 	LCUI_Widget btn, btn_reset, switcher;
 
 	SelectWidget(switcher, ID_SWITCH_PRIVATE_SPACE);
-	BindEvent(switcher, "change.switch", OnPrivateSpaceSwitchCahnge);
+	BindEvent(switcher, "change", OnPrivateSpaceSwitchChange);
 	SelectWidget(view.source_dirs, ID_VIEW_PRIVATE_SOURCE_LIST);
 	SelectWidget(view.view, ID_VIEW_PRIVATE_SPACE);
 	SelectWidget(btn, ID_BTN_ADD_PRIVATE_SOURCE);

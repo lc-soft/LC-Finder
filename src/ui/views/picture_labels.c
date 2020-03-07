@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * picture_label.c -- picture label labels_panel
  *
- * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * picture_label.c -- "图片标记" 视图
  *
- * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "finder.h"
 #include "ui.h"
 #include "i18n.h"
@@ -164,7 +165,7 @@ static int RemoveFileTag(const wchar_t *tagname)
 	return DBFile_RemoveTag(labels_panel.file, tag);
 }
 
-static LabelsStats_Add(const char *tagname)
+static void LabelsStats_Add(const char *tagname)
 {
 	int *count;
 	Dict *stats = labels_panel.labels_stats;
@@ -341,9 +342,6 @@ static void OnLabelItemRemove(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 static int LabelsPanel_SetBox(BoundingBoxItem item, BoundingBox box)
 {
 	DB_Tag tag;
-	PictureLabelsViewContext ctx = &labels_panel.ctx;
-	float width = ctx->scale * ctx->width;
-	float height = ctx->scale * ctx->height;
 	wchar_t *name;
 
 	tag = LCFinder_GetTagById(box->id);
@@ -454,7 +452,7 @@ static void LabelsPanel_LoadBoxes(wchar_t *filename)
 			break;
 		}
 		fp = wfopen(datafile, L"r");
-		LOG("[labels-panel] open data file: %ls\n", datafile);
+		Logger_Debug("[labels-panel] open data file: %ls\n", datafile);
 		free(datafile);
 		if (!fp) {
 			break;
@@ -485,7 +483,7 @@ static void LabelsPanel_SaveBoxes(wchar_t *file, BoundingBox *boxes)
 
 	datafile = GetAnnotationFileNameW(file);
 	fp = wfopen(datafile, L"w+");
-	LOG("[labels-panel] write data file: %ls\n", datafile);
+	Logger_Debug("[labels-panel] write data file: %ls\n", datafile);
 	free(datafile);
 	if (!fp) {
 		return;
@@ -536,11 +534,8 @@ static void LabelsPanel_SaveBoxesAsync(void)
 static void OnAddLabel(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
 	BoundingBoxItem data;
-	PictureLabelsViewContext ctx = &labels_panel.ctx;
 
 	const wchar_t *name;
-	float width = ctx->scale * ctx->width;
-	float height = ctx->scale * ctx->height;
 
 	data = LabelsPanel_AddBox();
 	if (!data) {
@@ -700,7 +695,6 @@ static LCUI_BOOL LabelsPanel_SaveContext(PictureLabelsViewContext ctx)
 void PictureView_SetLabelsContext(PictureLabelsViewContext ctx)
 {
 	LCUI_BOOL file_changed;
-	wchar_t *file = labels_panel.ctx.file;
 
 	if (!labels_panel.visible) {
 		LabelsPanel_SaveContext(ctx);

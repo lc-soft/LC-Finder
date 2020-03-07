@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * detector.c -- detector
  *
- * Copyright (C) 2019 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2019-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * detector.c -- 检测器，基于 darknet 实现
  *
- * 版权所有 (C) 2019 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2019-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -35,6 +35,7 @@
  * ****************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 #include <LCUI_Build.h>
 #include <LCUI/types.h>
@@ -158,7 +159,7 @@ static DetectorModel DetectorModel_Create(const wchar_t *modeldir)
 	}
 	wcscpy(path, modeldir);
 	if (LCUI_OpenDirW(path, &dir) != 0) {
-		LOG("[detector] open model directory failed: %ls\n", path);
+		Logger_Debug("[detector] open model directory failed: %ls\n", path);
 		free(model);
 		return NULL;
 	}
@@ -207,12 +208,12 @@ int Detector_Init(const wchar_t *workdir)
 	wcscpy(dmod.workdir, path);
 	dir_len = wpathjoin(path, path, MODELS_DIR);
 	if (LCUI_OpenDirW(path, &dir) != 0) {
-		LOG("[detector] open directory failed: %ls\n", path);
+		Logger_Debug("[detector] open directory failed: %ls\n", path);
 		return -ENOENT;
 	}
 	path[dir_len++] = PATH_SEP;
 	file = path + dir_len;
-	LOG("[detector] load models...\n");
+	Logger_Debug("[detector] load models...\n");
 	while ((entry = LCUI_ReadDirW(&dir))) {
 		name = LCUI_GetFileNameW(entry);
 		if (name[0] == '.') {
@@ -224,7 +225,7 @@ int Detector_Init(const wchar_t *workdir)
 		wcscpy(file, name);
 		model = DetectorModel_Create(path);
 		if (model) {
-			LOG("[detector] load model: %ls\n", model->name);
+			Logger_Debug("[detector] load model: %ls\n", model->name);
 			LinkedList_Append(&dmod.models, model);
 		}
 	}
@@ -441,9 +442,9 @@ static int DetectorModel_InitConfigFile(DetectorModel model)
 			}
 		}
 		fputs(buff, outfile);
-		fputchar('\n');
+		fputc('\n', outfile);
 	}
-	fputchar('\n');
+	fputc('\n', outfile);
 	fclose(infile);
 	fclose(outfile);
 	return 0;
@@ -624,7 +625,7 @@ int Detector_RunTask(DetectorTask task)
 	DB_QueryTermsRec terms = { 0 };
 
 	if (!dmod.model) {
-		LOG("[detector] not model selected\n");
+		Logger_Debug("[detector] not model selected\n");
 		return -ENOENT;
 	}
 	task->state = DETECTOR_TASK_STATE_PREPARING;

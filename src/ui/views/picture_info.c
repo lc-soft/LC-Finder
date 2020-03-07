@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
  * picture_info.c -- picture info view
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2016-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -20,7 +20,7 @@
 /* ****************************************************************************
  * picture_info.c -- "图片信息" 视图
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2016-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -43,6 +43,7 @@
 #include "ui.h"
 #include "i18n.h"
 #include "file_storage.h"
+#include <LCDesign.h>
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
 #include <LCUI/cursor.h>
@@ -51,7 +52,6 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include "dialog.h"
-#include "starrating.h"
 #include "picture.h"
 
 // clang-format off
@@ -213,7 +213,7 @@ static void PictureInfo_AppendTag(DB_Tag tag)
 
 static void OnSetRating(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
 {
-	int rating = StarRating_GetRating(w);
+	int rating = (int)Rate_GetValue(w);
 	DBFile_SetScore(view.file, rating);
 }
 
@@ -351,7 +351,7 @@ static void InfoPanel_LoadInfo(void)
 	}
 	Widget_Show(view.view_tags->parent);
 	Widget_Show(view.rating->parent);
-	StarRating_SetRating(view.rating, view.file->score);
+	Rate_SetValue(view.rating, (unsigned)view.file->score);
 	n = LCFinder_GetFileTags(view.file, &tags);
 	for (i = 0; i < n; ++i) {
 		PictureInfo_AppendTag(tags[i]);
