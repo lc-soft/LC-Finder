@@ -5,13 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm-run-all build-bin build-assets",
+    "build": "npm-run-all build-bin build-css",
     "build-bin": "xmake",
-    "build-assets": "npm-run-all build-css build-vendor-assets",
-    "build-vendor-assets": "cp-cli setup/repos/lc-design/dist/assets app/assets",
     "build-css": "npm-run-all build-css-main build-css-themes",
-    "build-css-themes": "node-sass --output app/assets/stylesheets/themes --output-style expanded src/scss/themes/default.scss",
-    "build-css-main": "node-sass --output app/assets/stylesheets --output-style expanded src/scss/main.scss"
+    "build-css-themes": "node-sass --include-path vendor/src --output app/assets/stylesheets/themes --output-style expanded src/scss/themes/default.scss",
+    "build-css-main": "node-sass --include-path vendor/src --output app/assets/stylesheets --output-style expanded src/scss/main.scss"
   },
   "repository": {
     "type": "git",

@@ -11,4 +11,4 @@ before_script:
   - ./node_modules/.bin/commitlint-travis
 
 script:
-  - xmake
+  - npm run build

@@ -1,13 +1,12 @@
 #!/bin/sh
 
 rootdir=`pwd`
-builddir=$rootdir/setup
-logfile=$builddir/output.log
-repodir=$builddir/repos
+logfile=setup.log
 installdir=$rootdir/vendor
+repodir=$installdir/src
 
-if [ ! -d $builddir ]; then
-  mkdir $builddir
+if [ ! -d $installdir ]; then
+  mkdir $installdir
 fi
 if [ ! -d $repodir ]; then
   mkdir $repodir
