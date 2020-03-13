@@ -7,8 +7,8 @@
     图像标注与目标检测工具
   </p>
   <p align="center">
-    <a class="https://github.com/lc-soft/LC-Finder/actions"><img src="https://github.com/lc-soft/LC-Finder/workflows/C%2FC%2B%2B%20CI/badge.svg" alt="GitHub Actions"></a>
-    <a class="https://travis-ci.org/lc-soft/LC-Finder"><img src="https://travis-ci.org/lc-soft/LC-Finder.svg?branch=develop" alt="Build Status"></a>
+    <a href="https://github.com/lc-soft/LC-Finder/actions"><img src="https://github.com/lc-soft/LC-Finder/workflows/C%2FC%2B%2B%20CI/badge.svg" alt="GitHub Actions"></a>
+    <a href="https://travis-ci.org/lc-soft/LC-Finder"><img src="https://travis-ci.org/lc-soft/LC-Finder.svg?branch=develop" alt="Build Status"></a>
     <a href="https://opensource.org/licenses/GPL-2.0"><img src="https://img.shields.io/github/license/lc-soft/LC-Finder.svg" alt="License"></a>
     <a href="https://github.com/lc-soft/LCUI/releases"><img src="https://img.shields.io/github/release/lc-soft/LC-Finder/all.svg" alt="Github Release"></a>
     <a href="https://github.com/lc-soft/LCUI/releases"><img src="https://img.shields.io/github/downloads/lc-soft/LC-Finder/total.svg" alt="Github All Releases"></a>
