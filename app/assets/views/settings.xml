@@ -103,7 +103,6 @@
               <w class="text text-line" type="textview-i18n" data-i18n-key="settings.private_space.description">私人空间可用于存放一些非公开的资源，该空间内的资源不会在资源列表中显示，并且不会出现在搜索结果中。</w>
               <w class="text-line">
                 <w id="switch-private-space-open" type="switch"></w>
-                <w type="textview-i18n" class="text switch-text" data-i18n-key="switch.off" data-bind="switch"></w>
               </w>
             </w>
             <w id="view-private-space" class="setting-group hide">

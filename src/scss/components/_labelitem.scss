@@ -1,5 +1,7 @@
 labelitem {
-    display: block;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     padding: $labelitem-padding-y $labelitem-padding-x $labelitem-padding-y $labelitem-padding-left;
     margin: 0 #{$labelitem-margin-x};
 
@@ -13,7 +15,6 @@ labelitem {
     height: $labelitem-marker-size;
     margin-right: $spacing / 2;
     margin-left: -$labelitem-marker-size;
-    vertical-align: middle;
     display: inline-block;
 }
 

@@ -17,3 +17,33 @@
 	font-size: 74px;
 	text-align: center;
 }
+
+.result {
+	display: flex;
+	height: 100%;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+}
+
+.result-inner {
+	margin-top: -60px;
+}
+
+.result-icon {
+	color: $gray-600;
+	font-size: 74px;
+	text-align: center;
+	margin-bottom: 24px;
+	display: block;
+}
+
+.result-title {
+	font-size: 18px;
+	text-align: center;
+}
+
+.result-subtitle {
+	color: $gray-600;
+	text-align: center;
+}

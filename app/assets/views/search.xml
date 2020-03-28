@@ -38,22 +38,24 @@
       <w class="view-body">
         <w id="view-search-tags-wrapper" class="view-content-wrapper">
           <w class="view-content full-height">
-            <w id="tip-search-tags-empty" class="floating center middle aligned icon message hide">
-              <w type="textview" class="icon icon icon-tag-multiple"></w>
-              <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_tags">未找到标签记录</w>
+            <w id="tip-search-tags-empty" class="result hide">
+              <w class="result-inner">
+                <icon name="tag-multiple" class="result-icon" />
+                <textview-i18n class="text result-title" data-i18n-key="search.message.empty_tags">未找到标签记录</textview-i18n>
+              </w>
             </w>
-            <w id="view-search-tags" type="thumbview" class="scrolllayer tag-thumb-list"></w>
-            <w type="scrollbar" target="view-search-tags" />
+            <thumbview id="view-search-tags" class="scrolllayer tag-thumb-list" />
+            <scrollbar target="view-search-tags" />
           </w>
         </w>
         <w id="view-search-results-wrapper" class="hide view-content-wrapper">
           <w class="view-content full-height">
-            <w id="tip-search-no-result" class="floating center middle aligned icon message hide">
-              <w type="textview" class="icon icon icon-file-hidden"></w>
-              <w type="textview-i18n" class="text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</w>
+            <w id="tip-search-no-result" class="result hide">
+              <icon name="file-hidden" class="result-icon" />
+              <textview-i18n class="result-title text" data-i18n-key="search.message.empty_results">未找到符合条件的图片</textview-i18n>
             </w>
-            <w id="view-search-files" type="thumbview" class="scrolllayer file-list"></w>
-            <w type="scrollbar" target="view-search-files" />
+            <thumbview id="view-search-files" class="scrolllayer file-list" />
+            <scrollbar target="view-search-files" />
           </w>
         </w>
       </w>

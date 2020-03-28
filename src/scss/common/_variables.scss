@@ -137,3 +137,11 @@ $item-padidng-y: 12px;
 $item-height: $item-padidng-y * 2 + $item-line-height;
 
 $loading-box-width: 128px;
+
+$search-input-group-padding-y: 5px;
+$search-input-line-height: $font-size * 1.5;
+$search-input-padding-x: 8px;
+$search-input-padding-y: ($view-navbar-line-height - 
+	($search-input-group-padding-y + 1px) * 2 - $search-input-line-height) / 2;
+$search-input-icon-width: 24px;
+$search-input-icon-height: $search-input-line-height;

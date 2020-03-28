@@ -30,9 +30,11 @@
         <w id="view-home-content-wrapper" class="view-content-wrapper">
           <w id="view-home-progress" class="top-fixed" type="progress"></w>
           <w id="view-home-content" class="view-content full-height">
-            <w id="tip-empty-collection" class="floating center middle aligned icon message hide">
-              <w type="textview" class="icon icon icon-image-multiple"></w>
-              <w type="textview-i18n" class="text" data-i18n-key="home.message.empty">未找到可读取的图片。</w>
+            <w id="tip-empty-collection" class="result hide">
+              <w class="result-inner">
+                <icon name="image-multiple" class="result-icon" />
+                <textview-i18n class="result-title text" data-i18n-key="home.message.empty">未找到可读取的图片。</textview-i18n>
+              </w>
             </w>
             <w type="thumbview" id="home-collection-list" class="scrolllayer file-list"></w>
           </w>

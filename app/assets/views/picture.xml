@@ -27,15 +27,17 @@
         </w>
         <w class="window-body">
           <w id="picture-viewer-target" class="picture-container"></w>
-          <w class="zoom-btn-group">
-            <w id="btn-picture-zoom-out" class="icon-btn picture-option-btn">
-              <w type="icon" name="minus"></w>
-            </w>
-            <w id="btn-picture-reset-size" class="icon-btn picture-option-btn">
-              <w type="icon" name="fullscreen"></w>
-            </w>
-            <w id="btn-picture-zoom-in" class="icon-btn picture-option-btn">
-              <w type="icon" name="plus"></w>
+          <w class="zoom-btn-group-wrapper">
+            <w class="zoom-btn-group">
+              <w id="btn-picture-zoom-out" class="icon-btn picture-option-btn">
+                <w type="icon" name="minus"></w>
+              </w>
+              <w id="btn-picture-reset-size" class="icon-btn picture-option-btn">
+                <w type="icon" name="fullscreen"></w>
+              </w>
+              <w id="btn-picture-zoom-in" class="icon-btn picture-option-btn">
+                <w type="icon" name="plus"></w>
+              </w>
             </w>
           </w>
           <w id="btn-picture-prev" class="icon-btn picture-switch-btn prev">
@@ -44,16 +46,18 @@
           <w id="btn-picture-next" class="icon-btn picture-switch-btn next">
             <w class="icon icon icon-chevron-right" type="textview"></w>
           </w>
-          <w id="tip-picture-loading" class="floating center middle aligned message box">
-            <w type="textview-i18n" class="text" data-i18n-key="picture.message.loading">图片载入中...</w>
-          </w>
-          <w id="tip-picture-not-found" class="floating center middle aligned icon inverted message">
-            <w type="textview" class="icon icon icon-file-hidden"></w>
-            <w type="textview-i18n" class="text" data-i18n-key="picture.message.empty">此处没有任何要显示的内容。</w>
-          </w>
-          <w id="tip-picture-unsupport" class="floating center middle aligned icon inverted message">
-            <w type="textview" class="icon icon icon-help"></w>
-            <w type="textview-i18n" class="text" data-i18n-key="picture.message.unsupport">无法识别该图片的内容。</w>
+          <w class="picture-message">
+            <w id="tip-picture-loading" class="message box">
+              <w type="textview-i18n" class="text" data-i18n-key="picture.message.loading">图片载入中...</w>
+            </w>
+            <w id="tip-picture-not-found" class="icon inverted message">
+              <w type="textview" class="icon icon icon-file-hidden"></w>
+              <w type="textview-i18n" class="text" data-i18n-key="picture.message.empty">此处没有任何要显示的内容。</w>
+            </w>
+            <w id="tip-picture-unsupport" class="icon inverted message">
+              <w type="textview" class="icon icon icon-help"></w>
+              <w type="textview-i18n" class="text" data-i18n-key="picture.message.unsupport">无法识别该图片的内容。</w>
+            </w>
           </w>
         </w>
       </w>

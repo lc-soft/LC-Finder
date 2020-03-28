@@ -36,7 +36,7 @@
             </w>
             <w class="info-item">
               <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.info.file_score">评分</w>
-              <w id="picture-info-rating" type="starrating"></w>
+              <w id="picture-info-rating" type="rate"></w>
             </w>
             <w class="info-item">
               <w type="textview-i18n" class="text info-item-name" data-i18n-key="picture.info.file_tags">标签</w>

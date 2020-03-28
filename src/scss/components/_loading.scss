@@ -1,6 +1,9 @@
 .loading-dimmer {
 	top: 0;
 	left: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	z-index: 1000;
 	width: 100%;
 	height: 100%;
@@ -9,12 +12,10 @@
 }
 .loading-box {
 	width: $loading-box-width;
-	margin: 0 auto;
 	padding: $spacing;
-	vertical-align: middle;
 	background-color: #fff;
     box-sizing: border-box;
-    box-shadow: 1px 0 8px rgba(0,0,0,0.4);
+	box-shadow: 1px 0 8px rgba(0,0,0,0.4);
 }
 .loading-icon {
     color: theme-color("primary");
