@@ -1258,9 +1258,6 @@ static void PictureLoader_Thread(void *arg)
 	PictureLoader loader = arg;
 	LCUIMutex_Lock(&loader->mutex);
 	while (loader->is_running) {
-		_DEBUG_MSG("wait load\n");
-		LCUICond_Wait(&loader->cond, &loader->mutex);
-		_DEBUG_MSG("start load\n");
 		for (loader->num = 0; loader->num < 3 && loader->is_running;
 		     ++loader->num) {
 			/* 图片实例组是这样记录图片的：
@@ -1291,6 +1288,9 @@ static void PictureLoader_Thread(void *arg)
 			WaitPictureLoadDone(pic);
 			LCUIMutex_Lock(&loader->mutex);
 		}
+		_DEBUG_MSG("wait load\n");
+		LCUICond_Wait(&loader->cond, &loader->mutex);
+		_DEBUG_MSG("start load\n");
 	}
 	LCUIMutex_Unlock(&loader->mutex);
 	LCUIThread_Exit(NULL);
