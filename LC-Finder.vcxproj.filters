@@ -102,12 +102,6 @@
     <ClCompile Include="src\ui\components\splashscreen.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\components\starrating.c">
-      <Filter>源文件\ui\components</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\components\switch.c">
-      <Filter>源文件\ui\components</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\components\textview_i18n.c">
       <Filter>源文件\ui\components</Filter>
     </ClCompile>
@@ -237,9 +231,6 @@
     <ClInclude Include="include\dialog.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\starrating.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\progressbar.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -259,9 +250,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\bridge.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\switch.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\build.h">
