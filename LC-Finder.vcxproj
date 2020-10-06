@@ -39,6 +39,8 @@
     <ClCompile Include="src\lib\i18n_detetime.c" />
     <ClCompile Include="src\lib\kvdb_leveldb.c" />
     <ClCompile Include="src\lib\kvdb_unqlite.c" />
+    <ClCompile Include="src\lib\picture_loader.c" />
+    <ClCompile Include="src\lib\picture_scanner.c" />
     <ClCompile Include="src\lib\sha1.c" />
     <ClCompile Include="src\lib\thumb_db.c" />
     <ClCompile Include="src\lib\thumb_cache.c" />
@@ -72,7 +74,6 @@
     <ClCompile Include="src\ui\views\picture.c" />
     <ClCompile Include="src\ui\views\picture_info.c" />
     <ClCompile Include="src\ui\views\picture_labels.c" />
-    <ClCompile Include="src\ui\views\picture_scanner.c" />
     <ClCompile Include="src\ui\views\search.c" />
     <ClCompile Include="src\ui\views\settings.c" />
     <ClCompile Include="src\ui\views\settings_detector.c" />
@@ -108,6 +109,8 @@
     <ClInclude Include="include\labelbox.h" />
     <ClInclude Include="include\labelitem.h" />
     <ClInclude Include="include\link_i18n.h" />
+    <ClInclude Include="include\picture_loader.h" />
+    <ClInclude Include="include\picture_scanner.h" />
     <ClInclude Include="include\progressbar.h" />
     <ClInclude Include="include\sha1.h" />
     <ClInclude Include="include\tagthumb.h" />
@@ -188,7 +191,7 @@
     </CustomBuildBeforeTargets>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <OutDir>$(ProjectDir)app\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -196,17 +199,17 @@
     <CustomBuildBeforeTargets />
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <OutDir>$(ProjectDir)app\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <OutDir>$(ProjectDir)app\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)app\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <OutDir>$(ProjectDir)app\</OutDir>
     <IntDir>$(ProjectDir)build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

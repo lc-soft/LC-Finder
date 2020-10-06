@@ -15,15 +15,41 @@
     "release"
   ],
   "dependencies": {
+    "LCUI": {
+      "version": "2.1.0",
+      "resolved": {
+        "x64-uwp": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x64-uwp.lcpkg.zip",
+        "all": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/liblcui2_2.1.0-1_amd64.deb.zip",
+        "x64-windows": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x64-windows.lcpkg.zip",
+        "x86-uwp": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x86-uwp.lcpkg.zip",
+        "x86-windows": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x86-windows.lcpkg.zip"
+      },
+      "sourceRequired": false,
+      "uri": "github:lc-soft/LCUI",
+      "linkage": "auto"
+    },
+    "lc-design": {
+      "resolved": {
+        "x64-uwp": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x64-uwp.lcpkg.zip",
+        "all": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-demo.zip",
+        "x64-windows": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x64-windows.lcpkg.zip",
+        "x86-uwp": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x86-uwp.lcpkg.zip",
+        "x86-windows": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x86-windows.lcpkg.zip"
+      },
+      "sourceRequired": true,
+      "version": "1.1.0",
+      "uri": "github:lc-ui/lc-design",
+      "linkage": "auto"
+    },
     "darknetlib": {
-      "version": "v0.2.0",
-      "uri": "github:lc-soft/darknetlib",
       "resolved": {
         "x64-windows-gpu": "https://github.com/lc-soft/darknetlib/releases/download/v0.2.0/darknetlib-0.2.0_x64-windows-gpu.lcpkg.zip",
         "all": "https://github.com/lc-soft/darknetlib/releases/download/v0.2.0/darknetlib-0.2.0_x86-windows.lcpkg.zip",
         "x64-windows": "https://github.com/lc-soft/darknetlib/releases/download/v0.2.0/darknetlib-0.2.0_x64-windows.lcpkg.zip",
         "x86-windows": "https://github.com/lc-soft/darknetlib/releases/download/v0.2.0/darknetlib-0.2.0_x86-windows.lcpkg.zip"
       },
+      "version": "0.2.0",
+      "uri": "github:lc-soft/darknetlib",
       "linkage": "auto"
     },
     "sqlite3": {
@@ -39,30 +65,6 @@
     "leveldb": {
       "version": "latest",
       "uri": "vcpkg:leveldb",
-      "linkage": "auto"
-    },
-    "LCUI": {
-      "version": "v2.1.0",
-      "uri": "github:lc-soft/LCUI",
-      "resolved": {
-        "x64-uwp": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x64-uwp.lcpkg.zip",
-        "all": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/liblcui2_2.1.0-1_amd64.deb.zip",
-        "x64-windows": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x64-windows.lcpkg.zip",
-        "x86-uwp": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x86-uwp.lcpkg.zip",
-        "x86-windows": "https://github.com/lc-soft/LCUI/releases/download/v2.1.0/LCUI-2.1.0_x86-windows.lcpkg.zip"
-      },
-      "linkage": "auto"
-    },
-    "lc-design": {
-      "version": "v1.1.0",
-      "uri": "github:lc-ui/lc-design",
-      "resolved": {
-        "x64-uwp": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x64-uwp.lcpkg.zip",
-        "all": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-demo.zip",
-        "x64-windows": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x64-windows.lcpkg.zip",
-        "x86-uwp": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x86-uwp.lcpkg.zip",
-        "x86-windows": "https://github.com/lc-ui/lc-design/releases/download/v1.1.0/lc-design-1.1.0_x86-windows.lcpkg.zip"
-      },
       "linkage": "auto"
     }
   }
