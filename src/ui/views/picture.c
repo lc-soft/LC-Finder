@@ -1,4 +1,4 @@
-/* ***************************************************************************
+﻿/* ***************************************************************************
  * view_picture.c -- picture view
  *
  * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
@@ -44,6 +44,7 @@
 #include "ui.h"
 #include "file_storage.h"
 #include "picture_loader.h"
+#include "picture_scanner.h"
 
 #include <LCUI/timer.h>
 #include <LCUI/display.h>
@@ -54,6 +55,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/widget/textview.h>
 #include <LCUI/util/charset.h>
+
 #include "progressbar.h"
 #include "dialog.h"
 #include "i18n.h"
@@ -159,8 +161,8 @@ static struct PictureViewer {
 		int64_t start_time;		/**< 开始时间 */
 		LCUI_BOOL is_running;		/**< 是否正在运行 */
 	} slide;
-	void *scanner;
 	PictureLoader loader;
+	PictureScanner scanner;
 	PictureSidePanel active_panel; /**< 当前活动的面板 */
 } viewer = { 0 };
 
@@ -1397,8 +1399,7 @@ void UI_InitPictureView(int mode)
 	PictureView_InitLabels();
 	UpdateSwitchButtons();
 	if (viewer.mode == MODE_SINGLE_PICVIEW) {
-		viewer.scanner =
-		    PictureView_CreateScanner(finder.storage_for_scan);
+		viewer.scanner = PictureScanner_Create(finder.storage_for_scan);
 		Widget_SetStyle(btn_back2, key_display, SV_NONE, style);
 		Widget_Hide(btn_back2);
 	} else {
@@ -1433,9 +1434,9 @@ void UI_OpenPictureView(const char *filepath)
 	Widget_Show(viewer.window);
 	Widget_Hide(main_window);
 	if (viewer.mode == MODE_SINGLE_PICVIEW) {
-		PictureView_OpenScanner(viewer.scanner, wpath,
-					DirectSetPictureView,
-					SetPicturePreloadList);
+		PictureScanner_Start(viewer.scanner, wpath,
+				     DirectSetPictureView,
+				     SetPicturePreloadList);
 	}
 	free(wpath);
 }
@@ -1467,7 +1468,7 @@ void UI_FreePictureView(void)
 {
 	viewer.is_working = FALSE;
 	if (viewer.mode == MODE_SINGLE_PICVIEW) {
-		PictureView_CloseScanner(viewer.scanner);
+		PictureScanner_Destroy(viewer.scanner);
 	}
 	PictureLoader_Destroy(viewer.loader);
 	DeletePicture(viewer.pictures[PICTURE_SLOT_PREV]);

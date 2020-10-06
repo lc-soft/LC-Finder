@@ -1,7 +1,7 @@
 ﻿/* ***************************************************************************
- * picture.h -- private header file for the picture view
+ * picture_scanner.h -- picture list scanner
  *
- * Copyright (C) 2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -18,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * picture.h -- 图片视图的私有头文件
+ * picture_scanner.h -- 图片文件列表扫描器
  *
- * 版权所有 (C) 2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -34,38 +34,19 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_PICTURE_VIEW_H
-#define LCFINDER_PICTURE_VIEW_H
+#ifndef LCFINDER_PICTURE_SCANNER_H
+#define LCFINDER_PICTURE_SCANNER_H
 
-typedef struct PictureLabelsViewContextRec_ {
-	wchar_t *file;
-	uint32_t width, height;
+typedef struct PictureFileScannerRec_ *PictureScanner;
 
-	float scale;
-	int focus_x, focus_y;
-	int offset_x, offset_y;
+PictureScanner PictureScanner_Create(int storage);
 
-	LCUI_Widget view;
-} PictureLabelsViewContextRec, *PictureLabelsViewContext;
+int PictureScanner_Start(PictureScanner scanner, const wchar_t *filepath,
+			 void (*on_found)(FileIterator),
+			 void (*on_active)(void));
 
-void PictureView_InitInfo(void);
+void PictureScanner_Stop(PictureScanner scanner);
 
-void PictureView_SetInfo(const char *filepath);
-
-void PictureView_ShowInfo(void);
-
-void PictureView_HideInfo(void);
-
-LCUI_BOOL PictureView_VisibleInfo(void);
-
-void PictureView_InitLabels(void);
-
-void PictureView_SetLabelsContext(PictureLabelsViewContext ctx);
-
-void PictureView_ShowLabels(void);
-
-void PictureView_HideLabels(void);
-
-LCUI_BOOL PictureView_VisibleLabels(void);
+void PictureScanner_Destroy(PictureScanner scanner);
 
 #endif
