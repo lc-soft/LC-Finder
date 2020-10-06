@@ -54,7 +54,7 @@ typedef struct LCUI_ProgressDialogRec_ {
  * @param[in] title 对话框标题
  * @param[in] text 对话框内容
  */
-LCUI_API void LCUIDialog_Alert(LCUI_Widget parent, const wchar_t *title,
+void LCUIDialog_Alert(LCUI_Widget parent, const wchar_t *title,
 			       const wchar_t *text);
 
 /**
@@ -64,7 +64,7 @@ LCUI_API void LCUIDialog_Alert(LCUI_Widget parent, const wchar_t *title,
  * @param[in] text 对话框内容
  * @returns 在用户点击“确认”按钮后返回 TRUE，点击“取消”按钮则返回 FALSE
  */
-LCUI_API LCUI_BOOL LCUIDialog_Confirm(LCUI_Widget parent, const wchar_t *title,
+LCUI_BOOL LCUIDialog_Confirm(LCUI_Widget parent, const wchar_t *title,
 				      const wchar_t *text);
 
 /**
@@ -79,7 +79,7 @@ LCUI_API LCUI_BOOL LCUIDialog_Confirm(LCUI_Widget parent, const wchar_t *title,
  * TRUE，否则返回 FALSE，置为 NULL 时将不验证文本。
  * @returns 点击“确认”按钮时返回 TRUE，点击“取消”按钮时返回 FALSE。
  */
-LCUI_API int LCUIDialog_Prompt(LCUI_Widget parent, const wchar_t *title,
+int LCUIDialog_Prompt(LCUI_Widget parent, const wchar_t *title,
 			       const wchar_t *placeholder, const wchar_t *val,
 			       wchar_t *newval, size_t max_len,
 			       LCUI_BOOL (*checker)(const wchar_t *));
@@ -92,7 +92,7 @@ LCUI_API int LCUIDialog_Prompt(LCUI_Widget parent, const wchar_t *title,
  * @param[in] check 回调函数，验证密码
  * @param[in] data 传递给回调函数的附加数据
  */
-LCUI_API int LCUIDialog_CheckPassword(
+int LCUIDialog_CheckPassword(
     LCUI_Widget parent, const wchar_t *title, const wchar_t *text,
     LCUI_BOOL (*check)(const char *, const char *), const char *data);
 /**
@@ -102,11 +102,11 @@ LCUI_API int LCUIDialog_CheckPassword(
  * @param[in] text 对话框内的说明文本
  * @param[out] password 设定的密码
  */
-LCUI_API int LCUIDialog_NewPassword(LCUI_Widget parent, const wchar_t *title,
+int LCUIDialog_NewPassword(LCUI_Widget parent, const wchar_t *title,
 				    const wchar_t *text, wchar_t *password);
 
 /** 新建一个“进度”对话框，返回值为该对话框的数据 */
-LCUI_API LCUI_ProgressDialog NewProgressDialog(void);
+LCUI_ProgressDialog NewProgressDialog(void);
 
 /**
  * 打开并显示“进度”对话框
@@ -114,11 +114,11 @@ LCUI_API LCUI_ProgressDialog NewProgressDialog(void);
  * @param[in] parent 父级部件，指定该对话框将放在哪个容器中显示
  * @note 在该函数执行完后，会自动销毁对话框数据
  */
-LCUI_API void OpenProgressDialog(LCUI_ProgressDialog dialog,
+void OpenProgressDialog(LCUI_ProgressDialog dialog,
 				 LCUI_Widget parent);
 
 /** 关闭”进度“对话框 */
-LCUI_API void CloseProgressDialog(LCUI_ProgressDialog dialog);
+void CloseProgressDialog(LCUI_ProgressDialog dialog);
 
 LCUI_END_HEADER
 
