@@ -143,12 +143,6 @@
     <ClCompile Include="..\src\ui\components\splashscreen.c">
       <Filter>src\ui\components</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ui\components\starrating.c">
-      <Filter>src\ui\components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ui\components\switch.c">
-      <Filter>src\ui\components</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ui\components\textview_i18n.c">
       <Filter>src\ui\components</Filter>
     </ClCompile>
@@ -182,6 +176,18 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="..\src\ui\components\link_i18n.c">
       <Filter>src\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\detector.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\file_service.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\picture_loader.c">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lib\picture_scanner.c">
+      <Filter>src\lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -49,7 +49,7 @@
 #define LCFINDER_NAME		L"LC's Finder"
 #define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
 #define LCFINDER_VER_MAJOR	0
-#define LCFINDER_VER_MINOR	3
+#define LCFINDER_VER_MINOR	4
 #define LCFINDER_VER_REVISION	0
 #define LCFINDER_VER_TYPE	VERSION_BETA
 
@@ -61,9 +61,7 @@
 #	define LCFINDER_USE_LEVELDB
 // 如果需要编译成 Windows XP 系统上能跑的版本的话
 //#define PLATFORM_WIN32_DESKTOP_XP
-#	if (WINAPI_PARTITION_PC_APP == 1)
-#		define PLATFORM_WIN32_PC_APP
-#	else
+#	ifndef PLATFORM_WIN32_PC_APP
 #		define PLATFORM_WIN32_DESKTOP
 #	endif
 #else
