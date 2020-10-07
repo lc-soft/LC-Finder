@@ -112,6 +112,7 @@ static void PictureLoaderTask_Dispatch(PictureLoaderTask task)
 		task->loader->on_progress(task->filepath, task->progress);
 		break;
 	}
+	task->changed = FALSE;
 }
 
 static void PictureLoader_OnEnd(LCUI_Graph *data, PictureLoaderTask task)
@@ -127,7 +128,7 @@ static void PictureLoader_OnEnd(LCUI_Graph *data, PictureLoaderTask task)
 		Graph_Init(&task->data);
 		task->state = PICTURE_LOADER_TASK_STATE_ERROR;
 	}
-	LCUI_PostSimpleTask(PictureLoaderTask_Dispatch, task, data);
+	LCUI_PostSimpleTask(PictureLoaderTask_Dispatch, task, NULL);
 	LCUIMutex_Lock(&task->loader->mutex);
 	task->loader->loading = FALSE;
 	LCUICond_Signal(&task->loader->cond);
