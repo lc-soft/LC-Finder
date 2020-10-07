@@ -1041,7 +1041,7 @@ int LCFinder_Init(int argc, char **argv)
 	Logger_SetHandlerW(LoggerHandlerW);
 #endif
 	LCFinder_InitEvent();
-	LCFinder_InitLicense();
+	LCFinder_InitLicense(&finder.license);
 	ASSERT(LCFinder_InitWorkDir() == 0);
 	ASSERT(LCFinder_LoadConfig() == 0);
 	ASSERT(LCFinder_InitLanguage() == 0);

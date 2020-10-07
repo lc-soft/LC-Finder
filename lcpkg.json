@@ -15,6 +15,12 @@
     "release"
   ],
   "dependencies": {
+    "leveldb": {
+      "version": "latest",
+      "sourceRequired": false,
+      "uri": "vcpkg:leveldb",
+      "linkage": "static"
+    },
     "LCUI": {
       "version": "2.1.0",
       "resolved": {
@@ -60,11 +66,6 @@
     "libyaml": {
       "version": "latest",
       "uri": "vcpkg:libyaml",
-      "linkage": "auto"
-    },
-    "leveldb": {
-      "version": "latest",
-      "uri": "vcpkg:leveldb",
       "linkage": "auto"
     }
   }
