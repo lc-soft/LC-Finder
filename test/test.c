@@ -63,6 +63,7 @@ static void test_file_storage_image(void)
 	LCUIMutex_Unlock(&ctx->mutex);
 	FileStorage_Close(ctx->storage);
 	remove("test_file_storage_image.png");
+	free(ctx);
 }
 
 static void test_file_storage(void)
