@@ -60,7 +60,6 @@
 #define LOG DEBUG_MSG
 
 typedef struct FileStreamRec_ {
-	LCUI_BOOL active;
 	LCUI_BOOL closed;
 	LCUI_Cond cond;
 	LCUI_Mutex mutex;
@@ -71,6 +70,8 @@ typedef struct FileStreamRec_ {
 typedef struct ConnectionHubRec_ {
 	unsigned int id;
 	FileStream streams[2];
+	Connection client;
+	Connection service;
 	LinkedListNode node;
 } ConnectionHubRec, *ConnectionHub;
 
@@ -155,7 +156,6 @@ FileStream FileStream_Create(void)
 	FileStream stream;
 	stream = NEW(FileStreamRec, 1);
 	stream->closed = FALSE;
-	stream->active = TRUE;
 	LinkedList_Init(&stream->data);
 	LCUICond_Init(&stream->cond);
 	LCUIMutex_Init(&stream->mutex);
@@ -170,49 +170,40 @@ void FileStream_Close(FileStream stream)
 	LCUIMutex_Unlock(&stream->mutex);
 }
 
-static LCUI_BOOL FileStream_Useable(FileStream stream)
-{
-	if (stream->active) {
-		if (stream->chunk || stream->data.length > 0) {
-			return TRUE;
-		}
-		if (stream->closed) {
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
 void FileStream_Destroy(FileStream stream)
 {
-	if (!stream->active) {
-		return;
-	}
-	stream->active = FALSE;
+	LOG("destroy stream %p start\n", stream);
 	FileStream_Close(stream);
 	LinkedList_Clear(&stream->data, FileStreamChunk_Release);
 	LCUIMutex_Destroy(&stream->mutex);
 	LCUICond_Destroy(&stream->cond);
+	LOG("destroy stream %p end\n", stream);
 }
 
 int FileStream_ReadChunk(FileStream stream, FileStreamChunk *chunk)
 {
 	LinkedListNode *node;
+	FileStreamChunk *raw_chunk;
 
-	if (!FileStream_Useable(stream)) {
-		FileStream_Destroy(stream);
-		return 0;
+	if (stream->closed) {
+		return -1;
 	}
 	LCUIMutex_Lock(&stream->mutex);
+	LOG("waitting stream %p\n", stream);
 	while (stream->data.length < 1 && !stream->closed) {
 		LCUICond_Wait(&stream->cond, &stream->mutex);
 	}
+	LOG("stream %p, closed: %d, len: %lu\n", stream, stream->closed, stream->data.length);
 	if (stream->data.length > 0) {
 		node = LinkedList_GetNode(&stream->data, 0);
 		LinkedList_Unlink(&stream->data, node);
-		*chunk = *((FileStreamChunk *)node->data);
+		raw_chunk = node->data;
+		*chunk = *raw_chunk;
+		free(raw_chunk);
 		LinkedListNode_Delete(node);
+		LOG("stream %p, unlocking\n", stream);
 		LCUIMutex_Unlock(&stream->mutex);
+		LOG("stream %p, unlocked\n", stream);
 		return 1;
 	}
 	LCUIMutex_Unlock(&stream->mutex);
@@ -223,8 +214,7 @@ int FileStream_WriteChunk(FileStream stream, FileStreamChunk *chunk)
 {
 	FileStreamChunk *buf;
 
-	if (!FileStream_Useable(stream)) {
-		FileStream_Destroy(stream);
+	if (stream->closed) {
 		return -1;
 	}
 	LCUIMutex_Lock(&stream->mutex);
@@ -248,8 +238,7 @@ size_t FileStream_Read(FileStream stream, char *buf, size_t size, size_t count)
 	FileStreamChunk *chunk;
 	size_t read_count = 0, cur = 0;
 
-	if (!FileStream_Useable(stream)) {
-		FileStream_Destroy(stream);
+	if (stream->closed) {
 		return 0;
 	}
 	while (1) {
@@ -308,8 +297,7 @@ size_t FileStream_Read(FileStream stream, char *buf, size_t size, size_t count)
 size_t FileStream_Write(FileStream stream, char *buf, size_t size, size_t count)
 {
 	FileStreamChunk *chunk;
-	if (!FileStream_Useable(stream)) {
-		FileStream_Destroy(stream);
+	if (stream->closed) {
 		return 0;
 	}
 	LCUIMutex_Lock(&stream->mutex);
@@ -336,8 +324,7 @@ char *FileStream_ReadLine(FileStream stream, char *buf, size_t size)
 	LinkedListNode *node;
 	FileStreamChunk *chunk;
 
-	if (!FileStream_Useable(stream)) {
-		FileStream_Destroy(stream);
+	if (stream->closed) {
 		return NULL;
 	}
 	do {
@@ -529,7 +516,7 @@ static int FileService_GetFileStatus(FileRequest *request,
 
 static int FileService_RemoveFile(const wchar_t *path, FileResponse *response)
 {
-	int ret = MoveFileToTrashW(path);
+	int ret = -1;    // MoveFileToTrashW(path);
 	response->status = GetStatusByErrorCode(ret);
 	return ret;
 }
@@ -625,52 +612,56 @@ static int FileService_GetFile(Connection conn, FileRequest *request,
 		return -1;
 	}
 	do {
-	LCUI_SetImageReaderForFile(&reader, fp);
-	reader.fn_prog = request->params.progress;
-	reader.prog_arg = request->params.progress_arg;
+		LCUI_SetImageReaderForFile(&reader, fp);
+		reader.fn_prog = request->params.progress;
+		reader.prog_arg = request->params.progress_arg;
 		ret = LCUI_InitImageReader(&reader);
 		if (ret != 0) {
 			LOG("[file service] cannot initialize image reader\n");
 			break;
-	}
-	if (LCUI_SetImageReaderJump(&reader)) {
+		}
+		if (LCUI_SetImageReaderJump(&reader)) {
 			LOG("[file service] cannot set jump point\n");
 			break;
-	}
-	if (LCUI_ReadImageHeader(&reader) != 0) {
+		}
+		if (LCUI_ReadImageHeader(&reader) != 0) {
 			LOG("[file service] cannot read image header\n");
 			break;
-	}
-	response->file.image = NEW(FileImageStatus, 1);
-	response->file.image->width = reader.header.width;
-	response->file.image->height = reader.header.height;
-	if (LCUI_ReadImage(&reader, &img) != 0) {
+		}
+		response->file.image = NEW(FileImageStatus, 1);
+		response->file.image->width = reader.header.width;
+		response->file.image->height = reader.header.height;
+		if (LCUI_ReadImage(&reader, &img) != 0) {
+			free(response->file.image);
+			response->file.image = NULL;
 			break;
-	}
-	fclose(fp);
+		}
+		LCUI_DestroyImageReader(&reader);
+		fclose(fp);
 		LOG("[file service] load image success, size: (%d, %d)\n",
 		    img.width, img.height);
-	Connection_WriteChunk(conn, chunk);
-	if (!params->get_thumbnail) {
-		chunk->type = DATA_CHUNK_IMAGE;
-		chunk->image = img;
-		return 0;
-	}
-	Graph_Init(&chunk->thumb);
-	if ((params->width > 0 && img.width > (int)params->width) ||
-	    (params->height > 0 && img.height > (int)params->height)) {
-		/* FIXME: 大图的缩小效果并不好，需要改进 */
+		Connection_WriteChunk(conn, chunk);
+		if (!params->get_thumbnail) {
+			chunk->type = DATA_CHUNK_IMAGE;
+			chunk->image = img;
+			return 0;
+		}
+		Graph_Init(&chunk->thumb);
+		if ((params->width > 0 && img.width > (int)params->width) ||
+		    (params->height > 0 && img.height > (int)params->height)) {
+			/* FIXME: 大图的缩小效果并不好，需要改进 */
 			Graph_ZoomBilinear(&img, &chunk->thumb, TRUE,
 					   params->width, params->height);
-		Graph_Free(&img);
-	} else {
-		chunk->thumb = img;
-	}
-	chunk->type = DATA_CHUNK_THUMB;
-	return 0;
+			Graph_Free(&img);
+		} else {
+			chunk->thumb = img;
+		}
+		chunk->type = DATA_CHUNK_THUMB;
+		return 0;
 	} while (0);
 	LOG("[file service] load image failed\n");
 	response->status = RESPONSE_STATUS_NOT_ACCEPTABLE;
+	LCUI_DestroyImageReader(&reader);
 	Graph_Free(&img);
 	fclose(fp);
 	return -1;
@@ -715,13 +706,19 @@ void FileService_Handler(void *arg)
 
 	LOG("[file service][thread %d] started, connection: %d\n",
 	    LCUIThread_SelfID(), conn->id);
-	while (1) {
+	while (!conn->closed) {
+		LOG("[file service][thread %d] waitting, connection: %d\n",
+	    	LCUIThread_SelfID(), conn->id);
 		n = Connection_ReadChunk(conn, &chunk);
+		LOG("[file service][thread %d] readed, n: %d, connection: %d\n",
+	    	LCUIThread_SelfID(), n, conn->id);
 		if (n == -1) {
 			break;
 		} else if (n == 0) {
 			continue;
 		}
+		LOG("[file service][thread %d] handle request, connection: %d\n",
+	    	LCUIThread_SelfID(), n, conn->id);
 		chunk.request.stream = conn->input;
 		FileService_HandleRequest(conn, &chunk.request);
 	}
@@ -769,31 +766,34 @@ static void OnDestroyConnectionHub(void *data)
 Connection FileService_Accept(void)
 {
 	ConnectionHub conn;
-	Connection conn_client, conn_service;
 
 	if (!service.active) {
 		return NULL;
 	}
+	conn = ConnectionHub_Create();
+
 	LCUIMutex_Lock(&service.mutex);
-	conn_client = LinkedList_Get(&service.requests, 0);
+	conn->client = LinkedList_Get(&service.requests, 0);
+	conn->service = Connection_Create();
 	LinkedList_Delete(&service.requests, 0);
+
+	LCUIMutex_Lock(&conn->client->mutex);
+	conn->client->id = conn->id;
+	conn->client->closed = FALSE;
+	conn->client->input = conn->streams[0];
+	conn->client->output = conn->streams[1];
+	LCUICond_Signal(&conn->client->cond);
+	LCUIMutex_Unlock(&conn->client->mutex);
+
+	conn->service->id = conn->id;
+	conn->service->closed = FALSE;
+	conn->service->input = conn->streams[1];
+	conn->service->output = conn->streams[0];
+
+	LinkedList_AppendNode(&service.connections, &conn->node);
 	LCUICond_Signal(&service.cond);
 	LCUIMutex_Unlock(&service.mutex);
-	conn = ConnectionHub_Create();
-	conn_service = Connection_Create();
-	LCUIMutex_Lock(&conn_client->mutex);
-	conn_client->id = conn->id;
-	conn_client->closed = FALSE;
-	conn_service->id = conn->id;
-	conn_service->closed = FALSE;
-	conn_client->input = conn->streams[0];
-	conn_client->output = conn->streams[1];
-	conn_service->input = conn->streams[1];
-	conn_service->output = conn->streams[0];
-	LinkedList_AppendNode(&service.connections, &conn->node);
-	LCUICond_Signal(&conn_client->cond);
-	LCUIMutex_Unlock(&conn_client->mutex);
-	return conn_service;
+	return conn->service;
 }
 
 void FileService_Run(void)
@@ -1011,8 +1011,8 @@ void FileClient_Run(FileClient client)
 		LinkedList_Unlink(&client->tasks, node);
 		task = node->data;
 		LOG("[file client] send request, "
-		    "method: %s, path len: %lu\n",
-		    GetRequestMethodString(task->request.method),
+		    "method: %d, path len: %lu\n",
+		    task->request.method,
 		    wcslen(task->request.path));
 		n = Connection_SendRequest(conn, &task->request);
 		if (n == 0) {
@@ -1029,7 +1029,12 @@ void FileClient_Run(FileClient client)
 		}
 		response.stream = conn->input;
 		task->handler.callback(&response, task->handler.data);
+		if (response.file.image) {
+			free(response.file.image);
+			response.file.image = NULL;
+		}
 		FileClientTask_Destroy(task);
+		free(node);
 	}
 	LOG("[file client][%u] work stopped\n", client->thread);
 	LCUIThread_Exit(NULL);
@@ -1050,9 +1055,11 @@ void FileClient_Close(FileClient client)
 	Connection_Close(client->connection);
 	LCUICond_Signal(&client->cond);
 	LCUIMutex_Unlock(&client->mutex);
-	LOG("[file client][%u] waiting...\n", client->thread);
-	LCUIThread_Join(client->thread, NULL);
-	LOG("[file client][%u] closed!\n", client->thread);
+	if (client->thread) {
+		LOG("[file client][%u] waiting...\n", client->thread);
+		LCUIThread_Join(client->thread, NULL);
+		LOG("[file client][%u] closed!\n", client->thread);
+	}
 }
 
 void FileClient_RunAsync(FileClient client)
