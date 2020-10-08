@@ -13,3 +13,8 @@ target("lc-finder")
     set_targetdir("app/")
     set_kind("binary")
     add_files("src/**.c")
+
+target("test")
+    set_targetdir("app/")
+    set_kind("binary")
+    add_files("test/test.c", "src/lib/file_storage.c", "src/lib/file_service.c", "src/lib/common.c", "src/lib/sha1.c")
