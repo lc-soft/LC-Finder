@@ -108,6 +108,7 @@ int FileStorage_Connect(void)
 		conn->active = TRUE;
 		FileClient_RunAsync(conn->client);
 	} else {
+		FileClient_Destroy(conn->client);
 		free(conn);
 		Logger_Debug("[file storage] connect failed, code: %d\n", ret);
 		return -1;
@@ -122,15 +123,30 @@ void FileStorage_Close(int id)
 {
 	FileStorageConnection conn = FileStorage_GetConnection(id);
 	if (conn) {
+		LinkedList_Unlink(&self.clients, &conn->node);
 		FileClient_Close(conn->client);
+		FileClient_Destroy(conn->client);
 		conn->client = NULL;
 		conn->active = FALSE;
+		free(conn);
 	}
+}
+
+static void FileStorage_OnDestroyClientConnection(void *data)
+{
+	FileStorageConnection conn = data;
+
+	FileClient_Close(conn->client);
+	FileClient_Destroy(conn->client);
+	conn->client = NULL;
+	conn->active = FALSE;
+	free(data);
 }
 
 void FileStorage_Free(void)
 {
-	LinkedList_ClearData(&self.clients, free);
+	LinkedList_ClearData(&self.clients,
+			     FileStorage_OnDestroyClientConnection);
 	FileService_Close();
 }
 

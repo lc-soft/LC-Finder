@@ -4,9 +4,8 @@ on: [push]
 
 jobs:
   build:
-
+    name: Build on Ubuntu
     runs-on: ubuntu-latest
-    
     steps:
     - uses: actions/checkout@v1
     - name: install xmake
@@ -17,3 +16,23 @@ jobs:
       run: sh ./setup.sh
     - name: build
       run: xmake
+
+  build-win:
+    name: Build on Windows
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+    - name: install Node.js packages
+      run: |
+        npm install
+        npm install -g lcpkg
+    - name: setup
+      run: lcpkg setup
+    - name: install dependencies
+      run: lcpkg install --arch x64
+    - name: build css
+      run: npm run build-css
+    - name: build bin
+      run: msbuild LC-Finder.sln /p:Configuration=Release /p:Platform=x64 /verbosity:minimal

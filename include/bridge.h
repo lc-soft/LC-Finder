@@ -40,21 +40,26 @@
 
 LCFINDER_BEGIN_HEADER
 
-void LCFinder_InitLicense( void );
+typedef struct FinderLicenseRec_ {
+	LCUI_BOOL is_active;
+	LCUI_BOOL is_trial;
+} FinderLicenseRec, *FinderLicense;
 
-void SelectFolderAsyncW( void( *callback )(const wchar_t*, const wchar_t*) );
+void LCFinder_InitLicense(FinderLicense license);
 
-void RemoveFolderAccessW( const wchar_t *token );
+void SelectFolderAsyncW(void (*callback)(const wchar_t *, const wchar_t *));
 
-int GetAppDataFolderW( wchar_t *buf, int max_len );
+void RemoveFolderAccessW(const wchar_t *token);
 
-int GetAppInstalledLocationW( wchar_t *buf, int max_len );
+int GetAppDataFolderW(wchar_t *buf, int max_len);
 
-void OpenFileManagerW( const wchar_t *filepath );
+int GetAppInstalledLocationW(wchar_t *buf, int max_len);
 
-int MoveFileToTrashW( const wchar_t *filepath );
+void OpenFileManagerW(const wchar_t *filepath);
 
-int MoveFileToTrash( const char *filepath );
+int MoveFileToTrashW(const wchar_t *filepath);
+
+int MoveFileToTrash(const char *filepath);
 
 LCFINDER_END_HEADER
 

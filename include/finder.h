@@ -84,11 +84,6 @@ typedef struct FinderConfigRec_ {
 	wchar_t detector_model_name[64];
 } FinderConfigRec, *FinderConfig;
 
-typedef struct FinderLicenseRec_ {
-	LCUI_BOOL is_active;
-	LCUI_BOOL is_trial;
-} FinderLicenseRec, *FinderLicense;
-
 enum FinderState {
 	FINDER_STATE_NONE,
 	FINDER_STATE_ACTIVATED,

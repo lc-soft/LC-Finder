@@ -225,10 +225,10 @@ void RemoveFolderAccessW(const wchar_t *token)
 	return;
 }
 
-void LCFinder_InitLicense(void)
+void LCFinder_InitLicense(FinderLicense license)
 {
-	finder.license.is_active = TRUE;
-	finder.license.is_trial = FALSE;
+	license->is_active = TRUE;
+	license->is_trial = FALSE;
 }
 
 #endif

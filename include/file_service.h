@@ -41,25 +41,19 @@
 
 LCFINDER_BEGIN_HEADER
 
-#ifdef LCFINDER_FILE_SERVICE_C
-typedef struct FileClientRec_* FileClient;
-typedef struct FileStreamRec_* FileStream;
-typedef struct ConnectionRec_* Connection;
-#else
-typedef void* FileClient;
-typedef void* FileStream;
-typedef void* Connection;
-#endif
+typedef struct FileClientRec_ *FileClient;
+typedef struct FileStreamRec_ *FileStream;
+typedef struct ConnectionRec_ *Connection;
 
-enum FileRequestMethod {
+typedef enum FileRequestMethod {
 	REQUEST_METHOD_HEAD,
 	REQUEST_METHOD_GET,
 	REQUEST_METHOD_POST,
 	REQUEST_METHOD_PUT,
 	REQUEST_METHOD_DELETE
-};
+} FileRequestMethod;
 
-enum FileResponseStatus {
+typedef enum FileResponseStatus {
 	RESPONSE_STATUS_OK = 200,
 	RESPONSE_STATUS_BAD_REQUEST = 400,
 	RESPONSE_STATUS_FORBIDDEN = 403,
@@ -67,12 +61,9 @@ enum FileResponseStatus {
 	RESPONSE_STATUS_NOT_ACCEPTABLE = 406,
 	RESPONSE_STATUS_ERROR = 500,
 	RESPONSE_STATUS_NOT_IMPLEMENTED = 501
-};
+} FileResponseStatus;
 
-enum FileType {
-	FILE_TYPE_ARCHIVE,
-	FILE_TYPE_DIRECTORY
-};
+typedef enum FileType { FILE_TYPE_ARCHIVE, FILE_TYPE_DIRECTORY } FileType;
 
 typedef struct FileImageStatus_ {
 	unsigned int width;
@@ -87,41 +78,41 @@ typedef struct FileStatus_ {
 	FileImageStatus *image;
 } FileStatus;
 
-enum FileFilter {
-	FILE_FILTER_NONE,	/**< 不过滤 */
-	FILE_FILTER_FILE,	/**< 仅保留文件 */
-	FILE_FILTER_FOLDER	/**< 仅保留文件夹 */
-};
+typedef enum FileFilter {
+	FILE_FILTER_NONE,  /**< 不过滤 */
+	FILE_FILTER_FILE,  /**< 仅保留文件 */
+	FILE_FILTER_FOLDER /**< 仅保留文件夹 */
+} FileFilter;
 
 /** 文件请求参数 */
 typedef struct FileRequestParams_ {
-	int filter;				/**< 过滤条件 */
-	LCUI_BOOL get_thumbnail;		/**< 是否仅获取缩略图 */
-	LCUI_BOOL with_image_status;		/**< 是否附带获取图片文件状态信息 */
-	void( *progress )(void*, float);	/**< 回调函数，用于接收文件读取进度 */
-	void *progress_arg;			/**< 接收文件读取进度时的附加参数 */
-	unsigned int width;			/**< 缩略图的宽度 */
-	unsigned int height;			/**< 缩略图的高度 */
+	int filter;              /**< 过滤条件 */
+	LCUI_BOOL get_thumbnail; /**< 是否仅获取缩略图 */
+	LCUI_BOOL with_image_status; /**< 是否附带获取图片文件状态信息 */
+	void (*progress)(void *, float); /**< 回调函数，用于接收文件读取进度 */
+	void *progress_arg;  /**< 接收文件读取进度时的附加参数 */
+	unsigned int width;  /**< 缩略图的宽度 */
+	unsigned int height; /**< 缩略图的高度 */
 } FileRequestParams;
 
 /** 文件请求 */
 typedef struct FileRequest_ {
-	int method;			/**< 请求方式 */
-	wchar_t path[256];		/**< 资源路径 */
-	FileStatus file;		/**< 文件状态参数 */
-	FileRequestParams params;	/**< 请求参数 */
-	FileStream stream;		/**< 文件流 */
+	int method;               /**< 请求方式 */
+	wchar_t path[256];        /**< 资源路径 */
+	FileStatus file;          /**< 文件状态参数 */
+	FileRequestParams params; /**< 请求参数 */
+	FileStream stream;        /**< 文件流 */
 } FileRequest;
 
 /** 文件响应 */
 typedef struct FileResponse_ {
-	int status;		/**< 状态 */
-	FileStatus file;	/**< 文件状态 */
-	FileStream stream;	/**< 文件流 */
+	int status;        /**< 状态 */
+	FileStatus file;   /**< 文件状态 */
+	FileStream stream; /**< 文件流 */
 } FileResponse;
 
 typedef struct FileRequestHandler_ {
-	void( *callback )(FileResponse*, void *);
+	void (*callback)(FileResponse *, void *);
 	void *data;
 } FileRequestHandler;
 
@@ -138,90 +129,82 @@ enum FileStreamChunkType {
 
 /** 文件流中的数据块 */
 typedef struct FileStreamChunk_ {
-	int type;			/**< 数据块类型 */
+	int type; /**< 数据块类型 */
 	union {
-		FileRequest request;	/**< 文件请求 */
-		FileResponse response;	/**< 文件请求的响应结果 */
-		LCUI_Graph thumb;	/**< 缩略图 */
-		LCUI_Graph image;	/**< 图像 */
-		FILE *file;		/**< C 标准库的文件流 */
-		char *data;		/**< 数据块 */
+		FileRequest request;   /**< 文件请求 */
+		FileResponse response; /**< 文件请求的响应结果 */
+		LCUI_Graph thumb;      /**< 缩略图 */
+		LCUI_Graph image;      /**< 图像 */
+		FILE *file;            /**< C 标准库的文件流 */
+		char *data;            /**< 数据块 */
 	};
-	size_t cur;			/**< 当前游标位置 */
-	size_t size;			/**< 数据总大小 */
+	size_t cur;  /**< 当前游标位置 */
+	size_t size; /**< 数据总大小 */
 } FileStreamChunk;
 
-void FileStreamChunk_Destroy( FileStreamChunk *chunk );
+void FileStreamChunk_Destroy(FileStreamChunk *chunk);
 
-FileStream FileStream_Create( void );
+FileStream FileStream_Create(void);
 
-void FileStream_Close( FileStream stream );
+void FileStream_Close(FileStream stream);
 
-void FileStream_Destroy( FileStream stream );
+void FileStream_Destroy(FileStream stream);
 
-int FileStream_ReadChunk( FileStream stream, FileStreamChunk *chunk );
+int FileStream_ReadChunk(FileStream stream, FileStreamChunk *chunk);
 
-int FileStream_WriteChunk( FileStream stream, FileStreamChunk *chunk );
+int FileStream_WriteChunk(FileStream stream, FileStreamChunk *chunk);
 
-size_t FileStream_Read( FileStream stream, char *buf,
-			size_t size, size_t count );
+size_t FileStream_Read(FileStream stream, char *buf, size_t size, size_t count);
 
-size_t FileStream_Write( FileStream stream, char *buf,
-			 size_t size, size_t count );
+size_t FileStream_Write(FileStream stream, char *buf, size_t size,
+			size_t count);
 
-char *FileStream_ReadLine( FileStream stream, char *buf, size_t size );
+char *FileStream_ReadLine(FileStream stream, char *buf, size_t size);
 
-Connection Connection_Create( void );
+Connection Connection_Create(void);
 
-size_t Connection_Read( Connection conn, char *buf,
-			size_t size, size_t count );
+size_t Connection_Read(Connection conn, char *buf, size_t size, size_t count);
 
-size_t Connection_Write( Connection conn, char *buf,
-			 size_t size, size_t count );
+size_t Connection_Write(Connection conn, char *buf, size_t size, size_t count);
 
-int Connection_ReadChunk( Connection conn, FileStreamChunk *chunk );
+int Connection_ReadChunk(Connection conn, FileStreamChunk *chunk);
 
-int Connection_WriteChunk( Connection conn, FileStreamChunk *chunk );
+int Connection_WriteChunk(Connection conn, FileStreamChunk *chunk);
 
-void Connection_Close( Connection conn );
+void Connection_Close(Connection conn);
 
-void Connection_Destroy( Connection conn );
+void Connection_Destroy(Connection conn);
 
-void FileService_Run( void );
+void FileService_Run(void);
 
-void FileService_RunAsync( void );
+void FileService_RunAsync(void);
 
-void FileService_Close( void );
+void FileService_Close(void);
 
-void FileService_Init( void );
+void FileService_Init(void);
 
-int Connection_SendRequest( Connection conn,
-			    const FileRequest *request );
+int Connection_SendRequest(Connection conn, const FileRequest *request);
 
-int Connection_ReceiveRequest( Connection conn,
-			       FileRequest *request );
+int Connection_ReceiveRequest(Connection conn, FileRequest *request);
 
-int Connection_SendResponse( Connection conn,
-			     const FileResponse *response );
+int Connection_SendResponse(Connection conn, const FileResponse *response);
 
-int Connection_ReceiveResponse( Connection conn,
-				FileResponse *response );
+int Connection_ReceiveResponse(Connection conn, FileResponse *response);
 
-FileClient FileClient_Create( void );
+FileClient FileClient_Create(void);
 
-int FileClient_Connect( FileClient client );
+int FileClient_Connect(FileClient client);
 
-void FileClient_Destroy( FileClient client );
+void FileClient_Destroy(FileClient client);
 
-void FileClient_Run( FileClient client );
+void FileClient_Run(FileClient client);
 
-void FileClient_Close( FileClient client );
+void FileClient_Close(FileClient client);
 
-void FileClient_RunAsync( FileClient client );
+void FileClient_RunAsync(FileClient client);
 
-void FileClient_SendRequest( FileClient client,
-			     const FileRequest *request,
-			     const FileRequestHandler *handler );
+void FileClient_SendRequest(FileClient client, const FileRequest *request,
+			    const FileRequestHandler *handler);
 
 LCFINDER_END_HEADER
 

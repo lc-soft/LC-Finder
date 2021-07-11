@@ -262,3 +262,5 @@ UWP/BundleArtifacts
 vendor/
 setup/
 app/lc-finder
+lcpkg
+test/build

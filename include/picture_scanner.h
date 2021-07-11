@@ -1,8 +1,7 @@
 ﻿/* ***************************************************************************
- * build.h -- Configuration and macro definitions related to the build 
- * environment.
+ * picture_scanner.h -- picture list scanner
  *
- * Copyright (C) 2016-2018 by Liu Chao <lc-soft@live.cn>
+ * Copyright (C) 2018-2020 by Liu Chao <lc-soft@live.cn>
  *
  * This file is part of the LC-Finder project, and may only be used, modified,
  * and distributed under the terms of the GPLv2.
@@ -19,9 +18,9 @@
  * ****************************************************************************/
 
 /* ****************************************************************************
- * build.h -- 与构建环境相关的配置和宏定义
+ * picture_scanner.h -- 图片文件列表扫描器
  *
- * 版权所有 (C) 2016-2018 归属于 刘超 <lc-soft@live.cn>
+ * 版权所有 (C) 2018-2020 归属于 刘超 <lc-soft@live.cn>
  *
  * 这个文件是 LC-Finder 项目的一部分，并且只可以根据GPLv2许可协议来使用、更改和
  * 发布。
@@ -35,44 +34,19 @@
  * 没有，请查看：<http://www.gnu.org/licenses/>.
  * ****************************************************************************/
 
-#ifndef LCFINDER_BUILD_H
-#define LCFINDER_BUILD_H
+#ifndef LCFINDER_PICTURE_SCANNER_H
+#define LCFINDER_PICTURE_SCANNER_H
 
-#ifdef __cplusplus
-#define LCFINDER_BEGIN_HEADER extern "C" {
-#define LCFINDER_END_HEADER }
-#else 
-#define LCFINDER_BEGIN_HEADER
-#define LCFINDER_END_HEADER
-#endif
+typedef struct PictureFileScannerRec_ *PictureScanner;
 
-#define LCFINDER_NAME		L"LC's Finder"
-#define LCFINDER_CONFIG_HEAD	"LCFinder Config Data"
-#define LCFINDER_VER_MAJOR	0
-#define LCFINDER_VER_MINOR	4
-#define LCFINDER_VER_REVISION	0
-#define LCFINDER_VER_TYPE	VERSION_BETA
+PictureScanner PictureScanner_Create(int storage);
 
-#define LCFINDER_USE_UNQLITE
+int PictureScanner_Start(PictureScanner scanner, const wchar_t *filepath,
+			 void (*on_found)(FileIterator),
+			 void (*on_active)(void));
 
-#ifdef _WIN32
-#	define PLATFORM_WIN32
-#	undef LCFINDER_USE_UNQLITE
-#	define LCFINDER_USE_LEVELDB
-// 如果需要编译成 Windows XP 系统上能跑的版本的话
-//#define PLATFORM_WIN32_DESKTOP_XP
-#	ifndef PLATFORM_WIN32_PC_APP
-#		define PLATFORM_WIN32_DESKTOP
-#	endif
-#else
-#	define PLATFORM_LINUX
-#endif
+void PictureScanner_Stop(PictureScanner scanner);
 
-enum VersionType {
-	VERSION_RELEASE,
-	VERSION_RC,
-	VERSION_BETA,
-	VERSION_ALPHA
-};
+void PictureScanner_Destroy(PictureScanner scanner);
 
 #endif

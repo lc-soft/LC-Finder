@@ -49,38 +49,39 @@ using namespace Windows::Foundation::Collections;
 using namespace Windows::ApplicationModel;
 using namespace Windows::ApplicationModel::Store;
 
-#define FutureAccessList AccessCache::StorageApplicationPermissions::FutureAccessList
+#define FutureAccessList \
+	AccessCache::StorageApplicationPermissions::FutureAccessList
 
 int GetAppDataFolderW(wchar_t *buf, int max_len)
 {
-	StorageFolder^ folder = ApplicationData::Current->LocalFolder;
+	StorageFolder ^ folder = ApplicationData::Current->LocalFolder;
 	wcsncpy(buf, folder->Path->Data(), max_len);
 	return 0;
 }
 
 int GetAppInstalledLocationW(wchar_t *buf, int max_len)
 {
-	StorageFolder^ folder = Package::Current->InstalledLocation;
+	StorageFolder ^ folder = Package::Current->InstalledLocation;
 	wcsncpy(buf, folder->Path->Data(), max_len);
 	return 0;
 }
 
-void SelectFolderAsyncW(void(*callback)(const wchar_t*, const wchar_t*))
+void SelectFolderAsyncW(void (*callback)(const wchar_t *, const wchar_t *))
 {
-	FolderPicker^ folderPicker = ref new FolderPicker();
+	FolderPicker ^ folderPicker = ref new FolderPicker();
 	folderPicker->SuggestedStartLocation = PickerLocationId::Desktop;
 	folderPicker->FileTypeFilter->Append(".png");
 	folderPicker->FileTypeFilter->Append(".bmp");
 	folderPicker->FileTypeFilter->Append(".jpg");
 	folderPicker->FileTypeFilter->Append(".jpeg");
 	create_task(folderPicker->PickSingleFolderAsync())
-		.then([callback](StorageFolder^ folder) {
-		if (!folder) {
-			return;
-		}
-		auto token = FutureAccessList->Add(folder);
-		callback(folder->Path->Data(), token->Data());
-	});
+	    .then([callback](StorageFolder ^ folder) {
+		    if (!folder) {
+			    return;
+		    }
+		    auto token = FutureAccessList->Add(folder);
+		    callback(folder->Path->Data(), token->Data());
+	    });
 }
 
 void RemoveFolderAccessW(const wchar_t *token)
@@ -91,7 +92,6 @@ void RemoveFolderAccessW(const wchar_t *token)
 
 void OpenFileManagerW(const wchar_t *filepath)
 {
-
 }
 
 int MoveFileToTrashW(const wchar_t *filepath)
@@ -103,25 +103,26 @@ int MoveFileToTrashW(const wchar_t *filepath)
 static void OnLicenseChanged(void)
 {
 #ifdef _DEBUG
-	LicenseInformation ^license = CurrentAppSimulator::LicenseInformation;
+	LicenseInformation ^ license = CurrentAppSimulator::LicenseInformation;
 #else
-	LicenseInformation ^license = CurrentApp::LicenseInformation;
+	LicenseInformation ^ license = CurrentApp::LicenseInformation;
 #endif
 	finder.license.is_active = license->IsActive;
 	finder.license.is_trial = license->IsTrial;
 	LCFinder_TriggerEvent(EVENT_LICENSE_CHG, NULL);
 }
 
-void LCFinder_InitLicense(void)
+void LCFinder_InitLicense(FinderLicense license)
 {
 #ifdef _DEBUG
-	LicenseInformation ^license = CurrentAppSimulator::LicenseInformation;
+	LicenseInformation ^ info = CurrentAppSimulator::LicenseInformation;
 #else
-	LicenseInformation ^license = CurrentApp::LicenseInformation;
+	LicenseInformation ^ info = CurrentApp::LicenseInformation;
 #endif
-	license->LicenseChanged += ref new LicenseChangedEventHandler(OnLicenseChanged);
-	finder.license.is_active = license->IsActive;
-	finder.license.is_trial = license->IsTrial;
+	info->LicenseChanged +=
+	    ref new LicenseChangedEventHandler(OnLicenseChanged);
+	license->is_active = info->IsActive;
+	license->is_trial = info->IsTrial;
 }
 
 int MoveFileToTrash(const char *filepath)

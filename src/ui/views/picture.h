@@ -48,16 +48,6 @@ typedef struct PictureLabelsViewContextRec_ {
 	LCUI_Widget view;
 } PictureLabelsViewContextRec, *PictureLabelsViewContext;
 
-void *PictureView_CreateScanner(int storage);
-
-int PictureView_OpenScanner(void *scanner, const wchar_t *filepath,
-			    void(*on_found)(FileIterator),
-			    void(*on_active)(void));
-
-void PictureView_CloseScanner(void *scanner);
-
-void PictureView_FreeScanner(void *scanner);
-
 void PictureView_InitInfo(void);
 
 void PictureView_SetInfo(const char *filepath);

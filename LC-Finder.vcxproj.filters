@@ -120,9 +120,6 @@
     <ClCompile Include="src\ui\animation.c">
       <Filter>源文件\ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\views\picture_scanner.c">
-      <Filter>源文件\ui\views</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\views\picture_info.c">
       <Filter>源文件\ui\views</Filter>
     </ClCompile>
@@ -191,6 +188,12 @@
     </ClCompile>
     <ClCompile Include="src\ui\components\thumbview_layout.c">
       <Filter>源文件\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\picture_loader.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\picture_scanner.c">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -299,6 +302,12 @@
     </ClInclude>
     <ClInclude Include="src\ui\views\settings.h">
       <Filter>源文件\ui\views</Filter>
+    </ClInclude>
+    <ClInclude Include="include\picture_loader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\picture_scanner.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
